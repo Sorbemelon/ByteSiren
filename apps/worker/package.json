@@ -7,7 +7,7 @@
     "build": "tsc --noEmit",
     "dev": "wrangler dev",
     "lint": "eslint src --max-warnings=0",
-    "test": "node --test src/services/binance.test.ts src/db/marketRepository.test.ts src/index.test.ts",
+    "test": "node --test src/services/binance.test.ts src/db/marketRepository.test.ts src/index.test.ts src/services/detector/detector.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
