@@ -9,9 +9,9 @@ import type {
 
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
-const DEFAULT_MAX_TOKENS = 1800;
-const DEFAULT_TIMEOUT_MS = 20_000;
-const DEFAULT_RETRIES = 1;
+const DEFAULT_MAX_TOKENS = 4096;
+const DEFAULT_TIMEOUT_MS = 120_000;
+const DEFAULT_RETRIES = 0;
 const RETRYABLE_HTTP_STATUSES = new Set([
   408, 409, 425, 429, 500, 502, 503, 504,
 ]);
@@ -42,7 +42,7 @@ export class AnthropicClient {
   constructor(options: AnthropicClientOptions) {
     this.apiKey = options.apiKey;
     this.endpoint = options.endpoint ?? ANTHROPIC_MESSAGES_URL;
-    this.fetcher = options.fetcher ?? fetch;
+    this.fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.retries = options.retries ?? DEFAULT_RETRIES;
     this.now = options.now ?? (() => new Date());
@@ -55,7 +55,25 @@ export class AnthropicClient {
     let lastResult: ClaudeClientResult | null = null;
 
     for (let attempt = 0; attempt <= this.retries; attempt += 1) {
-      const response = await this.fetchWithTimeout(body);
+      let response: Response;
+
+      try {
+        response = await this.fetchWithTimeout(body);
+      } catch {
+        lastResult = errorResult({
+          request,
+          generatedAt: this.now().toISOString(),
+          errorCode: "unavailable",
+          message: "Claude request failed before a response.",
+          retryable: true,
+        });
+
+        if (attempt < this.retries) {
+          continue;
+        }
+
+        return lastResult;
+      }
 
       if (!response.ok) {
         lastResult = await responseToErrorResult(

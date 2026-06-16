@@ -125,6 +125,23 @@ test("AnthropicClient posts a non-streaming Messages request with configured too
   assert.equal(result.parsed.metadata.searches_used, 1);
 });
 
+test("AnthropicClient treats fetch exceptions as retryable unavailable errors", async () => {
+  const client = new AnthropicClient({
+    apiKey: "test-key",
+    fetcher: async () => {
+      throw new Error("network timeout");
+    },
+    retries: 0,
+    now: () => new Date("2026-06-16T12:00:00.000Z"),
+  });
+
+  const result = await client.createIncidentBrief(request());
+
+  assert.equal(result.ok, false);
+  assert.equal(result.parsed.retryable, true);
+  assert.equal(result.parsed.metadata.error_code, "unavailable");
+});
+
 test("parser strips markdown fences and parses valid JSON text content", () => {
   const parsed = parseAnthropicMessage(
     {

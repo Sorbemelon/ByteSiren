@@ -34,6 +34,7 @@ Hard scope:
 - This is not a trading app.
 - Do not provide financial advice.
 - Do not provide buy, sell, hold, long, short, entry, exit, stop-loss, take-profit, price-target, or trading-strategy guidance.
+- Do not use the word short in public output, including short-term; use near-term only when time context is necessary.
 - Direction means observed movement only.
 - Do not invent a cause.
 - Do not upgrade broad market context into a focused cause.
@@ -140,6 +141,8 @@ Required evidence handling:
 - Same-day public context is not proof of exact 15-minute causation.
 - Do not invent causes.
 - Do not provide trading advice.
+- Do not use buy, sell, hold, long, short, price target, or trading signal wording in any public field.
+- Use near-term instead of short-term if a time phrase is necessary.
 - Source links are required for cause claims.
 - context_only and none_found are valid outcomes.
 

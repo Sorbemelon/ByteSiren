@@ -25,11 +25,10 @@ CLAUDE_SECOND_SEARCH_MAX_USES=2
 # Increase to 8 later if too many visible incidents remain queued/limited.
 CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT=5
 
-# Prefer allowed domains for source quality.
-# Use domains only, no https://.
-# Do not set CLAUDE_BLOCKED_DOMAINS when this is set.
-CLAUDE_ALLOWED_DOMAINS=coindesk.com,reuters.com,apnews.com,cnbc.com,fortune.com,yahoo.com,theblock.co,blockworks.co,decrypt.co,cointelegraph.com,coinmarketcap.com,coinshares.com,farside.co.uk,investing.com,binance.com,ethereum.org,solana.com,ripple.com,bnbchain.org,sec.gov,cftc.gov,federalreserve.gov
+# Optional allow-list. Leave blank for local smoke because some reputable
+# domains may block Anthropic's web-search crawler and cause request rejection.
+CLAUDE_ALLOWED_DOMAINS=
 
-# Leave blank when CLAUDE_ALLOWED_DOMAINS is set.
+# Use blocked domains by default for local smoke.
 # Claude Web Search supports either allowed_domains or blocked_domains, not both.
-CLAUDE_BLOCKED_DOMAINS=
+CLAUDE_BLOCKED_DOMAINS=coindcx.com,bitcoinfoundation.org,tradingkey.com,intellectia.ai,mexc.com,bitget.com,stealthex.io
