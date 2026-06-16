@@ -1,37 +1,85 @@
 @import "tailwindcss";
 
 :root {
+  /* ── Backgrounds ── */
   --bg-page: #070a12;
   --bg-page-top: #0b1020;
   --bg-panel: #0d1324;
+  --bg-panel-soft: #111827;
   --bg-row: #101729;
+
+  /* ── Borders ── */
   --border-panel: rgba(148, 163, 184, 0.16);
+  --border-panel-hover: rgba(139, 92, 246, 0.45);
+  --border-row: rgba(148, 163, 184, 0.12);
+
+  /* ── Text ── */
   --text-primary: #e5e7eb;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
+
+  /* ── Interface accent (violet) ── */
   --accent-primary: #8b5cf6;
-  --brand-logo-orange: #fe7203;
-  --brand-logo-glow-soft: rgba(254, 114, 3, 0.14);
+  --accent-secondary: #22d3ee;
+  --accent-selected-bg: rgba(139, 92, 246, 0.15);
+  --accent-selected-border: rgba(139, 92, 246, 0.75);
+  --accent-selected-shadow: 0 0 0 1px rgba(139, 92, 246, 0.18);
+
+  /* ── Market direction ── */
+  --up: #10b981;
+  --down: #f43f5e;
+  --two-sided: #a78bfa;
+
+  /* ── Evidence confidence ── */
+  --cause-focused: #10b981;
+  --cause-likely: #14b8a6;
+  --context-backdrop: #64748b;
+  --none-found: #94a3b8;
+  --claude-limited: #8b5cf6;
+
+  /* ── Status ── */
+  --status-calm: #64748b;
+  --status-moving: #3b82f6;
+  --status-in-event: #8b5cf6;
+  --status-strong: #f59e0b;
+  --status-severe: #f97316;
+
+  /* ── Brand orange (logo + micro-accents only) ── */
+  --brand-orange-deep: #fe4000;
+  --brand-orange: #fe7203;
+  --brand-orange-ember: #fe9303;
+  --brand-orange-amber: #fea800;
+  --brand-orange-yellow: #feb500;
+  --brand-glow-soft: rgba(254, 114, 3, 0.1);
+  --brand-glow-medium: rgba(254, 147, 3, 0.22);
+  --brand-border-soft: rgba(254, 147, 3, 0.24);
+
+  /* ── Z-index scale ── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
   min-height: 100%;
   background: var(--bg-page);
+  color-scheme: dark;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(
-      circle at 8% 6%,
-      var(--brand-logo-glow-soft),
-      transparent 28%
-    ),
+    radial-gradient(circle at 8% 6%, var(--brand-glow-soft), transparent 28%),
     radial-gradient(
       circle at 78% 12%,
       rgba(139, 92, 246, 0.12),
@@ -39,10 +87,54 @@ body {
     ),
     var(--bg-page);
   color: var(--text-primary);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist, system-ui, -apple-system, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
 a {
   color: inherit;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ── Accordion animation ── */
+details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

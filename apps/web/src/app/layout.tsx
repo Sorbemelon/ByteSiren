@@ -1,18 +1,61 @@
 import type { Metadata } from "next";
+import { Geist } from "next/font/google";
 import "./globals.css";
 
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "ByteSiren",
-  description: "AI Crypto Market Intelligence",
+  title: "ByteSiren — AI Crypto Market Intelligence Dashboard",
+  description:
+    "ByteSiren monitors Binance public crypto market data, detects broad market anomalies, and uses Claude Web Search to provide cited public context. Read-only and not financial advice.",
+  icons: {
+    icon: "/brand/bytesiren_logo_transparent.png",
+    apple: "/brand/bytesiren_logo_transparent.png",
+  },
+  openGraph: {
+    title: "ByteSiren — AI Crypto Market Intelligence Dashboard",
+    description:
+      "Read-only AI crypto market intelligence using Binance public data and Claude Web Search.",
+    siteName: "ByteSiren",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ByteSiren — AI Crypto Market Intelligence",
+    description:
+      "A read-only AI crypto market intelligence dashboard using Binance public data and Claude Web Search.",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "ByteSiren",
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Web",
+  description:
+    "A read-only AI crypto market intelligence dashboard using Binance public market data and Claude Web Search.",
+  creator: {
+    "@type": "Person",
+    name: "Methus Klaewkla",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={geist.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );
