@@ -15,45 +15,57 @@ import {
 } from "./routes/market.ts";
 import type { Env } from "./types/env.ts";
 import {
+  corsPreflightResponse,
   jsonError,
   methodNotAllowed,
   notFound,
   safeErrorMessage,
+  withCors,
 } from "./utils/http.ts";
+
+function isApiPath(pathname: string): boolean {
+  return pathname.startsWith("/api/");
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const respond = (response: Response): Response =>
+      isApiPath(url.pathname) ? withCors(request, response) : response;
+
+    if (request.method === "OPTIONS" && isApiPath(url.pathname)) {
+      return corsPreflightResponse(request);
+    }
 
     if (request.method !== "GET") {
-      return methodNotAllowed();
+      return respond(methodNotAllowed());
     }
 
     if (request.method === "GET" && url.pathname === "/api/health") {
-      return healthResponse();
+      return respond(healthResponse());
     }
 
     if (request.method === "GET" && url.pathname === "/api/version") {
-      return versionResponse(env);
+      return respond(versionResponse(env));
     }
 
     try {
       if (url.pathname === "/api/market/latest") {
-        return await latestMarketResponse(env.DB);
+        return respond(await latestMarketResponse(env.DB));
       }
 
       if (url.pathname === "/api/market/candles") {
-        return await marketCandlesResponse(request, env.DB);
+        return respond(await marketCandlesResponse(request, env.DB));
       }
 
       if (url.pathname === "/api/intelligence/feed") {
-        return await intelligenceFeedResponse(env.DB);
+        return respond(await intelligenceFeedResponse(env.DB));
       }
     } catch (error) {
-      return jsonError(500, "internal_error", safeErrorMessage(error));
+      return respond(jsonError(500, "internal_error", safeErrorMessage(error)));
     }
 
-    return notFound();
+    return respond(notFound());
   },
 
   async scheduled(controller: ScheduledController, env: Env): Promise<void> {

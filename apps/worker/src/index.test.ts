@@ -165,6 +165,62 @@ test("worker returns health and version JSON", async () => {
   );
 });
 
+test("worker allows local web origin for public API GET requests", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/health", {
+      headers: {
+        origin: "http://localhost:3000",
+      },
+    }),
+    makeEnv(),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:3000",
+  );
+  assert.equal(response.headers.get("access-control-allow-credentials"), null);
+});
+
+test("worker handles local web CORS preflight without credentials", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/market/latest", {
+      method: "OPTIONS",
+      headers: {
+        origin: "http://localhost:3000",
+        "access-control-request-method": "GET",
+      },
+    }),
+    makeEnv(),
+  );
+
+  assert.equal(response.status, 204);
+  assert.equal(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:3000",
+  );
+  assert.match(
+    response.headers.get("access-control-allow-methods") ?? "",
+    /GET/,
+  );
+  assert.equal(response.headers.get("access-control-allow-credentials"), null);
+});
+
+test("worker does not allow arbitrary CORS origins", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/health", {
+      headers: {
+        origin: "https://example.com",
+      },
+    }),
+    makeEnv(),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
 test("worker returns latest market summary for the approved symbols", async () => {
   const response = await worker.fetch(
     new Request("http://localhost/api/market/latest"),

@@ -22,43 +22,46 @@ function incidentMarkers(
   feed: FeedItem[],
   selectedId: string | null,
 ): SeriesMarker<Time>[] {
-  return feed.map((item) => {
-    const time = Math.floor(
-      new Date(item.detected_at).getTime() / 1000,
-    ) as Time;
-    const isSelected = item.incident_id === selectedId;
+  return feed
+    .map((item) => {
+      const time = Math.floor(
+        new Date(item.detected_at).getTime() / 1000,
+      ) as Time;
+      const isSelected = item.incident_id === selectedId;
 
-    const color =
-      item.direction === "observed_up"
-        ? isSelected
-          ? "#34d399"
-          : "#10b981"
-        : item.direction === "observed_down"
+      const color =
+        item.direction === "observed_up"
           ? isSelected
-            ? "#fb7185"
-            : "#f43f5e"
-          : isSelected
-            ? "#c4b5fd"
-            : "#a78bfa";
-
-    const shape =
-      item.scope === "market_day"
-        ? "square"
-        : item.direction === "observed_up"
-          ? "arrowUp"
+            ? "#34d399"
+            : "#10b981"
           : item.direction === "observed_down"
-            ? "arrowDown"
-            : "circle";
+            ? isSelected
+              ? "#fb7185"
+              : "#f43f5e"
+            : isSelected
+              ? "#c4b5fd"
+              : "#a78bfa";
 
-    return {
-      time,
-      position: item.direction === "observed_down" ? "aboveBar" : "belowBar",
-      color,
-      shape,
-      size: isSelected ? 2 : 1,
-      text: item.incident_id === selectedId ? item.evidence.severity_label : "",
-    } as SeriesMarker<Time>;
-  });
+      const shape =
+        item.scope === "market_day"
+          ? "square"
+          : item.direction === "observed_up"
+            ? "arrowUp"
+            : item.direction === "observed_down"
+              ? "arrowDown"
+              : "circle";
+
+      return {
+        time,
+        position: item.direction === "observed_down" ? "aboveBar" : "belowBar",
+        color,
+        shape,
+        size: isSelected ? 2 : 1,
+        text:
+          item.incident_id === selectedId ? item.evidence.severity_label : "",
+      } as SeriesMarker<Time>;
+    })
+    .sort((a, b) => Number(a.time) - Number(b.time));
 }
 
 export default function TradingViewChart({
