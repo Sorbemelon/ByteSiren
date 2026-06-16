@@ -1,0 +1,66 @@
+{
+  "endpoints": {
+    "GET /api/health": {
+      "response": {
+        "ok": true,
+        "service": "bytesiren-worker",
+        "version": "string",
+        "checked_at": "ISO8601"
+      }
+    },
+    "GET /api/market/latest": {
+      "description": "Latest card/header data for five symbols."
+    },
+    "GET /api/market/candles?symbol=BTCUSDT": {
+      "description": "Last 30 days of 15m candles and incident markers for allowed symbol."
+    },
+    "GET /api/intelligence/feed": {
+      "description": "All visible incidents for the past 30 days, newest first; includes evidence, brief, sources, and expanded details."
+    }
+  },
+  "feed_item": {
+    "incident_id": "string",
+    "detected_at": "ISO8601",
+    "display_date": "string",
+    "scope": "market_wide | market_day",
+    "direction": "observed_up | observed_down | two_sided",
+    "symbols": [
+      "BTCUSDT"
+    ],
+    "tags": [
+      "same_day_context"
+    ],
+    "evidence": {
+      "signal_window": "15m",
+      "baseline_window": "24h",
+      "summary": "string",
+      "breadth_label": "5/5 pairs",
+      "severity_score": 100,
+      "severity_label": "Strong Move",
+      "avg_15m_change_pct": 2.4,
+      "peak_symbol": "SOLUSDT"
+    },
+    "brief": {
+      "status": "brief_ready | analysis_limited | queued_for_analysis | none_found | context_only",
+      "catalyst_status": "cause_supported | cause_likely | context_only | none_found | null",
+      "label": "Focused Cause | Likely Cause | Market Backdrop | No Clear Cause | Claude Limited | Waiting for Claude",
+      "summary": "string",
+      "confidence": "high | medium | low | unexplained | null",
+      "price_context_check": "matches_binance | minor_mismatch | conflict | unknown | null"
+    },
+    "sources": [
+      {
+        "publisher": "CoinDesk",
+        "title": "string",
+        "url": "https://...",
+        "published_at": "YYYY-MM-DD",
+        "used_for": "focused_catalyst"
+      }
+    ],
+    "expanded_details": {
+      "symbol_evidence": [],
+      "claude_context": {},
+      "caveats": []
+    }
+  }
+}

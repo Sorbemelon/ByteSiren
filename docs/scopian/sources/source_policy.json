@@ -1,0 +1,42 @@
+{
+  "public_ui": {
+    "show_accepted_sources_only": true,
+    "show_rejected_sources": false,
+    "source_chip_link_behavior": {
+      "target": "_blank",
+      "rel": "noopener noreferrer"
+    }
+  },
+  "prefer_categories": [
+    "official exchange/project/status pages",
+    "regulators and official macro sources",
+    "Reuters/AP/CNBC/Fortune/Yahoo Finance",
+    "CoinDesk",
+    "The Block",
+    "Blockworks",
+    "Decrypt",
+    "Cointelegraph",
+    "CoinShares/Farside for ETF flows",
+    "security/exploit sources when relevant"
+  ],
+  "downrank_or_reject_patterns": [
+    "price prediction",
+    "forecast",
+    "price target",
+    "why-is-crypto",
+    "coindcx.com/blog",
+    "bitcoinfoundation.org/news",
+    "TradingKey",
+    "Intellectia",
+    "MEXC/news",
+    "Bitget/wiki",
+    "StealthEX",
+    "*-price-prediction-*"
+  ],
+  "source_roles": [
+    "focused_catalyst",
+    "likely_cause",
+    "backdrop",
+    "price_check"
+  ]
+}

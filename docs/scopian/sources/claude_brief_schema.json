@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ByteSirenClaudeBrief",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "incident_id",
+    "analysis_mode",
+    "catalyst_status",
+    "ui_label",
+    "brief_summary",
+    "source_links",
+    "disclaimer"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "incident_id": {
+      "type": "string"
+    },
+    "analysis_mode": {
+      "type": "string",
+      "enum": [
+        "live_context",
+        "date_matched_retrospective"
+      ]
+    },
+    "catalyst_status": {
+      "type": "string",
+      "enum": [
+        "cause_supported",
+        "cause_likely",
+        "context_only",
+        "none_found"
+      ]
+    },
+    "ui_label": {
+      "type": "string",
+      "enum": [
+        "Focused Cause",
+        "Likely Cause",
+        "Market Backdrop",
+        "No Clear Cause"
+      ]
+    },
+    "headline": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "brief_summary": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "unexplained"
+      ]
+    },
+    "price_context_check": {
+      "type": "string",
+      "enum": [
+        "matches_binance",
+        "minor_mismatch",
+        "conflict",
+        "unknown"
+      ]
+    },
+    "main_catalyst": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "broader_context": {
+      "type": "array"
+    },
+    "caveats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "publisher",
+          "title",
+          "url",
+          "accessed_at",
+          "used_for"
+        ],
+        "properties": {
+          "publisher": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "published_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "accessed_at": {
+            "type": "string"
+          },
+          "used_for": {
+            "type": "string",
+            "enum": [
+              "focused_catalyst",
+              "likely_cause",
+              "backdrop",
+              "price_check"
+            ]
+          },
+          "source_strength": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "disclaimer": {
+      "type": "string"
+    }
+  }
+}

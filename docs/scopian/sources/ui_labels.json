@@ -1,0 +1,49 @@
+{
+  "watchlist_states": {
+    "calm": {
+      "label": "Calm",
+      "meaning": "No unusual movement detected."
+    },
+    "moving": {
+      "label": "Moving",
+      "meaning": "Some unusual activity, but not a major event by itself."
+    },
+    "in_event": {
+      "label": "In Event",
+      "meaning": "This coin is part of the selected market-wide detection."
+    },
+    "strong_move": {
+      "label": "Strong Move",
+      "meaning": "Moved unusually strongly compared with recent baseline."
+    },
+    "data_delay": {
+      "label": "Data Delay",
+      "meaning": "Latest market data may be delayed or incomplete."
+    }
+  },
+  "incident_labels": [
+    "Market-wide",
+    "Market Day",
+    "Observed Up",
+    "Observed Down",
+    "Two-sided"
+  ],
+  "claude_labels": {
+    "cause_supported": "Focused Cause",
+    "cause_likely": "Likely Cause",
+    "context_only": "Market Backdrop",
+    "none_found": "No Clear Cause",
+    "analysis_limited": "Claude Limited",
+    "queued_for_analysis": "Waiting for Claude"
+  },
+  "color_roles": {
+    "observed_up": "emerald",
+    "observed_down": "rose",
+    "two_sided": "violet",
+    "focused_cause": "emerald",
+    "likely_cause": "teal",
+    "market_backdrop": "blue-gray",
+    "claude_limited": "muted violet",
+    "brand": "subtle orange"
+  }
+}

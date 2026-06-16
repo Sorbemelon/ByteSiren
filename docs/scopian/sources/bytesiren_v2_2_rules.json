@@ -1,0 +1,89 @@
+{
+  "project": "ByteSiren",
+  "version": "v2.2-mvp",
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT"
+  ],
+  "interval": "15m",
+  "visible_range_days": 30,
+  "retention_days_internal": 31,
+  "baseline": {
+    "bars": 96,
+    "label": "24h",
+    "method": "median_mad",
+    "exclude_current_bar": true
+  },
+  "symbol_elevated_rule": {
+    "abs_price_z_min": 3.0,
+    "abs_return_15m_pct_min": 0.35,
+    "confirm_any": {
+      "volume_ratio_min": 2.0,
+      "range_ratio_min": 2.0
+    }
+  },
+  "scoring": {
+    "price_score": {
+      "floor": 3.0,
+      "cap": 8.0,
+      "weight": 0.4
+    },
+    "volume_score": {
+      "floor": 2.0,
+      "cap": 6.0,
+      "weight": 0.3
+    },
+    "range_score": {
+      "floor": 2.0,
+      "cap": 6.0,
+      "weight": 0.3
+    }
+  },
+  "market_candidate_rule": {
+    "breadth_count_min": 3,
+    "suppress_direction": [
+      "mixed"
+    ]
+  },
+  "persistence": {
+    "default_consecutive_bars": 2,
+    "waive_if_any": [
+      {
+        "breadth_count_gte": 4
+      },
+      {
+        "avg_elevated_severity_gte": 80
+      },
+      {
+        "breadth_count_gte": 3,
+        "max_elevated_severity_gte": 85
+      }
+    ]
+  },
+  "grouping": {
+    "same_direction_merge_hours": 4,
+    "market_day_group_same_utc_day_opposite_direction": true
+  },
+  "suppression": [
+    "single_symbol_public_candidates",
+    "mixed_direction_same_candle",
+    "flat_price_volume_range_artifacts",
+    "single_symbol_after_market_wide_60m",
+    "low_severity_3_of_5_not_persisted",
+    "duplicate_incident_key"
+  ],
+  "claude": {
+    "default_searches_per_candidate": 1,
+    "second_search_if": [
+      "none_found",
+      "context_only_without_focused_cause",
+      "rejected_sources_only",
+      "severity_100_and_breadth_5",
+      "two_sided_market_day"
+    ],
+    "public_budget_visible": false
+  }
+}
