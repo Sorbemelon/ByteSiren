@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-11
 title: Build Plan and Verification
 status: frozen_source
-version: phase0-source-of-truth-v1
+version: phase4d-build-plan-sync-v1
 last_updated: 2026-06-16
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -163,12 +163,22 @@ limited state uses exact approved copy
 no public budget/quota field
 ```
 
+Phase 4C live-smoke status:
+
+```text
+Backend intelligence pipeline is validated locally through one real Claude Web Search enrichment.
+Accepted source URLs appear through GET /api/intelligence/feed.
+Rejected sources, raw Claude output, tool traces, and usage counts remain hidden from public responses.
+```
+
 ### Phase 5 — UI implementation
 
 Goal:
 
 ```text
 Build one-page Variant A terminal UI.
+Use GET /api/intelligence/feed as the final Intelligence Feed source.
+Render accepted source URLs returned by the API.
 ```
 
 Deliverables:

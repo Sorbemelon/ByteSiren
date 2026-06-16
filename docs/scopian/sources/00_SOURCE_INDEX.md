@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-00
 title: ByteSiren Phase 0 Source Index
 status: frozen_source
-version: phase0-source-of-truth-v1
+version: phase4d-source-of-truth-sync-v1
 last_updated: 2026-06-16
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -92,6 +92,19 @@ Public framing: market intelligence, not trading signal
 ```
 
 Implementation should not reopen the detector logic unless a new Scopian decision explicitly approves it.
+
+## Phase 4C live Claude smoke baseline
+
+The backend intelligence pipeline through Phase 4C is live-smoke validated for the MVP backend path:
+
+```text
+Local Worker can process one queued market incident through Claude Web Search.
+Accepted source URLs are persisted and exposed through GET /api/intelligence/feed.
+Rejected sources, raw Claude responses, tool traces, and analysis usage counts remain hidden from the public feed.
+Claude credentials stay Worker-only.
+```
+
+The next implementation focus is frontend preparation and the Variant A UI build. The frontend should consume `/api/intelligence/feed` as the primary Intelligence Feed source and render only accepted source URLs returned by the API.
 
 ## External reference URLs verified during planning
 

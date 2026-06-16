@@ -2,9 +2,9 @@ sources:
   - id: SRC-00-source-index
     path: docs/scopian/sources/00_SOURCE_INDEX.md
     status: active
-    content_hash: sha256:bc9d1798dbe36c57ae481b4c3be9b93b57abb947dc60ce0251eed72b3b953ed7
+    content_hash: sha256:2508bdaa8ca0ebb7218b1f07545d1997b7ec32dfb30e26a2406edb9c1954ef31
     registered_at: 2026-06-16T12:10:02+07:00
-    updated_at: 2026-06-16T15:19:30+07:00
+    updated_at: 2026-06-16T17:16:50+07:00
   - id: SRC-01-product-spec
     path: docs/scopian/sources/01_PRODUCT_SPEC.md
     status: active
@@ -20,15 +20,15 @@ sources:
   - id: SRC-03-claude-enrichment-policy
     path: docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md
     status: active
-    content_hash: sha256:45ed0532068964b670036ff14b982c66b1ab8a4ba4c9eec37b4b928c69d07585
+    content_hash: sha256:99989ebd89a29d2bacf928768770d2f9fce828ddfc3dba7cfdd225a165bccbaf
     registered_at: 2026-06-16T12:10:02+07:00
-    updated_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T17:16:50+07:00
   - id: SRC-04-cloudflare-architecture-and-api
     path: docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md
     status: active
-    content_hash: sha256:9647ad755c58f2b6ab88c3a77a02f44dc683c75cc363c97f185ebc8b5447727c
+    content_hash: sha256:37ba31db575ffe35d0a45c8d11d6673578104b08697b0ba86dc194e5ec282b78
     registered_at: 2026-06-16T12:10:02+07:00
-    updated_at: 2026-06-16T15:19:30+07:00
+    updated_at: 2026-06-16T17:16:50+07:00
   - id: SRC-05-data-model-d1-retention
     path: docs/scopian/sources/05_DATA_MODEL_D1_RETENTION.md
     status: active
@@ -68,9 +68,9 @@ sources:
   - id: SRC-11-build-plan-and-verification
     path: docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md
     status: active
-    content_hash: sha256:3a578dc81ab265c02ab2d5fdce544e679ea2ffa2b6568e40ecb881863a22858f
+    content_hash: sha256:ac29e166d9304ad26097d7828e68947cdd2ec6f728b5c48e7bff4e659723b432
     registered_at: 2026-06-16T12:10:02+07:00
-    updated_at: 2026-06-16T15:19:30+07:00
+    updated_at: 2026-06-16T17:16:50+07:00
   - id: SRC-12-claude-production-prompt
     path: docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md
     status: active
@@ -86,6 +86,6 @@ sources:
   - id: SRC-14-deployment-boundaries
     path: docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md
     status: active
-    content_hash: sha256:5027a709dfefa005682a0984264e56f003de194e42d200a16a74b0c61ce37d8b
+    content_hash: sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5
     registered_at: 2026-06-16T15:19:30+07:00
-    updated_at: 2026-06-16T15:29:38+07:00
+    updated_at: 2026-06-16T17:16:50+07:00

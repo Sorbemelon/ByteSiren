@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-14
 title: Deployment Boundaries
 status: frozen_source
-version: phase4a5-deployment-boundary-v1
+version: phase4d-deployment-boundary-v1
 last_updated: 2026-06-16
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -63,6 +63,8 @@ Web example: apps/web/.env.local.example
 
 Real local env files must stay untracked.
 
+The repo root `.env.example` does not exist and should not be recreated. Keep environment examples app-local so Worker secrets and frontend public values cannot drift together.
+
 ## Production env ownership
 
 ```text
@@ -93,7 +95,28 @@ Claude configuration for model/tool behavior is Worker-only.
 
 `ANTHROPIC_API_KEY` is a Worker secret only. It must not be committed and must not be exposed to the frontend.
 
-Phase 4A.5 does not add a live Claude client.
+Phase 4B adds the live Claude client only inside the Worker. Phase 4C live-smoke validated one local Worker enrichment through Claude Web Search.
+
+The frontend must never receive:
+
+```text
+ANTHROPIC_API_KEY
+NEXT_PUBLIC_ANTHROPIC_API_KEY
+any NEXT_PUBLIC_ Claude key
+```
+
+## Claude Web Search domain filters
+
+Recommended practical default after live smoke:
+
+```text
+CLAUDE_ALLOWED_DOMAINS=
+CLAUDE_BLOCKED_DOMAINS=<known bad source classes when supported cleanly>
+```
+
+Do not strongly require a broad allowed-domain list. Some reputable domains can still be rejected or inaccessible to Claude Web Search crawler behavior.
+
+Use backend source filtering and deny/down-rank rules as the main quality guard. Only use `CLAUDE_ALLOWED_DOMAINS` for a curated small set that has been proven accessible. The Worker request must use either allowed domains or blocked domains, not both.
 
 ## Deployment sequence
 

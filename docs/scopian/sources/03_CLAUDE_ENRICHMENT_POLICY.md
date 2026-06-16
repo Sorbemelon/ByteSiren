@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-03
 title: Claude Enrichment and Source Policy
 status: frozen_source
-version: phase0-source-of-truth-v1
+version: phase4d-claude-live-smoke-sync-v1
 last_updated: 2026-06-16
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -18,6 +18,20 @@ depends_on: [BS-SRC-02]
 Claude is used only after ByteSiren’s deterministic detector has created a final incident candidate. Claude’s role is to search for current or date-matched public context and produce a structured, cited brief.
 
 Claude must not create trading advice, predictions, price targets, or recommendations.
+
+## Phase 4C live-smoke finding
+
+The local Worker pipeline has been live-smoke validated through one real Claude Web Search enrichment.
+
+```text
+The Worker can process one queued incident through Claude Web Search.
+Accepted sources are persisted and exposed through GET /api/intelligence/feed.
+Rejected sources are not exposed publicly.
+Raw Claude responses, tool traces, crawler details, and analysis usage counts are not exposed publicly.
+Public feed responses must not include budget, quota, or search-count fields.
+```
+
+This validation confirms the backend path for queued candidate -> Claude Web Search -> brief/source validation -> D1 persistence -> public feed mapping. It does not add frontend UI source chips by itself.
 
 ## When to call Claude
 
@@ -57,6 +71,13 @@ candidate scope is two_sided market_day
 ```
 
 Do not show search counts or budget values in the public UI.
+
+Implementation note:
+
+```text
+Internal job metadata may record search/tool usage for operations.
+Public API responses must hide those counts.
+```
 
 ## Cache policy
 
@@ -259,6 +280,27 @@ SOL: Solana outage/status, ETF, exploit, ecosystem
 XRP: Ripple, SEC/legal, listing, ETF/regulatory
 ```
 
+## Web Search domain filter guidance
+
+After Phase 4C live smoke, do not strongly require broad `CLAUDE_ALLOWED_DOMAINS` by default.
+
+Practical default:
+
+```text
+Leave CLAUDE_ALLOWED_DOMAINS blank unless a curated small set has been proven accessible.
+Use backend source filtering plus deny/down-rank policy as the main quality guard.
+Optionally use CLAUDE_BLOCKED_DOMAINS or deny patterns for known bad source classes when supported cleanly.
+Never send allowed_domains and blocked_domains in the same Claude Web Search request.
+```
+
+Reason:
+
+```text
+Some reputable allowed domains can still be rejected or inaccessible because of Claude Web Search crawler behavior.
+An overly broad allow-list can reduce useful results or cause request failures.
+Backend validation remains mandatory even when domain filters are configured.
+```
+
 ## Source quality policy
 
 Prefer:
@@ -298,6 +340,38 @@ StealthEX
 ```
 
 Public UI shows only accepted source links.
+
+## Public summary wording
+
+Public labels, summaries, fallback copy, and source-facing output should avoid wording that can look like trading guidance or trip the public forbidden-word scan.
+
+Use:
+
+```text
+observed up
+observed down
+observed market movement
+market movement
+market backdrop
+focused cause
+likely cause
+near-term
+```
+
+Avoid in public output:
+
+```text
+buy
+sell
+long
+short
+hold
+price target
+trading signal
+short-term
+```
+
+The words may appear only in internal guard lists, tests, or source-policy documentation that exists to prevent public exposure.
 
 ## Accepted source link shape
 

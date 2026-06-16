@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-04
 title: Cloudflare Architecture and Public API Contract
 status: frozen_source
-version: phase0-source-of-truth-v1
+version: phase4d-cloudflare-api-sync-v1
 last_updated: 2026-06-16
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -62,6 +62,16 @@ Cloudflare Pages
   -> calls Worker read-only public API
   -> renders chart + Intelligence Feed
 ```
+
+## Phase 4C backend smoke status
+
+The backend intelligence path is live-smoke validated locally through Claude Web Search:
+
+```text
+queued incident -> Claude Web Search -> brief/source validation -> D1 persistence -> GET /api/intelligence/feed
+```
+
+The public feed may expose accepted source URLs. It must not expose rejected sources, raw Claude responses, Web Search tool traces, crawler details, search counts, quota values, or budget status.
 
 ## Recommended repository structure
 
@@ -308,12 +318,12 @@ unknown query params should be ignored or rejected consistently
 
 ## API cache guidance
 
-Public read endpoints may use short cache headers if suitable:
+Public read endpoints may use brief cache headers if suitable:
 
 ```text
-/api/market/latest: short cache, e.g. 30–60s
+/api/market/latest: brief cache, e.g. 30 to 60s
 /api/market/candles: cache until next poll window
-/api/intelligence/feed: short cache, e.g. 60s
+/api/intelligence/feed: brief cache, e.g. 60s
 ```
 
 Do not cache errors as successful responses.
@@ -374,6 +384,9 @@ Do not store user data; MVP has no user accounts.
 ```text
 apps/worker/.dev.vars contains Worker-local secrets and non-public runtime values.
 apps/web/.env.local contains frontend public runtime values only.
+Root .env.example does not exist and should not be recreated.
+Worker example: apps/worker/.dev.vars.example
+Web example: apps/web/.env.local.example
 ```
 
 Production environment values belong in the matching Cloudflare target:
@@ -384,6 +397,8 @@ Pages public vars: Cloudflare Pages settings
 ```
 
 D1 is bound only to the Worker deployment. Cloudflare Pages calls the Worker public API and does not receive D1 bindings.
+
+Claude environment values are Worker-only. The frontend must never receive `ANTHROPIC_API_KEY` or any `NEXT_PUBLIC_` Claude key.
 
 ## Rate and failure behavior
 
