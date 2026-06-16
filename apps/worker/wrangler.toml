@@ -1,10 +1,10 @@
-name = "bytesiren-worker"
-main = "apps/worker/src/index.ts"
+name = "bytesiren-api"
+main = "src/index.ts"
 compatibility_date = "2026-06-16"
 
 [vars]
 APP_VERSION = "0.1.0-placeholder"
-BUILD_PHASE = "phase-4a-claude-foundation"
+BUILD_PHASE = "phase-4a5-deployment-boundary"
 CLAUDE_MODEL = ""
 CLAUDE_WEB_SEARCH_TOOL_TYPE = ""
 CLAUDE_DEFAULT_MAX_USES = "1"
@@ -17,7 +17,7 @@ CLAUDE_BLOCKED_DOMAINS = ""
 binding = "DB"
 database_name = "bytesiren-placeholder"
 database_id = "00000000-0000-0000-0000-000000000000"
-migrations_dir = "apps/worker/migrations"
+migrations_dir = "migrations"
 
 [triggers]
 crons = [

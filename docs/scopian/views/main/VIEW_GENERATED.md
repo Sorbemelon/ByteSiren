@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-16T12:10:19+07:00
+generated_at: 2026-06-16T15:29:38+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -12,11 +12,11 @@ canonical_inputs:
   - context.yml
   - source_registry.yml
 input_hashes:
-  view: sha256:1968319e5d4e
-  sources: sha256:4575eddbc0bb
+  view: sha256:17e3e4eedbe5
+  sources: sha256:f2992191cde3
   buffer: sha256:e3b0c44298fc
   context: sha256:5ef45bc1a5d7
-  registry: sha256:95d927e8baaa
+  registry: sha256:0a59d9a63b56
 ---
 
 # Generated Scope View
@@ -31,24 +31,25 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-16T12:10:19+07:00
+- generated_at: 2026-06-16T15:29:38+07:00
 
 ## Selected Sources
 
-- docs/scopian/sources/00_SOURCE_INDEX.md (sha256:815b801323b8eac7a634c6a58fec76ddf4aa7d33d74bbcb5c3dbe3add651c3ed)
+- docs/scopian/sources/00_SOURCE_INDEX.md (sha256:bc9d1798dbe36c57ae481b4c3be9b93b57abb947dc60ce0251eed72b3b953ed7)
 - docs/scopian/sources/01_PRODUCT_SPEC.md (sha256:5e1166ce582094a06466cc038086a6de0a117a5fa2a69880d23a60ea5e21d8f7)
 - docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md (sha256:6ee10db5ff934f5552c83fcad278e7c3e2ee2e981031f6b2e88ee68aa7e5bdbf)
 - docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md (sha256:45ed0532068964b670036ff14b982c66b1ab8a4ba4c9eec37b4b928c69d07585)
-- docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md (sha256:d7b0f9e8541535f3bf5759850b3d99bec0b7e9a6c5b8a4ceefee648340457804)
+- docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md (sha256:9647ad755c58f2b6ab88c3a77a02f44dc683c75cc363c97f185ebc8b5447727c)
 - docs/scopian/sources/05_DATA_MODEL_D1_RETENTION.md (sha256:5a0b20dc06b930686f5637f3233c17107af1413f481739f316131d89b7454ee6)
 - docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md (sha256:9626f814df5a410628a0f8423da9f8a95c4d28929560a0d454d58bd3a3969fcb)
 - docs/scopian/sources/07_VISUAL_THEME_AND_BRAND.md (sha256:f8fb5996946571a10ba53becd99d0f75e0334929c6b2a29c810c0045a3a236e9)
 - docs/scopian/sources/08_SEO_SPEC.md (sha256:42a9519fe8deeb3e807f0c30a6624edbe48299928fd65072310e8f3d72d5a1f3)
 - docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md (sha256:1c74e905b5c7b81e7ff8840fb002567d3a51a5f84b42ba003c6d6fe45f09e077)
 - docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md (sha256:477e680400f61ce878050aac5f0bc0272fd46bafc565c4c16f8f764cce02f4fe)
-- docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md (sha256:4c73962601e7f817dbde5414e13cbcb95fbe33d46eabdf6c58f342b1901b08b9)
+- docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md (sha256:3a578dc81ab265c02ab2d5fdce544e679ea2ffa2b6568e40ecb881863a22858f)
 - docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md (sha256:3195035b0510a3568b8a45ae204407e589271f2568763c58aa730183c58afde4)
-- docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md (sha256:89404fe60af428aec646b0d6c51e388547d57dbb22184b73dedea3d9afc71d9c)
+- docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md (sha256:f59fa372b1951fe6b9d256070b31d84f906321a750a31e6a428918fe3eee6803)
+- docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:5027a709dfefa005682a0984264e56f003de194e42d200a16a74b0c61ce37d8b)
 
 ## Approved Buffer Summary
 
@@ -80,6 +81,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-likely-in-scope-version-5a350958 | likely_in_scope | Version | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#version | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-accessibility-requirements-6ca0a2f5 | allowed_with_limits | Accessibility requirements | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#accessibility-requirements | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-allowed-public-wording-05648528 | allowed_with_limits | Allowed public wording | docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md#allowed-public-wording | read-only | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-app-local-configs-05b525a1 | allowed_with_limits | App-local configs | docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md#app-local-configs | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-approved-poc-validation-baseline-f76043f6 | allowed_with_limits | Approved PoC / validation baseline | docs/scopian/sources/00_SOURCE_INDEX.md#approved-poc-validation-baseline | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-bottom-full-disclaimer-afb73ee1 | allowed_with_limits | Bottom full disclaimer | docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md#bottom-full-disclaimer | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-briefcell-8676e17d | allowed_with_limits | BriefCell | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#briefcell | none | not_checked_in_generated_view |
@@ -88,9 +90,12 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-claude-4c6bd3d1 | allowed_with_limits | Claude | docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md#claude | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-claude-code-phase-5-prompt-ui-06-37790fee | allowed_with_limits | Claude Code Phase 5 prompt — UI: 06_UI_UX_VARIANT_A_SPEC.md; 07_VISUAL_THEME_AND_BRAND.md; 08_SEO_SPEC.md; 09_SAFETY_DISCLAIMER_COPY.md | docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md#claude-code-phase-5-prompt-ui | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-claude-limited-card-b36a02a6 | allowed_with_limits | Claude Limited card | docs/scopian/sources/07_VISUAL_THEME_AND_BRAND.md#claude-limited-card | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-d1-boundary-0f9d7659 | allowed_with_limits | D1 boundary | docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md#d1-boundary | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-data-source-note-c8a424f4 | allowed_with_limits | Data source note | docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md#data-source-note | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-deployment-resources-1ba6435f | allowed_with_limits | Deployment resources | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#deployment-resources | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-desktop-wireframe-683eb886 | allowed_with_limits | Desktop wireframe | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#desktop-wireframe | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-detector-3597d56c | allowed_with_limits | Detector | docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md#detector | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-environment-ownership-6060a3d6 | allowed_with_limits | Environment ownership | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#environment-ownership | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-event-focused-search-requirement-896d58a1 | allowed_with_limits | Event-focused search requirement | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#event-focused-search-requirement | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-external-reference-urls-verified-4bc20bcb | allowed_with_limits | External reference URLs verified during planning | docs/scopian/sources/00_SOURCE_INDEX.md#external-reference-urls-verified-during-planning | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-frozen-decisions-summary-368b963d | allowed_with_limits | Frozen decisions summary | docs/scopian/sources/00_SOURCE_INDEX.md#frozen-decisions-summary | read-only | not_checked_in_generated_view |
@@ -101,6 +106,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-if-only-broader-context-found-ec0892ae | allowed_with_limits | If only broader context found | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#if-only-broader-context-found | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-included-07c8fcd2 | allowed_with_limits | Included | docs/scopian/sources/01_PRODUCT_SPEC.md#included | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-interactions-9ecb50cd | allowed_with_limits | Interactions | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#interactions | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-local-env-ownership-2dc83d90 | allowed_with_limits | Local env ownership | docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md#local-env-ownership | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-locked-project-constraints-4351263c | allowed_with_limits | Locked project constraints | docs/scopian/sources/01_PRODUCT_SPEC.md#locked-project-constraints | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-logo-assets-8ffb511f | allowed_with_limits | Logo assets | docs/scopian/sources/07_VISUAL_THEME_AND_BRAND.md#logo-assets | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-meta-description-6ee13576 | allowed_with_limits | Meta description | docs/scopian/sources/08_SEO_SPEC.md#meta-description | read-only | not_checked_in_generated_view |
@@ -112,6 +118,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-post-processing-requirements-5d2850aa | allowed_with_limits | Post-processing requirements | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#post-processing-requirements | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-product-identity-a2010428 | allowed_with_limits | Product identity | docs/scopian/sources/01_PRODUCT_SPEC.md#product-identity | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-product-page-structure-f867a21f | allowed_with_limits | Product page structure | docs/scopian/sources/01_PRODUCT_SPEC.md#product-page-structure | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-production-env-ownership-00b86492 | allowed_with_limits | Production env ownership | docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md#production-env-ownership | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-prompt-template-for-claude-code-5e4d5b55 | allowed_with_limits | Prompt template for Claude Code: 06_UI_UX_VARIANT_A_SPEC.md; 07_VISUAL_THEME_AND_BRAND.md; 08_SEO_SPEC.md; 09_SAFETY_DISCLAIMER_COPY.md | docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md#prompt-template-for-claude-code | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-public-ui-summary-constraints-1a6f2c7d | allowed_with_limits | Public UI summary constraints | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#public-ui-summary-constraints | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-purpose-e8e4b104 | allowed_with_limits | Purpose | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#purpose | none | not_checked_in_generated_view |
@@ -139,6 +146,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-worker-responsibilities-1d668606 | allowed_with_limits | Worker responsibilities | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#worker-responsibilities | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-working-style-82a5378e | allowed_with_limits | Working style | docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md#working-style | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-cause-vs-context-philosophy-0034039d | likely_out_of_scope | Cause vs context philosophy | docs/scopian/sources/01_PRODUCT_SPEC.md#cause-vs-context-philosophy | none | not_checked_in_generated_view |
+| ITEM-likely-out-of-scope-claude-boundary-48928f06 | likely_out_of_scope | Claude boundary | docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md#claude-boundary | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-claude-code-1e5c5a79 | likely_out_of_scope | Claude Code | docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md#claude-code | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-codex-7ab08705 | likely_out_of_scope | Codex | docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md#codex | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-codex-phase-1-prompt-cloudflare-ac8ee980 | likely_out_of_scope | Codex Phase 1 prompt — Cloudflare foundation: 01_PRODUCT_SPEC.md; 04_CLOUDFLARE_ARCHITECTURE_AND_API.md; 10_AGENT_ROLES_AND_BUILD_WORKFLOW.md; 11_BUILD_PLAN ... | docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md#codex-phase-1-prompt-cloudflare-foundation | do-not-build | not_checked_in_generated_view |
@@ -154,8 +162,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 ## Coverage Snapshot
 
 - likely_in_scope: 20
-- allowed_with_limits: 60
-- likely_out_of_scope: 12
+- allowed_with_limits: 66
+- likely_out_of_scope: 13
 - decision_required: 0
 - conflict_detected: 0
 - insufficient_evidence: 0
@@ -166,21 +174,21 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - template_only: true
 - correctness_claim: false
 - decision_required_items: 0
-- out_of_scope_items: 12
+- out_of_scope_items: 13
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-16T12:10:19+07:00
-- selected_sources: 14
+- generated_refresh: 2026-06-16T15:29:38+07:00
+- selected_sources: 15
 - approved_buffer_records: 0
 
 ## Freshness Metadata
 
-- view: sha256:1968319e5d4e
-- sources: sha256:4575eddbc0bb
+- view: sha256:17e3e4eedbe5
+- sources: sha256:f2992191cde3
 - buffer: sha256:e3b0c44298fc
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:95d927e8baaa
+- registry: sha256:0a59d9a63b56
 
 ## Refresh Instructions
 

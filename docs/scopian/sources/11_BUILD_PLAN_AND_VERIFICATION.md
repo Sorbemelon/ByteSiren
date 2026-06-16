@@ -54,7 +54,8 @@ Deliverables:
 ```text
 apps/web Next.js static app
 apps/worker Cloudflare Worker
-wrangler.toml
+apps/web/wrangler.toml
+apps/worker/wrangler.toml
 D1 binding placeholder
 health endpoint
 basic local scripts
@@ -309,16 +310,18 @@ No trading-signal SEO positioning.
 Actual commands may change after repo setup.
 
 ```bash
-pnpm install
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
-pnpm --filter worker dev
-pnpm --filter web dev
-npx wrangler d1 migrations apply <db-name> --local
-npx wrangler dev --test-scheduled
+corepack pnpm install
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm test
+corepack pnpm build
+corepack pnpm --filter @bytesiren/worker dev
+corepack pnpm --filter @bytesiren/web dev
+corepack pnpm --filter @bytesiren/worker exec wrangler d1 migrations apply bytesiren-placeholder --local
+corepack pnpm --filter @bytesiren/worker exec wrangler deploy --dry-run
 ```
+
+Worker commands run from `apps/worker/wrangler.toml`. Pages commands run from `apps/web/wrangler.toml`.
 
 ## Manual smoke tests
 

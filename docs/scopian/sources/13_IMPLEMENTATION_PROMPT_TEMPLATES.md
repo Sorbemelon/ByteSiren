@@ -39,7 +39,8 @@ Implement Phase 1 only:
 - monorepo skeleton
 - apps/web Next.js static app placeholder
 - apps/worker Cloudflare Worker TypeScript skeleton
-- wrangler.toml
+- apps/web/wrangler.toml
+- apps/worker/wrangler.toml
 - health endpoint
 - package scripts
 - D1 binding placeholder, no real detector yet

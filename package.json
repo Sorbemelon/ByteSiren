@@ -8,6 +8,14 @@
     "typecheck": "corepack pnpm -r --if-present typecheck",
     "lint": "corepack pnpm -r --if-present lint",
     "test": "corepack pnpm -r --if-present test",
+    "web:build": "corepack pnpm --filter @bytesiren/web build",
+    "web:pages:preview": "corepack pnpm --filter @bytesiren/web pages:preview",
+    "web:deploy:pages": "corepack pnpm --filter @bytesiren/web deploy:pages",
+    "worker:dev": "corepack pnpm --filter @bytesiren/worker dev",
+    "worker:deploy": "corepack pnpm --filter @bytesiren/worker deploy",
+    "worker:deploy:dry": "corepack pnpm --filter @bytesiren/worker deploy:dry",
+    "worker:migrate:local": "corepack pnpm --filter @bytesiren/worker d1:migrations:local",
+    "worker:migrate:remote": "corepack pnpm --filter @bytesiren/worker d1:migrations:remote",
     "format:check": "prettier --check package.json pnpm-workspace.yaml tsconfig.base.json eslint.config.mjs \"apps/**/*.{json,mjs,ts,tsx,css}\""
   },
   "devDependencies": {

@@ -96,7 +96,7 @@ function makeEnv(options: { incidents?: IncidentRow[] } = {}): Env {
   return {
     DB: db,
     APP_VERSION: "0.1.0-placeholder",
-    BUILD_PHASE: "phase-4a-claude-foundation",
+    BUILD_PHASE: "phase-4a5-deployment-boundary",
   };
 }
 
@@ -159,7 +159,10 @@ test("worker returns health and version JSON", async () => {
   assert.equal(health.status, 200);
   assert.equal(version.status, 200);
   assert.equal((await readJson(health)).service, "bytesiren-worker");
-  assert.equal((await readJson(version)).phase, "phase-4a-claude-foundation");
+  assert.equal(
+    (await readJson(version)).phase,
+    "phase-4a5-deployment-boundary",
+  );
 });
 
 test("worker returns latest market summary for the approved symbols", async () => {
@@ -245,7 +248,7 @@ test("worker returns stored Claude fixture brief and accepted sources only", asy
   const env: Env = {
     DB: db,
     APP_VERSION: "0.1.0-placeholder",
-    BUILD_PHASE: "phase-4a-claude-foundation",
+    BUILD_PHASE: "phase-4a5-deployment-boundary",
   };
 
   await persistClaudeFixtureBriefForTest(db, claudeFixture(incident.id), {

@@ -27,6 +27,24 @@ AI: Claude API with Web Search
 
 No Docker is needed for the MVP.
 
+## Deployment resources
+
+ByteSiren uses two Cloudflare deployment targets from the same monorepo:
+
+```text
+apps/web     -> Cloudflare Pages static frontend
+apps/worker  -> Cloudflare Worker backend, API, Cron Triggers, and D1
+```
+
+Deployment config must stay app-local:
+
+```text
+apps/web/wrangler.toml     Pages config only
+apps/worker/wrangler.toml  Worker config only
+```
+
+The repo root should not contain an active mixed `wrangler.toml` with Worker, D1, and Cron settings.
+
 ## High-level architecture
 
 ```text
@@ -61,7 +79,9 @@ bytesiren/
           twitter-image.png
         components/
         lib/
+      wrangler.toml
     worker/
+      wrangler.toml
       src/
         index.ts
         routes/
@@ -69,12 +89,12 @@ bytesiren/
         services/
         db/
         types/
+      migrations/
   docs/
     scopian/
       sources/
   package.json
   pnpm-workspace.yaml
-  wrangler.toml
 ```
 
 ## Worker responsibilities
@@ -348,6 +368,22 @@ No Binance key is needed for public market-data-only endpoints.
 Do not store raw Claude search HTML.
 Do not store user data; MVP has no user accounts.
 ```
+
+## Environment ownership
+
+```text
+apps/worker/.dev.vars contains Worker-local secrets and non-public runtime values.
+apps/web/.env.local contains frontend public runtime values only.
+```
+
+Production environment values belong in the matching Cloudflare target:
+
+```text
+Worker secrets and non-public vars: Cloudflare Worker settings
+Pages public vars: Cloudflare Pages settings
+```
+
+D1 is bound only to the Worker deployment. Cloudflare Pages calls the Worker public API and does not receive D1 bindings.
 
 ## Rate and failure behavior
 

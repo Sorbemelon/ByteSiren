@@ -12,11 +12,18 @@ coverage/
 # Cloudflare / local runtime
 .wrangler/
 .dev.vars
+.dev.vars.*
 
 # Environment files
 .env
 .env.*
 !.env.example
+apps/web/.env.local
+apps/web/.env*.local
+apps/worker/.dev.vars
+apps/worker/.dev.vars.*
+!apps/web/.env.local.example
+!apps/worker/.dev.vars.example
 
 # Local tool state
 .crosshelix/
