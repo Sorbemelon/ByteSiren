@@ -73,7 +73,7 @@ export default {
         env.DB,
         "claude_enrichment_placeholder",
         "skipped",
-        "Future enrichment cron is intentionally skipped in this phase.",
+        "Claude enrichment not enabled in Phase 4A.",
         {
           cron: controller.cron,
         },

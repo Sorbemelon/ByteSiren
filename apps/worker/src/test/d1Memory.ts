@@ -45,11 +45,48 @@ interface JobRunRow {
   metadata_json: string;
 }
 
+interface ClaudeBriefRow {
+  id: string;
+  incident_id: string;
+  analysis_mode: string;
+  catalyst_status: string | null;
+  ui_label: string;
+  confidence: string | null;
+  price_context_check: string | null;
+  headline: string | null;
+  summary: string;
+  focused_catalyst_json: string | null;
+  main_catalyst_json: string | null;
+  broader_context_json: string;
+  caveats_json: string;
+  tags_json: string;
+  source_quality_meta_json: string;
+  generated_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SourceReferenceRow {
+  id: number;
+  brief_id: string;
+  publisher: string;
+  title: string;
+  url: string;
+  normalized_url: string;
+  published_at: string | null;
+  accessed_at: string | null;
+  used_for: string;
+  source_strength: string | null;
+  created_at: string;
+}
+
 export interface MemoryD1Tables {
   market_candles: MarketCandle[];
   market_features: MarketFeatureRow[];
   raw_signal_events: RawSignalEventRow[];
   incidents: IncidentRow[];
+  claude_briefs: ClaudeBriefRow[];
+  source_references: SourceReferenceRow[];
   job_runs: JobRunRow[];
 }
 
@@ -62,6 +99,8 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
     market_features: [...(initial.market_features ?? [])],
     raw_signal_events: [...(initial.raw_signal_events ?? [])],
     incidents: [...(initial.incidents ?? [])],
+    claude_briefs: [...(initial.claude_briefs ?? [])],
+    source_references: [...(initial.source_references ?? [])],
     job_runs: [...(initial.job_runs ?? [])],
   };
 
@@ -152,6 +191,19 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         };
       }
 
+      if (
+        this.sql.includes("FROM source_references") &&
+        this.sql.includes("brief_id = ?")
+      ) {
+        const [briefId] = this.params as [string];
+
+        return {
+          results: tables.source_references
+            .filter((row) => row.brief_id === briefId)
+            .sort((a, b) => a.id - b.id) as T[],
+        };
+      }
+
       return { results: [] as T[] };
     }
 
@@ -169,6 +221,22 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       if (this.sql.includes("FROM incidents") && this.sql.includes("id = ?")) {
         const [id] = this.params as [string];
         return (tables.incidents.find((row) => row.id === id) ?? null) as T;
+      }
+
+      if (
+        this.sql.includes("FROM claude_briefs") &&
+        this.sql.includes("incident_id = ?")
+      ) {
+        const [incidentId] = this.params as [string];
+        const row = tables.claude_briefs
+          .filter((brief) => brief.incident_id === incidentId)
+          .sort((a, b) =>
+            (b.generated_at ?? b.updated_at).localeCompare(
+              a.generated_at ?? a.updated_at,
+            ),
+          )[0];
+
+        return (row ?? null) as T;
       }
 
       return null as T;
@@ -378,6 +446,150 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         return result(1);
       }
 
+      if (this.sql.includes("INSERT INTO claude_briefs")) {
+        const [
+          id,
+          incidentId,
+          analysisMode,
+          catalystStatus,
+          uiLabel,
+          confidence,
+          priceContextCheck,
+          headline,
+          summary,
+          focusedCatalystJson,
+          mainCatalystJson,
+          broaderContextJson,
+          caveatsJson,
+          tagsJson,
+          sourceQualityMetaJson,
+          generatedAt,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string | null,
+          string,
+          string | null,
+          string | null,
+          string | null,
+          string,
+          string | null,
+          string | null,
+          string,
+          string,
+          string,
+          string,
+          string | null,
+        ];
+        const existing = tables.claude_briefs.find(
+          (row) =>
+            row.incident_id === incidentId &&
+            row.analysis_mode === analysisMode,
+        );
+        const now = new Date().toISOString();
+        const row: ClaudeBriefRow = {
+          id,
+          incident_id: incidentId,
+          analysis_mode: analysisMode,
+          catalyst_status: catalystStatus,
+          ui_label: uiLabel,
+          confidence,
+          price_context_check: priceContextCheck,
+          headline,
+          summary,
+          focused_catalyst_json: focusedCatalystJson,
+          main_catalyst_json: mainCatalystJson,
+          broader_context_json: broaderContextJson,
+          caveats_json: caveatsJson,
+          tags_json: tagsJson,
+          source_quality_meta_json: sourceQualityMetaJson,
+          generated_at: generatedAt,
+          created_at: existing?.created_at ?? now,
+          updated_at: now,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.claude_briefs.push(row);
+        }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO source_references")) {
+        const [
+          briefId,
+          publisher,
+          title,
+          url,
+          normalizedUrl,
+          publishedAt,
+          accessedAt,
+          usedFor,
+          sourceStrength,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string,
+          string,
+          string | null,
+          string | null,
+          string,
+          string | null,
+        ];
+        const existing = tables.source_references.find(
+          (row) =>
+            row.brief_id === briefId && row.normalized_url === normalizedUrl,
+        );
+        const now = new Date().toISOString();
+        const row: SourceReferenceRow = {
+          id: existing?.id ?? tables.source_references.length + 1,
+          brief_id: briefId,
+          publisher,
+          title,
+          url,
+          normalized_url: normalizedUrl,
+          published_at: publishedAt,
+          accessed_at: accessedAt,
+          used_for: usedFor,
+          source_strength: sourceStrength,
+          created_at: existing?.created_at ?? now,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.source_references.push(row);
+        }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("UPDATE incidents")) {
+        const hasExplicitStatus = this.sql.includes("SET status = ?");
+        const [status, briefStatus, incidentId] = hasExplicitStatus
+          ? (this.params as [string, string, string])
+          : (["analysis_limited", "analysis_limited", this.params[0]] as [
+              string,
+              string,
+              string,
+            ]);
+        const incident = tables.incidents.find((row) => row.id === incidentId);
+
+        if (!incident) {
+          return result(0);
+        }
+
+        incident.status = status;
+        incident.brief_status = briefStatus;
+        incident.updated_at = new Date().toISOString();
+
+        return result(1);
+      }
+
       if (this.sql.includes("INSERT INTO job_runs")) {
         const [
           id,
@@ -444,6 +656,29 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           (row) => row.open_time >= cutoff,
         );
         return result(before - tables.market_candles.length);
+      }
+
+      if (this.sql.includes("DELETE FROM source_references")) {
+        const [cutoff] = this.params as [string];
+        const before = tables.source_references.length;
+        const oldBriefIds = new Set(
+          tables.claude_briefs
+            .filter((row) => (row.generated_at ?? row.created_at) < cutoff)
+            .map((row) => row.id),
+        );
+        tables.source_references = tables.source_references.filter(
+          (row) => row.created_at >= cutoff && !oldBriefIds.has(row.brief_id),
+        );
+        return result(before - tables.source_references.length);
+      }
+
+      if (this.sql.includes("DELETE FROM claude_briefs")) {
+        const [cutoff] = this.params as [string];
+        const before = tables.claude_briefs.length;
+        tables.claude_briefs = tables.claude_briefs.filter(
+          (row) => (row.generated_at ?? row.created_at) >= cutoff,
+        );
+        return result(before - tables.claude_briefs.length);
       }
 
       return result(0);

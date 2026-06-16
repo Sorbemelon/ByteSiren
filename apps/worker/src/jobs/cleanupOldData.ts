@@ -3,6 +3,7 @@ import {
   recordJobRun,
   retentionCutoffIso,
 } from "../db/marketRepository.ts";
+import { cleanupClaudeDataOlderThan31Days } from "../db/claudeRepository.ts";
 import { cleanupDetectorDataOlderThan31Days } from "../db/detectorRepository.ts";
 import { safeErrorMessage } from "../utils/http.ts";
 
@@ -15,6 +16,8 @@ export interface CleanupOldDataResult {
     market_features: number;
     raw_signal_events: number;
     incidents: number;
+    claude_briefs: number;
+    source_references: number;
   };
 }
 
@@ -31,12 +34,15 @@ export async function cleanupOldData(
       db,
       cutoffIso,
     );
+    const claudeDeleted = await cleanupClaudeDataOlderThan31Days(db, cutoffIso);
     const deleted = {
       market_candles: marketDeleted.market_candles,
       market_features:
         marketDeleted.market_features + detectorDeleted.market_features,
       raw_signal_events: detectorDeleted.raw_signal_events,
       incidents: detectorDeleted.incidents,
+      claude_briefs: claudeDeleted.claude_briefs,
+      source_references: claudeDeleted.source_references,
     };
     const message = `Cleanup completed for records older than ${cutoffIso}.`;
 
@@ -83,6 +89,8 @@ export async function cleanupOldData(
         market_features: 0,
         raw_signal_events: 0,
         incidents: 0,
+        claude_briefs: 0,
+        source_references: 0,
       },
     };
   }

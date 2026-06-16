@@ -1,0 +1,175 @@
+import { isSourceRole, isSourceStrength } from "./briefSchema.ts";
+import type {
+  ClaudeSourceLink,
+  RejectedClaudeSource,
+  SourceRole,
+  SourceStrength,
+} from "./types.ts";
+
+const DEFAULT_REJECT_PATTERNS = [
+  "price prediction",
+  "forecast",
+  "price target",
+  "why-is-crypto",
+  "coindcx.com/blog",
+  "bitcoinfoundation.org/news",
+  "tradingkey",
+  "intellectia",
+  "mexc/news",
+  "bitget/wiki",
+  "stealthex",
+  "-price-prediction-",
+] as const;
+
+const DATE_WINDOW_DAYS = 3;
+
+export interface RawClaudeSource {
+  publisher?: unknown;
+  title?: unknown;
+  url?: unknown;
+  published_at?: unknown;
+  accessed_at?: unknown;
+  used_for?: unknown;
+  source_strength?: unknown;
+}
+
+export interface SourcePolicyOptions {
+  eventDate?: string;
+  blockedDomains?: string[];
+}
+
+export interface FilteredSources {
+  accepted: ClaudeSourceLink[];
+  rejected: RejectedClaudeSource[];
+}
+
+function toStringOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function normalizeUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value);
+    parsed.hash = "";
+    parsed.searchParams.sort();
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+export function normalizedUrlKey(value: string): string {
+  const normalized = normalizeUrl(value);
+
+  if (!normalized) {
+    return value.trim().toLowerCase();
+  }
+
+  const parsed = new URL(normalized);
+  return `${parsed.hostname.toLowerCase()}${parsed.pathname.toLowerCase()}${parsed.search}`;
+}
+
+function matchesRejectPattern(sourceText: string, blockedDomains: string[]) {
+  const lower = sourceText.toLowerCase();
+  return [...DEFAULT_REJECT_PATTERNS, ...blockedDomains].some((pattern) =>
+    lower.includes(pattern.toLowerCase().replaceAll("*", "")),
+  );
+}
+
+function dateOutsideWindow(publishedAt: string | null, eventDate?: string) {
+  if (!publishedAt || !eventDate) {
+    return false;
+  }
+
+  const published = Date.parse(publishedAt);
+  const event = Date.parse(eventDate);
+
+  if (!Number.isFinite(published) || !Number.isFinite(event)) {
+    return false;
+  }
+
+  const days = Math.abs(published - event) / (24 * 60 * 60 * 1000);
+  return days > DATE_WINDOW_DAYS;
+}
+
+function sourceRole(value: unknown): SourceRole {
+  return isSourceRole(value) ? value : "backdrop";
+}
+
+function sourceStrength(value: unknown): SourceStrength {
+  return isSourceStrength(value) ? value : "acceptable";
+}
+
+function reject(
+  source: RawClaudeSource,
+  rejectionReason: string,
+): RejectedClaudeSource {
+  return {
+    publisher: toStringOrNull(source.publisher) ?? undefined,
+    title: toStringOrNull(source.title) ?? undefined,
+    url: toStringOrNull(source.url) ?? undefined,
+    published_at: toStringOrNull(source.published_at),
+    accessed_at: toStringOrNull(source.accessed_at),
+    used_for: isSourceRole(source.used_for) ? source.used_for : undefined,
+    source_strength: isSourceStrength(source.source_strength)
+      ? source.source_strength
+      : undefined,
+    rejection_reason: rejectionReason,
+  };
+}
+
+export function filterSourceLinks(
+  sources: RawClaudeSource[],
+  options: SourcePolicyOptions = {},
+): FilteredSources {
+  const accepted = new Map<string, ClaudeSourceLink>();
+  const rejected: RejectedClaudeSource[] = [];
+
+  for (const source of sources) {
+    const url = toStringOrNull(source.url);
+
+    if (!url) {
+      rejected.push(reject(source, "missing_url"));
+      continue;
+    }
+
+    const normalized = normalizeUrl(url);
+
+    if (!normalized) {
+      rejected.push(reject(source, "invalid_url"));
+      continue;
+    }
+
+    const title = toStringOrNull(source.title) ?? "";
+    const publisher = toStringOrNull(source.publisher) ?? "Unknown";
+    const publishedAt = toStringOrNull(source.published_at);
+    const accessedAt = toStringOrNull(source.accessed_at);
+    const sourceText = `${publisher} ${title} ${normalizedUrlKey(normalized)}`;
+
+    if (matchesRejectPattern(sourceText, options.blockedDomains ?? [])) {
+      rejected.push(reject(source, "blocked_or_low_quality_source"));
+      continue;
+    }
+
+    if (dateOutsideWindow(publishedAt, options.eventDate)) {
+      rejected.push(reject(source, "outside_event_date_window"));
+      continue;
+    }
+
+    const key = normalizedUrlKey(normalized);
+    accepted.set(key, {
+      publisher,
+      title,
+      url: normalized,
+      published_at: publishedAt,
+      accessed_at: accessedAt,
+      used_for: sourceRole(source.used_for),
+      source_strength: sourceStrength(source.source_strength),
+    });
+  }
+
+  return {
+    accepted: [...accepted.values()],
+    rejected,
+  };
+}

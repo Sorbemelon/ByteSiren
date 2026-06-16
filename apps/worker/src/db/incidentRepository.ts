@@ -1,4 +1,18 @@
 import { ALLOWED_SYMBOLS, VISIBLE_RANGE_DAYS, isoDaysAgo } from "../config.ts";
+import {
+  getAcceptedSourcesForBrief,
+  getBriefByIncidentId,
+} from "./claudeRepository.ts";
+import {
+  analysisLimitedFeedBrief,
+  queuedFeedBrief,
+  sourceLinksToPublicSources,
+  storedBriefToFeedBrief,
+  type PublicFeedBrief,
+  type PublicFeedSource,
+  type StoredClaudeBrief,
+  type ClaudeSourceLink,
+} from "../services/claude/index.ts";
 import type {
   IncidentCandidate,
   MarketTier,
@@ -75,20 +89,13 @@ export interface FeedItem {
   };
   symbols: string[];
   symbol_evidence: SymbolEvidence[];
-  brief: {
-    status: "queued_for_analysis";
-    label: "Waiting for Claude";
-    summary: string;
-    confidence: null;
-    catalyst_status: null;
-    price_context_check: null;
-  };
-  sources: [];
+  brief: PublicFeedBrief;
+  sources: PublicFeedSource[];
   tags: string[];
   has_details: true;
   expanded_details: {
     symbol_evidence: SymbolEvidence[];
-    claude_context: Record<string, never>;
+    claude_context: Record<string, unknown>;
     caveats: string[];
   };
 }
@@ -245,8 +252,16 @@ function ensureAllSymbolEvidence(evidence: SymbolEvidence[]): SymbolEvidence[] {
 }
 
 export function incidentRowToFeedItem(row: IncidentRow): FeedItem {
+  return incidentRowToFeedItemWithBrief(row, null, []);
+}
+
+export function incidentRowToFeedItemWithBrief(
+  row: IncidentRow,
+  brief: StoredClaudeBrief | null,
+  acceptedSources: ClaudeSourceLink[],
+): FeedItem {
   const symbols = parseJsonArray<string>(row.symbols_json);
-  const tags = parseJsonArray<string>(row.tags_json);
+  const incidentTags = parseJsonArray<string>(row.tags_json);
   const symbolEvidence = ensureAllSymbolEvidence(
     parseJsonArray<SymbolEvidence>(row.symbol_evidence_json),
   );
@@ -258,6 +273,17 @@ export function incidentRowToFeedItem(row: IncidentRow): FeedItem {
     severityLabel: row.severity_label,
     severityScore,
   });
+  const publicBrief = brief
+    ? storedBriefToFeedBrief(brief)
+    : row.status === "analysis_limited" ||
+        row.brief_status === "analysis_limited"
+      ? analysisLimitedFeedBrief()
+      : queuedFeedBrief();
+  const briefTags = brief?.tags ?? [];
+  const tags = [...new Set([...incidentTags, ...briefTags])];
+  const publicSources = brief
+    ? sourceLinksToPublicSources(acceptedSources)
+    : [];
 
   return {
     incident_id: row.id,
@@ -281,22 +307,22 @@ export function incidentRowToFeedItem(row: IncidentRow): FeedItem {
     },
     symbols,
     symbol_evidence: symbolEvidence,
-    brief: {
-      status: "queued_for_analysis",
-      label: "Waiting for Claude",
-      summary:
-        "Waiting for Claude analysis. This detection is queued for date-matched web context.",
-      confidence: null,
-      catalyst_status: null,
-      price_context_check: null,
-    },
-    sources: [],
+    brief: publicBrief,
+    sources: publicSources,
     tags,
     has_details: true,
     expanded_details: {
       symbol_evidence: symbolEvidence,
-      claude_context: {},
-      caveats: [],
+      claude_context: brief
+        ? {
+            headline: brief.headline,
+            generated_at: brief.generated_at,
+            analysis_mode: brief.analysis_mode,
+            focused_catalyst: brief.focused_catalyst,
+            broader_context: brief.broader_context,
+          }
+        : {},
+      caveats: brief?.caveats ?? [],
     },
   };
 }
@@ -446,7 +472,15 @@ export async function getRecentIncidentsForFeed(
     .bind(cutoff)
     .all<IncidentRow>();
 
-  return result.results.map(incidentRowToFeedItem);
+  const feedItems: FeedItem[] = [];
+
+  for (const row of result.results) {
+    const brief = await getBriefByIncidentId(db, row.id);
+    const sources = brief ? await getAcceptedSourcesForBrief(db, brief.id) : [];
+    feedItems.push(incidentRowToFeedItemWithBrief(row, brief, sources));
+  }
+
+  return feedItems;
 }
 
 export async function getIncidentById(
@@ -484,5 +518,12 @@ export async function getIncidentById(
     .bind(id)
     .first<IncidentRow>();
 
-  return row ? incidentRowToFeedItem(row) : null;
+  if (!row) {
+    return null;
+  }
+
+  const brief = await getBriefByIncidentId(db, row.id);
+  const sources = brief ? await getAcceptedSourcesForBrief(db, brief.id) : [];
+
+  return incidentRowToFeedItemWithBrief(row, brief, sources);
 }

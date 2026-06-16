@@ -6,6 +6,7 @@ import type { Env } from "./types/env.ts";
 import { createMemoryD1 } from "./test/d1Memory.ts";
 import type { IncidentRow } from "./db/incidentRepository.ts";
 import type { MarketCandle } from "./types/market.ts";
+import { persistClaudeFixtureBriefForTest } from "./db/claudeRepository.ts";
 
 const symbols = [
   "BTCUSDT",
@@ -95,7 +96,47 @@ function makeEnv(options: { incidents?: IncidentRow[] } = {}): Env {
   return {
     DB: db,
     APP_VERSION: "0.1.0-placeholder",
-    BUILD_PHASE: "phase-3b-detector-incidents",
+    BUILD_PHASE: "phase-4a-claude-foundation",
+  };
+}
+
+function claudeFixture(incidentId: string) {
+  return {
+    schema_version: "1.0",
+    generated_at: "2026-06-16T00:00:00.000Z",
+    incident_id: incidentId,
+    analysis_mode: "fixture_test",
+    catalyst_status: "cause_likely",
+    ui_label: "Likely Cause",
+    headline: "Same-day context for broad crypto movement",
+    brief_summary:
+      "Same-day public reporting connected the broad crypto movement to macro context.",
+    confidence: "medium",
+    price_context_check: "matches_binance",
+    main_catalyst: { type: "macro_context" },
+    broader_context: [{ note: "Same-day public context." }],
+    caveats: [
+      "This is same-day public context, not proof of exact 15-minute causation.",
+    ],
+    tags: ["same_day_context"],
+    source_links: [
+      {
+        publisher: "Reuters",
+        title: "Crypto market context",
+        url: "https://www.reuters.com/markets/2026/06/15/crypto-context/",
+        published_at: "2026-06-15",
+        accessed_at: "2026-06-16T00:00:00.000Z",
+        used_for: "likely_cause",
+        source_strength: "strong",
+      },
+      {
+        publisher: "Rejected Page",
+        title: "Crypto forecast page",
+        url: "https://example.com/forecast",
+        used_for: "backdrop",
+        source_strength: "weak",
+      },
+    ],
   };
 }
 
@@ -118,7 +159,7 @@ test("worker returns health and version JSON", async () => {
   assert.equal(health.status, 200);
   assert.equal(version.status, 200);
   assert.equal((await readJson(health)).service, "bytesiren-worker");
-  assert.equal((await readJson(version)).phase, "phase-3b-detector-incidents");
+  assert.equal((await readJson(version)).phase, "phase-4a-claude-foundation");
 });
 
 test("worker returns latest market summary for the approved symbols", async () => {
@@ -193,4 +234,43 @@ test("worker returns intelligence feed items with queued brief shape", async () 
   assert.equal(Array.isArray(first?.sources), true);
   assert.equal((first?.sources as unknown[]).length, 0);
   assert.equal(brief.status, "queued_for_analysis");
+});
+
+test("worker returns stored Claude fixture brief and accepted sources only", async () => {
+  const incident = seededIncident();
+  const { db } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [incident],
+  });
+  const env: Env = {
+    DB: db,
+    APP_VERSION: "0.1.0-placeholder",
+    BUILD_PHASE: "phase-4a-claude-foundation",
+  };
+
+  await persistClaudeFixtureBriefForTest(db, claudeFixture(incident.id), {
+    eventDate: incident.started_at,
+  });
+
+  const response = await worker.fetch(
+    new Request("http://localhost/api/intelligence/feed"),
+    env,
+  );
+  const body = await readJson(response);
+  const items = body.items as Array<Record<string, unknown>>;
+  const first = items[0];
+  const brief = first?.brief as Record<string, unknown>;
+  const sources = first?.sources as Array<Record<string, unknown>>;
+  const serialized = JSON.stringify(body);
+
+  assert.equal(response.status, 200);
+  assert.equal(brief.status, "brief_ready");
+  assert.equal(brief.label, "Likely Cause");
+  assert.equal(sources.length, 1);
+  assert.equal(sources[0].publisher, "Reuters");
+  assert.equal(
+    sources[0].url,
+    "https://www.reuters.com/markets/2026/06/15/crypto-context/",
+  );
+  assert.equal(serialized.includes("Rejected Page"), false);
 });
