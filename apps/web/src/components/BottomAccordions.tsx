@@ -22,12 +22,12 @@ function Accordion({ id, title, children, defaultOpen }: AccordionProps) {
       }}
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500">
-        <span
-          className="text-[13px] font-semibold"
+        <h2
+          className="m-0 text-[13px] font-semibold"
           style={{ color: "var(--text-primary)" }}
         >
           {title}
-        </span>
+        </h2>
         <ChevronDown
           size={15}
           aria-hidden

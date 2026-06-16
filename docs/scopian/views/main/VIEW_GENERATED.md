@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-16T18:04:31+07:00
+generated_at: 2026-06-17T01:46:53+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -14,7 +14,7 @@ canonical_inputs:
 input_hashes:
   view: sha256:39a4b55b602d
   sources: sha256:fab8d5e05966
-  buffer: sha256:e3b0c44298fc
+  buffer: sha256:168257a1c409
   context: sha256:5ef45bc1a5d7
   registry: sha256:4a0448757592
 ---
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-16T18:04:31+07:00
+- generated_at: 2026-06-17T01:46:53+07:00
 
 ## Selected Sources
 
@@ -54,7 +54,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Approved Buffer Summary
 
-- none
+- 2026-06-17T01:12:59+07:00 DEC-20260617-0112-user-header-orange-wordmark-FPDE: User approved keeping the 'Siren' header wordmark as the orange logo-gradient (background-clip:text), an accepted deviation from the loc ... (docs/scopian/views/main/buffer/decisions/DEC-20260617-0112-user-header-orange-wordmark-FPDE.md)
+- 2026-06-17T01:13:04+07:00 DEC-20260617-0113-user-muted-contrast-aa-5W8M: User approved lifting --text-muted and --context-backdrop from #64748b to #828ea1 (~3.9:1 -> ~5.5:1) to meet WCAG AA for small text on d ... (docs/scopian/views/main/buffer/decisions/DEC-20260617-0113-user-muted-contrast-aa-5W8M.md)
 
 ## Scope Checklist
 
@@ -79,6 +80,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-likely-in-scope-selected-layout-46f571e9 | likely_in_scope | Selected layout | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#selected-layout | none | not_checked_in_generated_view |
 | ITEM-likely-in-scope-sitemap-5bac33e7 | likely_in_scope | Sitemap | docs/scopian/sources/08_SEO_SPEC.md#sitemap | none | not_checked_in_generated_view |
 | ITEM-likely-in-scope-suppression-rules-2155a135 | likely_in_scope | Suppression rules | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#suppression-rules | none | not_checked_in_generated_view |
+| ITEM-likely-in-scope-user-approved-lifting-text-muted-55031b97 | likely_in_scope | User approved lifting --text-muted and --context-backdrop from #64748b to #828ea1 (~3.9:1 -> ~5.5:1) to meet WCAG AA for small text on d ... | docs/scopian/views/main/buffer/decisions/DEC-20260617-0113-user-muted-contrast-aa-5W8M.md | approved_buffer | not_checked_in_generated_view |
 | ITEM-likely-in-scope-version-5a350958 | likely_in_scope | Version | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#version | none | not_checked_in_generated_view |
 | ITEM-likely-in-scope-web-search-domain-filter-guidanc-8c16d913 | likely_in_scope | Web Search domain filter guidance | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#web-search-domain-filter-guidance | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-accessibility-requirements-6ca0a2f5 | allowed_with_limits | Accessibility requirements | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#accessibility-requirements | none | not_checked_in_generated_view |
@@ -147,6 +149,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-tool-behavior-b3e8a175 | allowed_with_limits | Tool behavior | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#tool-behavior | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-top-compact-safety-pill-b882e74c | allowed_with_limits | Top compact safety pill | docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md#top-compact-safety-pill | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-ui-f4964ec8 | allowed_with_limits | UI | docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md#ui | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-user-approved-keeping-the-siren-a9cd4f89 | allowed_with_limits | User approved keeping the 'Siren' header wordmark as the orange logo-gradient (background-clip:text), an accepted deviation from the loc ... | docs/scopian/views/main/buffer/decisions/DEC-20260617-0112-user-header-orange-wordmark-FPDE.md | approved_buffer | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-user-prompt-template-cause-suppo-ff2eb9ae | allowed_with_limits | User prompt template: cause_supported => UI label Focused Cause; cause_likely => UI label Likely Cause; context_only => UI label Market Backdrop; none_found ... | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#user-prompt-template | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-when-to-call-claude-40241b1e | allowed_with_limits | When to call Claude | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#when-to-call-claude | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-where-to-use-orange-4cf1933e | allowed_with_limits | Where to use orange | docs/scopian/sources/07_VISUAL_THEME_AND_BRAND.md#where-to-use-orange | none | not_checked_in_generated_view |
@@ -170,8 +173,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Coverage Snapshot
 
-- likely_in_scope: 21
-- allowed_with_limits: 71
+- likely_in_scope: 22
+- allowed_with_limits: 72
 - likely_out_of_scope: 15
 - decision_required: 0
 - conflict_detected: 0
@@ -187,15 +190,15 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-16T18:04:31+07:00
+- generated_refresh: 2026-06-17T01:46:53+07:00
 - selected_sources: 16
-- approved_buffer_records: 0
+- approved_buffer_records: 2
 
 ## Freshness Metadata
 
 - view: sha256:39a4b55b602d
 - sources: sha256:fab8d5e05966
-- buffer: sha256:e3b0c44298fc
+- buffer: sha256:168257a1c409
 - context: sha256:5ef45bc1a5d7
 - registry: sha256:4a0448757592
 

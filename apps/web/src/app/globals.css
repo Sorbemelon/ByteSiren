@@ -16,7 +16,9 @@
   /* ── Text ── */
   --text-primary: #e5e7eb;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  /* Lifted from slate-500 (#64748b, ~3.9:1) to meet WCAG AA (≥4.5:1) for the
+     small helper/date/column text it carries on the dark panels. */
+  --text-muted: #828ea1;
 
   /* ── Interface accent (violet) ── */
   --accent-primary: #8b5cf6;
@@ -33,7 +35,8 @@
   /* ── Evidence confidence ── */
   --cause-focused: #10b981;
   --cause-likely: #14b8a6;
-  --context-backdrop: #64748b;
+  /* Blue-gray for Market Backdrop, lifted to AA (was #64748b ~3.9:1). */
+  --context-backdrop: #828ea1;
   --none-found: #94a3b8;
   --claude-limited: #8b5cf6;
 
@@ -97,6 +100,18 @@ a {
   color: inherit;
 }
 
+button:not(:disabled),
+a[href],
+summary,
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;
@@ -126,6 +141,62 @@ details > summary {
 }
 details > summary::-webkit-details-marker {
   display: none;
+}
+
+/* ── Brand wordmark ── */
+/* Solid orange by default; upgrades to the logo gradient only where
+   background-clip:text is supported, so the wordmark never renders invisible. */
+.brand-wordmark {
+  color: var(--brand-orange);
+}
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .brand-wordmark {
+    background-image: linear-gradient(
+      135deg,
+      var(--brand-orange-deep) 0%,
+      var(--brand-orange) 38%,
+      var(--brand-orange-amber) 72%,
+      var(--brand-orange-yellow) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* ── Chart symbol tabs ── */
+.chart-tab {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: var(--text-secondary);
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+.chart-tab:hover {
+  border-color: rgba(148, 163, 184, 0.45);
+  color: var(--text-primary);
+}
+.chart-tab[aria-selected="true"] {
+  border-color: var(--accent-primary);
+  background: var(--accent-selected-bg);
+  color: #c4b5fd;
+}
+
+/* ── Feed row ── */
+.feed-row {
+  background: var(--bg-row);
+  border: 1px solid var(--border-row);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.feed-row:hover {
+  border-color: var(--border-panel-hover);
+}
+.feed-row[data-selected="true"] {
+  border-color: var(--accent-selected-border);
+  box-shadow: var(--accent-selected-shadow);
 }
 
 /* ── Reduced motion ── */

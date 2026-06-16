@@ -377,14 +377,8 @@ function FeedRow({ item, isSelected, isExpanded, onToggle }: FeedRowProps) {
 
   return (
     <article
-      className="relative rounded-2xl border transition-colors"
-      style={{
-        background: "var(--bg-row)",
-        border: isSelected
-          ? "1px solid var(--accent-selected-border)"
-          : "1px solid var(--border-row)",
-        boxShadow: isSelected ? "var(--accent-selected-shadow)" : "none",
-      }}
+      className="feed-row relative rounded-2xl"
+      data-selected={isSelected}
     >
       {/* Header region: a dedicated expand button is stretched over it; source
           links sit above as separate interactive siblings (valid HTML). */}
@@ -519,7 +513,7 @@ export default function IntelligenceFeed({
   return (
     <section
       aria-label="Intelligence Feed"
-      className="flex flex-col rounded-2xl p-4"
+      className="flex h-full min-h-0 flex-col rounded-2xl p-4"
       style={{
         background: "var(--bg-panel)",
         border: "1px solid var(--border-panel)",
@@ -530,7 +524,7 @@ export default function IntelligenceFeed({
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
           <h2
-            className="text-[16px] font-semibold"
+            className="text-[22px] font-semibold leading-tight"
             style={{ color: "var(--text-primary)" }}
           >
             Intelligence Feed
@@ -579,10 +573,7 @@ export default function IntelligenceFeed({
       </div>
 
       {/* Feed rows */}
-      <div
-        className="flex flex-col gap-2 overflow-y-auto pr-0.5"
-        style={{ maxHeight: "calc(100% - 120px)", minHeight: 200 }}
-      >
+      <div className="flex min-h-50 flex-1 flex-col gap-2 overflow-y-auto pr-0.5">
         {loading && (
           <div className="flex items-center justify-center py-8">
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>

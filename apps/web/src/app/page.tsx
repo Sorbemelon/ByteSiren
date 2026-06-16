@@ -55,11 +55,11 @@ export default function Home() {
   );
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8">
+    <main className="flex min-h-screen w-full flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8 2xl:px-10">
       <Header updatedAt={updatedAt} />
 
       <section
-        className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]"
+        className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.78fr)] lg:grid-rows-[auto_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.72fr)]"
         aria-label="AI Crypto Market Intelligence Monitor"
       >
         <ChartPanel
@@ -71,7 +71,7 @@ export default function Home() {
         />
 
         <div
-          className="overflow-y-auto rounded-2xl lg:max-h-[calc(100vh-8rem)]"
+          className="min-h-0 rounded-2xl lg:col-start-2 lg:row-span-2 lg:row-start-1"
           style={{ scrollbarGutter: "stable" } as React.CSSProperties}
         >
           <IntelligenceFeed
@@ -82,9 +82,11 @@ export default function Home() {
             loading={feedLoading}
           />
         </div>
-      </section>
 
-      <BottomAccordions />
+        <div className="lg:col-start-1 lg:row-start-2">
+          <BottomAccordions />
+        </div>
+      </section>
 
       <p className="sr-only">
         Displaying {feed.length} market-wide intelligence events from the past

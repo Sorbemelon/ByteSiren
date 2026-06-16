@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { MarketLatest, FeedItem, CandleBar, Symbol } from "../lib/types";
 import { SYMBOLS, SYMBOL_FULL } from "../lib/types";
 import { generateCandles, IS_DEV } from "../lib/mockData";
@@ -99,8 +99,6 @@ export default function ChartPanel({
       });
   }, [symbolFull]);
 
-  const memoCandles = useMemo(() => candles, [candles]);
-
   return (
     <section
       aria-label="Market Chart"
@@ -111,6 +109,7 @@ export default function ChartPanel({
         boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
       }}
     >
+      <h2 className="sr-only">Market Chart</h2>
       {/* Symbol tabs + helper */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div role="tablist" aria-label="Chart symbol" className="flex gap-1.5">
@@ -122,19 +121,7 @@ export default function ChartPanel({
                 role="tab"
                 aria-selected={active}
                 onClick={() => onSymbolChange(sym)}
-                className="rounded-md border px-3 py-1 text-xs font-semibold transition-colors"
-                style={
-                  active
-                    ? {
-                        borderColor: "var(--accent-primary)",
-                        background: "var(--accent-selected-bg)",
-                        color: "#c4b5fd",
-                      }
-                    : {
-                        borderColor: "rgba(148,163,184,0.2)",
-                        color: "var(--text-muted)",
-                      }
-                }
+                className="chart-tab rounded-md px-3 py-1.5 text-xs font-semibold"
               >
                 {sym}
               </button>
@@ -151,7 +138,6 @@ export default function ChartPanel({
         className="rounded-xl p-3"
         style={{
           background: "rgba(16,23,41,0.5)",
-          border: "1px solid rgba(148,163,184,0.1)",
         }}
       >
         <p
@@ -220,9 +206,9 @@ export default function ChartPanel({
         className="overflow-hidden rounded-xl"
         style={{ background: "rgba(16,23,41,0.4)" }}
       >
-        {memoCandles.length > 0 ? (
+        {candles.length > 0 ? (
           <TradingViewChart
-            candles={memoCandles}
+            candles={candles}
             feed={feed}
             selectedIncidentId={selectedIncidentId}
           />
