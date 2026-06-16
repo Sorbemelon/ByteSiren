@@ -1,13 +1,32 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Cloudflare / local runtime
+.wrangler/
+.dev.vars
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local tool state
 .crosshelix/
-__pycache__/
-*.py[cod]
-*.pyc
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-*.egg-info/
-.audit_final/
-.audit_*/
-.claude/settings.local.json
-*.local.json
 .scopian/
+
+# Logs and OS files
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db

@@ -1,0 +1,20 @@
+name = "bytesiren-worker"
+main = "apps/worker/src/index.ts"
+compatibility_date = "2026-06-16"
+
+[vars]
+APP_VERSION = "0.1.0-placeholder"
+BUILD_PHASE = "phase-1a-cloudflare-foundation"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bytesiren-placeholder"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "apps/worker/migrations"
+
+[triggers]
+crons = [
+  "*/5 * * * *",
+  "*/15 * * * *",
+  "17 0 * * *"
+]
