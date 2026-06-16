@@ -6,7 +6,9 @@ import {
 import { recordJobRun } from "./db/marketRepository.ts";
 import { cleanupOldData } from "./jobs/cleanupOldData.ts";
 import { pollMarket } from "./jobs/pollMarket.ts";
+import { runDetector } from "./jobs/runDetector.ts";
 import { healthResponse, versionResponse } from "./routes/health.ts";
+import { intelligenceFeedResponse } from "./routes/intelligence.ts";
 import {
   latestMarketResponse,
   marketCandlesResponse,
@@ -43,6 +45,10 @@ export default {
       if (url.pathname === "/api/market/candles") {
         return await marketCandlesResponse(request, env.DB);
       }
+
+      if (url.pathname === "/api/intelligence/feed") {
+        return await intelligenceFeedResponse(env.DB);
+      }
     } catch (error) {
       return jsonError(500, "internal_error", safeErrorMessage(error));
     }
@@ -53,6 +59,7 @@ export default {
   async scheduled(controller: ScheduledController, env: Env): Promise<void> {
     if (controller.cron === POLL_MARKET_CRON) {
       await pollMarket(env.DB);
+      await runDetector(env.DB);
       return;
     }
 

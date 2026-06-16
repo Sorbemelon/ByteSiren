@@ -188,6 +188,14 @@ export async function getCandlesForSymbol(
   now = new Date(),
 ): Promise<MarketCandle[]> {
   const cutoff = isoDaysAgo(VISIBLE_RANGE_DAYS, now);
+  return getCandlesForSymbolSince(db, symbol, cutoff);
+}
+
+export async function getCandlesForSymbolSince(
+  db: D1Database,
+  symbol: MarketSymbol,
+  cutoffIso: string,
+): Promise<MarketCandle[]> {
   const result = await db
     .prepare(
       `SELECT symbol, interval, open_time, close_time, open, high, low, close, volume, quote_volume, trade_count
@@ -195,7 +203,7 @@ export async function getCandlesForSymbol(
        WHERE symbol = ? AND interval = ? AND open_time >= ?
        ORDER BY open_time ASC`,
     )
-    .bind(symbol, MARKET_INTERVAL, cutoff)
+    .bind(symbol, MARKET_INTERVAL, cutoffIso)
     .all<MarketCandleRow>();
 
   return result.results.map(toMarketCandle);

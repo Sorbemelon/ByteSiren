@@ -14,6 +14,6 @@ export function versionResponse(env: Env): Response {
     ok: true,
     service: "bytesiren-worker",
     version: env.APP_VERSION ?? "0.1.0-placeholder",
-    phase: env.BUILD_PHASE ?? "phase-2a-market-ingestion",
+    phase: env.BUILD_PHASE ?? "phase-3b-detector-incidents",
   });
 }

@@ -65,9 +65,9 @@ function highestSeverityEvent(events: RawMarketEvent[]): RawMarketEvent {
   );
 }
 
-function maxSeverity(events: RawMarketEvent[]): number {
+function averageHeadlineSeverity(events: RawMarketEvent[]): number {
   return roundNumber(
-    Math.max(...events.map((event) => event.headline_severity)),
+    average(events.map((event) => event.headline_severity)) ?? 0,
     4,
   );
 }
@@ -102,7 +102,7 @@ function candidateFromEvents(input: {
 }): IncidentCandidate {
   const events = sortEvents(input.events);
   const representative = highestSeverityEvent(events);
-  const headlineSeverity = maxSeverity(events);
+  const headlineSeverity = averageHeadlineSeverity(events);
   const breadthCount = maxBreadth(events);
   const maxSymbolSeverity = maxElevatedSeverity(events);
   const peakEvent = events.reduce((highest, event) =>

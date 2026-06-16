@@ -523,8 +523,10 @@ test("grouping creates market day, merges same direction, and preserves sub-even
   assert.equal(grouped[0].scope, "market_day");
   assert.equal(grouped[0].direction, "two_sided");
   assert.equal(grouped[0].sub_events.length, 2);
+  assert.equal(grouped[0].headline_severity, 92.5);
   assert.equal(grouped[1].scope, "market_wide");
   assert.equal(grouped[1].sub_events.length, 2);
+  assert.equal(grouped[1].headline_severity, 82.5);
   assert.equal(grouped[2].scope, "market_wide");
   assert.equal(grouped[2].sub_events.length, 1);
   assert.equal(grouped[0].symbol_evidence.length, 5);

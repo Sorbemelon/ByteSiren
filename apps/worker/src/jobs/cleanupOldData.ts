@@ -3,6 +3,7 @@ import {
   recordJobRun,
   retentionCutoffIso,
 } from "../db/marketRepository.ts";
+import { cleanupDetectorDataOlderThan31Days } from "../db/detectorRepository.ts";
 import { safeErrorMessage } from "../utils/http.ts";
 
 export interface CleanupOldDataResult {
@@ -12,6 +13,8 @@ export interface CleanupOldDataResult {
   deleted: {
     market_candles: number;
     market_features: number;
+    raw_signal_events: number;
+    incidents: number;
   };
 }
 
@@ -23,7 +26,18 @@ export async function cleanupOldData(
   const cutoffIso = retentionCutoffIso(now);
 
   try {
-    const deleted = await cleanupOldMarketData(db, cutoffIso);
+    const marketDeleted = await cleanupOldMarketData(db, cutoffIso);
+    const detectorDeleted = await cleanupDetectorDataOlderThan31Days(
+      db,
+      cutoffIso,
+    );
+    const deleted = {
+      market_candles: marketDeleted.market_candles,
+      market_features:
+        marketDeleted.market_features + detectorDeleted.market_features,
+      raw_signal_events: detectorDeleted.raw_signal_events,
+      incidents: detectorDeleted.incidents,
+    };
     const message = `Cleanup completed for records older than ${cutoffIso}.`;
 
     await recordJobRun(
@@ -67,6 +81,8 @@ export async function cleanupOldData(
       deleted: {
         market_candles: 0,
         market_features: 0,
+        raw_signal_events: 0,
+        incidents: 0,
       },
     };
   }
