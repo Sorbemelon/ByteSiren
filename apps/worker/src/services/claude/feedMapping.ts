@@ -59,5 +59,6 @@ export function sourceLinksToPublicSources(
     url: source.url,
     published_at: source.published_at,
     used_for: source.used_for,
+    source_strength: source.source_strength,
   }));
 }

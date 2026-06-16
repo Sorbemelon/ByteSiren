@@ -43,6 +43,21 @@ interface SourceReferenceRow {
 export interface ClaudeCleanupCounts {
   claude_briefs: number;
   source_references: number;
+  claude_analysis_usage: number;
+}
+
+export interface ClaudeAnalysisUsage {
+  usage_date: string;
+  analysis_count: number;
+  web_search_requests: number;
+  updated_at: string | null;
+}
+
+interface ClaudeUsageRow {
+  usage_date: string;
+  analysis_count: number;
+  web_search_requests: number;
+  updated_at: string | null;
 }
 
 function changedRows(result: D1Result<unknown>): number {
@@ -335,10 +350,102 @@ export async function markIncidentAnalysisLimited(
     .run();
 }
 
+export async function markIncidentEnriching(
+  db: D1Database,
+  incidentId: string,
+  now = new Date(),
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE incidents
+       SET analysis_attempt_count = analysis_attempt_count + 1,
+           analysis_last_attempt_at = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+    )
+    .bind(now.toISOString(), incidentId)
+    .run();
+}
+
+export async function markIncidentRetryable(
+  db: D1Database,
+  incidentId: string,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE incidents
+       SET status = ?,
+           brief_status = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+    )
+    .bind("failed_retryable", "failed_retryable", incidentId)
+    .run();
+}
+
+export async function getClaudeUsageForToday(
+  db: D1Database,
+  now = new Date(),
+): Promise<ClaudeAnalysisUsage> {
+  const usageDate = now.toISOString().slice(0, 10);
+  const row = await db
+    .prepare(
+      `SELECT usage_date, analysis_count, web_search_requests, updated_at
+       FROM claude_analysis_usage
+       WHERE usage_date = ?`,
+    )
+    .bind(usageDate)
+    .first<ClaudeUsageRow>();
+
+  return {
+    usage_date: usageDate,
+    analysis_count: row?.analysis_count ?? 0,
+    web_search_requests: row?.web_search_requests ?? 0,
+    updated_at: row?.updated_at ?? null,
+  };
+}
+
+export async function recordClaudeUsageForToday(
+  db: D1Database,
+  input: {
+    analyses: number;
+    webSearchRequests: number;
+    now?: Date;
+  },
+): Promise<void> {
+  const usageDate = (input.now ?? new Date()).toISOString().slice(0, 10);
+
+  await db
+    .prepare(
+      `INSERT INTO claude_analysis_usage (
+        usage_date,
+        analysis_count,
+        web_search_requests,
+        updated_at
+      )
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(usage_date)
+      DO UPDATE SET
+        analysis_count = analysis_count + excluded.analysis_count,
+        web_search_requests = web_search_requests + excluded.web_search_requests,
+        updated_at = CURRENT_TIMESTAMP`,
+    )
+    .bind(usageDate, input.analyses, input.webSearchRequests)
+    .run();
+}
+
 export async function cleanupClaudeDataOlderThan31Days(
   db: D1Database,
   cutoffIso: string,
 ): Promise<ClaudeCleanupCounts> {
+  const usageCutoffDate = cutoffIso.slice(0, 10);
+  const usageResult = await db
+    .prepare(
+      `DELETE FROM claude_analysis_usage
+       WHERE usage_date < ?`,
+    )
+    .bind(usageCutoffDate)
+    .run();
   const sourceResult = await db
     .prepare(
       `DELETE FROM source_references
@@ -361,6 +468,7 @@ export async function cleanupClaudeDataOlderThan31Days(
   return {
     source_references: changedRows(sourceResult),
     claude_briefs: changedRows(briefResult),
+    claude_analysis_usage: changedRows(usageResult),
   };
 }
 

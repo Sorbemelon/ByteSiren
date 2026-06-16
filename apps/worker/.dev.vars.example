@@ -1,8 +1,35 @@
+# ByteSiren Worker local environment example
+# Copy this file to apps/worker/.dev.vars for local development.
+# Never commit apps/worker/.dev.vars.
+
 ANTHROPIC_API_KEY=
-CLAUDE_MODEL=
-CLAUDE_WEB_SEARCH_TOOL_TYPE=
-CLAUDE_DEFAULT_MAX_USES=
-CLAUDE_SECOND_SEARCH_MAX_USES=
-CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT=
-CLAUDE_ALLOWED_DOMAINS=
+
+# Claude model for market-intelligence briefs.
+# Current balanced default on the Claude API.
+CLAUDE_MODEL=claude-sonnet-4-6
+
+# Use the basic Web Search tool for Phase 4B.
+# The newer web_search_20260209 is for dynamic filtering and requires code execution support,
+# so keep Phase 4B simpler with web_search_20250305 first.
+CLAUDE_WEB_SEARCH_TOOL_TYPE=web_search_20250305
+
+# Default one search per qualifying incident.
+CLAUDE_DEFAULT_MAX_USES=1
+
+# Allow a second search only for strict fallback cases:
+# none_found, context_only without focused cause, rejected-only first result,
+# severity 100 + breadth 5, or two-sided market_day.
+CLAUDE_SECOND_SEARCH_MAX_USES=2
+
+# Conservative free-public-demo daily cap.
+# Increase to 8 later if too many visible incidents remain queued/limited.
+CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT=5
+
+# Prefer allowed domains for source quality.
+# Use domains only, no https://.
+# Do not set CLAUDE_BLOCKED_DOMAINS when this is set.
+CLAUDE_ALLOWED_DOMAINS=coindesk.com,reuters.com,apnews.com,cnbc.com,fortune.com,yahoo.com,theblock.co,blockworks.co,decrypt.co,cointelegraph.com,coinmarketcap.com,coinshares.com,farside.co.uk,investing.com,binance.com,ethereum.org,solana.com,ripple.com,bnbchain.org,sec.gov,cftc.gov,federalreserve.gov
+
+# Leave blank when CLAUDE_ALLOWED_DOMAINS is set.
+# Claude Web Search supports either allowed_domains or blocked_domains, not both.
 CLAUDE_BLOCKED_DOMAINS=

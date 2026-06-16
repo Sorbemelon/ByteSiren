@@ -1,10 +1,10 @@
 import {
-  CLAUDE_PLACEHOLDER_CRON,
+  CLAUDE_ENRICHMENT_CRON,
   CLEANUP_CRON,
   POLL_MARKET_CRON,
 } from "./config.ts";
-import { recordJobRun } from "./db/marketRepository.ts";
 import { cleanupOldData } from "./jobs/cleanupOldData.ts";
+import { enrichQueuedIncidents } from "./jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "./jobs/pollMarket.ts";
 import { runDetector } from "./jobs/runDetector.ts";
 import { healthResponse, versionResponse } from "./routes/health.ts";
@@ -68,16 +68,8 @@ export default {
       return;
     }
 
-    if (controller.cron === CLAUDE_PLACEHOLDER_CRON) {
-      await recordJobRun(
-        env.DB,
-        "claude_enrichment_placeholder",
-        "skipped",
-        "Claude enrichment not enabled in Phase 4A.",
-        {
-          cron: controller.cron,
-        },
-      );
+    if (controller.cron === CLAUDE_ENRICHMENT_CRON) {
+      await enrichQueuedIncidents(env.DB, env);
     }
   },
 } satisfies ExportedHandler<Env>;

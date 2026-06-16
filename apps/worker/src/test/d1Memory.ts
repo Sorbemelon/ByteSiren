@@ -80,6 +80,13 @@ interface SourceReferenceRow {
   created_at: string;
 }
 
+interface ClaudeAnalysisUsageRow {
+  usage_date: string;
+  analysis_count: number;
+  web_search_requests: number;
+  updated_at: string;
+}
+
 export interface MemoryD1Tables {
   market_candles: MarketCandle[];
   market_features: MarketFeatureRow[];
@@ -87,6 +94,7 @@ export interface MemoryD1Tables {
   incidents: IncidentRow[];
   claude_briefs: ClaudeBriefRow[];
   source_references: SourceReferenceRow[];
+  claude_analysis_usage: ClaudeAnalysisUsageRow[];
   job_runs: JobRunRow[];
 }
 
@@ -101,6 +109,7 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
     incidents: [...(initial.incidents ?? [])],
     claude_briefs: [...(initial.claude_briefs ?? [])],
     source_references: [...(initial.source_references ?? [])],
+    claude_analysis_usage: [...(initial.claude_analysis_usage ?? [])],
     job_runs: [...(initial.job_runs ?? [])],
   };
 
@@ -176,6 +185,29 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
 
       if (
         this.sql.includes("FROM incidents") &&
+        this.sql.includes("brief_status IN")
+      ) {
+        const cutoff = this.params[0] as string;
+        const limit = this.params.at(-1) as number;
+        const statuses = new Set(
+          this.params.slice(1, -1).map((value) => String(value)),
+        );
+
+        return {
+          results: tables.incidents
+            .filter(
+              (row) =>
+                row.started_at >= cutoff &&
+                (row.scope === "market_wide" || row.scope === "market_day") &&
+                statuses.has(row.brief_status),
+            )
+            .sort((a, b) => b.started_at.localeCompare(a.started_at))
+            .slice(0, limit) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM incidents") &&
         this.sql.includes("started_at >= ?")
       ) {
         const [cutoff] = this.params as [string];
@@ -237,6 +269,13 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           )[0];
 
         return (row ?? null) as T;
+      }
+
+      if (this.sql.includes("FROM claude_analysis_usage")) {
+        const [usageDate] = this.params as [string];
+        return (tables.claude_analysis_usage.find(
+          (row) => row.usage_date === usageDate,
+        ) ?? null) as T;
       }
 
       return null as T;
@@ -568,7 +607,56 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         return result(1);
       }
 
+      if (this.sql.includes("INSERT INTO claude_analysis_usage")) {
+        const [usageDate, analysisCount, webSearchRequests] = this.params as [
+          string,
+          number,
+          number,
+        ];
+        const existing = tables.claude_analysis_usage.find(
+          (row) => row.usage_date === usageDate,
+        );
+        const now = new Date().toISOString();
+
+        if (existing) {
+          existing.analysis_count += analysisCount;
+          existing.web_search_requests += webSearchRequests;
+          existing.updated_at = now;
+        } else {
+          tables.claude_analysis_usage.push({
+            usage_date: usageDate,
+            analysis_count: analysisCount,
+            web_search_requests: webSearchRequests,
+            updated_at: now,
+          });
+        }
+
+        return result(1);
+      }
+
       if (this.sql.includes("UPDATE incidents")) {
+        if (this.sql.includes("analysis_attempt_count")) {
+          const [attemptedAt, incidentId] = this.params as [string, string];
+          const incident = tables.incidents.find(
+            (row) => row.id === incidentId,
+          );
+
+          if (!incident) {
+            return result(0);
+          }
+
+          const mutableIncident = incident as IncidentRow & {
+            analysis_attempt_count?: number;
+            analysis_last_attempt_at?: string;
+          };
+          mutableIncident.analysis_attempt_count =
+            (mutableIncident.analysis_attempt_count ?? 0) + 1;
+          mutableIncident.analysis_last_attempt_at = attemptedAt;
+          incident.updated_at = new Date().toISOString();
+
+          return result(1);
+        }
+
         const hasExplicitStatus = this.sql.includes("SET status = ?");
         const [status, briefStatus, incidentId] = hasExplicitStatus
           ? (this.params as [string, string, string])
@@ -679,6 +767,15 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           (row) => (row.generated_at ?? row.created_at) >= cutoff,
         );
         return result(before - tables.claude_briefs.length);
+      }
+
+      if (this.sql.includes("DELETE FROM claude_analysis_usage")) {
+        const [cutoff] = this.params as [string];
+        const before = tables.claude_analysis_usage.length;
+        tables.claude_analysis_usage = tables.claude_analysis_usage.filter(
+          (row) => row.usage_date >= cutoff,
+        );
+        return result(before - tables.claude_analysis_usage.length);
       }
 
       return result(0);

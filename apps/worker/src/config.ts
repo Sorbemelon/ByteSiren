@@ -19,7 +19,7 @@ export const RECENT_KLINES_LIMIT = 200;
 export const BINANCE_USER_AGENT = "ByteSiren/0.1";
 
 export const POLL_MARKET_CRON = "*/5 * * * *";
-export const CLAUDE_PLACEHOLDER_CRON = "*/15 * * * *";
+export const CLAUDE_ENRICHMENT_CRON = "*/15 * * * *";
 export const CLEANUP_CRON = "17 0 * * *";
 
 const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);

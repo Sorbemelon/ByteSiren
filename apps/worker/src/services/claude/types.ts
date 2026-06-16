@@ -133,6 +133,7 @@ export interface PublicFeedSource {
   url: string;
   published_at: string | null;
   used_for: SourceRole;
+  source_strength: SourceStrength;
 }
 
 export interface ClaudePromptInput {
@@ -156,6 +157,59 @@ export interface ClaudePromptBuildResult {
   incident_json: Record<string, unknown>;
 }
 
+export type ClaudeToolErrorCode =
+  | "too_many_requests"
+  | "invalid_input"
+  | "max_uses_exceeded"
+  | "query_too_long"
+  | "unavailable"
+  | "http_error"
+  | "parse_error"
+  | "unknown";
+
+export interface ClaudeResponseMetadata {
+  searches_used: number;
+  claude_model: string;
+  tool_type: string;
+  max_uses: number;
+  error_code: ClaudeToolErrorCode | null;
+  generated_at: string;
+}
+
+export interface ClaudeCitationSource {
+  publisher: string;
+  title: string;
+  url: string;
+  published_at: string | null;
+  accessed_at: string | null;
+  used_for: SourceRole;
+  source_strength: SourceStrength;
+}
+
+export interface ClaudeParsedMessage {
+  json: unknown | null;
+  text: string;
+  citations: ClaudeCitationSource[];
+  metadata: ClaudeResponseMetadata;
+  retryable: boolean;
+  error_message: string | null;
+}
+
+export interface ClaudeClientRequest {
+  system_prompt: string;
+  user_prompt: string;
+  model: string;
+  tool_type: string;
+  max_uses: number;
+  allowed_domains: string[];
+  blocked_domains: string[];
+}
+
+export interface ClaudeClientResult {
+  ok: boolean;
+  parsed: ClaudeParsedMessage;
+}
+
 function parseInteger(value: string | undefined, fallback: number): number {
   const parsed = Number.parseInt(value ?? "", 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -172,7 +226,7 @@ export function claudeWebSearchPolicyFromEnv(
   env: Partial<Env> = {},
 ): ClaudeWebSearchPolicy {
   return {
-    tool_type: env.CLAUDE_WEB_SEARCH_TOOL_TYPE || "configurable_web_search",
+    tool_type: env.CLAUDE_WEB_SEARCH_TOOL_TYPE || "web_search_20250305",
     model: env.CLAUDE_MODEL || null,
     default_max_uses: parseInteger(env.CLAUDE_DEFAULT_MAX_USES, 1),
     second_search_max_uses: parseInteger(env.CLAUDE_SECOND_SEARCH_MAX_USES, 2),

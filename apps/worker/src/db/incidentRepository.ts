@@ -483,6 +483,62 @@ export async function getRecentIncidentsForFeed(
   return feedItems;
 }
 
+export async function getNextIncidentsForEnrichment(
+  db: D1Database,
+  options: {
+    limit?: number;
+    days?: number;
+    includeAnalysisLimited?: boolean;
+    now?: Date;
+  } = {},
+): Promise<IncidentRow[]> {
+  const cutoff = isoDaysAgo(
+    options.days ?? VISIBLE_RANGE_DAYS,
+    options.now ?? new Date(),
+  );
+  const limit = Math.max(1, Math.min(options.limit ?? 1, 10));
+  const statuses = options.includeAnalysisLimited
+    ? ["queued_for_analysis", "failed_retryable", "analysis_limited"]
+    : ["queued_for_analysis", "failed_retryable"];
+  const placeholders = statuses.map(() => "?").join(", ");
+  const result = await db
+    .prepare(
+      `SELECT
+        id,
+        incident_key,
+        macro_day_cache_key,
+        scope,
+        direction,
+        started_at,
+        ended_at,
+        signal_window,
+        baseline_window,
+        headline_severity,
+        severity_label,
+        breadth_count,
+        breadth_label,
+        symbols_json,
+        tags_json,
+        sub_events_json,
+        symbol_evidence_json,
+        query_hints_json,
+        status,
+        brief_status,
+        created_at,
+        updated_at
+       FROM incidents
+       WHERE started_at >= ?
+         AND scope IN ('market_wide', 'market_day')
+         AND brief_status IN (${placeholders})
+       ORDER BY started_at DESC
+       LIMIT ?`,
+    )
+    .bind(cutoff, ...statuses, limit)
+    .all<IncidentRow>();
+
+  return result.results;
+}
+
 export async function getIncidentById(
   db: D1Database,
   id: string,
