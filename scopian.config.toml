@@ -1,0 +1,8 @@
+[project]
+default_view = "main"
+
+[tag_suggestions]
+feature = ["feature:billing", "feature:workspace-settings"]
+area = ["area:frontend", "area:backend", "area:auth"]
+risk = ["risk:payment-mutation", "risk:email-workflow"]
+status = ["status:future-scope", "status:out-of-scope"]

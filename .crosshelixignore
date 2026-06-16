@@ -1,0 +1,62 @@
+# Secrets and local config
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*secret*
+*secrets*
+*credential*
+*credentials*
+
+# Local state and generated data
+.crosshelix/
+.git/
+.venv/
+venv/
+node_modules/
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
+*.egg-info/
+.audit_final/
+.claude/settings.local.json
+*.local.json
+.scopian/
+
+# Generated Scopian view artifacts
+docs/scopian/views/*/PM_SUMMARY.md
+docs/scopian/views/*/GENERATED_SCOPE_VIEW.md
+docs/scopian/views/*/SCOPE_CHECKLIST.md
+docs/scopian/views/*/CHANGELOG.md
+docs/scopian/views/*/context.yml
+docs/scopian/views/*/checks/
+docs/scopian/views/*/generated/
+
+# Logs and dumps
+*.log
+logs/
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+*.tmp
+
+# Large/binary archives
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar

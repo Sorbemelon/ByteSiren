@@ -1,0 +1,13 @@
+.crosshelix/
+__pycache__/
+*.py[cod]
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.audit_final/
+.audit_*/
+.claude/settings.local.json
+*.local.json
+.scopian/

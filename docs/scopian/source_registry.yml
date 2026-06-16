@@ -1,0 +1,85 @@
+sources:
+  - id: SRC-00-source-index
+    path: docs/scopian/sources/00_SOURCE_INDEX.md
+    status: active
+    content_hash: sha256:815b801323b8eac7a634c6a58fec76ddf4aa7d33d74bbcb5c3dbe3add651c3ed
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-01-product-spec
+    path: docs/scopian/sources/01_PRODUCT_SPEC.md
+    status: active
+    content_hash: sha256:5e1166ce582094a06466cc038086a6de0a117a5fa2a69880d23a60ea5e21d8f7
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-02-signal-engine-v2-2
+    path: docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md
+    status: active
+    content_hash: sha256:6ee10db5ff934f5552c83fcad278e7c3e2ee2e981031f6b2e88ee68aa7e5bdbf
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-03-claude-enrichment-policy
+    path: docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md
+    status: active
+    content_hash: sha256:45ed0532068964b670036ff14b982c66b1ab8a4ba4c9eec37b4b928c69d07585
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-04-cloudflare-architecture-and-api
+    path: docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md
+    status: active
+    content_hash: sha256:d7b0f9e8541535f3bf5759850b3d99bec0b7e9a6c5b8a4ceefee648340457804
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-05-data-model-d1-retention
+    path: docs/scopian/sources/05_DATA_MODEL_D1_RETENTION.md
+    status: active
+    content_hash: sha256:5a0b20dc06b930686f5637f3233c17107af1413f481739f316131d89b7454ee6
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-06-ui-ux-variant-a-spec
+    path: docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md
+    status: active
+    content_hash: sha256:9626f814df5a410628a0f8423da9f8a95c4d28929560a0d454d58bd3a3969fcb
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-07-visual-theme-and-brand
+    path: docs/scopian/sources/07_VISUAL_THEME_AND_BRAND.md
+    status: active
+    content_hash: sha256:f8fb5996946571a10ba53becd99d0f75e0334929c6b2a29c810c0045a3a236e9
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-08-seo-spec
+    path: docs/scopian/sources/08_SEO_SPEC.md
+    status: active
+    content_hash: sha256:42a9519fe8deeb3e807f0c30a6624edbe48299928fd65072310e8f3d72d5a1f3
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-09-safety-disclaimer-copy
+    path: docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md
+    status: active
+    content_hash: sha256:1c74e905b5c7b81e7ff8840fb002567d3a51a5f84b42ba003c6d6fe45f09e077
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-10-agent-roles-and-build-workflow
+    path: docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md
+    status: active
+    content_hash: sha256:477e680400f61ce878050aac5f0bc0272fd46bafc565c4c16f8f764cce02f4fe
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-11-build-plan-and-verification
+    path: docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md
+    status: active
+    content_hash: sha256:4c73962601e7f817dbde5414e13cbcb95fbe33d46eabdf6c58f342b1901b08b9
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-12-claude-production-prompt
+    path: docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md
+    status: active
+    content_hash: sha256:3195035b0510a3568b8a45ae204407e589271f2568763c58aa730183c58afde4
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
+  - id: SRC-13-implementation-prompt-templates
+    path: docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md
+    status: active
+    content_hash: sha256:89404fe60af428aec646b0d6c51e388547d57dbb22184b73dedea3d9afc71d9c
+    registered_at: 2026-06-16T12:10:02+07:00
+    updated_at: 2026-06-16T12:10:02+07:00
