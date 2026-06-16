@@ -1,0 +1,42 @@
+export const ALLOWED_SYMBOLS = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "BNBUSDT",
+  "SOLUSDT",
+  "XRPUSDT",
+] as const;
+
+export type MarketSymbol = (typeof ALLOWED_SYMBOLS)[number];
+
+export const MARKET_INTERVAL = "15m";
+export const VISIBLE_RANGE_DAYS = 30;
+export const INTERNAL_RETENTION_DAYS = 31;
+export const BASELINE_BARS_24H = 96;
+export const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+export const BINANCE_BASE_URL = "https://data-api.binance.vision";
+export const BINANCE_KLINES_LIMIT = 1000;
+export const RECENT_KLINES_LIMIT = 200;
+export const BINANCE_USER_AGENT = "ByteSiren/0.1";
+
+export const POLL_MARKET_CRON = "*/5 * * * *";
+export const CLAUDE_PLACEHOLDER_CRON = "*/15 * * * *";
+export const CLEANUP_CRON = "17 0 * * *";
+
+const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);
+
+export function isAllowedSymbol(symbol: string): symbol is MarketSymbol {
+  return allowedSymbolSet.has(symbol);
+}
+
+export function parseMarketSymbol(symbol: string | null): MarketSymbol | null {
+  if (!symbol) {
+    return null;
+  }
+
+  const normalized = symbol.toUpperCase();
+  return isAllowedSymbol(normalized) ? normalized : null;
+}
+
+export function isoDaysAgo(days: number, now = new Date()): string {
+  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
+}

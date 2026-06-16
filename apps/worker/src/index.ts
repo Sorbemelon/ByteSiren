@@ -1,52 +1,31 @@
-export interface Env {
-  DB: D1Database;
-  APP_VERSION?: string;
-  BUILD_PHASE?: string;
-}
-
-type JsonBody = Record<string, unknown>;
-
-function json(body: JsonBody, init: ResponseInit = {}): Response {
-  const headers = new Headers(init.headers);
-  headers.set("content-type", "application/json; charset=utf-8");
-
-  return new Response(JSON.stringify(body), {
-    ...init,
-    headers,
-  });
-}
-
-function notFound(): Response {
-  return json(
-    {
-      ok: false,
-      error: "not_found",
-    },
-    {
-      status: 404,
-    },
-  );
-}
-
-function healthResponse(): Response {
-  return json({
-    ok: true,
-    service: "bytesiren-worker",
-    time: new Date().toISOString(),
-  });
-}
-
-function versionResponse(env: Env): Response {
-  return json({
-    service: "bytesiren-worker",
-    version: env.APP_VERSION ?? "0.1.0-placeholder",
-    phase: env.BUILD_PHASE ?? "phase-1a-cloudflare-foundation",
-  });
-}
+import {
+  CLAUDE_PLACEHOLDER_CRON,
+  CLEANUP_CRON,
+  POLL_MARKET_CRON,
+} from "./config.ts";
+import { recordJobRun } from "./db/marketRepository.ts";
+import { cleanupOldData } from "./jobs/cleanupOldData.ts";
+import { pollMarket } from "./jobs/pollMarket.ts";
+import { healthResponse, versionResponse } from "./routes/health.ts";
+import {
+  latestMarketResponse,
+  marketCandlesResponse,
+} from "./routes/market.ts";
+import type { Env } from "./types/env.ts";
+import {
+  jsonError,
+  methodNotAllowed,
+  notFound,
+  safeErrorMessage,
+} from "./utils/http.ts";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (request.method !== "GET") {
+      return methodNotAllowed();
+    }
 
     if (request.method === "GET" && url.pathname === "/api/health") {
       return healthResponse();
@@ -56,12 +35,42 @@ export default {
       return versionResponse(env);
     }
 
+    try {
+      if (url.pathname === "/api/market/latest") {
+        return await latestMarketResponse(env.DB);
+      }
+
+      if (url.pathname === "/api/market/candles") {
+        return await marketCandlesResponse(request, env.DB);
+      }
+    } catch (error) {
+      return jsonError(500, "internal_error", safeErrorMessage(error));
+    }
+
     return notFound();
   },
 
   async scheduled(controller: ScheduledController, env: Env): Promise<void> {
-    // Future phases route cron expressions to market polling, enrichment, and cleanup.
-    console.log(`ByteSiren scheduled placeholder: ${controller.cron}`);
-    void env.DB;
+    if (controller.cron === POLL_MARKET_CRON) {
+      await pollMarket(env.DB);
+      return;
+    }
+
+    if (controller.cron === CLEANUP_CRON) {
+      await cleanupOldData(env.DB);
+      return;
+    }
+
+    if (controller.cron === CLAUDE_PLACEHOLDER_CRON) {
+      await recordJobRun(
+        env.DB,
+        "claude_enrichment_placeholder",
+        "skipped",
+        "Future enrichment cron is intentionally skipped in this phase.",
+        {
+          cron: controller.cron,
+        },
+      );
+    }
   },
 } satisfies ExportedHandler<Env>;

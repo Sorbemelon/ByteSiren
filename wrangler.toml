@@ -4,7 +4,7 @@ compatibility_date = "2026-06-16"
 
 [vars]
 APP_VERSION = "0.1.0-placeholder"
-BUILD_PHASE = "phase-1a-cloudflare-foundation"
+BUILD_PHASE = "phase-2a-market-ingestion"
 
 [[d1_databases]]
 binding = "DB"
