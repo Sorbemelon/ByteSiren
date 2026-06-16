@@ -8,6 +8,7 @@ export const MOCK_MARKET: Record<string, MarketLatest> = {
     last_price: 65420.5,
     change_15m_pct: 0.8,
     change_24h_pct: 3.2,
+    data_status: "fresh",
     updated_at: new Date().toISOString(),
   },
   ETHUSDT: {
@@ -15,6 +16,7 @@ export const MOCK_MARKET: Record<string, MarketLatest> = {
     last_price: 3580.2,
     change_15m_pct: 0.5,
     change_24h_pct: 2.8,
+    data_status: "fresh",
     updated_at: new Date().toISOString(),
   },
   BNBUSDT: {
@@ -22,6 +24,7 @@ export const MOCK_MARKET: Record<string, MarketLatest> = {
     last_price: 598.4,
     change_15m_pct: 0.3,
     change_24h_pct: 1.9,
+    data_status: "fresh",
     updated_at: new Date().toISOString(),
   },
   SOLUSDT: {
@@ -29,6 +32,7 @@ export const MOCK_MARKET: Record<string, MarketLatest> = {
     last_price: 178.6,
     change_15m_pct: 1.2,
     change_24h_pct: 4.5,
+    data_status: "fresh",
     updated_at: new Date().toISOString(),
   },
   XRPUSDT: {
@@ -36,6 +40,7 @@ export const MOCK_MARKET: Record<string, MarketLatest> = {
     last_price: 0.5425,
     change_15m_pct: 0.4,
     change_24h_pct: 1.7,
+    data_status: "fresh",
     updated_at: new Date().toISOString(),
   },
 };
@@ -595,4 +600,16 @@ export function generateCandles(symbolFull: string, days = 30): CandleBar[] {
   }
 
   return bars;
+}
+
+// ─── Dev gate ─────────────────────────────────────────────────────────────────
+
+export const IS_DEV = process.env.NODE_ENV !== "production";
+
+export function getInitialFeed(): FeedItem[] {
+  return IS_DEV ? MOCK_FEED : [];
+}
+
+export function getInitialMarket(): Record<string, MarketLatest> {
+  return IS_DEV ? MOCK_MARKET : {};
 }

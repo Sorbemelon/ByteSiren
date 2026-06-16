@@ -1,10 +1,12 @@
 export interface SymbolEvidence {
   symbol: string;
-  change_15m_pct: number;
-  price_z: number;
-  volume_x: number;
-  range_x: number;
-  score: number;
+  // Nullable: a genuinely missing metric stays null so the UI shows "—",
+  // distinct from a real measured 0.
+  change_15m_pct: number | null;
+  price_z: number | null;
+  volume_x: number | null;
+  range_x: number | null;
+  score: number | null;
 }
 
 export interface FeedItemBrief {
@@ -68,9 +70,12 @@ export interface FeedItem {
 
 export interface MarketLatest {
   symbol: string;
-  last_price: number;
-  change_15m_pct: number;
-  change_24h_pct: number;
+  // Nullable: missing values stay null so the UI shows the delayed state
+  // instead of a fake $0.00 / +0.00%.
+  last_price: number | null;
+  change_15m_pct: number | null;
+  change_24h_pct: number | null;
+  data_status: "fresh" | "delayed" | "missing";
   updated_at: string;
 }
 
@@ -92,4 +97,70 @@ export const SYMBOL_FULL: Record<Symbol, string> = {
   BNB: "BNBUSDT",
   SOL: "SOLUSDT",
   XRP: "XRPUSDT",
+};
+
+// ─── Backend API wire types (normalized before reaching UI components) ────────
+
+export interface ApiSymbolEvidence {
+  symbol: string;
+  included_in_event?: boolean;
+  direction?: "up" | "down" | "flat";
+  change_15m_pct: number | null;
+  price_z: number | null;
+  volume_ratio: number | null;
+  volatility_ratio: number | null;
+  severity_score: number;
+}
+
+export interface ApiCandle {
+  open_time: string;
+  close_time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  quote_volume: number;
+}
+
+export interface ApiMarketSymbol {
+  symbol: string;
+  last_price: number | null;
+  last_close_time: string | null;
+  change_15m_pct: number | null;
+  change_24h_pct: number | null;
+  data_status: "fresh" | "delayed" | "missing";
+}
+
+export interface FeedApiResponse {
+  ok: boolean;
+  updated_at: string;
+  range_days: number;
+  signal_window: string;
+  baseline_window: string;
+  items: ApiFeedItem[];
+}
+
+export interface MarketLatestApiResponse {
+  ok: boolean;
+  updated_at: string | null;
+  symbols: ApiMarketSymbol[];
+}
+
+export interface CandlesApiResponse {
+  ok: boolean;
+  symbol: string;
+  interval: string;
+  range_days: number;
+  candles: ApiCandle[];
+}
+
+export type ApiFeedItem = Omit<FeedItem, "expanded_details"> & {
+  symbol_evidence?: ApiSymbolEvidence[];
+  evidence: FeedItem["evidence"] & { evidence_summary?: string };
+  expanded_details?: {
+    symbol_evidence?: ApiSymbolEvidence[];
+    claude_context?: Record<string, unknown>;
+    caveats?: string[];
+  };
 };

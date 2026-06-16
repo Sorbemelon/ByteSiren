@@ -4,7 +4,10 @@ import dynamic from "next/dynamic";
 import { useMemo, useEffect, useState } from "react";
 import type { MarketLatest, FeedItem, CandleBar, Symbol } from "../lib/types";
 import { SYMBOLS, SYMBOL_FULL } from "../lib/types";
-import { generateCandles } from "../lib/mockData";
+import { generateCandles, IS_DEV } from "../lib/mockData";
+import { fetchCandles } from "../lib/api";
+
+type ChartStatus = "loading" | "ready" | "unavailable";
 
 const TradingViewChart = dynamic(() => import("./TradingViewChart"), {
   ssr: false,
@@ -54,22 +57,47 @@ export default function ChartPanel({
   const symbolFull = SYMBOL_FULL[selectedSymbol];
   const mkt = market[symbolFull];
 
-  const [candles, setCandles] = useState<CandleBar[]>([]);
+  // Mock candles are dev-only. In production we never show deterministic
+  // fake candles; the chart shows a loading/unavailable state until live data
+  // arrives.
+  const [candles, setCandles] = useState<CandleBar[]>(() =>
+    IS_DEV ? generateCandles(symbolFull) : [],
+  );
+  const [status, setStatus] = useState<ChartStatus>(
+    IS_DEV ? "ready" : "loading",
+  );
 
+  // Symbol change: dev regenerates mock; prod resets to loading + empty.
   useEffect(() => {
-    setCandles(generateCandles(symbolFull));
+    if (IS_DEV) {
+      setCandles(generateCandles(symbolFull));
+      setStatus("ready");
+    } else {
+      setCandles([]);
+      setStatus("loading");
+    }
   }, [symbolFull]);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  // Fetch live candles when an API base is configured; normalised by fetchCandles.
   useEffect(() => {
-    if (!apiBase || candles.length === 0) return;
-    fetch(`${apiBase}/api/market/candles?symbol=${symbolFull}`)
-      .then((r) => r.json())
-      .then((data: CandleBar[]) => {
-        if (Array.isArray(data) && data.length > 0) setCandles(data);
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!apiBase) {
+      if (!IS_DEV) setStatus("unavailable");
+      return;
+    }
+    fetchCandles(apiBase, symbolFull)
+      .then((data) => {
+        if (data.length > 0) {
+          setCandles(data);
+          setStatus("ready");
+        } else if (!IS_DEV) {
+          setStatus("unavailable");
+        }
       })
-      .catch(() => {});
-  }, [apiBase, symbolFull, candles.length]);
+      .catch(() => {
+        if (!IS_DEV) setStatus("unavailable");
+      });
+  }, [symbolFull]);
 
   const memoCandles = useMemo(() => candles, [candles]);
 
@@ -132,7 +160,11 @@ export default function ChartPanel({
         >
           {symbolFull}
         </p>
-        {mkt ? (
+        {mkt &&
+        mkt.data_status !== "missing" &&
+        mkt.last_price != null &&
+        mkt.change_15m_pct != null &&
+        mkt.change_24h_pct != null ? (
           <>
             <p
               className="mt-0.5 text-[22px] font-bold leading-none tabular-nums"
@@ -162,6 +194,18 @@ export default function ChartPanel({
                 24h Change {fmtPct(mkt.change_24h_pct)}
               </span>
             </p>
+            {mkt.data_status === "delayed" && (
+              <span
+                className="mt-1.5 inline-block rounded-full border px-2 py-0.5 text-[10px] font-medium"
+                style={{
+                  borderColor: "rgba(148,163,184,0.3)",
+                  color: "var(--text-muted)",
+                  background: "rgba(148,163,184,0.06)",
+                }}
+              >
+                Data Delay
+              </span>
+            )}
           </>
         ) : (
           <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
@@ -176,11 +220,25 @@ export default function ChartPanel({
         className="overflow-hidden rounded-xl"
         style={{ background: "rgba(16,23,41,0.4)" }}
       >
-        <TradingViewChart
-          candles={memoCandles}
-          feed={feed}
-          selectedIncidentId={selectedIncidentId}
-        />
+        {memoCandles.length > 0 ? (
+          <TradingViewChart
+            candles={memoCandles}
+            feed={feed}
+            selectedIncidentId={selectedIncidentId}
+          />
+        ) : (
+          <div
+            className="flex items-center justify-center px-6 text-center"
+            style={{ height: 420 }}
+            role="status"
+          >
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+              {status === "loading"
+                ? "Loading chart…"
+                : "Market data is delayed. ByteSiren will update when new public Binance data is available."}
+            </p>
+          </div>
+        )}
       </div>
 
       <p

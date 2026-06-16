@@ -45,6 +45,12 @@ function fmtPct(pct: number): string {
   return `${sign}${pct.toFixed(2)}%`;
 }
 
+function safeVal(v: number | null | undefined, fixed = 1): string {
+  // Show real zeros; reserve "—" for genuinely absent values only.
+  if (v == null || Number.isNaN(v)) return "—";
+  return v.toFixed(fixed);
+}
+
 // ─── SourceChip ───────────────────────────────────────────────────────────────
 
 function SourceChip({ source }: { source: FeedItemSource }) {
@@ -66,6 +72,121 @@ function SourceChip({ source }: { source: FeedItemSource }) {
       {source.publisher}
       <ExternalLink size={10} aria-hidden />
     </a>
+  );
+}
+
+// ─── BriefContent ─────────────────────────────────────────────────────────────
+
+interface BriefContentProps {
+  item: FeedItem;
+  isExpanded: boolean;
+  accentColor: string;
+}
+
+function BriefContent({ item, isExpanded, accentColor }: BriefContentProps) {
+  const { brief } = item;
+  const showSummary =
+    (brief.status === "brief_ready" || brief.status === "context_only") &&
+    brief.summary;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <span
+          className="h-1.5 w-1.5 shrink-0 rounded-full"
+          aria-hidden
+          style={{ background: accentColor }}
+        />
+        <span
+          className="text-[12px] font-semibold"
+          style={{ color: accentColor }}
+        >
+          {brief.label}
+        </span>
+      </div>
+
+      {/* brief_ready or context_only: show summary */}
+      {showSummary && (
+        <p
+          className="text-[12px] leading-snug"
+          style={
+            {
+              color: "var(--text-secondary)",
+              display: "-webkit-box",
+              WebkitLineClamp: isExpanded ? "unset" : 2,
+              WebkitBoxOrient: "vertical",
+              overflow: isExpanded ? "visible" : "hidden",
+            } as React.CSSProperties
+          }
+        >
+          {brief.summary}
+        </p>
+      )}
+
+      {/* analysis_limited: violet glass card */}
+      {brief.status === "analysis_limited" && (
+        <div
+          style={{
+            background: "rgba(139, 92, 246, 0.08)",
+            border: "1px solid rgba(139, 92, 246, 0.25)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderRadius: "10px",
+            padding: "8px 10px",
+          }}
+        >
+          <p
+            className="text-[11px] font-semibold"
+            style={{ color: "var(--claude-limited)" }}
+          >
+            Claude Limited
+          </p>
+          <p
+            className="mt-0.5 text-[12px]"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Claude analysis is limited in this free public project. The context
+            will be shown when analysis is available.
+          </p>
+        </div>
+      )}
+
+      {/* queued_for_analysis */}
+      {brief.status === "queued_for_analysis" && (
+        <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
+          Waiting for Claude analysis. This detection is queued for date-matched
+          web context.
+        </p>
+      )}
+
+      {/* none_found */}
+      {brief.status === "none_found" && (
+        <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
+          No clear public cause found from trusted sources for this detection.
+        </p>
+      )}
+
+      {/* Metadata: confidence + price check */}
+      {brief.status === "brief_ready" &&
+        (brief.confidence || brief.price_context_check) && (
+          <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+            {brief.confidence && (
+              <span style={{ textTransform: "capitalize" }}>
+                {brief.confidence} confidence
+              </span>
+            )}
+            {brief.price_context_check &&
+              brief.price_context_check !== "unknown" && (
+                <>
+                  <span> · </span>
+                  <span>
+                    Price: {brief.price_context_check.replace(/_/g, " ")}
+                  </span>
+                </>
+              )}
+          </p>
+        )}
+    </div>
   );
 }
 
@@ -112,7 +233,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                     "Range ×",
                     "Score",
                   ].map((h) => (
-                    <th key={h} className="py-2 px-3 text-left font-medium">
+                    <th key={h} className="px-3 py-2 text-left font-medium">
                       {h}
                     </th>
                   ))}
@@ -129,39 +250,45 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                     }}
                   >
                     <td
-                      className="py-2 px-3 font-semibold"
+                      className="px-3 py-2 font-semibold"
                       style={{ color: "var(--text-primary)" }}
                     >
                       {row.symbol.replace("USDT", "")}
                     </td>
                     <td
-                      className="py-2 px-3 tabular-nums"
+                      className="px-3 py-2 tabular-nums"
                       style={{
                         color:
-                          row.change_15m_pct >= 0 ? "var(--up)" : "var(--down)",
+                          row.change_15m_pct == null
+                            ? "var(--text-muted)"
+                            : row.change_15m_pct >= 0
+                              ? "var(--up)"
+                              : "var(--down)",
                       }}
                     >
-                      {fmtPct(row.change_15m_pct)}
+                      {row.change_15m_pct == null
+                        ? "—"
+                        : fmtPct(row.change_15m_pct)}
                     </td>
-                    <td className="py-2 px-3 tabular-nums">
-                      {row.price_z.toFixed(1)}
+                    <td className="px-3 py-2 tabular-nums">
+                      {safeVal(row.price_z)}
                     </td>
-                    <td className="py-2 px-3 tabular-nums">
-                      {row.volume_x.toFixed(1)}×
+                    <td className="px-3 py-2 tabular-nums">
+                      {safeVal(row.volume_x)}×
                     </td>
-                    <td className="py-2 px-3 tabular-nums">
-                      {row.range_x.toFixed(1)}×
+                    <td className="px-3 py-2 tabular-nums">
+                      {safeVal(row.range_x)}×
                     </td>
                     <td
-                      className="py-2 px-3 tabular-nums font-semibold"
+                      className="px-3 py-2 tabular-nums font-semibold"
                       style={{
                         color:
-                          row.score >= 90
+                          row.score != null && row.score >= 90
                             ? "var(--status-strong)"
                             : "var(--text-primary)",
                       }}
                     >
-                      {row.score}
+                      {safeVal(row.score, 0)}
                     </td>
                   </tr>
                 ))}
@@ -179,7 +306,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
       )}
 
       {/* Claude context */}
-      {brief.status === "brief_ready" &&
+      {(brief.status === "brief_ready" || brief.status === "context_only") &&
         expanded_details.claude_context.summary && (
           <div>
             <p
@@ -250,186 +377,119 @@ function FeedRow({ item, isSelected, isExpanded, onToggle }: FeedRowProps) {
 
   return (
     <article
-      className="rounded-2xl border transition-colors"
+      className="relative rounded-2xl border transition-colors"
       style={{
         background: "var(--bg-row)",
         border: isSelected
-          ? `1px solid var(--accent-selected-border)`
-          : `1px solid var(--border-row)`,
+          ? "1px solid var(--accent-selected-border)"
+          : "1px solid var(--border-row)",
         boxShadow: isSelected ? "var(--accent-selected-shadow)" : "none",
       }}
     >
-      <button
-        className="w-full cursor-pointer rounded-2xl p-3 text-left focus-visible:outline-offset-0"
-        onClick={onToggle}
-        aria-expanded={isExpanded}
-        aria-label={`${scopeLabel} on ${item.display_date}, ${DIRECTION_LABELS[item.direction] ?? item.direction}, ${item.brief.label}. ${isExpanded ? "Click to collapse" : "Click to expand"}`}
-      >
-        <div className="grid gap-2 sm:grid-cols-[1fr_1.5fr_auto]">
-          {/* Evidence column */}
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap gap-1.5">
-              <span
-                className="inline-block rounded border px-1.5 py-0.5 text-[11px] font-semibold"
-                style={{
-                  borderColor: "rgba(148,163,184,0.25)",
-                  color: "var(--text-secondary)",
-                  background: "rgba(148,163,184,0.07)",
-                }}
-              >
-                {scopeLabel}
-              </span>
-              <span
-                className="inline-block rounded border px-1.5 py-0.5 text-[11px] font-medium"
-                style={{
-                  borderColor: dirColor + "55",
-                  color: dirColor,
-                  background: dirColor + "12",
-                }}
-              >
-                {DIRECTION_LABELS[item.direction] ?? item.direction}
-              </span>
-            </div>
+      {/* Header region: a dedicated expand button is stretched over it; source
+          links sit above as separate interactive siblings (valid HTML). */}
+      <div className="relative">
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          aria-label={`${scopeLabel} on ${item.display_date}, ${DIRECTION_LABELS[item.direction] ?? item.direction}, ${item.brief.label}. ${isExpanded ? "Collapse details" : "Expand details"}`}
+          onClick={onToggle}
+          className="absolute inset-0 cursor-pointer rounded-2xl"
+          style={{
+            background: "transparent",
+            outlineOffset: "-2px",
+            WebkitTapHighlightColor: "transparent",
+          }}
+        />
 
-            <p
-              className="text-[12px] font-medium tabular-nums"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {item.evidence.breadth_label}
-              <span style={{ color: "var(--text-muted)" }}> · </span>
-              <span style={{ color: "var(--status-strong)" }}>
-                {item.evidence.severity_label} {item.evidence.severity_score}
-              </span>
-            </p>
-
-            <p
-              className="text-[11px] tabular-nums"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {item.display_date}
-            </p>
-          </div>
-
-          {/* Brief column */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                aria-hidden
-                style={{ background: accentColor }}
-              />
-              <span
-                className="text-[12px] font-semibold"
-                style={{ color: accentColor }}
-              >
-                {item.brief.label}
-              </span>
-            </div>
-
-            {item.brief.status === "brief_ready" && item.brief.summary && (
-              <p
-                className="text-[12px] leading-snug"
-                style={
-                  {
+        <div className="pointer-events-none p-3">
+          <div className="grid gap-2 sm:grid-cols-[1fr_1.5fr_auto]">
+            {/* Evidence column */}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap gap-1.5">
+                <span
+                  className="inline-block rounded border px-1.5 py-0.5 text-[11px] font-semibold"
+                  style={{
+                    borderColor: "rgba(148,163,184,0.25)",
                     color: "var(--text-secondary)",
-                    display: "-webkit-box",
-                    WebkitLineClamp: isExpanded ? "unset" : 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: isExpanded ? "visible" : "hidden",
-                  } as React.CSSProperties
-                }
-              >
-                {item.brief.summary}
-              </p>
-            )}
-
-            {item.brief.status === "analysis_limited" && (
-              <p
-                className="text-[12px] leading-snug"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Claude analysis is limited in this free public project.
-                <br />
-                The context will be shown when analysis is available.
-              </p>
-            )}
-
-            {item.brief.status === "queued_for_analysis" && (
-              <p
-                className="text-[12px]"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Waiting for Claude analysis. This detection is queued for
-                date-matched web context.
-              </p>
-            )}
-
-            {item.brief.status === "none_found" && (
-              <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
-                No clear public cause found from trusted sources for this
-                detection.
-              </p>
-            )}
-
-            {item.brief.status === "brief_ready" &&
-              (item.brief.confidence || item.brief.price_context_check) && (
-                <p
-                  className="text-[11px]"
-                  style={{ color: "var(--text-muted)" }}
+                    background: "rgba(148,163,184,0.07)",
+                  }}
                 >
-                  {item.brief.confidence && (
-                    <span style={{ textTransform: "capitalize" }}>
-                      {item.brief.confidence} confidence
-                    </span>
-                  )}
-                  {item.brief.price_context_check &&
-                    item.brief.price_context_check !== "unknown" && (
-                      <>
-                        <span> · </span>
-                        <span>
-                          Price:{" "}
-                          {item.brief.price_context_check.replace(/_/g, " ")}
-                        </span>
-                      </>
-                    )}
-                </p>
-              )}
-          </div>
+                  {scopeLabel}
+                </span>
+                <span
+                  className="inline-block rounded border px-1.5 py-0.5 text-[11px] font-medium"
+                  style={{
+                    borderColor: dirColor + "55",
+                    color: dirColor,
+                    background: dirColor + "12",
+                  }}
+                >
+                  {DIRECTION_LABELS[item.direction] ?? item.direction}
+                </span>
+              </div>
 
-          {/* Sources column */}
-          <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
-            {visibleSources.map((s, i) => (
-              <SourceChip key={i} source={s} />
-            ))}
-            {overflowCount > 0 && (
-              <span
-                className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
-                style={{
-                  borderColor: "var(--border-row)",
-                  color: "var(--text-muted)",
-                }}
+              <p
+                className="text-[12px] font-medium tabular-nums"
+                style={{ color: "var(--text-secondary)" }}
               >
-                +{overflowCount}
-              </span>
-            )}
+                {item.evidence.breadth_label}
+                <span style={{ color: "var(--text-muted)" }}> · </span>
+                <span style={{ color: "var(--status-strong)" }}>
+                  {item.evidence.severity_label} {item.evidence.severity_score}
+                </span>
+              </p>
+
+              <p
+                className="text-[11px] tabular-nums"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {item.display_date}
+              </p>
+            </div>
+
+            {/* Brief column */}
+            <BriefContent
+              item={item}
+              isExpanded={isExpanded}
+              accentColor={accentColor}
+            />
+
+            {/* Sources column — interactive, above the stretched expand button */}
+            <div className="pointer-events-auto relative z-1 flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
+              {visibleSources.map((s, i) => (
+                <SourceChip key={i} source={s} />
+              ))}
+              {overflowCount > 0 && (
+                <span
+                  className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
+                  style={{
+                    borderColor: "var(--border-row)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  +{overflowCount}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Expand chevron */}
+          <div className="mt-2 flex justify-center">
+            <ChevronDown
+              size={14}
+              aria-hidden
+              style={{
+                color: "var(--text-muted)",
+                transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 200ms ease-out",
+              }}
+            />
           </div>
         </div>
+      </div>
 
-        {/* Expand toggle hint */}
-        <div className="mt-2 flex justify-center">
-          <ChevronDown
-            size={14}
-            aria-hidden
-            style={{
-              color: "var(--text-muted)",
-              transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 200ms ease-out",
-            }}
-          />
-        </div>
-      </button>
-
-      {/* Expanded details */}
+      {/* Expanded details — sibling outside the stretched expand button */}
       {isExpanded && (
         <div className="px-3 pb-4">
           <ExpandedRow item={item} />
@@ -492,10 +552,11 @@ export default function IntelligenceFeed({
             color: "var(--text-muted)",
           }}
           onClick={() => {
-            document.getElementById("how-to-read")?.setAttribute("open", "");
-            document
-              .getElementById("how-to-read")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            const el = document.getElementById("how-to-read");
+            if (el) {
+              el.setAttribute("open", "");
+              el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
           }}
           aria-label="What do these labels mean? Scroll to glossary"
         >
