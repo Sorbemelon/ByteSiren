@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-16T17:17:00+07:00
+generated_at: 2026-06-16T18:04:31+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -12,11 +12,11 @@ canonical_inputs:
   - context.yml
   - source_registry.yml
 input_hashes:
-  view: sha256:17e3e4eedbe5
-  sources: sha256:16761cfb9a6f
+  view: sha256:39a4b55b602d
+  sources: sha256:fab8d5e05966
   buffer: sha256:e3b0c44298fc
   context: sha256:5ef45bc1a5d7
-  registry: sha256:6273b9cd6833
+  registry: sha256:4a0448757592
 ---
 
 # Generated Scope View
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-16T17:17:00+07:00
+- generated_at: 2026-06-16T18:04:31+07:00
 
 ## Selected Sources
 
@@ -50,6 +50,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md (sha256:3195035b0510a3568b8a45ae204407e589271f2568763c58aa730183c58afde4)
 - docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md (sha256:f59fa372b1951fe6b9d256070b31d84f906321a750a31e6a428918fe3eee6803)
 - docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5)
+- PRODUCT.md (sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd)
 
 ## Approved Buffer Summary
 
@@ -95,6 +96,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-d1-boundary-0f9d7659 | allowed_with_limits | D1 boundary | docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md#d1-boundary | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-data-source-note-c8a424f4 | allowed_with_limits | Data source note | docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md#data-source-note | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-deployment-resources-1ba6435f | allowed_with_limits | Deployment resources | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#deployment-resources | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-design-principles-206253ea | allowed_with_limits | Design Principles | PRODUCT.md#design-principles | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-desktop-wireframe-683eb886 | allowed_with_limits | Desktop wireframe | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#desktop-wireframe | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-detector-3597d56c | allowed_with_limits | Detector | docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md#detector | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-environment-ownership-6060a3d6 | allowed_with_limits | Environment ownership | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#environment-ownership | none | not_checked_in_generated_view |
@@ -121,6 +123,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-post-processing-requirements-5d2850aa | allowed_with_limits | Post-processing requirements | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#post-processing-requirements | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-product-identity-a2010428 | allowed_with_limits | Product identity | docs/scopian/sources/01_PRODUCT_SPEC.md#product-identity | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-product-page-structure-f867a21f | allowed_with_limits | Product page structure | docs/scopian/sources/01_PRODUCT_SPEC.md#product-page-structure | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-product-purpose-01bc1350 | allowed_with_limits | Product Purpose | PRODUCT.md#product-purpose | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-production-env-ownership-00b86492 | allowed_with_limits | Production env ownership | docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md#production-env-ownership | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-prompt-template-for-claude-code-5e4d5b55 | allowed_with_limits | Prompt template for Claude Code: 06_UI_UX_VARIANT_A_SPEC.md; 07_VISUAL_THEME_AND_BRAND.md; 08_SEO_SPEC.md; 09_SAFETY_DISCLAIMER_COPY.md | docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md#prompt-template-for-claude-code | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-public-summary-wording-292d1368 | allowed_with_limits | Public summary wording | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#public-summary-wording | none | not_checked_in_generated_view |
@@ -168,7 +171,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 ## Coverage Snapshot
 
 - likely_in_scope: 21
-- allowed_with_limits: 69
+- allowed_with_limits: 71
 - likely_out_of_scope: 15
 - decision_required: 0
 - conflict_detected: 0
@@ -184,17 +187,17 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-16T17:17:00+07:00
-- selected_sources: 15
+- generated_refresh: 2026-06-16T18:04:31+07:00
+- selected_sources: 16
 - approved_buffer_records: 0
 
 ## Freshness Metadata
 
-- view: sha256:17e3e4eedbe5
-- sources: sha256:16761cfb9a6f
+- view: sha256:39a4b55b602d
+- sources: sha256:fab8d5e05966
 - buffer: sha256:e3b0c44298fc
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:6273b9cd6833
+- registry: sha256:4a0448757592
 
 ## Refresh Instructions
 

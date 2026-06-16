@@ -89,3 +89,9 @@ sources:
     content_hash: sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5
     registered_at: 2026-06-16T15:19:30+07:00
     updated_at: 2026-06-16T17:16:50+07:00
+  - id: SRC-product
+    path: PRODUCT.md
+    status: active
+    content_hash: sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd
+    registered_at: 2026-06-16T18:04:17+07:00
+    updated_at: 2026-06-16T18:04:17+07:00

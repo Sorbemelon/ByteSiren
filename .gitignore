@@ -37,3 +37,7 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 Thumbs.db
+
+# Impeccable local machine state
+.impeccable/**/config.local.json
+PRODUCT.md

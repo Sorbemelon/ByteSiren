@@ -18,6 +18,7 @@ sources:
   - ../../sources/12_CLAUDE_PRODUCTION_PROMPT.md
   - ../../sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md
   - ../../sources/14_DEPLOYMENT_BOUNDARIES.md
+  - ../../../../PRODUCT.md
 buffer:
   mode: all-approved-in-view
 tags:
