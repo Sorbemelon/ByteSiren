@@ -19,6 +19,7 @@ sources:
   - ../../sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md
   - ../../sources/14_DEPLOYMENT_BOUNDARIES.md
   - ../../../../PRODUCT.md
+  - ../../sources/15_DEPLOYMENT_CHECKLIST.md
 buffer:
   mode: all-approved-in-view
 tags:

@@ -48,6 +48,7 @@ ByteSiren is a one-page, read-only AI crypto market intelligence dashboard. It m
 | `12_CLAUDE_PRODUCTION_PROMPT.md` | Production Claude Web Search prompt and output rules | Codex/backend |
 | `13_IMPLEMENTATION_PROMPT_TEMPLATES.md` | Ready-to-copy prompts for Codex and Claude Code phases | Project owner |
 | `14_DEPLOYMENT_BOUNDARIES.md` | Cloudflare Pages vs Worker deployment split and env ownership | Codex/backend |
+| `15_DEPLOYMENT_CHECKLIST.md` | Cloudflare Worker, D1, Pages, CORS, env, and smoke checklist | Codex/backend |
 
 ## Machine-readable helper files
 

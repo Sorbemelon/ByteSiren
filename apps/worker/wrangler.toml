@@ -12,6 +12,7 @@ CLAUDE_SECOND_SEARCH_MAX_USES = "2"
 CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT = "5"
 CLAUDE_ALLOWED_DOMAINS = ""
 CLAUDE_BLOCKED_DOMAINS = ""
+PUBLIC_WEB_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://bytesiren.pages.dev"
 
 [[d1_databases]]
 binding = "DB"

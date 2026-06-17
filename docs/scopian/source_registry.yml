@@ -2,9 +2,9 @@ sources:
   - id: SRC-00-source-index
     path: docs/scopian/sources/00_SOURCE_INDEX.md
     status: active
-    content_hash: sha256:2508bdaa8ca0ebb7218b1f07545d1997b7ec32dfb30e26a2406edb9c1954ef31
+    content_hash: sha256:3abe408fc27b31aa455f63c07f60d6a2e456ba072035d5bec7006187369bc0ce
     registered_at: 2026-06-16T12:10:02+07:00
-    updated_at: 2026-06-16T17:16:50+07:00
+    updated_at: 2026-06-17T21:30:08+07:00
   - id: SRC-01-product-spec
     path: docs/scopian/sources/01_PRODUCT_SPEC.md
     status: active
@@ -89,6 +89,12 @@ sources:
     content_hash: sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5
     registered_at: 2026-06-16T15:19:30+07:00
     updated_at: 2026-06-16T17:16:50+07:00
+  - id: SRC-15-deployment-checklist
+    path: docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md
+    status: active
+    content_hash: sha256:b37db8ea1f5b38995f992523b8ca75d6e2ea80694ab72422a52975f2eed5522e
+    registered_at: 2026-06-17T21:30:08+07:00
+    updated_at: 2026-06-17T21:30:08+07:00
   - id: SRC-product
     path: PRODUCT.md
     status: active

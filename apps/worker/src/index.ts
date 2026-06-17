@@ -35,10 +35,10 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const respond = (response: Response): Response =>
-      isApiPath(url.pathname) ? withCors(request, response) : response;
+      isApiPath(url.pathname) ? withCors(request, response, env) : response;
 
     if (request.method === "OPTIONS" && isApiPath(url.pathname)) {
-      return corsPreflightResponse(request);
+      return corsPreflightResponse(request, env);
     }
 
     if (url.pathname === "/api/metrics/views") {

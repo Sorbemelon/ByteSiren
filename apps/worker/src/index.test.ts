@@ -87,7 +87,9 @@ function seededIncident(): IncidentRow {
   };
 }
 
-function makeEnv(options: { incidents?: IncidentRow[] } = {}): Env {
+function makeEnv(
+  options: { incidents?: IncidentRow[]; publicWebOrigins?: string } = {},
+): Env {
   const { db } = createMemoryD1({
     market_candles: seededRows(),
     incidents: options.incidents,
@@ -97,6 +99,7 @@ function makeEnv(options: { incidents?: IncidentRow[] } = {}): Env {
     DB: db,
     APP_VERSION: "0.1.0-placeholder",
     BUILD_PHASE: "phase-4a5-deployment-boundary",
+    PUBLIC_WEB_ORIGINS: options.publicWebOrigins,
   };
 }
 
@@ -183,6 +186,44 @@ test("worker allows local web origin for public API GET requests", async () => {
   assert.equal(response.headers.get("access-control-allow-credentials"), null);
 });
 
+test("worker allows configured production web origin for public API GET requests", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/health", {
+      headers: {
+        origin: "https://bytesiren.pages.dev",
+      },
+    }),
+    makeEnv({
+      publicWebOrigins:
+        "https://bytesiren.pages.dev, https://preview.bytesiren.pages.dev/path",
+    }),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(
+    response.headers.get("access-control-allow-origin"),
+    "https://bytesiren.pages.dev",
+  );
+  assert.equal(response.headers.get("access-control-allow-credentials"), null);
+});
+
+test("worker includes secondary local development origins by default", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/health", {
+      headers: {
+        origin: "http://127.0.0.1:3001",
+      },
+    }),
+    makeEnv(),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(
+    response.headers.get("access-control-allow-origin"),
+    "http://127.0.0.1:3001",
+  );
+});
+
 test("worker handles local web CORS preflight without credentials", async () => {
   const response = await worker.fetch(
     new Request("http://localhost/api/market/latest", {
@@ -236,6 +277,28 @@ test("worker allows POST CORS only for public view metrics", async () => {
   );
   assert.doesNotMatch(
     marketPreflight.headers.get("access-control-allow-methods") ?? "",
+    /POST/,
+  );
+});
+
+test("worker rejects POST on non-metrics API routes without advertising POST CORS", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/health", {
+      method: "POST",
+      headers: {
+        origin: "http://localhost:3000",
+      },
+    }),
+    makeEnv(),
+  );
+
+  assert.equal(response.status, 405);
+  assert.equal(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:3000",
+  );
+  assert.doesNotMatch(
+    response.headers.get("access-control-allow-methods") ?? "",
     /POST/,
   );
 });

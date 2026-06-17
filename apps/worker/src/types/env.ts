@@ -10,4 +10,5 @@ export interface Env {
   CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT?: string;
   CLAUDE_ALLOWED_DOMAINS?: string;
   CLAUDE_BLOCKED_DOMAINS?: string;
+  PUBLIC_WEB_ORIGINS?: string;
 }

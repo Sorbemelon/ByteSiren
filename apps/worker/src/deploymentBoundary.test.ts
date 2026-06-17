@@ -35,6 +35,11 @@ test("Claude secrets stay Worker-only and no scripts depend on root Wrangler con
   const workerPackage = readRepoFile("apps/worker/package.json");
 
   assert.match(workerEnvExample, /ANTHROPIC_API_KEY=/);
+  assert.match(workerEnvExample, /PUBLIC_WEB_ORIGINS=/);
+  assert.match(
+    webEnvExample,
+    /NEXT_PUBLIC_API_BASE_URL=http:\/\/localhost:8787/,
+  );
   assert.equal(webEnvExample.includes("ANTHROPIC_API_KEY"), false);
   assert.equal(webEnvExample.includes("NEXT_PUBLIC_ANTHROPIC"), false);
   assert.equal(rootPackage.includes("../../wrangler.toml"), false);

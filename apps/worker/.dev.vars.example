@@ -32,3 +32,7 @@ CLAUDE_ALLOWED_DOMAINS=
 # Use blocked domains by default for local smoke.
 # Claude Web Search supports either allowed_domains or blocked_domains, not both.
 CLAUDE_BLOCKED_DOMAINS=coindcx.com,bitcoinfoundation.org,tradingkey.com,intellectia.ai,mexc.com,bitget.com,stealthex.io
+
+# Comma-separated frontend origins allowed to call public Worker API routes.
+# Keep local dev origins and add the deployed Cloudflare Pages origin before deploy.
+PUBLIC_WEB_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://bytesiren.pages.dev

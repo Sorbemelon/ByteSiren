@@ -28,6 +28,7 @@ apps/worker/.dev.vars.*
 # Local tool state
 .crosshelix/
 .scopian/
+.claude/settings.local.json
 
 # Logs and OS files
 *.log
