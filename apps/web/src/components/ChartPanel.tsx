@@ -121,7 +121,7 @@ export default function ChartPanel({
       }}
     >
       <h2 className="sr-only">Market Chart</h2>
-      {/* Symbol tabs + helper */}
+      {/* Symbol tabs + chart interval selector */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div role="tablist" aria-label="Chart symbol" className="flex gap-1.5">
           {SYMBOLS.map((sym) => {
@@ -139,16 +139,6 @@ export default function ChartPanel({
             );
           })}
         </div>
-        <p
-          className="min-w-0 flex-1 text-[11px] sm:text-right"
-          style={{ color: "var(--text-muted)" }}
-        >
-          Chart symbol only · Intelligence Feed shows all detected market events
-        </p>
-      </div>
-
-      {/* Interval selector (chart display only) */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
         <div
           role="tablist"
           aria-label="Chart interval"
@@ -166,12 +156,6 @@ export default function ChartPanel({
             </button>
           ))}
         </div>
-        <p
-          className="min-w-0 flex-1 text-[11px] sm:text-right"
-          style={{ color: "var(--text-muted)" }}
-        >
-          Chart interval only · ByteSiren detections use 15m signals
-        </p>
       </div>
 
       {/* Stat header */}

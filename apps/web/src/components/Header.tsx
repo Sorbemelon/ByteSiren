@@ -94,7 +94,7 @@ export default function Header({ updatedAt }: HeaderProps) {
             background: "var(--safety-pill-bg)",
           }}
         >
-          Read-only · Not financial advice
+          Not financial advice
         </span>
         <ThemeToggle />
       </div>

@@ -3,7 +3,6 @@
 import {
   ArrowLeftRight,
   BadgeCheck,
-  ChevronDown,
   Clock,
   ExternalLink,
   HelpCircle,
@@ -90,7 +89,7 @@ const CHIP_TONES = {
   },
   market: {
     background: "var(--chip-bg)",
-    border: "1px solid var(--market-chip-border)",
+    border: "1px solid transparent",
     color: "var(--market-chip-text)",
   },
   up: {
@@ -227,7 +226,7 @@ function SourceChip({ source }: { source: FeedItemSource }) {
       rel="noopener noreferrer"
       title={source.title}
       aria-label={`${source.publisher}: ${source.title} (opens in new tab)`}
-      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5 hover:brightness-110 focus-visible:ring-2"
+      className="inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[10px] font-medium transition-colors hover:bg-white/5 hover:brightness-110 focus-visible:ring-2"
       style={{
         background: style.background,
         borderColor: style.border,
@@ -236,7 +235,7 @@ function SourceChip({ source }: { source: FeedItemSource }) {
       }}
     >
       {source.publisher}
-      <ExternalLink size={10} aria-hidden />
+      <ExternalLink size={9} aria-hidden />
     </a>
   );
 }
@@ -340,7 +339,13 @@ function PublicContext({ item, isExpanded, accentColor }: PublicContextProps) {
 
       {brief.status === "brief_ready" &&
         (brief.confidence || brief.price_context_check) && (
-          <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+          <p
+            className="text-[11px]"
+            style={{
+              color:
+                "color-mix(in srgb, var(--source-price-text) 48%, var(--text-muted))",
+            }}
+          >
             {brief.confidence && (
               <span style={{ textTransform: "capitalize" }}>
                 {brief.confidence} confidence
@@ -576,6 +581,14 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                 {formatEventDateTime(item)}
               </p>
               <Chip tone="market">{scopeWord}</Chip>
+            </div>
+            <Chip tone="impact">
+              Impact Score: {item.evidence.severity_score}
+            </Chip>
+          </div>
+
+          <div className="feed-card-grid">
+            <div>
               <Chip
                 tone={
                   item.direction === "observed_up"
@@ -588,24 +601,15 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                 <DirIcon size={12} aria-hidden />
                 {dir.label}
               </Chip>
-            </div>
-            <Chip tone="impact">
-              Impact Score: {item.evidence.severity_score}
-            </Chip>
-          </div>
-
-          <div className="feed-card-grid">
-            <div>
-              <ColLabel>Evidence</ColLabel>
               <p
-                className="text-[12.5px] font-semibold"
+                className="mt-1.5 text-[12.5px] font-semibold"
                 style={{ color: "var(--text-secondary)" }}
               >
                 {breadthLabel(item.symbols.length)}
               </p>
               <p
-                className="mt-1 text-[12px] tabular-nums"
-                style={{ color: "var(--text-muted)" }}
+                className="mt-1 text-[11px] tabular-nums"
+                style={{ color: "var(--text-primary)" }}
               >
                 Avg 15m{" "}
                 {hasAvg ? (
@@ -620,15 +624,16 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                 ) : (
                   <span>—</span>
                 )}
-                <span>
-                  {" "}
-                  · Peak {item.evidence.peak_symbol.replace("USDT", "")}
-                </span>
+              </p>
+              <p
+                className="mt-0.5 text-[11px] tabular-nums"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Peak {item.evidence.peak_symbol.replace("USDT", "")}
               </p>
             </div>
 
             <div>
-              <ColLabel>Public Context</ColLabel>
               <PublicContext
                 item={item}
                 isExpanded={isExpanded}
@@ -636,49 +641,53 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
               />
             </div>
 
-            <div className="pointer-events-auto relative z-[1]">
-              <ColLabel>Sources</ColLabel>
-              {item.sources.length > 0 ? (
-                <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
-                  {visibleSources.map((s, i) => (
-                    <SourceChip key={i} source={s} />
-                  ))}
-                  {overflowCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={onToggle}
-                      aria-label={`Show ${overflowCount} more accepted source${overflowCount === 1 ? "" : "s"}`}
-                      className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
-                      style={{
-                        borderColor: "var(--border-row)",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      +{overflowCount}
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <span
-                  className="text-[11px]"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  —
-                </span>
-              )}
-            </div>
-          </div>
+            <div className="pointer-events-auto relative z-[1] flex self-stretch flex-col">
+              <div>
+                {item.sources.length > 0 ? (
+                  <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
+                    {visibleSources.map((s, i) => (
+                      <SourceChip key={i} source={s} />
+                    ))}
+                    {overflowCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={onToggle}
+                        aria-label={`Show ${overflowCount} more accepted source${overflowCount === 1 ? "" : "s"}`}
+                        className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
+                        style={{
+                          borderColor: "var(--border-row)",
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        +{overflowCount}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <span
+                    className="text-[11px]"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    —
+                  </span>
+                )}
+              </div>
 
-          <div className="mt-3 flex justify-center">
-            <ChevronDown
-              size={14}
-              aria-hidden
-              style={{
-                color: "var(--text-muted)",
-                transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 200ms ease-out",
-              }}
-            />
+              <div className="mt-auto flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={onToggle}
+                  aria-expanded={isExpanded}
+                  className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5 focus-visible:ring-2"
+                  style={{
+                    color: "var(--text-muted)",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
+                >
+                  {isExpanded ? "Hide" : "See more"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -734,18 +743,40 @@ export default function IntelligenceFeed({
               Intelligence Feed
             </AuroraText>
           </h2>
-          <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
-            Past 30 days · newest first
-          </p>
-          <p
-            className="mt-0.5 text-[11px]"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Labels describe observed market movement, not trading advice.
-          </p>
+          <div className="mt-1.5 space-y-1">
+            <p
+              className="flex items-center gap-1.5 text-[12px] leading-snug"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <img
+                src="/brand/Binance_icon.png"
+                alt=""
+                aria-hidden
+                className="h-3.5 w-3.5 shrink-0"
+              />
+              <span>
+                Binance public market data is used for signal detection.
+              </span>
+            </p>
+            <p
+              className="flex items-center gap-1.5 text-[12px] leading-snug"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <img
+                src="/brand/Claude_AI_symbol.svg"
+                alt=""
+                aria-hidden
+                className="h-3.5 w-3.5 shrink-0"
+              />
+              <span>
+                Claude AI analysis using detected evidence and relevant sources
+                from Claude Web Search tool.
+              </span>
+            </p>
+          </div>
         </div>
         <button
-          className="flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[11px] transition-colors hover:bg-white/5"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors hover:bg-white/5"
           style={{
             borderColor: "var(--border-row)",
             color: "var(--text-muted)",
@@ -758,9 +789,9 @@ export default function IntelligenceFeed({
             }
           }}
           aria-label="What do these labels mean? Scroll to glossary"
+          title="What do these labels mean?"
         >
-          <HelpCircle size={12} aria-hidden />
-          What do these labels mean?
+          <HelpCircle size={20} aria-hidden />
         </button>
       </div>
 
