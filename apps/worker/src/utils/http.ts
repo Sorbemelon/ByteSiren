@@ -1,6 +1,7 @@
 export type JsonRecord = Record<string, unknown>;
 
 const LOCAL_WEB_ORIGIN = "http://localhost:3000";
+const METRICS_VIEWS_PATH = "/api/metrics/views";
 
 export function json(body: JsonRecord, init: ResponseInit = {}): Response {
   const headers = new Headers(init.headers);
@@ -66,9 +67,12 @@ export function withCors(request: Request, response: Response): Response {
 function corsHeaders(request: Request): Headers {
   const headers = new Headers();
   const origin = request.headers.get("origin");
+  const pathname = new URL(request.url).pathname;
+  const methods =
+    pathname === METRICS_VIEWS_PATH ? "GET, POST, OPTIONS" : "GET, OPTIONS";
 
   headers.set("vary", "Origin");
-  headers.set("access-control-allow-methods", "GET, OPTIONS");
+  headers.set("access-control-allow-methods", methods);
   headers.set("access-control-allow-headers", "content-type");
   headers.set("access-control-max-age", "86400");
 

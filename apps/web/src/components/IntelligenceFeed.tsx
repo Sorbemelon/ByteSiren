@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   ArrowLeftRight,
   BadgeCheck,
@@ -60,18 +61,18 @@ const SOURCE_CHIP_STYLES: Record<
   { border: string; background: string; color: string }
 > = {
   focused_catalyst: {
-    border: "rgba(16, 185, 129, 0.34)",
-    background: "rgba(16, 185, 129, 0.08)",
+    border: "rgba(30, 64, 175, 0.46)",
+    background: "rgba(30, 64, 175, 0.16)",
     color: "var(--source-focused-text)",
   },
   likely_cause: {
-    border: "rgba(20, 184, 166, 0.34)",
-    background: "rgba(20, 184, 166, 0.08)",
+    border: "rgba(14, 165, 233, 0.34)",
+    background: "rgba(14, 165, 233, 0.1)",
     color: "var(--source-likely-text)",
   },
   backdrop: {
-    border: "rgba(14, 165, 233, 0.34)",
-    background: "rgba(14, 165, 233, 0.08)",
+    border: "rgba(148, 163, 184, 0.3)",
+    background: "rgba(148, 163, 184, 0.08)",
     color: "var(--source-backdrop-text)",
   },
   price_check: {
@@ -91,6 +92,12 @@ const CHIP_TONES = {
     background: "var(--chip-bg)",
     border: "1px solid transparent",
     color: "var(--market-chip-text)",
+  },
+  marketWide: {
+    background: "rgba(245, 158, 11, 0.1)",
+    border: "1px solid transparent",
+    color:
+      "color-mix(in srgb, var(--market-chip-text) 70%, var(--brand-orange) 30%)",
   },
   up: {
     background: "rgba(16, 185, 129, 0.1)",
@@ -498,7 +505,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
 
       {item.sources.length > 0 && (
         <div>
-          <ColLabel>Accepted sources</ColLabel>
+          <ColLabel>Sources</ColLabel>
           <div className="flex flex-wrap gap-2">
             {item.sources.map((s, i) => (
               <SourceChip key={i} source={s} />
@@ -580,7 +587,11 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
               >
                 {formatEventDateTime(item)}
               </p>
-              <Chip tone="market">{scopeWord}</Chip>
+              <Chip
+                tone={item.scope === "market_day" ? "market" : "marketWide"}
+              >
+                {scopeWord}
+              </Chip>
             </div>
             <Chip tone="impact">
               Impact Score: {item.evidence.severity_score}
@@ -748,29 +759,32 @@ export default function IntelligenceFeed({
               className="flex items-center gap-1.5 text-[12px] leading-snug"
               style={{ color: "var(--text-primary)" }}
             >
-              <img
+              <Image
                 src="/brand/Binance_icon.png"
                 alt=""
                 aria-hidden
+                width={14}
+                height={14}
                 className="h-3.5 w-3.5 shrink-0"
               />
-              <span>
-                Binance public market data is used for signal detection.
-              </span>
+              <span>Binance public market data drives the detection.</span>
             </p>
             <p
-              className="flex items-center gap-1.5 text-[12px] leading-snug"
+              className="flex items-start gap-1.5 text-[12px] leading-snug"
               style={{ color: "var(--text-primary)" }}
             >
-              <img
+              <Image
                 src="/brand/Claude_AI_symbol.svg"
                 alt=""
                 aria-hidden
-                className="h-3.5 w-3.5 shrink-0"
+                width={14}
+                height={14}
+                className="mt-0.5 h-3.5 w-3.5 shrink-0"
               />
               <span>
-                Claude AI analysis using detected evidence and relevant sources
-                from Claude Web Search tool.
+                Claude reviews detected evidence, uses Web Search to find
+                relevant public sources, and summarizes the context with
+                citations.
               </span>
             </p>
           </div>

@@ -13,6 +13,10 @@ import {
   latestMarketResponse,
   marketCandlesResponse,
 } from "./routes/market.ts";
+import {
+  incrementViewMetricsResponse,
+  viewMetricsResponse,
+} from "./routes/metrics.ts";
 import type { Env } from "./types/env.ts";
 import {
   corsPreflightResponse,
@@ -35,6 +39,24 @@ export default {
 
     if (request.method === "OPTIONS" && isApiPath(url.pathname)) {
       return corsPreflightResponse(request);
+    }
+
+    if (url.pathname === "/api/metrics/views") {
+      try {
+        if (request.method === "GET") {
+          return respond(await viewMetricsResponse(env.DB));
+        }
+
+        if (request.method === "POST") {
+          return respond(await incrementViewMetricsResponse(env.DB));
+        }
+
+        return respond(methodNotAllowed());
+      } catch (error) {
+        return respond(
+          jsonError(500, "internal_error", safeErrorMessage(error)),
+        );
+      }
     }
 
     if (request.method !== "GET") {

@@ -28,9 +28,9 @@
   --source-chip-bg: rgba(34, 211, 238, 0.08);
   --source-chip-border: rgba(34, 211, 238, 0.36);
   --source-chip-text: #67e8f9;
-  --source-focused-text: #86efac;
-  --source-likely-text: #5eead4;
-  --source-backdrop-text: #7dd3fc;
+  --source-focused-text: #3b82f6;
+  --source-likely-text: #7dd3fc;
+  --source-backdrop-text: #cbd5e1;
   --source-price-text: #fcd34d;
   --market-chip-text: #fbbf24;
   --market-chip-border: rgba(251, 191, 36, 0.28);
@@ -49,8 +49,8 @@
 
   /* ── Evidence confidence ── */
   --cause-focused: #10b981;
-  --cause-likely: #14b8a6;
-  --context-backdrop: #94a3b8;
+  --cause-likely: #65a30d;
+  --context-backdrop: #b45309;
   --none-found: #94a3b8;
   --claude-limited: #8b5cf6;
 
@@ -114,9 +114,9 @@
   --source-chip-bg: rgba(14, 165, 233, 0.08);
   --source-chip-border: rgba(14, 165, 233, 0.3);
   --source-chip-text: #0369a1;
-  --source-focused-text: #047857;
-  --source-likely-text: #0f766e;
-  --source-backdrop-text: #0369a1;
+  --source-focused-text: #1e3a8a;
+  --source-likely-text: #0369a1;
+  --source-backdrop-text: #475569;
   --source-price-text: #a16207;
   --market-chip-text: #b45309;
   --market-chip-border: rgba(180, 83, 9, 0.24);
@@ -124,7 +124,9 @@
   --accent-selected-bg: rgba(139, 92, 246, 0.12);
   --accent-selected-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25);
 
-  --context-backdrop: #5b6677;
+  --cause-focused: #047857;
+  --cause-likely: #3f6212;
+  --context-backdrop: #7c2d12;
   --none-found: #5b6677;
 
   --brand-glow-soft: rgba(254, 114, 3, 0.06);
@@ -266,14 +268,14 @@ details > summary::-webkit-details-marker {
   box-shadow: 0 0 0 1px rgba(254, 114, 3, 0.12);
 }
 .chart-interval-tab:hover {
-  border-color: rgba(139, 92, 246, 0.5);
-  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(245, 158, 11, 0.44);
+  background: rgba(245, 158, 11, 0.08);
 }
 .chart-tab[aria-selected="true"],
 .chart-interval-tab[aria-selected="true"] {
-  border-color: var(--accent-primary);
-  background: var(--accent-selected-bg);
-  color: #c4b5fd;
+  border-color: rgba(245, 158, 11, 0.68);
+  background: rgba(245, 158, 11, 0.12);
+  color: #fcd34d;
 }
 
 :root[data-theme="light"] .chart-symbol-tab[aria-selected="true"] {
@@ -281,7 +283,7 @@ details > summary::-webkit-details-marker {
 }
 
 :root[data-theme="light"] .chart-interval-tab[aria-selected="true"] {
-  color: #5b21b6;
+  color: #92400e;
 }
 
 /* ── Feed row ── */

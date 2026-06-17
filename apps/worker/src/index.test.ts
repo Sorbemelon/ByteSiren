@@ -207,6 +207,39 @@ test("worker handles local web CORS preflight without credentials", async () => 
   assert.equal(response.headers.get("access-control-allow-credentials"), null);
 });
 
+test("worker allows POST CORS only for public view metrics", async () => {
+  const metricsPreflight = await worker.fetch(
+    new Request("http://localhost/api/metrics/views", {
+      method: "OPTIONS",
+      headers: {
+        origin: "http://localhost:3000",
+        "access-control-request-method": "POST",
+      },
+    }),
+    makeEnv(),
+  );
+  const marketPreflight = await worker.fetch(
+    new Request("http://localhost/api/market/latest", {
+      method: "OPTIONS",
+      headers: {
+        origin: "http://localhost:3000",
+        "access-control-request-method": "POST",
+      },
+    }),
+    makeEnv(),
+  );
+
+  assert.equal(metricsPreflight.status, 204);
+  assert.match(
+    metricsPreflight.headers.get("access-control-allow-methods") ?? "",
+    /POST/,
+  );
+  assert.doesNotMatch(
+    marketPreflight.headers.get("access-control-allow-methods") ?? "",
+    /POST/,
+  );
+});
+
 test("worker does not allow arbitrary CORS origins", async () => {
   const response = await worker.fetch(
     new Request("http://localhost/api/health", {
@@ -219,6 +252,55 @@ test("worker does not allow arbitrary CORS origins", async () => {
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("worker returns public view metrics shape", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/metrics/views"),
+    makeEnv(),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.today_utc, new Date().toISOString().slice(0, 10));
+  assert.equal(body.total_views, 0);
+  assert.equal(body.today_views, 0);
+  assert.equal(typeof body.updated_at, "string");
+});
+
+test("worker increments public view metrics without storing request identity", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    APP_VERSION: "0.1.0-placeholder",
+    BUILD_PHASE: "phase-4a5-deployment-boundary",
+  };
+
+  const first = await worker.fetch(
+    new Request("http://localhost/api/metrics/views", {
+      method: "POST",
+      headers: {
+        "user-agent": "Test Browser",
+        "cf-connecting-ip": "203.0.113.7",
+      },
+    }),
+    env,
+  );
+  const second = await worker.fetch(
+    new Request("http://localhost/api/metrics/views", { method: "POST" }),
+    env,
+  );
+  const firstBody = await readJson(first);
+  const secondBody = await readJson(second);
+  const storedKeys = Object.keys(tables.public_view_counts[0] ?? {});
+
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 200);
+  assert.equal(firstBody.today_views, 1);
+  assert.equal(secondBody.today_views, 2);
+  assert.equal(secondBody.total_views, 2);
+  assert.deepEqual(storedKeys.sort(), ["updated_at", "view_date", "views"]);
 });
 
 test("worker returns latest market summary for the approved symbols", async () => {

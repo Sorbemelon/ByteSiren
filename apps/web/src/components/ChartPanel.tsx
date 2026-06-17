@@ -257,8 +257,8 @@ export default function ChartPanel({
         className="px-2 text-center text-[11px] leading-snug"
         style={{ color: "var(--text-muted)" }}
       >
-        30-day chart · {chartInterval} candles · Binance public market data ·
-        Incident markers shown
+        30-day chart · {chartInterval} display · Detections use 15m signals ·
+        Binance public market data
       </p>
     </section>
   );

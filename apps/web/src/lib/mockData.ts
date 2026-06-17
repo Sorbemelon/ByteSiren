@@ -138,7 +138,7 @@ export const MOCK_FEED: FeedItem[] = [
       ],
       claude_context: {
         summary:
-          "Multiple same-day outlets attributed the broad risk-on move to renewed progress in US–China trade negotiations, with headlines crossing during the session. Coverage described crypto rallying alongside equities and other risk assets rather than moving on a crypto-specific catalyst. ByteSiren detected all five monitored symbols rising within the same 15-minute window; the public context is consistent with that timing but characterizes the day's sentiment rather than proving exact 15-minute causation.",
+          "Multiple same-day outlets attributed the broad risk-on move to renewed progress in US–China trade negotiations, with headlines crossing during the session. Coverage described crypto rallying with equities and other risk assets rather than moving on a crypto-specific catalyst. ByteSiren detected all five monitored symbols rising within the same 15-minute window; the public context is consistent with that timing but characterizes the day's sentiment rather than proving exact 15-minute causation.",
         caveats: [
           "This is same-day public context, not proof of exact 15-minute causation.",
         ],
@@ -229,7 +229,7 @@ export const MOCK_FEED: FeedItem[] = [
       ],
       claude_context: {
         summary:
-          "Public reporting pointed to the largest weekly spot-ETF net inflows in roughly three months, alongside risk-on positioning ahead of the scheduled Fed statement. Coverage framed the move as inflow- and sentiment-driven rather than tied to a single headline, which is consistent with the four-pair breadth ByteSiren detected. Price data showed a minor mismatch with the Binance reference for this window, so treat the linkage as supporting context rather than confirmation.",
+          "Public reporting pointed to the largest weekly spot-ETF net inflows in roughly three months, with risk-on positioning ahead of the scheduled Fed statement. Coverage framed the move as inflow- and sentiment-driven rather than tied to a single headline, which is consistent with the four-pair breadth ByteSiren detected. Price data showed a minor mismatch with the Binance reference for this window, so treat the linkage as supporting context rather than confirmation.",
         caveats: [
           "This is same-day public context, not proof of exact 15-minute causation.",
           "Price data shows a minor mismatch with Binance reference.",

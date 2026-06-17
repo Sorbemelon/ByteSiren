@@ -87,15 +87,24 @@ export default function Header({ updatedAt }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3 lg:justify-self-end">
-        <span
-          className="rounded-full px-4 py-1.5 text-[14px] font-semibold sm:text-[15px]"
-          style={{
-            color: "var(--safety-pill-text)",
-            background: "var(--safety-pill-bg)",
-          }}
-        >
-          Not financial advice
-        </span>
+        <div className="text-left lg:text-right">
+          <span
+            className="inline-flex rounded-full px-4 py-1.5 text-[14px] font-semibold sm:text-[15px]"
+            style={{
+              color: "var(--safety-pill-text)",
+              background: "var(--safety-pill-bg)",
+            }}
+          >
+            Not financial advice
+          </span>
+          <p
+            className="mt-1 whitespace-nowrap text-[10px] leading-snug sm:text-[11px]"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Not affiliated with or endorsed by Binance, Anthropic, or any
+            exchange.
+          </p>
+        </div>
         <ThemeToggle />
       </div>
     </header>

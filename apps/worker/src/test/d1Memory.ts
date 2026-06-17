@@ -87,6 +87,12 @@ interface ClaudeAnalysisUsageRow {
   updated_at: string;
 }
 
+interface PublicViewCountRow {
+  view_date: string;
+  views: number;
+  updated_at: string;
+}
+
 export interface MemoryD1Tables {
   market_candles: MarketCandle[];
   market_features: MarketFeatureRow[];
@@ -95,6 +101,7 @@ export interface MemoryD1Tables {
   claude_briefs: ClaudeBriefRow[];
   source_references: SourceReferenceRow[];
   claude_analysis_usage: ClaudeAnalysisUsageRow[];
+  public_view_counts: PublicViewCountRow[];
   job_runs: JobRunRow[];
 }
 
@@ -110,6 +117,7 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
     claude_briefs: [...(initial.claude_briefs ?? [])],
     source_references: [...(initial.source_references ?? [])],
     claude_analysis_usage: [...(initial.claude_analysis_usage ?? [])],
+    public_view_counts: [...(initial.public_view_counts ?? [])],
     job_runs: [...(initial.job_runs ?? [])],
   };
 
@@ -275,6 +283,28 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         const [usageDate] = this.params as [string];
         return (tables.claude_analysis_usage.find(
           (row) => row.usage_date === usageDate,
+        ) ?? null) as T;
+      }
+
+      if (
+        this.sql.includes("SUM(views)") &&
+        this.sql.includes("AS total_views")
+      ) {
+        return {
+          total_views: tables.public_view_counts.reduce(
+            (total, row) => total + row.views,
+            0,
+          ),
+        } as T;
+      }
+
+      if (
+        this.sql.includes("FROM public_view_counts") &&
+        this.sql.includes("view_date = ?")
+      ) {
+        const [viewDate] = this.params as [string];
+        return (tables.public_view_counts.find(
+          (row) => row.view_date === viewDate,
         ) ?? null) as T;
       }
 
@@ -628,6 +658,26 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
             analysis_count: analysisCount,
             web_search_requests: webSearchRequests,
             updated_at: now,
+          });
+        }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO public_view_counts")) {
+        const [viewDate, updatedAt] = this.params as [string, string];
+        const existing = tables.public_view_counts.find(
+          (row) => row.view_date === viewDate,
+        );
+
+        if (existing) {
+          existing.views += 1;
+          existing.updated_at = updatedAt;
+        } else {
+          tables.public_view_counts.push({
+            view_date: viewDate,
+            views: 1,
+            updated_at: updatedAt,
           });
         }
 

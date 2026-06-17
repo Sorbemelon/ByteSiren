@@ -88,6 +88,13 @@ export interface CandleBar {
   volume: number;
 }
 
+export interface ViewMetrics {
+  updated_at: string;
+  today_utc: string;
+  total_views: number;
+  today_views: number;
+}
+
 export const SYMBOLS = ["BTC", "ETH", "BNB", "SOL", "XRP"] as const;
 export type Symbol = (typeof SYMBOLS)[number];
 
@@ -153,6 +160,10 @@ export interface CandlesApiResponse {
   interval: string;
   range_days: number;
   candles: ApiCandle[];
+}
+
+export interface ViewMetricsApiResponse extends ViewMetrics {
+  ok: boolean;
 }
 
 export type ApiFeedItem = Omit<FeedItem, "expanded_details" | "evidence"> & {

@@ -9,6 +9,8 @@ import type {
   FeedApiResponse,
   MarketLatestApiResponse,
   CandlesApiResponse,
+  ViewMetrics,
+  ViewMetricsApiResponse,
 } from "./types";
 
 // ─── Normalization helpers ────────────────────────────────────────────────────
@@ -134,4 +136,28 @@ export async function fetchCandles(
   if (!res.ok) throw new Error(`candles HTTP ${res.status}`);
   const data = (await res.json()) as CandlesApiResponse;
   return (data.candles ?? []).map(normalizeCandle);
+}
+
+export async function fetchViewMetrics(base: string): Promise<ViewMetrics> {
+  const res = await fetch(`${base}/api/metrics/views`);
+  if (!res.ok) throw new Error(`view metrics HTTP ${res.status}`);
+  const data = (await res.json()) as ViewMetricsApiResponse;
+  return {
+    updated_at: data.updated_at,
+    today_utc: data.today_utc,
+    total_views: data.total_views,
+    today_views: data.today_views,
+  };
+}
+
+export async function recordViewMetric(base: string): Promise<ViewMetrics> {
+  const res = await fetch(`${base}/api/metrics/views`, { method: "POST" });
+  if (!res.ok) throw new Error(`view metrics POST HTTP ${res.status}`);
+  const data = (await res.json()) as ViewMetricsApiResponse;
+  return {
+    updated_at: data.updated_at,
+    today_utc: data.today_utc,
+    total_views: data.total_views,
+    today_views: data.today_views,
+  };
 }
