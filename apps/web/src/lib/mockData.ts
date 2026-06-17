@@ -51,19 +51,19 @@ export const MOCK_FEED: FeedItem[] = [
   {
     incident_id: "inc_001",
     detected_at: "2026-06-14T21:15:00Z",
-    display_date: "Jun 14 · 21:15 UTC",
+    display_date: "Jun 14, 21:15 UTC",
     scope: "market_wide",
     direction: "observed_up",
     symbols: ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"],
-    tags: ["same_day_context"],
+    tags: ["relief_rally", "same_day_context"],
     evidence: {
       signal_window: "15m",
       baseline_window: "24h",
       summary:
         "All five monitored pairs moved sharply upward within the same 15-minute window.",
-      breadth_label: "5/5 pairs",
+      breadth_label: "Signals: 5 of 5 symbols",
       severity_score: 100,
-      severity_label: "Strong Move",
+      severity_label: "Impact Score",
       avg_15m_change_pct: 2.4,
       peak_symbol: "SOLUSDT",
     },
@@ -81,14 +81,14 @@ export const MOCK_FEED: FeedItem[] = [
         publisher: "Reuters",
         title:
           "US-China trade talks progress spurs risk-on rally across assets",
-        url: "https://www.reuters.com",
+        url: "https://www.reuters.com/markets/global-markets-risk-assets-us-china-trade-talks-2026-06-14/",
         published_at: "2026-06-14",
         used_for: "focused_catalyst",
       },
       {
         publisher: "CoinDesk",
         title: "Crypto rallies as geopolitical tensions ease",
-        url: "https://www.coindesk.com",
+        url: "https://www.coindesk.com/markets/2026/06/14/crypto-rallies-as-geopolitical-tensions-ease/",
         published_at: "2026-06-14",
         used_for: "focused_catalyst",
       },
@@ -138,7 +138,7 @@ export const MOCK_FEED: FeedItem[] = [
       ],
       claude_context: {
         summary:
-          "Public sources from the same day describe broad market risk-on sentiment driven by geopolitical easing. Multiple outlets reported crypto as part of the wider asset rally.",
+          "Multiple same-day outlets attributed the broad risk-on move to renewed progress in US–China trade negotiations, with headlines crossing during the session. Coverage described crypto rallying alongside equities and other risk assets rather than moving on a crypto-specific catalyst. ByteSiren detected all five monitored symbols rising within the same 15-minute window; the public context is consistent with that timing but characterizes the day's sentiment rather than proving exact 15-minute causation.",
         caveats: [
           "This is same-day public context, not proof of exact 15-minute causation.",
         ],
@@ -151,19 +151,19 @@ export const MOCK_FEED: FeedItem[] = [
   {
     incident_id: "inc_002",
     detected_at: "2026-06-12T09:30:00Z",
-    display_date: "Jun 12 · 09:30 UTC",
+    display_date: "Jun 12, 09:30 UTC",
     scope: "market_wide",
     direction: "observed_up",
     symbols: ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"],
-    tags: ["same_day_context"],
+    tags: ["oversold_rebound", "same_day_context"],
     evidence: {
       signal_window: "15m",
       baseline_window: "24h",
       summary:
         "Four of five monitored pairs moved upward in the same 15-minute window.",
-      breadth_label: "4/5 pairs",
+      breadth_label: "Signals: 4 of 5 symbols",
       severity_score: 84,
-      severity_label: "Strong Move",
+      severity_label: "Impact Score",
       avg_15m_change_pct: 1.6,
       peak_symbol: "ETHUSDT",
     },
@@ -180,14 +180,14 @@ export const MOCK_FEED: FeedItem[] = [
       {
         publisher: "Bloomberg",
         title: "Bitcoin ETFs see largest weekly inflow in three months",
-        url: "https://www.bloomberg.com",
+        url: "https://www.bloomberg.com/news/articles/2026-06-12/bitcoin-etfs-see-largest-weekly-inflow-in-three-months",
         published_at: "2026-06-12",
         used_for: "likely_cause",
       },
       {
         publisher: "Yahoo Finance",
         title: "Crypto markets move higher ahead of Fed minutes release",
-        url: "https://finance.yahoo.com",
+        url: "https://finance.yahoo.com/news/crypto-markets-move-higher-ahead-fed-minutes-2026-06-12.html",
         published_at: "2026-06-12",
         used_for: "backdrop",
       },
@@ -229,7 +229,7 @@ export const MOCK_FEED: FeedItem[] = [
       ],
       claude_context: {
         summary:
-          "ETF inflow data and pre-FOMC positioning appear consistent with the observed upward move across four pairs.",
+          "Public reporting pointed to the largest weekly spot-ETF net inflows in roughly three months, alongside risk-on positioning ahead of the scheduled Fed statement. Coverage framed the move as inflow- and sentiment-driven rather than tied to a single headline, which is consistent with the four-pair breadth ByteSiren detected. Price data showed a minor mismatch with the Binance reference for this window, so treat the linkage as supporting context rather than confirmation.",
         caveats: [
           "This is same-day public context, not proof of exact 15-minute causation.",
           "Price data shows a minor mismatch with Binance reference.",
@@ -242,8 +242,8 @@ export const MOCK_FEED: FeedItem[] = [
   },
   {
     incident_id: "inc_003",
-    detected_at: "2026-06-10T00:00:00Z",
-    display_date: "Jun 10",
+    detected_at: "2026-06-10T09:30:00Z",
+    display_date: "Jun 10, 09:30–15:45 UTC",
     scope: "market_day",
     direction: "two_sided",
     symbols: ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"],
@@ -253,9 +253,9 @@ export const MOCK_FEED: FeedItem[] = [
       baseline_window: "24h",
       summary:
         "Day-level grouping of two sub-events: sharp intraday decline reversed by late-session recovery.",
-      breadth_label: "5/5 pairs",
+      breadth_label: "Signals: 5 of 5 symbols",
       severity_score: 83,
-      severity_label: "Strong Move",
+      severity_label: "Impact Score",
       avg_15m_change_pct: 1.9,
       peak_symbol: "BTCUSDT",
     },
@@ -272,14 +272,14 @@ export const MOCK_FEED: FeedItem[] = [
       {
         publisher: "CoinDesk",
         title: "Crypto endures volatile session before recovering late",
-        url: "https://www.coindesk.com",
+        url: "https://www.coindesk.com/markets/2026/06/10/crypto-endures-volatile-session-before-recovering-late/",
         published_at: "2026-06-10",
         used_for: "backdrop",
       },
       {
         publisher: "CoinTelegraph",
         title: "Market day recap: crypto swings with equities",
-        url: "https://cointelegraph.com",
+        url: "https://cointelegraph.com/news/market-day-recap-crypto-swings-with-equities-june-10-2026",
         published_at: "2026-06-10",
         used_for: "backdrop",
       },
@@ -329,7 +329,7 @@ export const MOCK_FEED: FeedItem[] = [
       ],
       claude_context: {
         summary:
-          "Day-level context only. Sources confirm broad volatility but do not identify a direct cause for either sub-event.",
+          "Day-level recap only. Sources described a volatile session: early losses were linked to broad macroeconomic uncertainty, and a late-session recovery coincided with improving risk sentiment in equity markets. Because this is a Market Day grouping of multiple sub-events, the context applies to the day overall and not to any single 15-minute candle.",
         caveats: [
           "This is same-day public context, not proof of exact 15-minute causation.",
           "Market Day events group multiple sub-events; context applies to the day, not each 15m candle.",
@@ -343,19 +343,19 @@ export const MOCK_FEED: FeedItem[] = [
   {
     incident_id: "inc_004",
     detected_at: "2026-06-07T14:00:00Z",
-    display_date: "Jun 7 · 14:00 UTC",
+    display_date: "Jun 7, 14:00 UTC",
     scope: "market_wide",
     direction: "observed_down",
     symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
-    tags: [],
+    tags: ["no_direct_catalyst"],
     evidence: {
       signal_window: "15m",
       baseline_window: "24h",
       summary:
         "Three of five monitored pairs moved sharply downward in the same 15-minute window.",
-      breadth_label: "3/5 pairs",
+      breadth_label: "Signals: 3 of 5 symbols",
       severity_score: 72,
-      severity_label: "Strong Move",
+      severity_label: "Impact Score",
       avg_15m_change_pct: -1.4,
       peak_symbol: "SOLUSDT",
     },
@@ -402,7 +402,7 @@ export const MOCK_FEED: FeedItem[] = [
   {
     incident_id: "inc_005",
     detected_at: "2026-06-05T18:45:00Z",
-    display_date: "Jun 5 · 18:45 UTC",
+    display_date: "Jun 5, 18:45 UTC",
     scope: "market_wide",
     direction: "observed_up",
     symbols: ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"],
@@ -412,9 +412,9 @@ export const MOCK_FEED: FeedItem[] = [
       baseline_window: "24h",
       summary:
         "All five monitored pairs moved upward in the same 15-minute window.",
-      breadth_label: "5/5 pairs",
+      breadth_label: "Signals: 5 of 5 symbols",
       severity_score: 91,
-      severity_label: "Strong Move",
+      severity_label: "Impact Score",
       avg_15m_change_pct: 1.9,
       peak_symbol: "SOLUSDT",
     },
@@ -477,7 +477,7 @@ export const MOCK_FEED: FeedItem[] = [
   {
     incident_id: "inc_006",
     detected_at: "2026-06-03T11:00:00Z",
-    display_date: "Jun 3 · 11:00 UTC",
+    display_date: "Jun 3, 11:00 UTC",
     scope: "market_wide",
     direction: "two_sided",
     symbols: ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"],
@@ -487,9 +487,9 @@ export const MOCK_FEED: FeedItem[] = [
       baseline_window: "24h",
       summary:
         "All five monitored pairs showed two-sided unusual movement in the same 15-minute window.",
-      breadth_label: "5/5 pairs",
+      breadth_label: "Signals: 5 of 5 symbols",
       severity_score: 77,
-      severity_label: "Strong Move",
+      severity_label: "Impact Score",
       avg_15m_change_pct: 1.7,
       peak_symbol: "ETHUSDT",
     },

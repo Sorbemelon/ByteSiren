@@ -56,7 +56,7 @@ export interface FeedItem {
     breadth_label: string;
     severity_score: number;
     severity_label: string;
-    avg_15m_change_pct: number;
+    avg_15m_change_pct: number | null;
     peak_symbol: string;
   };
   brief: FeedItemBrief;
@@ -155,9 +155,12 @@ export interface CandlesApiResponse {
   candles: ApiCandle[];
 }
 
-export type ApiFeedItem = Omit<FeedItem, "expanded_details"> & {
+export type ApiFeedItem = Omit<FeedItem, "expanded_details" | "evidence"> & {
   symbol_evidence?: ApiSymbolEvidence[];
-  evidence: FeedItem["evidence"] & { evidence_summary?: string };
+  evidence: Omit<FeedItem["evidence"], "avg_15m_change_pct"> & {
+    avg_15m_change_pct?: number | null;
+    evidence_summary?: string;
+  };
   expanded_details?: {
     symbol_evidence?: ApiSymbolEvidence[];
     claude_context?: Record<string, unknown>;

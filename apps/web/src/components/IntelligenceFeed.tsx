@@ -1,20 +1,50 @@
 "use client";
 
-import { ChevronDown, ExternalLink, HelpCircle } from "lucide-react";
+import {
+  ArrowLeftRight,
+  BadgeCheck,
+  ChevronDown,
+  Clock,
+  ExternalLink,
+  HelpCircle,
+  Info,
+  Lock,
+  type LucideIcon,
+  SearchCheck,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
 import type { FeedItem, FeedItemSource, SymbolEvidence } from "../lib/types";
+import { AuroraText } from "./ui/aurora-text";
 
-// ─── Label color maps ─────────────────────────────────────────────────────────
+// ─── Label maps ────────────────────────────────────────────────────────────────
 
-const DIRECTION_COLORS: Record<string, string> = {
-  observed_up: "var(--up)",
-  observed_down: "var(--down)",
-  two_sided: "var(--two-sided)",
+const DIRECTION_META: Record<
+  string,
+  { label: string; color: string; Icon: LucideIcon }
+> = {
+  observed_up: { label: "Observed Up", color: "var(--up)", Icon: TrendingUp },
+  observed_down: {
+    label: "Observed Down",
+    color: "var(--down)",
+    Icon: TrendingDown,
+  },
+  two_sided: {
+    label: "Two-sided",
+    color: "var(--two-sided)",
+    Icon: ArrowLeftRight,
+  },
 };
 
-const DIRECTION_LABELS: Record<string, string> = {
-  observed_up: "Observed Up",
-  observed_down: "Observed Down",
-  two_sided: "Two-sided",
+// Keyed by catalyst_status ?? status.
+const STATUS_ICON: Record<string, LucideIcon> = {
+  cause_supported: BadgeCheck,
+  cause_likely: SearchCheck,
+  context_only: Info,
+  none_found: HelpCircle,
+  analysis_limited: Lock,
+  queued_for_analysis: Clock,
 };
 
 const BRIEF_ACCENT: Record<string, string> = {
@@ -26,18 +56,93 @@ const BRIEF_ACCENT: Record<string, string> = {
   queued_for_analysis: "var(--status-moving)",
 };
 
-const SOURCE_CHIP_COLORS: Record<string, string> = {
-  focused_catalyst: "var(--cause-focused)",
-  likely_cause: "var(--cause-likely)",
-  backdrop: "var(--context-backdrop)",
-  price_check: "var(--status-strong)",
+const SOURCE_CHIP_STYLES: Record<
+  FeedItemSource["used_for"],
+  { border: string; background: string; color: string }
+> = {
+  focused_catalyst: {
+    border: "rgba(16, 185, 129, 0.34)",
+    background: "rgba(16, 185, 129, 0.08)",
+    color: "var(--source-focused-text)",
+  },
+  likely_cause: {
+    border: "rgba(20, 184, 166, 0.34)",
+    background: "rgba(20, 184, 166, 0.08)",
+    color: "var(--source-likely-text)",
+  },
+  backdrop: {
+    border: "rgba(14, 165, 233, 0.34)",
+    background: "rgba(14, 165, 233, 0.08)",
+    color: "var(--source-backdrop-text)",
+  },
+  price_check: {
+    border: "rgba(245, 158, 11, 0.32)",
+    background: "rgba(245, 158, 11, 0.07)",
+    color: "var(--source-price-text)",
+  },
 };
+
+const CHIP_TONES = {
+  neutral: {
+    background: "var(--chip-bg)",
+    border: "1px solid var(--chip-border)",
+    color: "var(--chip-text)",
+  },
+  market: {
+    background: "var(--chip-bg)",
+    border: "1px solid var(--market-chip-border)",
+    color: "var(--market-chip-text)",
+  },
+  up: {
+    background: "rgba(16, 185, 129, 0.1)",
+    border: "1px solid rgba(16, 185, 129, 0.28)",
+    color: "var(--up)",
+  },
+  down: {
+    background: "rgba(244, 63, 94, 0.1)",
+    border: "1px solid rgba(244, 63, 94, 0.3)",
+    color: "var(--down)",
+  },
+  twoSided: {
+    background: "rgba(167, 139, 250, 0.12)",
+    border: "1px solid rgba(167, 139, 250, 0.32)",
+    color: "var(--two-sided)",
+  },
+  impact: {
+    background: "rgba(245, 158, 11, 0.1)",
+    border: "1px solid transparent",
+    color: "var(--text-primary)",
+  },
+  info: {
+    background: "rgba(59, 130, 246, 0.1)",
+    border: "1px solid rgba(59, 130, 246, 0.28)",
+    color: "var(--status-moving)",
+  },
+} satisfies Record<string, CSSProperties>;
+
+const UTC_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function briefKind(item: FeedItem): string {
+  return item.brief.catalyst_status ?? item.brief.status;
+}
+
 function briefAccentColor(item: FeedItem): string {
-  const cs = item.brief.catalyst_status ?? item.brief.status;
-  return BRIEF_ACCENT[cs] ?? "var(--text-muted)";
+  return BRIEF_ACCENT[briefKind(item)] ?? "var(--text-muted)";
 }
 
 function fmtPct(pct: number): string {
@@ -46,15 +151,75 @@ function fmtPct(pct: number): string {
 }
 
 function safeVal(v: number | null | undefined, fixed = 1): string {
-  // Show real zeros; reserve "—" for genuinely absent values only.
   if (v == null || Number.isNaN(v)) return "—";
   return v.toFixed(fixed);
 }
 
-// ─── SourceChip ───────────────────────────────────────────────────────────────
+function breadthLabel(count: number): string {
+  if (count <= 0) return "Signals: —";
+  return `Signals: ${Math.min(count, 5)} of 5 symbols`;
+}
+
+function formatEventDateTime(item: FeedItem): string {
+  const d = new Date(item.detected_at);
+  const datePart = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}`;
+  const timePart = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
+    d.getUTCMinutes(),
+  ).padStart(2, "0")}`;
+  if (item.scope === "market_day") {
+    const display = item.display_date?.trim().replace(/\s+/g, " ");
+    if (display && /\d{1,2}:\d{2}/.test(display)) return display;
+    return `${datePart}, ${timePart} UTC · multi-event day`;
+  }
+  return `${datePart}, ${timePart} UTC`;
+}
+
+function normalizeText(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function hasDistinctContextDetails(item: FeedItem): boolean {
+  const summary = normalizeText(item.brief.summary);
+  const details = normalizeText(item.expanded_details.claude_context.summary);
+  if (!details) return false;
+  if (!summary) return true;
+  if (details === summary) return false;
+  return details.length > summary.length + 40;
+}
+
+// ─── Small primitives ─────────────────────────────────────────────────────────
+
+function Chip({
+  children,
+  tone = "neutral",
+}: {
+  children: ReactNode;
+  tone?: keyof typeof CHIP_TONES;
+}) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium"
+      style={CHIP_TONES[tone]}
+    >
+      {children}
+    </span>
+  );
+}
+
+function ColLabel({ children }: { children: ReactNode }) {
+  return (
+    <p
+      className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
+      style={{ color: "var(--text-muted)" }}
+    >
+      {children}
+    </p>
+  );
+}
 
 function SourceChip({ source }: { source: FeedItemSource }) {
-  const color = SOURCE_CHIP_COLORS[source.used_for] ?? "var(--text-muted)";
+  const style =
+    SOURCE_CHIP_STYLES[source.used_for] ?? SOURCE_CHIP_STYLES.backdrop;
   return (
     <a
       href={source.url}
@@ -62,10 +227,11 @@ function SourceChip({ source }: { source: FeedItemSource }) {
       rel="noopener noreferrer"
       title={source.title}
       aria-label={`${source.publisher}: ${source.title} (opens in new tab)`}
-      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5 focus-visible:ring-2"
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5 hover:brightness-110 focus-visible:ring-2"
       style={{
-        borderColor: color,
-        color,
+        background: style.background,
+        borderColor: style.border,
+        color: style.color,
         textDecoration: "none",
       }}
     >
@@ -75,40 +241,37 @@ function SourceChip({ source }: { source: FeedItemSource }) {
   );
 }
 
-// ─── BriefContent ─────────────────────────────────────────────────────────────
+// ─── Public Context column ────────────────────────────────────────────────────
 
-interface BriefContentProps {
+interface PublicContextProps {
   item: FeedItem;
   isExpanded: boolean;
   accentColor: string;
 }
 
-function BriefContent({ item, isExpanded, accentColor }: BriefContentProps) {
+function PublicContext({ item, isExpanded, accentColor }: PublicContextProps) {
   const { brief } = item;
+  const Icon = STATUS_ICON[briefKind(item)] ?? Info;
   const showSummary =
     (brief.status === "brief_ready" || brief.status === "context_only") &&
     brief.summary;
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-2">
+      {/* Status line: icon and label carry the approved context state. */}
+      <div className="flex items-center gap-1.5">
+        <Icon size={14} color={accentColor} aria-hidden />
         <span
-          className="h-1.5 w-1.5 shrink-0 rounded-full"
-          aria-hidden
-          style={{ background: accentColor }}
-        />
-        <span
-          className="text-[12px] font-semibold"
+          className="text-[12.5px] font-semibold"
           style={{ color: accentColor }}
         >
           {brief.label}
         </span>
       </div>
 
-      {/* brief_ready or context_only: show summary */}
       {showSummary && (
         <p
-          className="text-[12px] leading-snug"
+          className="text-[12.5px] leading-snug"
           style={
             {
               color: "var(--text-secondary)",
@@ -123,26 +286,37 @@ function BriefContent({ item, isExpanded, accentColor }: BriefContentProps) {
         </p>
       )}
 
-      {/* analysis_limited: violet glass card */}
+      {/* Claude Limited: blurred ghost block behind the approved message only */}
       {brief.status === "analysis_limited" && (
         <div
+          className="relative overflow-hidden rounded-lg p-2.5"
           style={{
             background: "rgba(139, 92, 246, 0.08)",
             border: "1px solid rgba(139, 92, 246, 0.25)",
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
-            borderRadius: "10px",
-            padding: "8px 10px",
           }}
         >
-          <p
-            className="text-[11px] font-semibold"
-            style={{ color: "var(--claude-limited)" }}
+          <div
+            aria-hidden
+            className="absolute inset-0 space-y-2 p-2.5"
+            style={{ filter: "blur(5px)", opacity: 0.5 }}
           >
-            Claude Limited
-          </p>
+            <div
+              className="h-2 rounded"
+              style={{ width: "92%", background: "var(--chip-bg)" }}
+            />
+            <div
+              className="h-2 rounded"
+              style={{ width: "78%", background: "var(--chip-bg)" }}
+            />
+            <div
+              className="h-2 rounded"
+              style={{ width: "64%", background: "var(--chip-bg)" }}
+            />
+          </div>
           <p
-            className="mt-0.5 text-[12px]"
+            className="relative text-[12px] leading-snug"
             style={{ color: "var(--text-secondary)" }}
           >
             Claude analysis is limited in this free public project. The context
@@ -151,7 +325,6 @@ function BriefContent({ item, isExpanded, accentColor }: BriefContentProps) {
         </div>
       )}
 
-      {/* queued_for_analysis */}
       {brief.status === "queued_for_analysis" && (
         <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
           Waiting for Claude analysis. This detection is queued for date-matched
@@ -159,14 +332,12 @@ function BriefContent({ item, isExpanded, accentColor }: BriefContentProps) {
         </p>
       )}
 
-      {/* none_found */}
       {brief.status === "none_found" && (
-        <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
+        <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
           No clear public cause found from trusted sources for this detection.
         </p>
       )}
 
-      {/* Metadata: confidence + price check */}
       {brief.status === "brief_ready" &&
         (brief.confidence || brief.price_context_check) && (
           <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
@@ -190,31 +361,28 @@ function BriefContent({ item, isExpanded, accentColor }: BriefContentProps) {
   );
 }
 
-// ─── ExpandedRow ─────────────────────────────────────────────────────────────
+// ─── Expanded detail ──────────────────────────────────────────────────────────
 
 function ExpandedRow({ item }: { item: FeedItem }) {
   const { expanded_details, brief } = item;
   const hasSymbolEvidence = expanded_details.symbol_evidence.length > 0;
+  const showContextDetails =
+    (brief.status === "brief_ready" || brief.status === "context_only") &&
+    hasDistinctContextDetails(item);
 
   return (
     <div
       className="mt-3 flex flex-col gap-4 pt-3"
-      style={{ borderTop: "1px solid rgba(148,163,184,0.1)" }}
+      style={{ borderTop: "1px solid var(--border-row)" }}
     >
-      {/* Per-symbol evidence */}
       {hasSymbolEvidence && (
         <div>
-          <p
-            className="mb-2 text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Per-symbol evidence
-          </p>
+          <ColLabel>Per-symbol evidence</ColLabel>
           <div
             className="overflow-x-auto rounded-lg"
             style={{
-              background: "rgba(7,10,18,0.5)",
-              border: "1px solid rgba(148,163,184,0.08)",
+              background: "var(--bg-panel)",
+              border: "1px solid var(--border-row)",
             }}
           >
             <table className="w-full text-[12px]">
@@ -222,7 +390,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                 <tr
                   style={{
                     color: "var(--text-muted)",
-                    borderBottom: "1px solid rgba(148,163,184,0.1)",
+                    borderBottom: "1px solid var(--border-row)",
                   }}
                 >
                   {[
@@ -231,7 +399,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                     "Price Z",
                     "Vol ×",
                     "Range ×",
-                    "Score",
+                    "Impact",
                   ].map((h) => (
                     <th key={h} className="px-3 py-2 text-left font-medium">
                       {h}
@@ -245,7 +413,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                     key={row.symbol}
                     className="border-b last:border-0"
                     style={{
-                      borderColor: "rgba(148,163,184,0.06)",
+                      borderColor: "var(--border-row)",
                       color: "var(--text-secondary)",
                     }}
                   >
@@ -280,7 +448,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                       {safeVal(row.range_x)}×
                     </td>
                     <td
-                      className="px-3 py-2 tabular-nums font-semibold"
+                      className="px-3 py-2 font-semibold tabular-nums"
                       style={{
                         color:
                           row.score != null && row.score >= 90
@@ -300,45 +468,32 @@ function ExpandedRow({ item }: { item: FeedItem }) {
             style={{ color: "var(--text-muted)" }}
           >
             Price Z: standard deviations vs 24h baseline · Vol × and Range ×
-            compare current 15m candle to recent 24h median
+            compare the current 15m candle to the recent 24h median
           </p>
         </div>
       )}
 
-      {/* Claude context */}
-      {(brief.status === "brief_ready" || brief.status === "context_only") &&
-        expanded_details.claude_context.summary && (
-          <div>
-            <p
-              className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Claude context
-            </p>
-            <p
-              className="text-[13px] leading-relaxed"
-              style={
-                {
-                  color: "var(--text-secondary)",
-                  maxWidth: "65ch",
-                  textWrap: "pretty",
-                } as React.CSSProperties
-              }
-            >
-              {expanded_details.claude_context.summary}
-            </p>
-          </div>
-        )}
+      {showContextDetails && (
+        <div>
+          <ColLabel>Context Details</ColLabel>
+          <p
+            className="text-[13px] leading-relaxed"
+            style={
+              {
+                color: "var(--text-secondary)",
+                maxWidth: "70ch",
+                textWrap: "pretty",
+              } as React.CSSProperties
+            }
+          >
+            {expanded_details.claude_context.summary}
+          </p>
+        </div>
+      )}
 
-      {/* All accepted sources */}
       {item.sources.length > 0 && (
         <div>
-          <p
-            className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Sources
-          </p>
+          <ColLabel>Accepted sources</ColLabel>
           <div className="flex flex-wrap gap-2">
             {item.sources.map((s, i) => (
               <SourceChip key={i} source={s} />
@@ -347,7 +502,17 @@ function ExpandedRow({ item }: { item: FeedItem }) {
         </div>
       )}
 
-      {/* Caveats */}
+      {item.tags.length > 0 && (
+        <div>
+          <ColLabel>Tags</ColLabel>
+          <div className="flex flex-wrap gap-1.5">
+            {item.tags.map((t) => (
+              <Chip key={t}>{t.replace(/_/g, " ")}</Chip>
+            ))}
+          </div>
+        </div>
+      )}
+
       {expanded_details.caveats.length > 0 && (
         <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
           {expanded_details.caveats.join(" ")}
@@ -357,36 +522,41 @@ function ExpandedRow({ item }: { item: FeedItem }) {
   );
 }
 
-// ─── FeedRow ─────────────────────────────────────────────────────────────────
+// ─── Feed card ────────────────────────────────────────────────────────────────
 
-interface FeedRowProps {
+interface FeedCardProps {
   item: FeedItem;
   isSelected: boolean;
   isExpanded: boolean;
   onToggle: () => void;
 }
 
-function FeedRow({ item, isSelected, isExpanded, onToggle }: FeedRowProps) {
-  const dirColor = DIRECTION_COLORS[item.direction] ?? "var(--text-muted)";
+function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
   const accentColor = briefAccentColor(item);
+  const dir = DIRECTION_META[item.direction] ?? {
+    label: item.direction,
+    color: "var(--text-muted)",
+    Icon: ArrowLeftRight,
+  };
+  const DirIcon = dir.Icon;
 
   const visibleSources = item.sources.slice(0, 2);
   const overflowCount = item.sources.length - visibleSources.length;
-
-  const scopeLabel = item.scope === "market_day" ? "Market Day" : "15m signal";
+  const scopeWord =
+    item.scope === "market_day" ? "Market Day" : "Market-wide event";
+  const avg = item.evidence.avg_15m_change_pct;
+  const hasAvg = avg != null && !Number.isNaN(avg);
 
   return (
     <article
       className="feed-row relative rounded-2xl"
       data-selected={isSelected}
     >
-      {/* Header region: a dedicated expand button is stretched over it; source
-          links sit above as separate interactive siblings (valid HTML). */}
       <div className="relative">
         <button
           type="button"
           aria-expanded={isExpanded}
-          aria-label={`${scopeLabel} on ${item.display_date}, ${DIRECTION_LABELS[item.direction] ?? item.direction}, ${item.brief.label}. ${isExpanded ? "Collapse details" : "Expand details"}`}
+          aria-label={`${scopeWord} on ${formatEventDateTime(item)}, ${dir.label}, ${item.brief.label}. ${isExpanded ? "Collapse details" : "Expand details"}`}
           onClick={onToggle}
           className="absolute inset-0 cursor-pointer rounded-2xl"
           style={{
@@ -396,80 +566,110 @@ function FeedRow({ item, isSelected, isExpanded, onToggle }: FeedRowProps) {
           }}
         />
 
-        <div className="pointer-events-none p-3">
-          <div className="grid gap-2 sm:grid-cols-[1fr_1.5fr_auto]">
-            {/* Evidence column */}
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap gap-1.5">
-                <span
-                  className="inline-block rounded border px-1.5 py-0.5 text-[11px] font-semibold"
-                  style={{
-                    borderColor: "rgba(148,163,184,0.25)",
-                    color: "var(--text-secondary)",
-                    background: "rgba(148,163,184,0.07)",
-                  }}
-                >
-                  {scopeLabel}
-                </span>
-                <span
-                  className="inline-block rounded border px-1.5 py-0.5 text-[11px] font-medium"
-                  style={{
-                    borderColor: dirColor + "55",
-                    color: dirColor,
-                    background: dirColor + "12",
-                  }}
-                >
-                  {DIRECTION_LABELS[item.direction] ?? item.direction}
-                </span>
-              </div>
-
+        <div className="pointer-events-none p-3.5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <p
-                className="text-[12px] font-medium tabular-nums"
+                className="mr-1 text-[13.5px] font-semibold tabular-nums"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {formatEventDateTime(item)}
+              </p>
+              <Chip tone="market">{scopeWord}</Chip>
+              <Chip
+                tone={
+                  item.direction === "observed_up"
+                    ? "up"
+                    : item.direction === "observed_down"
+                      ? "down"
+                      : "twoSided"
+                }
+              >
+                <DirIcon size={12} aria-hidden />
+                {dir.label}
+              </Chip>
+            </div>
+            <Chip tone="impact">
+              Impact Score: {item.evidence.severity_score}
+            </Chip>
+          </div>
+
+          <div className="feed-card-grid">
+            <div>
+              <ColLabel>Evidence</ColLabel>
+              <p
+                className="text-[12.5px] font-semibold"
                 style={{ color: "var(--text-secondary)" }}
               >
-                {item.evidence.breadth_label}
-                <span style={{ color: "var(--text-muted)" }}> · </span>
-                <span style={{ color: "var(--status-strong)" }}>
-                  {item.evidence.severity_label} {item.evidence.severity_score}
-                </span>
+                {breadthLabel(item.symbols.length)}
               </p>
-
               <p
-                className="text-[11px] tabular-nums"
+                className="mt-1 text-[12px] tabular-nums"
                 style={{ color: "var(--text-muted)" }}
               >
-                {item.display_date}
+                Avg 15m{" "}
+                {hasAvg ? (
+                  <span
+                    style={{
+                      color: avg >= 0 ? "var(--up)" : "var(--down)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {fmtPct(avg)}
+                  </span>
+                ) : (
+                  <span>—</span>
+                )}
+                <span>
+                  {" "}
+                  · Peak {item.evidence.peak_symbol.replace("USDT", "")}
+                </span>
               </p>
             </div>
 
-            {/* Brief column */}
-            <BriefContent
-              item={item}
-              isExpanded={isExpanded}
-              accentColor={accentColor}
-            />
+            <div>
+              <ColLabel>Public Context</ColLabel>
+              <PublicContext
+                item={item}
+                isExpanded={isExpanded}
+                accentColor={accentColor}
+              />
+            </div>
 
-            {/* Sources column — interactive, above the stretched expand button */}
-            <div className="pointer-events-auto relative z-1 flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
-              {visibleSources.map((s, i) => (
-                <SourceChip key={i} source={s} />
-              ))}
-              {overflowCount > 0 && (
+            <div className="pointer-events-auto relative z-[1]">
+              <ColLabel>Sources</ColLabel>
+              {item.sources.length > 0 ? (
+                <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
+                  {visibleSources.map((s, i) => (
+                    <SourceChip key={i} source={s} />
+                  ))}
+                  {overflowCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={onToggle}
+                      aria-label={`Show ${overflowCount} more accepted source${overflowCount === 1 ? "" : "s"}`}
+                      className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
+                      style={{
+                        borderColor: "var(--border-row)",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      +{overflowCount}
+                    </button>
+                  )}
+                </div>
+              ) : (
                 <span
-                  className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
-                  style={{
-                    borderColor: "var(--border-row)",
-                    color: "var(--text-muted)",
-                  }}
+                  className="text-[11px]"
+                  style={{ color: "var(--text-muted)" }}
                 >
-                  +{overflowCount}
+                  —
                 </span>
               )}
             </div>
           </div>
 
-          {/* Expand chevron */}
-          <div className="mt-2 flex justify-center">
+          <div className="mt-3 flex justify-center">
             <ChevronDown
               size={14}
               aria-hidden
@@ -483,9 +683,8 @@ function FeedRow({ item, isSelected, isExpanded, onToggle }: FeedRowProps) {
         </div>
       </div>
 
-      {/* Expanded details — sibling outside the stretched expand button */}
       {isExpanded && (
-        <div className="px-3 pb-4">
+        <div className="feed-expand px-3.5 pb-4">
           <ExpandedRow item={item} />
         </div>
       )}
@@ -520,14 +719,20 @@ export default function IntelligenceFeed({
         boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
       }}
     >
-      {/* Panel header */}
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <h2
-            className="text-[22px] font-semibold leading-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Intelligence Feed
+          <h2 className="text-[28px] font-semibold leading-tight sm:text-[30px]">
+            <AuroraText
+              colors={[
+                "var(--brand-orange-deep)",
+                "var(--brand-orange)",
+                "var(--brand-orange-amber)",
+                "var(--brand-orange-yellow)",
+              ]}
+              speed={0.7}
+            >
+              Intelligence Feed
+            </AuroraText>
           </h2>
           <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
             Past 30 days · newest first
@@ -559,21 +764,7 @@ export default function IntelligenceFeed({
         </button>
       </div>
 
-      {/* Column headers */}
-      <div
-        className="mb-2 grid grid-cols-[1fr_1.5fr_auto] gap-2 pb-2 text-[11px] font-semibold uppercase tracking-wider"
-        style={{
-          color: "var(--text-muted)",
-          borderBottom: "1px solid rgba(148,163,184,0.1)",
-        }}
-      >
-        <span>Evidence</span>
-        <span>Claude Brief</span>
-        <span>Sources</span>
-      </div>
-
-      {/* Feed rows */}
-      <div className="flex min-h-50 flex-1 flex-col gap-2 overflow-y-auto pr-0.5">
+      <div className="flex min-h-50 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">
         {loading && (
           <div className="flex items-center justify-center py-8">
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -586,8 +777,8 @@ export default function IntelligenceFeed({
           <div
             className="flex flex-col items-center justify-center rounded-xl px-4 py-10 text-center"
             style={{
-              background: "rgba(148,163,184,0.04)",
-              border: "1px dashed rgba(148,163,184,0.15)",
+              background: "var(--chip-bg)",
+              border: "1px dashed var(--border-row)",
             }}
           >
             <p
@@ -608,7 +799,7 @@ export default function IntelligenceFeed({
 
         {!loading &&
           items.map((item) => (
-            <FeedRow
+            <FeedCard
               key={item.incident_id}
               item={item}
               isSelected={item.incident_id === selectedId}

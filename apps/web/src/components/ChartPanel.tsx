@@ -1,11 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MarketLatest, FeedItem, CandleBar, Symbol } from "../lib/types";
 import { SYMBOLS, SYMBOL_FULL } from "../lib/types";
 import { generateCandles, IS_DEV } from "../lib/mockData";
 import { fetchCandles } from "../lib/api";
+import { aggregateCandles, CHART_INTERVALS } from "../lib/candles";
+import type { ChartInterval } from "../lib/candles";
+import { useTheme } from "../lib/theme";
 
 type ChartStatus = "loading" | "ready" | "unavailable";
 
@@ -16,7 +19,7 @@ const TradingViewChart = dynamic(() => import("./TradingViewChart"), {
       className="flex items-center justify-center rounded-xl"
       style={{
         height: 420,
-        background: "rgba(16, 23, 41, 0.4)",
+        background: "var(--bg-chart-loading)",
         border: "1px dashed rgba(148,163,184,0.2)",
       }}
     >
@@ -57,8 +60,8 @@ export default function ChartPanel({
   const symbolFull = SYMBOL_FULL[selectedSymbol];
   const mkt = market[symbolFull];
 
-  // Mock candles are dev-only. In production we never show deterministic
-  // fake candles; the chart shows a loading/unavailable state until live data
+  // Development sample candles are dev-only. In production the chart shows a
+  // loading/unavailable state until live data
   // arrives.
   const [candles, setCandles] = useState<CandleBar[]>(() =>
     IS_DEV ? generateCandles(symbolFull) : [],
@@ -66,8 +69,10 @@ export default function ChartPanel({
   const [status, setStatus] = useState<ChartStatus>(
     IS_DEV ? "ready" : "loading",
   );
+  const [chartInterval, setChartInterval] = useState<ChartInterval>("15m");
+  const theme = useTheme();
 
-  // Symbol change: dev regenerates mock; prod resets to loading + empty.
+  // Symbol change: development regenerates sample data; production resets to loading + empty.
   useEffect(() => {
     if (IS_DEV) {
       setCandles(generateCandles(symbolFull));
@@ -99,6 +104,12 @@ export default function ChartPanel({
       });
   }, [symbolFull]);
 
+  // Frontend display aggregation only — detection always uses 15m signals.
+  const displayCandles = useMemo(
+    () => aggregateCandles(candles, chartInterval),
+    [candles, chartInterval],
+  );
+
   return (
     <section
       aria-label="Market Chart"
@@ -121,15 +132,45 @@ export default function ChartPanel({
                 role="tab"
                 aria-selected={active}
                 onClick={() => onSymbolChange(sym)}
-                className="chart-tab rounded-md px-3 py-1.5 text-xs font-semibold"
+                className="chart-symbol-tab rounded-md px-3 py-1.5 text-xs font-semibold"
               >
                 {sym}
               </button>
             );
           })}
         </div>
-        <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+        <p
+          className="min-w-0 flex-1 text-[11px] sm:text-right"
+          style={{ color: "var(--text-muted)" }}
+        >
           Chart symbol only · Intelligence Feed shows all detected market events
+        </p>
+      </div>
+
+      {/* Interval selector (chart display only) */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div
+          role="tablist"
+          aria-label="Chart interval"
+          className="flex gap-1.5"
+        >
+          {CHART_INTERVALS.map((iv) => (
+            <button
+              key={iv}
+              role="tab"
+              aria-selected={iv === chartInterval}
+              onClick={() => setChartInterval(iv)}
+              className="chart-interval-tab rounded-md px-3 py-1.5 text-xs font-semibold"
+            >
+              {iv}
+            </button>
+          ))}
+        </div>
+        <p
+          className="min-w-0 flex-1 text-[11px] sm:text-right"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Chart interval only · ByteSiren detections use 15m signals
         </p>
       </div>
 
@@ -137,7 +178,7 @@ export default function ChartPanel({
       <div
         className="rounded-xl p-3"
         style={{
-          background: "rgba(16,23,41,0.5)",
+          background: "var(--bg-stat-card)",
         }}
       >
         <p
@@ -184,9 +225,9 @@ export default function ChartPanel({
               <span
                 className="mt-1.5 inline-block rounded-full border px-2 py-0.5 text-[10px] font-medium"
                 style={{
-                  borderColor: "rgba(148,163,184,0.3)",
-                  color: "var(--text-muted)",
-                  background: "rgba(148,163,184,0.06)",
+                  borderColor: "rgba(245,158,11,0.32)",
+                  color: "var(--status-strong)",
+                  background: "rgba(245,158,11,0.08)",
                 }}
               >
                 Data Delay
@@ -204,13 +245,14 @@ export default function ChartPanel({
       {/* Chart */}
       <div
         className="overflow-hidden rounded-xl"
-        style={{ background: "rgba(16,23,41,0.4)" }}
+        style={{ background: "var(--bg-chart-container)" }}
       >
-        {candles.length > 0 ? (
+        {displayCandles.length > 0 ? (
           <TradingViewChart
-            candles={candles}
+            candles={displayCandles}
             feed={feed}
             selectedIncidentId={selectedIncidentId}
+            theme={theme}
           />
         ) : (
           <div
@@ -228,10 +270,11 @@ export default function ChartPanel({
       </div>
 
       <p
-        className="text-center text-[11px]"
+        className="px-2 text-center text-[11px] leading-snug"
         style={{ color: "var(--text-muted)" }}
       >
-        30-day 15m candles · Binance public market data · Incident markers shown
+        30-day chart · {chartInterval} candles · Binance public market data ·
+        Incident markers shown
       </p>
     </section>
   );

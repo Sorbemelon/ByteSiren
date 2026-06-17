@@ -11,22 +11,46 @@ import {
   type Time,
 } from "lightweight-charts";
 import type { CandleBar, FeedItem } from "../lib/types";
+import type { Theme } from "../lib/theme";
 
 interface TradingViewChartProps {
   candles: CandleBar[];
   feed: FeedItem[];
   selectedIncidentId: string | null;
+  theme: Theme;
+}
+
+function cssVar(name: string, fallback: string): string {
+  if (typeof document === "undefined") return fallback;
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return v || fallback;
+}
+
+/** Snap an incident time (sec) to the displayed candle bucket containing it. */
+function snapToCandle(timeSec: number, candleTimes: number[]): number | null {
+  if (candleTimes.length === 0) return null;
+  if (timeSec <= candleTimes[0]) return candleTimes[0];
+  let snap = candleTimes[0];
+  for (const ct of candleTimes) {
+    if (ct <= timeSec) snap = ct;
+    else break;
+  }
+  return snap;
 }
 
 function incidentMarkers(
   feed: FeedItem[],
   selectedId: string | null,
+  candles: CandleBar[],
 ): SeriesMarker<Time>[] {
+  const candleTimes = candles.map((c) => c.time);
   return feed
     .map((item) => {
-      const time = Math.floor(
-        new Date(item.detected_at).getTime() / 1000,
-      ) as Time;
+      const raw = Math.floor(new Date(item.detected_at).getTime() / 1000);
+      const snapped = snapToCandle(raw, candleTimes);
+      if (snapped == null) return null;
       const isSelected = item.incident_id === selectedId;
 
       const color =
@@ -52,15 +76,15 @@ function incidentMarkers(
               : "circle";
 
       return {
-        time,
+        time: snapped as Time,
         position: item.direction === "observed_down" ? "aboveBar" : "belowBar",
         color,
         shape,
         size: isSelected ? 2 : 1,
-        text:
-          item.incident_id === selectedId ? item.evidence.severity_label : "",
+        text: isSelected ? `Impact Score: ${item.evidence.severity_score}` : "",
       } as SeriesMarker<Time>;
     })
+    .filter((m): m is SeriesMarker<Time> => m !== null)
     .sort((a, b) => Number(a.time) - Number(b.time));
 }
 
@@ -68,6 +92,7 @@ export default function TradingViewChart({
   candles,
   feed,
   selectedIncidentId,
+  theme,
 }: TradingViewChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -81,21 +106,21 @@ export default function TradingViewChart({
     const chart = createChart(el, {
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#94a3b8",
+        textColor: cssVar("--chart-text", "#94a3b8"),
         fontFamily: "var(--font-geist, system-ui, sans-serif)",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: "rgba(148, 163, 184, 0.06)" },
-        horzLines: { color: "rgba(148, 163, 184, 0.06)" },
+        vertLines: { color: cssVar("--chart-grid", "rgba(148,163,184,0.06)") },
+        horzLines: { color: cssVar("--chart-grid", "rgba(148,163,184,0.06)") },
       },
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: {
-        borderColor: "rgba(148, 163, 184, 0.12)",
+        borderColor: cssVar("--chart-border", "rgba(148,163,184,0.12)"),
         scaleMargins: { top: 0.08, bottom: 0.2 },
       },
       timeScale: {
-        borderColor: "rgba(148, 163, 184, 0.12)",
+        borderColor: cssVar("--chart-border", "rgba(148,163,184,0.12)"),
         timeVisible: true,
         secondsVisible: false,
         fixLeftEdge: true,
@@ -153,6 +178,25 @@ export default function TradingViewChart({
     return cleanup;
   }, [initChart]);
 
+  // Re-apply theme-driven axis/grid colors when the theme changes.
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    chart.applyOptions({
+      layout: { textColor: cssVar("--chart-text", "#94a3b8") },
+      grid: {
+        vertLines: { color: cssVar("--chart-grid", "rgba(148,163,184,0.06)") },
+        horzLines: { color: cssVar("--chart-grid", "rgba(148,163,184,0.06)") },
+      },
+      rightPriceScale: {
+        borderColor: cssVar("--chart-border", "rgba(148,163,184,0.12)"),
+      },
+      timeScale: {
+        borderColor: cssVar("--chart-border", "rgba(148,163,184,0.12)"),
+      },
+    });
+  }, [theme]);
+
   useEffect(() => {
     const cs = candleSeriesRef.current;
     const vs = volumeSeriesRef.current;
@@ -185,8 +229,8 @@ export default function TradingViewChart({
   useEffect(() => {
     const cs = candleSeriesRef.current;
     if (!cs) return;
-    cs.setMarkers(incidentMarkers(feed, selectedIncidentId));
-  }, [feed, selectedIncidentId]);
+    cs.setMarkers(incidentMarkers(feed, selectedIncidentId, candles));
+  }, [feed, selectedIncidentId, candles]);
 
   return (
     <div
@@ -194,7 +238,7 @@ export default function TradingViewChart({
       className="w-full"
       style={{ height: 420 }}
       role="img"
-      aria-label="ByteSiren 30-day 15-minute candlestick chart with incident markers"
+      aria-label="ByteSiren candlestick chart with market incident markers"
     />
   );
 }

@@ -1,24 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  /* ── Backgrounds ── */
+  /* ── Backgrounds ── (panel near-black, card lifted) */
   --bg-page: #070a12;
   --bg-page-top: #0b1020;
-  --bg-panel: #0d1324;
+  --bg-panel: #030407;
   --bg-panel-soft: #111827;
-  --bg-row: #101729;
+  --bg-row: #111827;
 
   /* ── Borders ── */
-  --border-panel: rgba(148, 163, 184, 0.16);
+  --border-panel: rgba(226, 232, 240, 0.16);
   --border-panel-hover: rgba(139, 92, 246, 0.45);
-  --border-row: rgba(148, 163, 184, 0.12);
+  --border-row: rgba(226, 232, 240, 0.16);
+  --border-row-hover: rgba(254, 114, 3, 0.42);
+  --feed-row-border: rgba(254, 114, 3, 0.22);
 
-  /* ── Text ── */
-  --text-primary: #e5e7eb;
-  --text-secondary: #94a3b8;
-  /* Lifted from slate-500 (#64748b, ~3.9:1) to meet WCAG AA (≥4.5:1) for the
-     small helper/date/column text it carries on the dark panels. */
-  --text-muted: #828ea1;
+  /* ── Text ── (near-white primary, light body, readable muted) */
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-disabled: #64748b;
+
+  /* ── Neutral chips ── */
+  --chip-bg: rgba(255, 255, 255, 0.06);
+  --chip-border: rgba(255, 255, 255, 0.08);
+  --chip-text: var(--text-secondary);
+  --source-chip-bg: rgba(34, 211, 238, 0.08);
+  --source-chip-border: rgba(34, 211, 238, 0.36);
+  --source-chip-text: #67e8f9;
+  --source-focused-text: #86efac;
+  --source-likely-text: #5eead4;
+  --source-backdrop-text: #7dd3fc;
+  --source-price-text: #fcd34d;
+  --market-chip-text: #fbbf24;
+  --market-chip-border: rgba(251, 191, 36, 0.28);
 
   /* ── Interface accent (violet) ── */
   --accent-primary: #8b5cf6;
@@ -35,8 +50,7 @@
   /* ── Evidence confidence ── */
   --cause-focused: #10b981;
   --cause-likely: #14b8a6;
-  /* Blue-gray for Market Backdrop, lifted to AA (was #64748b ~3.9:1). */
-  --context-backdrop: #828ea1;
+  --context-backdrop: #94a3b8;
   --none-found: #94a3b8;
   --claude-limited: #8b5cf6;
 
@@ -56,6 +70,17 @@
   --brand-glow-soft: rgba(254, 114, 3, 0.1);
   --brand-glow-medium: rgba(254, 147, 3, 0.22);
   --brand-border-soft: rgba(254, 147, 3, 0.24);
+  --glow-violet: rgba(139, 92, 246, 0.12);
+
+  /* ── Chart (theme-aware) ── */
+  --bg-stat-card: rgba(17, 24, 39, 0.72);
+  --bg-chart-container: rgba(17, 24, 39, 0.48);
+  --bg-chart-loading: rgba(17, 24, 39, 0.42);
+  --chart-text: #94a3b8;
+  --chart-grid: rgba(148, 163, 184, 0.06);
+  --chart-border: rgba(148, 163, 184, 0.12);
+  --safety-pill-bg: rgba(139, 92, 246, 0.1);
+  --safety-pill-text: #ddd6fe;
 
   /* ── Z-index scale ── */
   --z-dropdown: 100;
@@ -64,6 +89,57 @@
   --z-modal: 400;
   --z-toast: 500;
   --z-tooltip: 600;
+}
+
+/* ── Light theme (meaning colors preserved; orange stays local accent) ── */
+:root[data-theme="light"] {
+  --bg-page: #f4f6fb;
+  --bg-page-top: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-panel-soft: #f1f5f9;
+  --bg-row: #ffffff;
+
+  --border-panel: rgba(15, 23, 42, 0.1);
+  --border-panel-hover: rgba(139, 92, 246, 0.5);
+  --border-row: rgba(15, 23, 42, 0.12);
+  --feed-row-border: rgba(234, 88, 12, 0.22);
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+
+  --chip-bg: rgba(15, 23, 42, 0.05);
+  --chip-border: rgba(15, 23, 42, 0.1);
+  --source-chip-bg: rgba(14, 165, 233, 0.08);
+  --source-chip-border: rgba(14, 165, 233, 0.3);
+  --source-chip-text: #0369a1;
+  --source-focused-text: #047857;
+  --source-likely-text: #0f766e;
+  --source-backdrop-text: #0369a1;
+  --source-price-text: #a16207;
+  --market-chip-text: #b45309;
+  --market-chip-border: rgba(180, 83, 9, 0.24);
+
+  --accent-selected-bg: rgba(139, 92, 246, 0.12);
+  --accent-selected-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25);
+
+  --context-backdrop: #5b6677;
+  --none-found: #5b6677;
+
+  --brand-glow-soft: rgba(254, 114, 3, 0.06);
+  --glow-violet: rgba(139, 92, 246, 0.06);
+
+  --bg-stat-card: #f8fafc;
+  --bg-chart-container: #ffffff;
+  --bg-chart-loading: #f8fafc;
+  --chart-text: #475569;
+  --chart-grid: rgba(15, 23, 42, 0.06);
+  --chart-border: rgba(15, 23, 42, 0.12);
+  --safety-pill-bg: rgba(139, 92, 246, 0.12);
+  --safety-pill-text: #5b21b6;
+
+  color-scheme: light;
 }
 
 *,
@@ -83,13 +159,12 @@ body {
   margin: 0;
   background:
     radial-gradient(circle at 8% 6%, var(--brand-glow-soft), transparent 28%),
-    radial-gradient(
-      circle at 78% 12%,
-      rgba(139, 92, 246, 0.12),
-      transparent 32%
-    ),
+    radial-gradient(circle at 78% 12%, var(--glow-violet), transparent 32%),
     var(--bg-page);
   color: var(--text-primary);
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
   font-family: var(--font-geist, system-ui, -apple-system, sans-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -164,8 +239,10 @@ details > summary::-webkit-details-marker {
   }
 }
 
-/* ── Chart symbol tabs ── */
-.chart-tab {
+/* ── Chart controls ── */
+.chart-tab,
+.chart-symbol-tab,
+.chart-interval-tab {
   border: 1px solid rgba(148, 163, 184, 0.2);
   color: var(--text-secondary);
   transition:
@@ -173,30 +250,113 @@ details > summary::-webkit-details-marker {
     border-color 150ms ease,
     background-color 150ms ease;
 }
-.chart-tab:hover {
-  border-color: rgba(148, 163, 184, 0.45);
+.chart-tab:hover,
+.chart-symbol-tab:hover,
+.chart-interval-tab:hover {
   color: var(--text-primary);
 }
-.chart-tab[aria-selected="true"] {
+.chart-symbol-tab:hover {
+  border-color: rgba(254, 114, 3, 0.46);
+  background: rgba(254, 114, 3, 0.08);
+}
+.chart-symbol-tab[aria-selected="true"] {
+  border-color: rgba(254, 114, 3, 0.72);
+  background: rgba(254, 114, 3, 0.13);
+  color: #fed7aa;
+  box-shadow: 0 0 0 1px rgba(254, 114, 3, 0.12);
+}
+.chart-interval-tab:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  background: rgba(139, 92, 246, 0.08);
+}
+.chart-tab[aria-selected="true"],
+.chart-interval-tab[aria-selected="true"] {
   border-color: var(--accent-primary);
   background: var(--accent-selected-bg);
   color: #c4b5fd;
 }
 
+:root[data-theme="light"] .chart-symbol-tab[aria-selected="true"] {
+  color: #9a3412;
+}
+
+:root[data-theme="light"] .chart-interval-tab[aria-selected="true"] {
+  color: #5b21b6;
+}
+
 /* ── Feed row ── */
 .feed-row {
   background: var(--bg-row);
-  border: 1px solid var(--border-row);
+  border: 1px solid var(--feed-row-border);
   transition:
     border-color 150ms ease,
     box-shadow 150ms ease;
 }
 .feed-row:hover {
-  border-color: var(--border-panel-hover);
+  border-color: var(--border-row-hover);
+  box-shadow: 0 0 0 1px rgba(254, 114, 3, 0.1);
 }
 .feed-row[data-selected="true"] {
-  border-color: var(--accent-selected-border);
-  box-shadow: var(--accent-selected-shadow);
+  border-color: rgba(254, 114, 3, 0.58);
+  /* Violet selection ring + a subtle orange siren micro-accent (the one
+     selected-row orange use the brand spec sanctions). */
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.34),
+    0 0 28px -14px rgba(254, 147, 3, 0.48);
+}
+
+.feed-card-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .feed-card-grid {
+    grid-template-columns: minmax(0, 30%) minmax(0, 1fr) minmax(112px, 22%);
+    align-items: start;
+  }
+}
+
+:root[data-theme="light"] .feed-row:hover {
+  box-shadow: 0 0 0 1px rgba(254, 114, 3, 0.08);
+}
+
+/* ── Expanded card reveal (signature micro-interaction) ── */
+@keyframes feedReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.feed-expand {
+  animation: feedReveal 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);
+  }
+  25% {
+    background-position: 50% 100%;
+    transform: rotate(5deg) scale(1.1);
+  }
+  50% {
+    background-position: 100% 50%;
+    transform: rotate(-3deg) scale(0.95);
+  }
+  75% {
+    background-position: 50% 0%;
+    transform: rotate(3deg) scale(1.05);
+  }
+  100% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);
+  }
 }
 
 /* ── Reduced motion ── */

@@ -32,7 +32,9 @@ export default function Home() {
     fetchFeed(API_BASE)
       .then(({ items, updatedAt: ua }) => {
         if (items.length > 0) setFeed(items);
-        if (ua) setUpdatedAt(ua);
+        if (ua) {
+          setUpdatedAt(ua);
+        }
       })
       .catch(() => {})
       .finally(() => setFeedLoading(false));

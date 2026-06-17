@@ -51,7 +51,7 @@ function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
       breadth_label: raw.evidence.breadth_label,
       severity_score: raw.evidence.severity_score,
       severity_label: raw.evidence.severity_label,
-      avg_15m_change_pct: raw.evidence.avg_15m_change_pct ?? 0,
+      avg_15m_change_pct: raw.evidence.avg_15m_change_pct ?? null,
       peak_symbol: raw.evidence.peak_symbol ?? "",
     },
     brief: {
