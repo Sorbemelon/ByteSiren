@@ -57,6 +57,23 @@ test("cause_supported without accepted sources fails", () => {
   );
 });
 
+test("cause_supported with only root publisher source fails", () => {
+  assert.throws(
+    () =>
+      validateClaudeBrief(
+        brief({
+          source_links: [
+            source({
+              title: "CoinDesk homepage",
+              url: "https://www.coindesk.com/",
+            }),
+          ],
+        }),
+      ),
+    ClaudeBriefValidationError,
+  );
+});
+
 test("cause_likely maps to Likely Cause", () => {
   const validated = validateClaudeBrief(
     brief({

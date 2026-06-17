@@ -110,6 +110,13 @@ function fixture(incidentId: string) {
         used_for: "backdrop",
         source_strength: "weak",
       },
+      {
+        publisher: "Reuters",
+        title: "Reuters homepage",
+        url: "https://www.reuters.com/",
+        used_for: "backdrop",
+        source_strength: "acceptable",
+      },
     ],
     disclaimer: "Informational market context only.",
   };
@@ -135,13 +142,20 @@ test("stored brief appears in feed with accepted source URL and no rejected sour
 
   assert.equal(tables.claude_briefs.length, 1);
   assert.equal(tables.source_references.length, 1);
-  assert.equal(brief.rejected_sources.length, 1);
+  assert.equal(brief.rejected_sources.length, 2);
   assert.equal(feed[0].brief.status, "brief_ready");
   assert.equal(feed[0].brief.label, "Focused Cause");
   assert.equal(feed[0].sources.length, 1);
   assert.equal(feed[0].sources[0].publisher, "CoinDesk");
-  assert.equal(feed[0].sources[0].url.includes("coindesk.com"), true);
+  assert.equal(
+    feed[0].sources[0].url,
+    "https://www.coindesk.com/markets/2026/06/14/context",
+  );
   assert.equal(JSON.stringify(feed).includes("Rejected SEO"), false);
+  assert.equal(
+    JSON.stringify(feed).includes("https://www.reuters.com/"),
+    false,
+  );
 });
 
 test("brief and source upserts are idempotent", async () => {

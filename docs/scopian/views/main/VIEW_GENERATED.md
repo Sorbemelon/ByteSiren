@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-17T01:46:53+07:00
+generated_at: 2026-06-17T19:06:37+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -14,7 +14,7 @@ canonical_inputs:
 input_hashes:
   view: sha256:39a4b55b602d
   sources: sha256:fab8d5e05966
-  buffer: sha256:168257a1c409
+  buffer: sha256:11e7a1a3d36e
   context: sha256:5ef45bc1a5d7
   registry: sha256:4a0448757592
 ---
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-17T01:46:53+07:00
+- generated_at: 2026-06-17T19:06:37+07:00
 
 ## Selected Sources
 
@@ -56,6 +56,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - 2026-06-17T01:12:59+07:00 DEC-20260617-0112-user-header-orange-wordmark-FPDE: User approved keeping the 'Siren' header wordmark as the orange logo-gradient (background-clip:text), an accepted deviation from the loc ... (docs/scopian/views/main/buffer/decisions/DEC-20260617-0112-user-header-orange-wordmark-FPDE.md)
 - 2026-06-17T01:13:04+07:00 DEC-20260617-0113-user-muted-contrast-aa-5W8M: User approved lifting --text-muted and --context-backdrop from #64748b to #828ea1 (~3.9:1 -> ~5.5:1) to meet WCAG AA for small text on d ... (docs/scopian/views/main/buffer/decisions/DEC-20260617-0113-user-muted-contrast-aa-5W8M.md)
+- 2026-06-17T03:10:35+07:00 DEC-20260617-0310-user-feed-wording-public-context-PHJ5: User instructed renaming the feed column 'Claude Brief' -> 'Public Context' and the expanded 'Claude context' -> 'Context Details' to be ... (docs/scopian/views/main/buffer/decisions/DEC-20260617-0310-user-feed-wording-public-context-PHJ5.md)
+- 2026-06-17T03:10:37+07:00 DEC-20260617-0310-user-feed-wording-tracked-pairs-5GQQ: User instructed changing breadth wording '5/5 pairs' -> 'All 5 tracked pairs' / 'N of 5 tracked pairs' for clarity. Display derived from ... (docs/scopian/views/main/buffer/decisions/DEC-20260617-0310-user-feed-wording-tracked-pairs-5GQQ.md)
 
 ## Scope Checklist
 
@@ -81,6 +83,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-likely-in-scope-sitemap-5bac33e7 | likely_in_scope | Sitemap | docs/scopian/sources/08_SEO_SPEC.md#sitemap | none | not_checked_in_generated_view |
 | ITEM-likely-in-scope-suppression-rules-2155a135 | likely_in_scope | Suppression rules | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#suppression-rules | none | not_checked_in_generated_view |
 | ITEM-likely-in-scope-user-approved-lifting-text-muted-55031b97 | likely_in_scope | User approved lifting --text-muted and --context-backdrop from #64748b to #828ea1 (~3.9:1 -> ~5.5:1) to meet WCAG AA for small text on d ... | docs/scopian/views/main/buffer/decisions/DEC-20260617-0113-user-muted-contrast-aa-5W8M.md | approved_buffer | not_checked_in_generated_view |
+| ITEM-likely-in-scope-user-instructed-changing-breadth-856a6102 | likely_in_scope | User instructed changing breadth wording '5/5 pairs' -> 'All 5 tracked pairs' / 'N of 5 tracked pairs' for clarity. Display derived from ... | docs/scopian/views/main/buffer/decisions/DEC-20260617-0310-user-feed-wording-tracked-pairs-5GQQ.md | approved_buffer | not_checked_in_generated_view |
+| ITEM-likely-in-scope-user-instructed-renaming-the-fee-dcab955c | likely_in_scope | User instructed renaming the feed column 'Claude Brief' -> 'Public Context' and the expanded 'Claude context' -> 'Context Details' to be ... | docs/scopian/views/main/buffer/decisions/DEC-20260617-0310-user-feed-wording-public-context-PHJ5.md | approved_buffer | not_checked_in_generated_view |
 | ITEM-likely-in-scope-version-5a350958 | likely_in_scope | Version | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#version | none | not_checked_in_generated_view |
 | ITEM-likely-in-scope-web-search-domain-filter-guidanc-8c16d913 | likely_in_scope | Web Search domain filter guidance | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#web-search-domain-filter-guidance | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-accessibility-requirements-6ca0a2f5 | allowed_with_limits | Accessibility requirements | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#accessibility-requirements | none | not_checked_in_generated_view |
@@ -173,7 +177,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Coverage Snapshot
 
-- likely_in_scope: 22
+- likely_in_scope: 24
 - allowed_with_limits: 72
 - likely_out_of_scope: 15
 - decision_required: 0
@@ -190,15 +194,15 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-17T01:46:53+07:00
+- generated_refresh: 2026-06-17T19:06:37+07:00
 - selected_sources: 16
-- approved_buffer_records: 2
+- approved_buffer_records: 4
 
 ## Freshness Metadata
 
 - view: sha256:39a4b55b602d
 - sources: sha256:fab8d5e05966
-- buffer: sha256:168257a1c409
+- buffer: sha256:11e7a1a3d36e
 - context: sha256:5ef45bc1a5d7
 - registry: sha256:4a0448757592
 

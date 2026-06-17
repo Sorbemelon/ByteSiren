@@ -58,6 +58,35 @@ function normalizeUrl(value: string): string | null {
   }
 }
 
+function isGenericHomepageUrl(value: string): boolean {
+  const parsed = new URL(value);
+  const pathSegments = parsed.pathname
+    .split("/")
+    .map((segment) => segment.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (pathSegments.length === 0) {
+    return true;
+  }
+
+  return (
+    pathSegments.length === 1 &&
+    ["home", "homepage", "index", "index.html", "default.aspx"].includes(
+      pathSegments[0],
+    )
+  );
+}
+
+export function isUsefulSourceUrl(value: string): boolean {
+  const normalized = normalizeUrl(value);
+
+  if (!normalized) {
+    return false;
+  }
+
+  return !isGenericHomepageUrl(normalized);
+}
+
 export function normalizedUrlKey(value: string): string {
   const normalized = normalizeUrl(value);
 
@@ -137,6 +166,11 @@ export function filterSourceLinks(
 
     if (!normalized) {
       rejected.push(reject(source, "invalid_url"));
+      continue;
+    }
+
+    if (!isUsefulSourceUrl(normalized)) {
+      rejected.push(reject(source, "generic_homepage_url"));
       continue;
     }
 

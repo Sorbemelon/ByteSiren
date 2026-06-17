@@ -684,7 +684,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                 )}
               </div>
 
-              <div className="mt-auto flex justify-end pt-2">
+              <div className="mt-auto flex justify-end pt-2 pr-8 sm:pr-0">
                 <button
                   type="button"
                   onClick={onToggle}
