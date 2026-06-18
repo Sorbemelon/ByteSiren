@@ -50,3 +50,16 @@ MARKET_IMPORT_TOKEN=
 # Production market ingestion uses external_import because Binance may block
 # Cloudflare Worker egress. Use worker_fetch only for controlled local tests.
 MARKET_FETCH_MODE=external_import
+
+# Cloudflare Cron controls market ingestion by dispatching the GitHub Actions
+# workflow_dispatch endpoint. GITHUB_INGEST_DISPATCH_TOKEN must be set as a
+# Worker secret in production and must have Actions read/write for this repo.
+ENABLE_GITHUB_INGEST_DISPATCH=true
+GITHUB_INGEST_OWNER=Sorbemelon
+GITHUB_INGEST_REPO=ByteSiren
+GITHUB_INGEST_WORKFLOW=market-ingest.yml
+GITHUB_INGEST_REF=main
+GITHUB_INGEST_HOURS=6
+GITHUB_INGEST_SYMBOLS=BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT
+GITHUB_INGEST_DRY_RUN=false
+GITHUB_INGEST_DISPATCH_TOKEN=

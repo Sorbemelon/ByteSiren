@@ -21,6 +21,7 @@ export const BINANCE_USER_AGENT = "ByteSiren/0.1";
 export const DETECTOR_CRON = "5,20,35,50 * * * *";
 export const CLAUDE_ENRICHMENT_CRON = "10,25,40,55 * * * *";
 export const CLEANUP_CRON = "17 0 * * *";
+export const GITHUB_INGEST_DISPATCH_CRON = "2,17,32,47 * * * *";
 export const LEGACY_POLL_MARKET_CRON = "*/5 * * * *";
 
 const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);

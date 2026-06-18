@@ -9,7 +9,9 @@ import type { MarketCandle } from "./types/market.ts";
 import { persistClaudeFixtureBriefForTest } from "./db/claudeRepository.ts";
 import {
   CLAUDE_ENRICHMENT_CRON,
+  CLEANUP_CRON,
   DETECTOR_CRON,
+  GITHUB_INGEST_DISPATCH_CRON,
   LEGACY_POLL_MARKET_CRON,
 } from "./config.ts";
 
@@ -460,6 +462,126 @@ test("legacy poll cron is inert unless Worker fetch mode is enabled", async () =
   await worker.scheduled(scheduledController(LEGACY_POLL_MARKET_CRON), env);
 
   assert.equal(tables.job_runs.length, 0);
+});
+
+test("scheduled GitHub ingest dispatch cron records successful dispatch", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_GITHUB_INGEST_DISPATCH: "true",
+    GITHUB_INGEST_OWNER: "Sorbemelon",
+    GITHUB_INGEST_REPO: "ByteSiren",
+    GITHUB_INGEST_WORKFLOW: "market-ingest.yml",
+    GITHUB_INGEST_REF: "main",
+    GITHUB_INGEST_HOURS: "6",
+    GITHUB_INGEST_SYMBOLS: "BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT",
+    GITHUB_INGEST_DRY_RUN: "false",
+    GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
+  };
+  let requestedUrl = "";
+  const fetcher: typeof fetch = async (input, init) => {
+    requestedUrl = String(input);
+    const body = JSON.parse(String(init?.body)) as {
+      ref: string;
+      inputs: Record<string, string>;
+    };
+
+    assert.equal(body.ref, "main");
+    assert.equal(body.inputs.hours, "6");
+    assert.equal(body.inputs.dry_run, "false");
+    assert.equal(Object.hasOwn(body.inputs, "days"), false);
+
+    return new Response(null, { status: 204 });
+  };
+
+  await withMockFetch(fetcher, async () => {
+    await worker.scheduled(
+      scheduledController(GITHUB_INGEST_DISPATCH_CRON),
+      env,
+    );
+  });
+
+  const job = tables.job_runs.find(
+    (row) => row.job_name === "github_ingest_dispatch",
+  );
+  const serializedJob = JSON.stringify(job);
+  const metadata = JSON.parse(job?.metadata_json ?? "{}") as {
+    status: number;
+    workflow: string;
+    ref: string;
+    hours: string;
+    symbols: string[];
+  };
+
+  assert.match(
+    requestedUrl,
+    /actions\/workflows\/market-ingest\.yml\/dispatches$/,
+  );
+  assert.equal(job?.status, "success");
+  assert.equal(
+    job?.message,
+    "GitHub ingest workflow dispatched: market-ingest.yml on main for hours=6.",
+  );
+  assert.equal(metadata.status, 204);
+  assert.equal(metadata.workflow, "market-ingest.yml");
+  assert.equal(metadata.ref, "main");
+  assert.equal(metadata.hours, "6");
+  assert.deepEqual(metadata.symbols, [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+  ]);
+  assert.equal(serializedJob.includes("secret-github-token"), false);
+});
+
+test("scheduled GitHub ingest dispatch records skipped when disabled", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_GITHUB_INGEST_DISPATCH: "false",
+  };
+  const fetcher: typeof fetch = async () => {
+    throw new Error("fetch should not be called");
+  };
+
+  await withMockFetch(fetcher, async () => {
+    await worker.scheduled(
+      scheduledController(GITHUB_INGEST_DISPATCH_CRON),
+      env,
+    );
+  });
+
+  const job = tables.job_runs.find(
+    (row) => row.job_name === "github_ingest_dispatch",
+  );
+
+  assert.equal(job?.status, "skipped");
+  assert.equal(
+    job?.message,
+    "GitHub ingest dispatch skipped: ENABLE_GITHUB_INGEST_DISPATCH is not true.",
+  );
+});
+
+test("scheduled cleanup cron runs cleanup only", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+  });
+  const env: Env = {
+    DB: db,
+  };
+
+  await worker.scheduled(scheduledController(CLEANUP_CRON), env);
+
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "cleanup_old_data"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector"),
+    false,
+  );
 });
 
 test("admin endpoint disabled returns not found without public CORS", async () => {

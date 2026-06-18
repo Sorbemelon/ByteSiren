@@ -22,6 +22,7 @@ test("deployment boundary keeps active Wrangler configs app-local", () => {
   assert.match(workerWrangler, /main = "src\/index\.ts"/);
   assert.match(workerWrangler, /binding = "DB"/);
   assert.match(workerWrangler, /crons = \[/);
+  assert.match(workerWrangler, /"2,17,32,47 \* \* \* \*"/);
   assert.match(workerWrangler, /"5,20,35,50 \* \* \* \*"/);
   assert.match(workerWrangler, /"10,25,40,55 \* \* \* \*"/);
   assert.equal(workerWrangler.includes('"*/5 * * * *"'), false);
@@ -34,7 +35,13 @@ test("deployment boundary keeps active Wrangler configs app-local", () => {
 test("market ingest workflow imports only and leaves detector to Worker cron", () => {
   const workflow = readRepoFile(".github/workflows/market-ingest.yml");
 
-  assert.match(workflow, /cron: "2,17,32,47 \* \* \* \*"/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.equal(workflow.includes("schedule:"), false);
+  assert.equal(workflow.includes('cron: "2,17,32,47 * * * *"'), false);
+  assert.match(
+    workflow,
+    /ByteSiren workflow_dispatch import-only run\. Triggered by Cloudflare scheduler or manual dispatch\./,
+  );
   assert.match(
     workflow,
     /ByteSiren import-only run\. Detector is handled by Worker cron\./,

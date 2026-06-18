@@ -16,6 +16,14 @@ PUBLIC_WEB_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000,http://localho
 ENABLE_ADMIN_MAINTENANCE = "false"
 ENABLE_MARKET_IMPORT = "true"
 MARKET_FETCH_MODE = "external_import"
+ENABLE_GITHUB_INGEST_DISPATCH = "true"
+GITHUB_INGEST_OWNER = "Sorbemelon"
+GITHUB_INGEST_REPO = "ByteSiren"
+GITHUB_INGEST_WORKFLOW = "market-ingest.yml"
+GITHUB_INGEST_REF = "main"
+GITHUB_INGEST_HOURS = "6"
+GITHUB_INGEST_SYMBOLS = "BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT"
+GITHUB_INGEST_DRY_RUN = "false"
 
 [[d1_databases]]
 binding = "DB"
@@ -25,6 +33,7 @@ migrations_dir = "migrations"
 
 [triggers]
 crons = [
+  "2,17,32,47 * * * *",
   "5,20,35,50 * * * *",
   "10,25,40,55 * * * *",
   "17 0 * * *"

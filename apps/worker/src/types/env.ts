@@ -16,4 +16,13 @@ export interface Env {
   ENABLE_MARKET_IMPORT?: string;
   MARKET_IMPORT_TOKEN?: string;
   MARKET_FETCH_MODE?: string;
+  ENABLE_GITHUB_INGEST_DISPATCH?: string;
+  GITHUB_INGEST_OWNER?: string;
+  GITHUB_INGEST_REPO?: string;
+  GITHUB_INGEST_WORKFLOW?: string;
+  GITHUB_INGEST_REF?: string;
+  GITHUB_INGEST_HOURS?: string;
+  GITHUB_INGEST_SYMBOLS?: string;
+  GITHUB_INGEST_DRY_RUN?: string;
+  GITHUB_INGEST_DISPATCH_TOKEN?: string;
 }

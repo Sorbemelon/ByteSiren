@@ -2,9 +2,11 @@ import {
   CLAUDE_ENRICHMENT_CRON,
   CLEANUP_CRON,
   DETECTOR_CRON,
+  GITHUB_INGEST_DISPATCH_CRON,
   LEGACY_POLL_MARKET_CRON,
 } from "./config.ts";
 import { cleanupOldData } from "./jobs/cleanupOldData.ts";
+import { dispatchGitHubIngest } from "./jobs/dispatchGitHubIngest.ts";
 import { enrichQueuedIncidents } from "./jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "./jobs/pollMarket.ts";
 import { runDetector } from "./jobs/runDetector.ts";
@@ -132,6 +134,11 @@ export default {
   },
 
   async scheduled(controller: ScheduledController, env: Env): Promise<void> {
+    if (controller.cron === GITHUB_INGEST_DISPATCH_CRON) {
+      await dispatchGitHubIngest(env.DB, env);
+      return;
+    }
+
     if (controller.cron === DETECTOR_CRON) {
       await runDetector(env.DB);
       return;

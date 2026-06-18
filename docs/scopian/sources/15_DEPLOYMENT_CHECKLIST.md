@@ -42,6 +42,7 @@ Replace `bytesiren-placeholder` with the configured D1 database name when the pr
 ```text
 ANTHROPIC_API_KEY
 MARKET_IMPORT_TOKEN
+GITHUB_INGEST_DISPATCH_TOKEN
 ```
 
 5. Set Worker vars:
@@ -55,6 +56,14 @@ CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT
 PUBLIC_WEB_ORIGINS
 ENABLE_MARKET_IMPORT
 MARKET_FETCH_MODE
+ENABLE_GITHUB_INGEST_DISPATCH
+GITHUB_INGEST_OWNER
+GITHUB_INGEST_REPO
+GITHUB_INGEST_WORKFLOW
+GITHUB_INGEST_REF
+GITHUB_INGEST_HOURS
+GITHUB_INGEST_SYMBOLS
+GITHUB_INGEST_DRY_RUN
 CLAUDE_ALLOWED_DOMAINS
 CLAUDE_BLOCKED_DOMAINS
 ```
@@ -66,9 +75,19 @@ For production market ingestion:
 ```text
 ENABLE_MARKET_IMPORT=true
 MARKET_FETCH_MODE=external_import
+ENABLE_GITHUB_INGEST_DISPATCH=true
+GITHUB_INGEST_OWNER=<GitHub owner>
+GITHUB_INGEST_REPO=<repo name>
+GITHUB_INGEST_WORKFLOW=market-ingest.yml
+GITHUB_INGEST_REF=main
+GITHUB_INGEST_HOURS=6
+GITHUB_INGEST_SYMBOLS=BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT
+GITHUB_INGEST_DRY_RUN=false
 ```
 
 `MARKET_IMPORT_TOKEN` is a Worker secret and must match the GitHub repository secret used by the ingestion workflow.
+`GITHUB_INGEST_DISPATCH_TOKEN` is a Worker secret used only to call the GitHub workflow_dispatch API.
+Use a fine-grained GitHub PAT limited to this repository with Actions read/write permission.
 
 6. Deploy the Worker after secrets, vars, and D1 binding are ready.
 7. Smoke Worker endpoints:
@@ -83,21 +102,22 @@ GET /api/metrics/views
 POST /api/metrics/views
 ```
 
-## B. External market ingestion through GitHub Actions
+## B. External market ingestion through Cloudflare-controlled GitHub dispatch
 
-Cloudflare Worker egress to Binance may be blocked in production. The production ingestion path is:
+Cloudflare Worker egress to Binance may be blocked in production. GitHub native scheduled workflows were also unreliable for this project. The final production ingestion path is:
 
 ```text
+Cloudflare Cron -> GitHub workflow_dispatch API -> GitHub Actions
 GitHub Actions -> Binance public market API -> protected Worker import endpoint -> D1 candle upsert
 Worker detector cron -> incident candidates
 Worker Claude cron -> public context enrichment
 ```
 
-The Worker keeps D1, detector, Claude enrichment, and cleanup responsibility. It should not depend on fetching Binance directly in production.
+Cloudflare does not fetch Binance in production. It only dispatches the GitHub workflow. GitHub Actions fetches Binance and imports candles to the protected Worker endpoint.
 
-Detector execution is intentionally decoupled from the import request. Initial backfills can upload many chunks, and running detector inside the final import request can exceed practical Worker request limits. The import endpoint should stay focused on validating and storing candles.
+The Worker keeps D1, detector, Claude enrichment, and cleanup responsibility. Detector execution is intentionally decoupled from the import request. Initial backfills can upload many chunks, and running detector inside the final import request can exceed practical Worker request limits. The import endpoint should stay focused on validating and storing candles.
 
-1. Add GitHub repository secrets:
+1. Add GitHub repository secrets used by the workflow:
 
 ```text
 BYTESIREN_WORKER_URL
@@ -112,7 +132,23 @@ Worker var: ENABLE_MARKET_IMPORT=true
 Worker var: MARKET_FETCH_MODE=external_import
 ```
 
-3. Run an initial seed from GitHub Actions with:
+3. Set Cloudflare Worker GitHub dispatch values:
+
+```text
+Worker secret: GITHUB_INGEST_DISPATCH_TOKEN
+Worker var: ENABLE_GITHUB_INGEST_DISPATCH=true
+Worker var: GITHUB_INGEST_OWNER=<GitHub owner>
+Worker var: GITHUB_INGEST_REPO=<repo name>
+Worker var: GITHUB_INGEST_WORKFLOW=market-ingest.yml
+Worker var: GITHUB_INGEST_REF=main
+Worker var: GITHUB_INGEST_HOURS=6
+Worker var: GITHUB_INGEST_SYMBOLS=BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT
+Worker var: GITHUB_INGEST_DRY_RUN=false
+```
+
+The GitHub token should be a fine-grained PAT limited to this repository with Actions read/write permission. Do not put the token in `apps/worker/wrangler.toml`, Pages env, frontend code, or GitHub workflow logs.
+
+4. Run an initial seed from GitHub Actions with:
 
 ```text
 workflow_dispatch days=31
@@ -120,23 +156,26 @@ workflow_dispatch days=31
 
 After the seed, wait for the Worker detector cron. If a protected maintenance endpoint exists and is enabled for a controlled diagnostic window, a manual detector trigger can be used instead.
 
-4. Scheduled market imports run through GitHub Actions:
+5. Production market imports are controlled by Cloudflare Cron dispatching `workflow_dispatch`:
 
 ```text
-2,17,32,47 * * * *
+2,17,32,47 * * * *    Cloudflare Worker dispatches market-ingest.yml
 ```
 
-The workflow fetches a rolling lookback window, defaulting to 6 hours, because GitHub scheduled runs can be delayed or dropped.
+The workflow itself should keep `workflow_dispatch` only. It should not rely on GitHub native `schedule:` triggers.
 
-5. Worker scheduled jobs are staggered after import:
+The dispatch uses a rolling lookback window, defaulting to 6 hours, so delayed or missed dispatches can still backfill recent candles.
+
+6. Worker scheduled jobs are staggered after dispatch/import:
 
 ```text
+2,17,32,47 * * * *    GitHub workflow dispatch
 5,20,35,50 * * * *    detector
 10,25,40,55 * * * *   Claude enrichment
 17 0 * * *            cleanup
 ```
 
-6. The scheduled importer calls:
+7. The GitHub Actions importer calls:
 
 ```text
 POST /api/ingest/candles
@@ -150,17 +189,18 @@ x-bytesiren-market-token
 
 The endpoint is not for frontend use, does not expose public CORS, does not call Claude, and should not be advertised as a public API.
 
-The GitHub Actions importer should not pass `--run-detector-last` in scheduled production runs. Use that script flag only for controlled manual debugging.
+The GitHub Actions importer should not pass `--run-detector-last` in production runs. Use that script flag only for controlled manual debugging.
 
-7. Scheduled update procedure:
+8. Scheduled update procedure:
 
 ```text
+Cloudflare Worker dispatches GitHub Actions.
 GitHub Actions imports recent candles.
 Worker detector cron evaluates stored candles.
 Worker Claude cron enriches queued incidents.
 ```
 
-8. Keep `ENABLE_ADMIN_MAINTENANCE=false` after diagnostics. The scheduled importer uses `MARKET_IMPORT_TOKEN`, not `ADMIN_BACKFILL_TOKEN`.
+9. Keep `ENABLE_ADMIN_MAINTENANCE=false` after diagnostics. The scheduled importer uses `MARKET_IMPORT_TOKEN`, not `ADMIN_BACKFILL_TOKEN`.
 
 ## C. Pages setup
 
@@ -280,7 +320,8 @@ Do not run remote migrations until the production D1 database name and ID have b
 After deployment:
 
 ```text
-watch GitHub Actions market-ingest runs
+watch Worker logs and D1 job_runs for github_ingest_dispatch
+watch GitHub Actions market-ingest workflow_dispatch runs
 watch Worker logs for import, detector, enrichment, and cleanup runs
 verify public view counter increments
 verify D1 row growth remains bounded by 31-day cleanup

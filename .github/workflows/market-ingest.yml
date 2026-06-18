@@ -1,8 +1,6 @@
 name: ByteSiren Market Ingest
 
 on:
-  schedule:
-    - cron: "2,17,32,47 * * * *"
   workflow_dispatch:
     inputs:
       days:
@@ -45,9 +43,10 @@ jobs:
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile
 
-      - name: Schedule heartbeat
+      - name: Dispatch heartbeat
         run: |
-          echo "ByteSiren scheduled market ingest started at $(date -u)"
+          echo "ByteSiren workflow_dispatch import-only run. Triggered by Cloudflare scheduler or manual dispatch."
+          echo "ByteSiren market ingest started at $(date -u)"
           echo "ByteSiren import-only run. Detector is handled by Worker cron."
 
       - name: Import Binance candles
