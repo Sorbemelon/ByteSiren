@@ -45,6 +45,10 @@ jobs:
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile
 
+      - name: Schedule heartbeat
+        run: |
+          echo "ByteSiren scheduled market ingest started at $(date -u)"
+
       - name: Import Binance candles
         env:
           WORKER_URL: ${{ secrets.BYTESIREN_WORKER_URL }}
