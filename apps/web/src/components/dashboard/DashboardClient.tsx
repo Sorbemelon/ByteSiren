@@ -8,7 +8,6 @@ import BottomAccordions from "../BottomAccordions";
 import {
   API_BASE_CONFIGURED,
   API_BASE_URL,
-  API_HOST_LABEL,
   fetchCandles,
   fetchFeed,
   fetchMarket,
@@ -244,24 +243,19 @@ export default function DashboardClient() {
     >
       <Header updatedAt={updatedAt} />
 
-      <div
-        className="rounded-lg border px-3 py-2 text-[12px]"
-        style={{
-          borderColor: apiError
-            ? "rgba(245, 158, 11, 0.32)"
-            : "var(--border-row)",
-          background: "var(--chip-bg)",
-          color: "var(--text-secondary)",
-        }}
-      >
-        <span className="font-medium" style={{ color: "var(--text-primary)" }}>
-          API host:
-        </span>{" "}
-        <span>{API_HOST_LABEL}</span>
-        {apiError && (
-          <span style={{ color: "var(--status-strong)" }}> - {apiError}</span>
-        )}
-      </div>
+      {apiError && (
+        <div
+          className="rounded-lg border px-3 py-2 text-[12px]"
+          role="status"
+          style={{
+            borderColor: "rgba(245, 158, 11, 0.32)",
+            background: "var(--chip-bg)",
+            color: "var(--status-strong)",
+          }}
+        >
+          {apiError}
+        </div>
+      )}
 
       <section
         className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.78fr)] lg:grid-rows-[auto_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.72fr)]"
