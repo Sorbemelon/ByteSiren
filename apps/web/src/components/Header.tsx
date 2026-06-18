@@ -4,7 +4,7 @@ import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 
 interface HeaderProps {
-  updatedAt?: string | null;
+  marketUpdatedAt?: string | null;
 }
 
 const UTC_MONTHS = [
@@ -22,18 +22,53 @@ const UTC_MONTHS = [
   "Dec",
 ];
 
-function formatUpdated(iso: string | null | undefined): string {
-  if (!iso) return "—";
+function formatUpdated(iso: string | null | undefined): {
+  date: string;
+  time: string;
+} | null {
+  if (!iso) return null;
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const datePart = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}`;
+  if (Number.isNaN(d.getTime())) return null;
+  const datePart = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
   const timePart = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
     d.getUTCMinutes(),
   ).padStart(2, "0")}`;
-  return `${datePart}, ${timePart} UTC`;
+  return { date: datePart, time: `${timePart} UTC` };
 }
 
-export default function Header({ updatedAt }: HeaderProps) {
+function TimeValue({
+  value,
+  fallback,
+}: {
+  value: string | null | undefined;
+  fallback: string;
+}) {
+  const formatted = formatUpdated(value);
+
+  if (!formatted) {
+    return (
+      <span
+        className="text-[13px] font-semibold sm:text-[14px]"
+        style={{ color: "var(--text-secondary)" }}
+      >
+        {fallback}
+      </span>
+    );
+  }
+
+  return (
+    <time
+      dateTime={value ?? undefined}
+      className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] font-semibold sm:text-[14px]"
+      style={{ color: "var(--text-primary)" }}
+    >
+      <span>{formatted.date}</span>
+      <span style={{ color: "var(--text-secondary)" }}>{formatted.time}</span>
+    </time>
+  );
+}
+
+export default function Header({ marketUpdatedAt }: HeaderProps) {
   return (
     <header
       className="grid gap-3 border-b pb-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center"
@@ -73,16 +108,22 @@ export default function Header({ updatedAt }: HeaderProps) {
 
       <div className="lg:justify-self-center">
         <div
-          className="inline-flex flex-wrap items-baseline gap-x-2 rounded-md px-0 text-[14px] font-semibold tabular-nums sm:text-[15px] lg:text-[16px]"
-          style={{ color: "var(--text-secondary)" }}
+          className="inline-flex flex-col items-start gap-1 rounded-md text-left tabular-nums lg:items-center lg:text-center"
+          aria-label={
+            marketUpdatedAt
+              ? "Market data update timing"
+              : "Market data update not available"
+          }
         >
-          <span
-            className="text-[11px] font-medium uppercase tracking-wider sm:text-[12px]"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Latest update
-          </span>
-          <span>{formatUpdated(updatedAt)}</span>
+          <div>
+            <span
+              className="text-[10px] font-medium uppercase tracking-wider sm:text-[11px]"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Market data updated
+            </span>
+            <TimeValue value={marketUpdatedAt} fallback="No update yet" />
+          </div>
         </div>
       </div>
 

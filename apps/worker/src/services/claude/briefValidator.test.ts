@@ -57,6 +57,32 @@ test("cause_supported without accepted sources fails", () => {
   );
 });
 
+test("cause_supported with only backdrop sources downgrades to context_only", () => {
+  const validated = validateClaudeBrief(
+    brief({
+      source_links: [source({ used_for: "backdrop" })],
+    }),
+  );
+
+  assert.equal(validated.catalyst_status, "context_only");
+  assert.equal(validated.ui_label, "Market Backdrop");
+  assert.equal(validated.focused_catalyst, null);
+});
+
+test("cause_likely with only backdrop sources downgrades to context_only", () => {
+  const validated = validateClaudeBrief(
+    brief({
+      catalyst_status: "cause_likely",
+      ui_label: "Likely Cause",
+      source_links: [source({ used_for: "backdrop" })],
+    }),
+  );
+
+  assert.equal(validated.catalyst_status, "context_only");
+  assert.equal(validated.ui_label, "Market Backdrop");
+  assert.equal(validated.focused_catalyst, null);
+});
+
 test("cause_supported with only root publisher source fails", () => {
   assert.throws(
     () =>

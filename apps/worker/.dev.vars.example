@@ -13,13 +13,13 @@ CLAUDE_MODEL=claude-sonnet-4-6
 # so keep Phase 4B simpler with web_search_20250305 first.
 CLAUDE_WEB_SEARCH_TOOL_TYPE=web_search_20250305
 
-# Default one search per qualifying incident.
-CLAUDE_DEFAULT_MAX_USES=1
+# Default bounded search allowance per qualifying incident.
+CLAUDE_DEFAULT_MAX_USES=2
 
 # Allow a second search only for strict fallback cases:
 # none_found, context_only without focused cause, rejected-only first result,
 # severity 100 + breadth 5, or two-sided market_day.
-CLAUDE_SECOND_SEARCH_MAX_USES=2
+CLAUDE_SECOND_SEARCH_MAX_USES=3
 
 # Conservative free-public-demo daily cap.
 # Increase to 8 later if too many visible incidents remain queued/limited.

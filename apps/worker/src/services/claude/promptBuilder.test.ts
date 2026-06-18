@@ -71,6 +71,12 @@ test("prompt includes date, windows, all symbols, and safety instructions", () =
   assert.match(prompt.user_prompt, /cause_supported/);
   assert.match(prompt.user_prompt, /context_only/);
   assert.match(prompt.user_prompt, /Do not provide trading advice/);
+  assert.match(prompt.user_prompt, /direct event-specific public context/i);
+  assert.match(prompt.user_prompt, /Do not keep searching to force a cause/i);
+  assert.match(
+    prompt.user_prompt,
+    /backdrop-only sources are not enough for Focused Cause or Likely Cause/i,
+  );
 
   for (const symbol of ALLOWED_SYMBOLS) {
     assert.match(prompt.user_prompt, new RegExp(symbol));
@@ -120,4 +126,11 @@ test("prompt builder keeps web search policy configurable for live phase", () =>
     "reuters.com",
   ]);
   assert.deepEqual(prompt.web_search_policy.blocked_domains, ["example.test"]);
+});
+
+test("prompt builder defaults to bounded two and three search uses", () => {
+  const prompt = buildClaudePrompt({ candidate: candidate("market_wide_up") });
+
+  assert.equal(prompt.web_search_policy.default_max_uses, 2);
+  assert.equal(prompt.web_search_policy.second_search_max_uses, 3);
 });

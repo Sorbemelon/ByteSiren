@@ -42,6 +42,9 @@ Hard scope:
 
 Evidence standard:
 A source can support cause_supported or cause_likely only when it is near the event date and discusses a real catalyst such as ETF flows, liquidation reports, macro data, geopolitical event, regulatory action, exchange/project announcement, network incident, exploit, institutional activity, or broad risk sentiment that is linked to crypto market movement.
+Prefer one direct same-day source that matches the detected event over several broad commentary pages.
+Search for direct event-specific public context first. If limited searching does not find a direct cause, return context_only instead of continuing to force a cause.
+Cause labels require evidence from accepted sources; backdrop-only sources are not enough for a cause label.
 
 Classify the result as exactly one of:
 - cause_supported
@@ -125,7 +128,7 @@ function userPrompt(input: {
   return `Generate a ByteSiren incident brief for the following detected market event.
 
 Search goal:
-Find public sources that explain the current/focused event, not generic crypto background. If only broad background exists, classify as context_only. If no reliable source exists, classify as none_found.
+Find direct event-specific public context first, not generic crypto background. Prefer one direct same-day source over broad commentary. If limited searching finds only broad background, classify as context_only. If no reliable source exists, classify as none_found. Do not keep searching to force a cause.
 
 Use date-bound search around the detected event date/time:
 ${input.incidentJson.detected_at}
@@ -140,6 +143,7 @@ Required evidence handling:
 - Separate focused cause from broader market backdrop.
 - Same-day public context is not proof of exact 15-minute causation.
 - Do not invent causes.
+- Cause labels require evidence from accepted sources; backdrop-only sources are not enough for Focused Cause or Likely Cause.
 - Do not provide trading advice.
 - Do not use buy, sell, hold, long, short, price target, or trading signal wording in any public field.
 - Use near-term instead of short-term if a time phrase is necessary.

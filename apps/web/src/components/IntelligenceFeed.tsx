@@ -166,7 +166,11 @@ function breadthLabel(count: number): string {
   return `Signals: ${Math.min(count, 5)} of 5 symbols`;
 }
 
-function formatEventDateTime(item: FeedItem): string {
+function formatEventDateTimeParts(item: FeedItem): {
+  label: string;
+  date: string;
+  time: string;
+} {
   const d = new Date(item.detected_at);
   const datePart = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}`;
   const timePart = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
@@ -174,10 +178,53 @@ function formatEventDateTime(item: FeedItem): string {
   ).padStart(2, "0")}`;
   if (item.scope === "market_day") {
     const display = item.display_date?.trim().replace(/\s+/g, " ");
-    if (display && /\d{1,2}:\d{2}/.test(display)) return display;
-    return `${datePart}, ${timePart} UTC`;
+    if (display && /\d{1,2}:\d{2}/.test(display)) {
+      const [date, ...timeParts] = display.split(",");
+      const time = timeParts.join(",").trim();
+
+      if (date.trim() && time) {
+        return { label: display, date: date.trim(), time };
+      }
+
+      return { label: display, date: display, time: "" };
+    }
   }
-  return `${datePart}, ${timePart} UTC`;
+
+  return {
+    label: `${datePart}, ${timePart} UTC`,
+    date: datePart,
+    time: `${timePart} UTC`,
+  };
+}
+
+function formatHeaderDateTime(iso: string | null | undefined): {
+  date: string;
+  time: string;
+} | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+
+  const date = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  const time = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
+    d.getUTCMinutes(),
+  ).padStart(2, "0")} UTC`;
+
+  return { date, time };
+}
+
+function formatAge(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return null;
+
+  const minutes = Math.max(0, Math.floor((Date.now() - then) / 60000));
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48) return `${hours}h ago`;
+
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 function normalizeText(value: string | null | undefined): string {
@@ -248,6 +295,44 @@ function SourceChip({ source }: { source: FeedItemSource }) {
 }
 
 // ─── Public Context column ────────────────────────────────────────────────────
+
+function LatestDetectedEvent({
+  latestEventAt,
+}: {
+  latestEventAt?: string | null;
+}) {
+  const formatted = formatHeaderDateTime(latestEventAt);
+  const age = formatAge(latestEventAt);
+
+  return (
+    <span
+      className="inline-flex flex-wrap items-baseline gap-x-1.5 text-[11px] font-medium tabular-nums sm:text-[12px]"
+      aria-label="Latest detected feed event timing"
+      style={{ color: "var(--text-secondary)" }}
+    >
+      {formatted ? (
+        <time
+          dateTime={latestEventAt ?? undefined}
+          className="inline-flex flex-wrap items-baseline gap-x-1.5"
+        >
+          <span style={{ color: "var(--text-muted)" }}>
+            Latest detected event:
+          </span>
+          <span>{formatted.date}</span>
+          <span>{formatted.time}</span>
+        </time>
+      ) : (
+        <span>
+          <span style={{ color: "var(--text-muted)" }}>
+            Latest detected event:
+          </span>{" "}
+          No event yet
+        </span>
+      )}
+      {age && <span style={{ color: "var(--text-muted)" }}>{age}</span>}
+    </span>
+  );
+}
 
 interface PublicContextProps {
   item: FeedItem;
@@ -558,6 +643,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
     item.scope === "market_day" ? "Market Day" : "Market-wide event";
   const avg = item.evidence.avg_15m_change_pct;
   const hasAvg = avg != null && !Number.isNaN(avg);
+  const eventTime = formatEventDateTimeParts(item);
 
   return (
     <article
@@ -568,7 +654,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
         <button
           type="button"
           aria-expanded={isExpanded}
-          aria-label={`${scopeWord} on ${formatEventDateTime(item)}, ${dir.label}, ${item.brief.label}. ${isExpanded ? "Collapse details" : "Expand details"}`}
+          aria-label={`${scopeWord} on ${eventTime.label}, ${dir.label}, ${item.brief.label}. ${isExpanded ? "Collapse details" : "Expand details"}`}
           onClick={onToggle}
           className="absolute inset-0 cursor-pointer rounded-2xl"
           style={{
@@ -582,10 +668,18 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <p
-                className="mr-1 text-[13.5px] font-semibold tabular-nums"
+                className="mr-1 flex flex-wrap items-baseline gap-x-1.5 font-semibold tabular-nums"
                 style={{ color: "var(--text-primary)" }}
               >
-                {formatEventDateTime(item)}
+                <span className="text-[14px]">{eventTime.date},</span>
+                {eventTime.time && (
+                  <span
+                    className="text-[12.5px]"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {eventTime.time}
+                  </span>
+                )}
               </p>
               <Chip
                 tone={item.scope === "market_day" ? "market" : "marketWide"}
@@ -720,6 +814,7 @@ interface IntelligenceFeedProps {
   expandedId: string | null;
   onToggle: (id: string) => void;
   loading: boolean;
+  latestEventAt?: string | null;
 }
 
 export default function IntelligenceFeed({
@@ -728,6 +823,7 @@ export default function IntelligenceFeed({
   expandedId,
   onToggle,
   loading,
+  latestEventAt,
 }: IntelligenceFeedProps) {
   return (
     <section
@@ -739,21 +835,24 @@ export default function IntelligenceFeed({
         boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
       }}
     >
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div>
-          <h2 className="text-[28px] font-semibold leading-tight sm:text-[30px]">
-            <AuroraText
-              colors={[
-                "var(--brand-orange-deep)",
-                "var(--brand-orange)",
-                "var(--brand-orange-amber)",
-                "var(--brand-orange-yellow)",
-              ]}
-              speed={0.7}
-            >
-              Intelligence Feed
-            </AuroraText>
-          </h2>
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="text-[28px] font-semibold leading-tight sm:text-[30px]">
+              <AuroraText
+                colors={[
+                  "var(--brand-orange-deep)",
+                  "var(--brand-orange)",
+                  "var(--brand-orange-amber)",
+                  "var(--brand-orange-yellow)",
+                ]}
+                speed={0.7}
+              >
+                Intelligence Feed
+              </AuroraText>
+            </h2>
+            <LatestDetectedEvent latestEventAt={latestEventAt} />
+          </div>
           <div className="mt-1.5 space-y-1">
             <p
               className="flex items-center gap-1.5 text-[12px] leading-snug"
@@ -789,24 +888,26 @@ export default function IntelligenceFeed({
             </p>
           </div>
         </div>
-        <button
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors hover:bg-white/5"
-          style={{
-            borderColor: "var(--border-row)",
-            color: "var(--text-muted)",
-          }}
-          onClick={() => {
-            const el = document.getElementById("how-to-read");
-            if (el) {
-              el.setAttribute("open", "");
-              el.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-          }}
-          aria-label="What do these labels mean? Scroll to glossary"
-          title="What do these labels mean?"
-        >
-          <HelpCircle size={20} aria-hidden />
-        </button>
+        <div className="flex shrink-0 items-start justify-between gap-2 sm:justify-end">
+          <button
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors hover:bg-white/5"
+            style={{
+              borderColor: "var(--border-row)",
+              color: "var(--text-muted)",
+            }}
+            onClick={() => {
+              const el = document.getElementById("how-to-read");
+              if (el) {
+                el.setAttribute("open", "");
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+            aria-label="What do these labels mean? Scroll to glossary"
+            title="What do these labels mean?"
+          >
+            <HelpCircle size={20} aria-hidden />
+          </button>
+        </div>
       </div>
 
       <div className="flex min-h-50 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">

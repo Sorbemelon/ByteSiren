@@ -228,8 +228,8 @@ export function claudeWebSearchPolicyFromEnv(
   return {
     tool_type: env.CLAUDE_WEB_SEARCH_TOOL_TYPE || "web_search_20250305",
     model: env.CLAUDE_MODEL || null,
-    default_max_uses: parseInteger(env.CLAUDE_DEFAULT_MAX_USES, 1),
-    second_search_max_uses: parseInteger(env.CLAUDE_SECOND_SEARCH_MAX_USES, 2),
+    default_max_uses: parseInteger(env.CLAUDE_DEFAULT_MAX_USES, 2),
+    second_search_max_uses: parseInteger(env.CLAUDE_SECOND_SEARCH_MAX_USES, 3),
     allowed_domains: parseCsv(env.CLAUDE_ALLOWED_DOMAINS),
     blocked_domains: parseCsv(env.CLAUDE_BLOCKED_DOMAINS),
   };

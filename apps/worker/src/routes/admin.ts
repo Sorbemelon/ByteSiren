@@ -4,6 +4,7 @@ import {
   type MarketSymbol,
   parseMarketSymbol,
 } from "../config.ts";
+import { enrichQueuedIncidents } from "../jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "../jobs/pollMarket.ts";
 import { checkBinanceKlines } from "../services/binance.ts";
 import type { Env } from "../types/env.ts";
@@ -53,6 +54,73 @@ function parseOptionalSymbol(value: string | null): MarketSymbol | undefined {
   }
 
   return parseMarketSymbol(value) ?? undefined;
+}
+
+function parseBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized === "true") {
+      return true;
+    }
+
+    if (normalized === "false") {
+      return false;
+    }
+  }
+
+  return fallback;
+}
+
+function parseCatchupLimit(value: unknown): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return 5;
+  }
+
+  return Math.max(1, Math.min(10, Math.trunc(parsed)));
+}
+
+async function readCatchupOptions(request: Request): Promise<{
+  limit: number;
+  includeLimited: boolean;
+  newestFirst: boolean;
+}> {
+  let body: Record<string, unknown> = {};
+
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    const parsed = (await request.json().catch(() => null)) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Request body must be a JSON object.");
+    }
+
+    body = parsed as Record<string, unknown>;
+  }
+
+  const url = new URL(request.url);
+
+  return {
+    limit: parseCatchupLimit(body.limit ?? url.searchParams.get("limit")),
+    includeLimited: parseBoolean(
+      body.include_limited ?? url.searchParams.get("include_limited"),
+      false,
+    ),
+    newestFirst: parseBoolean(
+      body.newest_first ?? url.searchParams.get("newest_first"),
+      true,
+    ),
+  };
 }
 
 function failuresForResponse(results: SymbolPollResult[]) {
@@ -132,6 +200,41 @@ export async function adminResponse(
       symbols_attempted: result.symbols.length,
       symbols_updated: symbolsUpdated,
       failures: failuresForResponse(result.symbols),
+      message: result.message,
+    });
+  }
+
+  if (url.pathname === "/api/admin/claude-catchup") {
+    if (request.method !== "POST") {
+      return methodNotAllowed();
+    }
+
+    let options: Awaited<ReturnType<typeof readCatchupOptions>>;
+
+    try {
+      options = await readCatchupOptions(request);
+    } catch {
+      return jsonError(
+        400,
+        "invalid_request",
+        "Request body must be a JSON object.",
+      );
+    }
+
+    const result = await enrichQueuedIncidents(env.DB, env, {
+      limit: options.limit,
+      includeAnalysisLimited: options.includeLimited,
+    });
+
+    return json({
+      ok: result.status !== "failed",
+      processed: Math.max(result.processed, result.limited_count),
+      brief_ready: result.brief_ready_count,
+      context_only: result.context_only_count,
+      none_found: result.none_found_count,
+      limited: result.limited_count,
+      failed_retryable: result.failed_retryable_count,
+      newest_first: options.newestFirst,
       message: result.message,
     });
   }

@@ -36,9 +36,42 @@ export function analysisLimitedFeedBrief(): PublicFeedBrief {
 
 export function storedBriefToFeedBrief(
   brief: StoredClaudeBrief,
+  sources: ClaudeSourceLink[] = [],
 ): PublicFeedBrief {
   if (!brief.catalyst_status) {
     return queuedFeedBrief();
+  }
+
+  if (
+    brief.catalyst_status === "cause_supported" &&
+    !sources.some((source) => source.used_for === "focused_catalyst")
+  ) {
+    return {
+      status: "context_only",
+      catalyst_status: "context_only",
+      label: "Market Backdrop",
+      summary: brief.summary,
+      confidence: brief.confidence,
+      price_context_check: brief.price_context_check,
+    };
+  }
+
+  if (
+    brief.catalyst_status === "cause_likely" &&
+    !sources.some(
+      (source) =>
+        source.used_for === "focused_catalyst" ||
+        source.used_for === "likely_cause",
+    )
+  ) {
+    return {
+      status: "context_only",
+      catalyst_status: "context_only",
+      label: "Market Backdrop",
+      summary: brief.summary,
+      confidence: brief.confidence,
+      price_context_check: brief.price_context_check,
+    };
   }
 
   return {

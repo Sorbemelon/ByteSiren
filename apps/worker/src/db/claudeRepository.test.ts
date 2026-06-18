@@ -184,6 +184,57 @@ test("brief and source upserts are idempotent", async () => {
   assert.equal((await getAcceptedSourcesForBrief(db, first.id)).length, 1);
 });
 
+test("legacy cause brief with only backdrop sources maps to Market Backdrop", async () => {
+  const { db, tables } = createMemoryD1();
+  const incident = candidate("bs_20260614_market_wide_up_legacy_backdrop");
+
+  await upsertIncidents(db, [incident]);
+  tables.claude_briefs.push({
+    id: `${incident.id}_fixture_test`,
+    incident_id: incident.id,
+    analysis_mode: "fixture_test",
+    catalyst_status: "cause_supported",
+    ui_label: "Focused Cause",
+    confidence: "medium",
+    price_context_check: "matches_binance",
+    headline: "Same-day market backdrop",
+    summary:
+      "Same-day public reporting described broad crypto market context near the detected movement.",
+    focused_catalyst_json: JSON.stringify({ type: "macro_context" }),
+    main_catalyst_json: JSON.stringify({ type: "macro_context" }),
+    broader_context_json: "[]",
+    caveats_json: "[]",
+    tags_json: JSON.stringify(["same_day_context"]),
+    source_quality_meta_json: "{}",
+    generated_at: "2026-06-16T00:00:00.000Z",
+    created_at: "2026-06-16T00:00:00.000Z",
+    updated_at: "2026-06-16T00:00:00.000Z",
+  });
+  tables.source_references.push({
+    id: 1,
+    brief_id: `${incident.id}_fixture_test`,
+    publisher: "CoinDesk",
+    title: "Crypto market backdrop",
+    url: "https://www.coindesk.com/markets/2026/06/14/backdrop",
+    normalized_url: "www.coindesk.com/markets/2026/06/14/backdrop",
+    published_at: "2026-06-14",
+    accessed_at: "2026-06-16T00:00:00.000Z",
+    used_for: "backdrop",
+    source_strength: "acceptable",
+    created_at: "2026-06-16T00:00:00.000Z",
+  });
+
+  const feed = await getRecentIncidentsForFeed(
+    db,
+    30,
+    new Date("2026-06-16T00:00:00.000Z"),
+  );
+
+  assert.equal(feed[0].brief.status, "context_only");
+  assert.equal(feed[0].brief.catalyst_status, "context_only");
+  assert.equal(feed[0].brief.label, "Market Backdrop");
+});
+
 test("queued incident and analysis-limited incident map to approved fallback copy", async () => {
   const { db } = createMemoryD1();
   const queued = candidate("bs_20260614_market_wide_up_queued");

@@ -51,6 +51,9 @@ export interface EnrichQueuedIncidentsResult {
   processed: number;
   limited_count: number;
   failed_retryable_count: number;
+  brief_ready_count: number;
+  context_only_count: number;
+  none_found_count: number;
   briefs_written: number;
   sources_written: number;
   searches_used: number;
@@ -59,6 +62,7 @@ export interface EnrichQueuedIncidentsResult {
 interface EnrichOptions {
   now?: Date;
   limit?: number;
+  includeAnalysisLimited?: boolean;
   client?: ClaudeEnrichmentClient;
 }
 
@@ -352,15 +356,23 @@ export async function enrichQueuedIncidents(
   options: EnrichOptions = {},
 ): Promise<EnrichQueuedIncidentsResult> {
   const startedAt = options.now ?? new Date();
-  const limit = Math.min(options.limit ?? MAX_INCIDENTS_PER_RUN, 5);
+  const requestedLimit = Math.max(
+    1,
+    Math.min(options.limit ?? MAX_INCIDENTS_PER_RUN, 10),
+  );
   const apiKey = env.ANTHROPIC_API_KEY?.trim();
   const dailyLimit = parseDailyLimit(env.CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT);
   const usage = await getClaudeUsageForToday(db, startedAt);
-  const hasCapacity = usage.analysis_count < dailyLimit;
+  const remainingCapacity = Math.max(0, dailyLimit - usage.analysis_count);
+  const hasCapacity = remainingCapacity > 0;
   const canCallClaude = Boolean(apiKey) && hasCapacity;
+  const limit = canCallClaude
+    ? Math.max(1, Math.min(requestedLimit, remainingCapacity))
+    : requestedLimit;
   const incidents = await getNextIncidentsForEnrichment(db, {
     limit,
-    includeAnalysisLimited: canCallClaude,
+    includeAnalysisLimited:
+      options.includeAnalysisLimited ?? Boolean(canCallClaude),
     now: startedAt,
   });
 
@@ -371,6 +383,9 @@ export async function enrichQueuedIncidents(
       processed: 0,
       limited_count: 0,
       failed_retryable_count: 0,
+      brief_ready_count: 0,
+      context_only_count: 0,
+      none_found_count: 0,
       briefs_written: 0,
       sources_written: 0,
       searches_used: 0,
@@ -403,6 +418,9 @@ export async function enrichQueuedIncidents(
       processed: 0,
       limited_count: incidents.length,
       failed_retryable_count: 0,
+      brief_ready_count: 0,
+      context_only_count: 0,
+      none_found_count: 0,
       briefs_written: 0,
       sources_written: 0,
       searches_used: 0,
@@ -435,6 +453,10 @@ export async function enrichQueuedIncidents(
   let failedRetryableCount = 0;
   let searchesUsed = 0;
   let lastError: string | null = null;
+  let limitedCount = 0;
+  let briefReadyCount = 0;
+  let contextOnlyCount = 0;
+  let noneFoundCount = 0;
 
   for (const row of incidents) {
     await markIncidentEnriching(db, row.id, startedAt);
@@ -496,6 +518,27 @@ export async function enrichQueuedIncidents(
 
       briefsWritten += 1;
       sourcesWritten += writtenSources;
+
+      if (
+        selectedBrief.catalyst_status === "cause_supported" ||
+        selectedBrief.catalyst_status === "cause_likely"
+      ) {
+        briefReadyCount += 1;
+      } else if (selectedBrief.catalyst_status === "context_only") {
+        contextOnlyCount += 1;
+      } else if (selectedBrief.catalyst_status === "none_found") {
+        noneFoundCount += 1;
+      }
+    } else if (
+      first.clientResult.parsed.metadata.error_code === "max_uses_exceeded" ||
+      second?.clientResult.parsed.metadata.error_code === "max_uses_exceeded"
+    ) {
+      limitedCount += 1;
+      lastError =
+        second?.validationError ??
+        first.validationError ??
+        "Claude Web Search reached the configured max uses.";
+      await markIncidentAnalysisLimited(db, row.id);
     } else {
       failedRetryableCount += 1;
       lastError =
@@ -516,15 +559,20 @@ export async function enrichQueuedIncidents(
 
   const status = failedRetryableCount === processed ? "failed" : "success";
   const message =
-    status === "success"
-      ? `Claude enrichment processed ${processed} incident(s).`
-      : `Claude enrichment could not validate a brief: ${lastError ?? "unknown error"}`;
+    status === "success" && limitedCount > 0
+      ? `Claude enrichment limited ${limitedCount} incident(s): ${lastError ?? "configured search limit reached"}`
+      : status === "success"
+        ? `Claude enrichment processed ${processed} incident(s).`
+        : `Claude enrichment could not validate a brief: ${lastError ?? "unknown error"}`;
   const result: EnrichQueuedIncidentsResult = {
     status,
     message,
     processed,
-    limited_count: 0,
+    limited_count: limitedCount,
     failed_retryable_count: failedRetryableCount,
+    brief_ready_count: briefReadyCount,
+    context_only_count: contextOnlyCount,
+    none_found_count: noneFoundCount,
     briefs_written: briefsWritten,
     sources_written: sourcesWritten,
     searches_used: searchesUsed,

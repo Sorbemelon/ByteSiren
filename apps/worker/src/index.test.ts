@@ -192,7 +192,14 @@ function claudeFixture(incidentId: string) {
       "Same-day public reporting connected the broad crypto movement to macro context.",
     confidence: "medium",
     price_context_check: "matches_binance",
-    main_catalyst: { type: "macro_context" },
+    main_catalyst: {
+      type: "macro_context",
+      why_it_matches_this_event:
+        "The source discusses the same-day market backdrop near the detected event window.",
+      confirmed_facts: [
+        "The public report was published near the detected event date.",
+      ],
+    },
     broader_context: [{ note: "Same-day public context." }],
     caveats: [
       "This is same-day public context, not proof of exact 15-minute causation.",
@@ -750,6 +757,72 @@ test("admin manual market poll supports small recent one-symbol seed", async () 
   });
 });
 
+test("admin claude catch-up requires token", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/claude-catchup", {
+      method: "POST",
+    }),
+    makeEnv({ adminEnabled: true, adminToken: "test-admin-token" }),
+  );
+
+  assert.equal(response.status, 404);
+});
+
+test("admin claude catch-up respects limit and returns safe summary", async () => {
+  const first = seededIncident();
+  const second: IncidentRow = {
+    ...seededIncident(),
+    id: "bs_20260615_market_wide_down_0915",
+    incident_key: "bs_20260615_market_wide_down_0915",
+    direction: "observed_down",
+    started_at: "2026-06-15T09:15:00.000Z",
+    ended_at: "2026-06-15T09:29:59.999Z",
+  };
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [first, second],
+  });
+  const env: Env = {
+    DB: db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    ANTHROPIC_API_KEY: "",
+  };
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/claude-catchup", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        limit: 1,
+        include_limited: false,
+        newest_first: true,
+      }),
+    }),
+    env,
+  );
+  const body = await readJson(response);
+  const serialized = JSON.stringify(body);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.processed, 1);
+  assert.equal(body.limited, 1);
+  assert.equal(body.failed_retryable, 0);
+  assert.equal(body.brief_ready, 0);
+  assert.equal(
+    tables.incidents.filter(
+      (incident) => incident.status === "analysis_limited",
+    ).length,
+    1,
+  );
+  assert.equal(serialized.includes("analysis_count"), false);
+  assert.equal(serialized.includes("web_search_requests"), false);
+  assert.equal(serialized.includes("test-admin-token"), false);
+});
+
 test("market candle import disabled returns not found without public CORS", async () => {
   const response = await worker.fetch(
     importRequest(
@@ -1091,6 +1164,8 @@ test("worker returns stored Claude fixture brief and accepted sources only", asy
   const first = items[0];
   const brief = first?.brief as Record<string, unknown>;
   const sources = first?.sources as Array<Record<string, unknown>>;
+  const expanded = first?.expanded_details as Record<string, unknown>;
+  const context = expanded.claude_context as Record<string, unknown>;
   const serialized = JSON.stringify(body);
 
   assert.equal(response.status, 200);
@@ -1102,5 +1177,10 @@ test("worker returns stored Claude fixture brief and accepted sources only", asy
     sources[0].url,
     "https://www.reuters.com/markets/2026/06/15/crypto-context/",
   );
+  assert.match(
+    String(context.summary),
+    /same-day market backdrop near the detected event window/i,
+  );
+  assert.notEqual(context.summary, brief.summary);
   assert.equal(serialized.includes("Rejected Page"), false);
 });

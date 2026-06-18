@@ -71,7 +71,7 @@ export default function DashboardClient() {
     API_BASE_CONFIGURED ? "loading" : IS_PRODUCTION ? "unavailable" : "ready",
   );
   const [feedLoading, setFeedLoading] = useState(API_BASE_CONFIGURED);
-  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [marketUpdatedAt, setMarketUpdatedAt] = useState<string | null>(null);
   const [viewMetrics, setViewMetrics] = useState<ViewMetrics | null>(null);
   const [apiError, setApiError] = useState<string | null>(
     API_BASE_CONFIGURED ? null : "Production API URL is not configured.",
@@ -101,11 +101,8 @@ export default function DashboardClient() {
       }
 
       if (feedResult.status === "fulfilled") {
-        const { items, updatedAt: feedUpdatedAt } = feedResult.value;
+        const { items } = feedResult.value;
         setFeed(items);
-        if (feedUpdatedAt) {
-          setUpdatedAt(feedUpdatedAt);
-        }
       } else if (!isAbortError(feedResult.reason)) {
         setApiError("Intelligence Feed could not be loaded.");
       }
@@ -115,7 +112,7 @@ export default function DashboardClient() {
           marketResult.value;
         setMarket(nextMarket);
         if (marketUpdatedAt) {
-          setUpdatedAt((previous) => previous ?? marketUpdatedAt);
+          setMarketUpdatedAt(marketUpdatedAt);
         }
       } else if (!isAbortError(marketResult.reason)) {
         setApiError(
@@ -241,7 +238,7 @@ export default function DashboardClient() {
       className="flex min-h-screen w-full flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8 2xl:px-10"
       data-api-base-configured={String(API_BASE_CONFIGURED)}
     >
-      <Header updatedAt={updatedAt} />
+      <Header marketUpdatedAt={marketUpdatedAt} />
 
       {apiError && (
         <div
@@ -283,6 +280,7 @@ export default function DashboardClient() {
             expandedId={expandedId}
             onToggle={handleToggle}
             loading={feedLoading}
+            latestEventAt={feed[0]?.detected_at ?? null}
           />
         </div>
 

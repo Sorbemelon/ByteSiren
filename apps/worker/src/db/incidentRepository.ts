@@ -251,6 +251,80 @@ function ensureAllSymbolEvidence(evidence: SymbolEvidence[]): SymbolEvidence[] {
   });
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function textFromUnknown(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) {
+    return value.trim();
+  }
+
+  if (isRecord(value)) {
+    const preferred = [
+      value.why_it_matches_this_event,
+      value.summary,
+      value.detail,
+      value.description,
+      value.note,
+      value.text,
+    ];
+
+    for (const item of preferred) {
+      if (typeof item === "string" && item.trim()) {
+        return item.trim();
+      }
+    }
+  }
+
+  return null;
+}
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(textFromUnknown)
+    .filter((item): item is string => Boolean(item));
+}
+
+function contextDetailSummary(brief: StoredClaudeBrief | null): string | null {
+  if (!brief) {
+    return null;
+  }
+
+  const details: string[] = [];
+
+  if (isRecord(brief.focused_catalyst)) {
+    const whyItMatches = textFromUnknown(
+      brief.focused_catalyst.why_it_matches_this_event,
+    );
+    const confirmedFacts = stringList(brief.focused_catalyst.confirmed_facts);
+
+    if (whyItMatches) {
+      details.push(whyItMatches);
+    }
+
+    details.push(...confirmedFacts);
+  }
+
+  details.push(
+    ...brief.broader_context
+      .map(textFromUnknown)
+      .filter((item): item is string => Boolean(item)),
+  );
+  details.push(...brief.caveats);
+
+  const normalizedSummary = (brief.summary ?? "").replace(/\s+/g, " ").trim();
+  const uniqueDetails = [...new Set(details)]
+    .map((item) => item.replace(/\s+/g, " ").trim())
+    .filter((item) => item && item !== normalizedSummary);
+
+  return uniqueDetails.length > 0 ? uniqueDetails.join(" ") : null;
+}
+
 export function incidentRowToFeedItem(row: IncidentRow): FeedItem {
   return incidentRowToFeedItemWithBrief(row, null, []);
 }
@@ -274,7 +348,7 @@ export function incidentRowToFeedItemWithBrief(
     severityScore,
   });
   const publicBrief = brief
-    ? storedBriefToFeedBrief(brief)
+    ? storedBriefToFeedBrief(brief, acceptedSources)
     : row.status === "analysis_limited" ||
         row.brief_status === "analysis_limited"
       ? analysisLimitedFeedBrief()
@@ -316,6 +390,7 @@ export function incidentRowToFeedItemWithBrief(
       claude_context: brief
         ? {
             headline: brief.headline,
+            summary: contextDetailSummary(brief),
             generated_at: brief.generated_at,
             analysis_mode: brief.analysis_mode,
             focused_catalyst: brief.focused_catalyst,

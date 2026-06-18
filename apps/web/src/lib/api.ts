@@ -57,8 +57,14 @@ function normalizeSymbolEvidence(raw: ApiSymbolEvidence): SymbolEvidence {
     price_z: raw.price_z,
     volume_x: raw.volume_ratio,
     range_x: raw.volatility_ratio,
-    score: raw.severity_score,
+    score: roundScore(raw.severity_score),
   };
+}
+
+function roundScore(value: number | null | undefined): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.round(value)
+    : 0;
 }
 
 function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
@@ -81,7 +87,7 @@ function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
       baseline_window: raw.evidence.baseline_window,
       summary: raw.evidence.summary ?? raw.evidence.evidence_summary ?? "",
       breadth_label: raw.evidence.breadth_label,
-      severity_score: raw.evidence.severity_score,
+      severity_score: roundScore(raw.evidence.severity_score),
       severity_label: raw.evidence.severity_label,
       avg_15m_change_pct: raw.evidence.avg_15m_change_pct ?? null,
       peak_symbol: raw.evidence.peak_symbol ?? "",

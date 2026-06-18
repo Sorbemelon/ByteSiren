@@ -217,7 +217,9 @@ function okResult(json: unknown, searchesUsed = 1): ClaudeClientResult {
   };
 }
 
-function errorResult(errorCode: "too_many_requests" | "parse_error") {
+function errorResult(
+  errorCode: "too_many_requests" | "parse_error" | "max_uses_exceeded",
+) {
   return {
     ok: false,
     parsed: {
@@ -406,6 +408,30 @@ test("retryable and parse failures do not create fake briefs", async () => {
   assert.equal(result.status, "failed");
   assert.equal(tables.claude_briefs.length, 0);
   assert.equal(feed[0].brief.status, "queued_for_analysis");
+});
+
+test("max uses exceeded marks incident limited and detector upsert preserves it", async () => {
+  const { db } = createMemoryD1();
+  const item = candidate("bs_20260616_market_wide_up_max_uses");
+
+  await upsertIncidents(db, [item]);
+  const result = await enrichQueuedIncidents(db, env({ DB: db }), {
+    client: new MockClaudeClient([errorResult("max_uses_exceeded")]),
+    now,
+  });
+  let feed = await getRecentIncidentsForFeed(db, 30, now);
+
+  assert.equal(result.status, "success");
+  assert.equal(result.limited_count, 1);
+  assert.equal(result.failed_retryable_count, 0);
+  assert.equal(feed[0].brief.status, "analysis_limited");
+  assert.equal(feed[0].brief.label, "Claude Limited");
+  assert.equal(feed[0].brief.summary, CLAUDE_LIMITED_SUMMARY);
+
+  await upsertIncidents(db, [item]);
+  feed = await getRecentIncidentsForFeed(db, 30, now);
+
+  assert.equal(feed[0].brief.status, "analysis_limited");
 });
 
 test("second search triggers for none_found and merges into one final brief", async () => {

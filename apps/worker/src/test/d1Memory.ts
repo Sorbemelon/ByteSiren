@@ -105,6 +105,13 @@ export interface MemoryD1Tables {
   job_runs: JobRunRow[];
 }
 
+const TERMINAL_INCIDENT_STATUSES = new Set([
+  "analysis_limited",
+  "brief_ready",
+  "context_only",
+  "none_found",
+]);
+
 export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
   db: D1Database;
   tables: MemoryD1Tables;
@@ -573,8 +580,14 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           sub_events_json: subEventsJson,
           symbol_evidence_json: symbolEvidenceJson,
           query_hints_json: queryHintsJson,
-          status,
-          brief_status: briefStatus,
+          status:
+            existing && TERMINAL_INCIDENT_STATUSES.has(existing.status)
+              ? existing.status
+              : status,
+          brief_status:
+            existing && TERMINAL_INCIDENT_STATUSES.has(existing.brief_status)
+              ? existing.brief_status
+              : briefStatus,
           created_at: existing?.created_at ?? now,
           updated_at: now,
         };

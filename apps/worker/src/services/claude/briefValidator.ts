@@ -219,6 +219,51 @@ function enforceSourceRequirements(input: {
   }
 }
 
+function hasAcceptedCauseRole(
+  status: CatalystStatus,
+  sources: ClaudeSourceLink[],
+): boolean {
+  if (status === "cause_supported") {
+    return sources.some((source) => source.used_for === "focused_catalyst");
+  }
+
+  if (status === "cause_likely") {
+    return sources.some(
+      (source) =>
+        source.used_for === "focused_catalyst" ||
+        source.used_for === "likely_cause",
+    );
+  }
+
+  return true;
+}
+
+function maybeDowngradeForBackdropOnlyCause(input: {
+  catalyst_status: CatalystStatus;
+  ui_label: ClaudeUiLabel;
+  accepted_sources: ClaudeSourceLink[];
+}): {
+  catalyst_status: CatalystStatus;
+  ui_label: ClaudeUiLabel;
+} {
+  if (
+    (input.catalyst_status === "cause_supported" ||
+      input.catalyst_status === "cause_likely") &&
+    input.accepted_sources.length > 0 &&
+    !hasAcceptedCauseRole(input.catalyst_status, input.accepted_sources)
+  ) {
+    return {
+      catalyst_status: "context_only",
+      ui_label: "Market Backdrop",
+    };
+  }
+
+  return {
+    catalyst_status: input.catalyst_status,
+    ui_label: input.ui_label,
+  };
+}
+
 function maybeDowngradeForConflict(input: {
   catalyst_status: CatalystStatus;
   ui_label: ClaudeUiLabel;
@@ -287,9 +332,14 @@ export function validateClaudeBrief(
       rejection_reason: "provided_as_rejected_source",
     })),
   ] as RejectedClaudeSource[];
-  const downgraded = maybeDowngradeForConflict({
+  const sourceRoleChecked = maybeDowngradeForBackdropOnlyCause({
     catalyst_status: status,
     ui_label: label,
+    accepted_sources: filtered.accepted,
+  });
+  const downgraded = maybeDowngradeForConflict({
+    catalyst_status: sourceRoleChecked.catalyst_status,
+    ui_label: sourceRoleChecked.ui_label,
     price_context_check: priceCheck,
     accepted_sources: filtered.accepted,
   });
