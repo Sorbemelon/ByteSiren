@@ -209,7 +209,7 @@ Worker Claude cron enriches queued incidents.
 3. Use this build command:
 
 ```bash
-corepack pnpm install --frozen-lockfile && corepack pnpm --filter @bytesiren/web build
+corepack enable && corepack pnpm install --frozen-lockfile && corepack pnpm --filter @bytesiren/web build
 ```
 
 4. Use this output directory:
@@ -232,6 +232,13 @@ https://bytesiren-api.<account>.workers.dev
 ```
 
 6. Deploy Pages only after the Worker API URL is known.
+   For manual deployment from the repository, use the Pages deploy command from the web app context:
+
+```bash
+cd apps/web
+corepack pnpm exec wrangler pages deploy ./out --project-name bytesiren --branch main
+```
+
 7. Smoke the frontend:
 
 ```text

@@ -1,23 +1,56 @@
 import type {
-  FeedItem,
-  MarketLatest,
-  CandleBar,
-  SymbolEvidence,
+  ApiCandle,
   ApiFeedItem,
   ApiSymbolEvidence,
-  ApiCandle,
-  FeedApiResponse,
-  MarketLatestApiResponse,
+  CandleBar,
   CandlesApiResponse,
+  FeedApiResponse,
+  FeedItem,
+  MarketLatest,
+  MarketLatestApiResponse,
+  SymbolEvidence,
   ViewMetrics,
   ViewMetricsApiResponse,
 } from "./types";
 
-// ─── Normalization helpers ────────────────────────────────────────────────────
+const rawApiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+export const API_BASE_URL =
+  rawApiBase && rawApiBase.trim().length > 0
+    ? rawApiBase.trim().replace(/\/$/, "")
+    : process.env.NODE_ENV === "production"
+      ? ""
+      : "http://localhost:8787";
+
+export const API_BASE_CONFIGURED = API_BASE_URL.length > 0;
+
+export const API_HOST_LABEL = (() => {
+  if (!API_BASE_CONFIGURED) {
+    return "not configured";
+  }
+
+  try {
+    return new URL(API_BASE_URL).host;
+  } catch {
+    return "invalid API URL";
+  }
+})();
+
+interface ApiFetchOptions {
+  signal?: AbortSignal;
+}
+
+export function apiUrl(path: string, base = API_BASE_URL): string {
+  const trimmedBase = base.trim().replace(/\/$/, "");
+
+  if (!trimmedBase) {
+    throw new Error("Production API URL is not configured.");
+  }
+
+  return `${trimmedBase}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 function normalizeSymbolEvidence(raw: ApiSymbolEvidence): SymbolEvidence {
-  // Preserve null for genuinely missing fields so the UI can show "—"
-  // rather than a misleading "0".
   return {
     symbol: raw.symbol,
     change_15m_pct: raw.change_15m_pct,
@@ -29,10 +62,8 @@ function normalizeSymbolEvidence(raw: ApiSymbolEvidence): SymbolEvidence {
 }
 
 function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
-  // Prefer item-level symbol_evidence; fall back to expanded_details
   const rawEvidence: ApiSymbolEvidence[] =
     raw.symbol_evidence ?? raw.expanded_details?.symbol_evidence ?? [];
-
   const symbolEvidence: SymbolEvidence[] = rawEvidence.map(
     normalizeSymbolEvidence,
   );
@@ -48,7 +79,6 @@ function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
     evidence: {
       signal_window: raw.evidence.signal_window,
       baseline_window: raw.evidence.baseline_window,
-      // backend may send evidence_summary instead of summary
       summary: raw.evidence.summary ?? raw.evidence.evidence_summary ?? "",
       breadth_label: raw.evidence.breadth_label,
       severity_score: raw.evidence.severity_score,
@@ -77,25 +107,27 @@ function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
   };
 }
 
-function normalizeCandle(c: ApiCandle): CandleBar {
+function normalizeCandle(candle: ApiCandle): CandleBar {
   return {
-    // Align each candle to its open time (matches detector/candle-time markers).
-    time: Math.floor(new Date(c.open_time).getTime() / 1000),
-    open: c.open,
-    high: c.high,
-    low: c.low,
-    close: c.close,
-    volume: c.volume,
+    time: Math.floor(new Date(candle.open_time).getTime() / 1000),
+    open: candle.open,
+    high: candle.high,
+    low: candle.low,
+    close: candle.close,
+    volume: candle.volume,
   };
 }
 
-// ─── Public API helpers ───────────────────────────────────────────────────────
-
 export async function fetchFeed(
-  base: string,
+  base = API_BASE_URL,
+  options: ApiFetchOptions = {},
 ): Promise<{ items: FeedItem[]; updatedAt: string | null }> {
-  const res = await fetch(`${base}/api/intelligence/feed`);
+  const res = await fetch(apiUrl("/api/intelligence/feed", base), {
+    signal: options.signal,
+  });
+
   if (!res.ok) throw new Error(`feed HTTP ${res.status}`);
+
   const data = (await res.json()) as FeedApiResponse;
   return {
     items: (data.items ?? []).map(normalizeFeedItem),
@@ -104,43 +136,61 @@ export async function fetchFeed(
 }
 
 export async function fetchMarket(
-  base: string,
+  base = API_BASE_URL,
+  options: ApiFetchOptions = {},
 ): Promise<{ market: Record<string, MarketLatest>; updatedAt: string | null }> {
-  const res = await fetch(`${base}/api/market/latest`);
-  if (!res.ok) throw new Error(`market HTTP ${res.status}`);
-  const data = (await res.json()) as MarketLatestApiResponse;
+  const res = await fetch(apiUrl("/api/market/latest", base), {
+    signal: options.signal,
+  });
 
+  if (!res.ok) throw new Error(`market HTTP ${res.status}`);
+
+  const data = (await res.json()) as MarketLatestApiResponse;
   const market: Record<string, MarketLatest> = {};
   const now = new Date().toISOString();
-  for (const sym of data.symbols ?? []) {
-    // Preserve null market values; the UI decides how to render missing data.
-    market[sym.symbol] = {
-      symbol: sym.symbol,
-      last_price: sym.last_price,
-      change_15m_pct: sym.change_15m_pct,
-      change_24h_pct: sym.change_24h_pct,
-      data_status: sym.data_status,
+
+  for (const symbol of data.symbols ?? []) {
+    market[symbol.symbol] = {
+      symbol: symbol.symbol,
+      last_price: symbol.last_price,
+      change_15m_pct: symbol.change_15m_pct,
+      change_24h_pct: symbol.change_24h_pct,
+      data_status: symbol.data_status,
       updated_at: data.updated_at ?? now,
     };
   }
+
   return { market, updatedAt: data.updated_at ?? null };
 }
 
 export async function fetchCandles(
-  base: string,
+  base = API_BASE_URL,
   symbol: string,
+  options: ApiFetchOptions = {},
 ): Promise<CandleBar[]> {
   const res = await fetch(
-    `${base}/api/market/candles?symbol=${encodeURIComponent(symbol)}`,
+    apiUrl(`/api/market/candles?symbol=${encodeURIComponent(symbol)}`, base),
+    {
+      signal: options.signal,
+    },
   );
+
   if (!res.ok) throw new Error(`candles HTTP ${res.status}`);
+
   const data = (await res.json()) as CandlesApiResponse;
   return (data.candles ?? []).map(normalizeCandle);
 }
 
-export async function fetchViewMetrics(base: string): Promise<ViewMetrics> {
-  const res = await fetch(`${base}/api/metrics/views`);
+export async function fetchViewMetrics(
+  base = API_BASE_URL,
+  options: ApiFetchOptions = {},
+): Promise<ViewMetrics> {
+  const res = await fetch(apiUrl("/api/metrics/views", base), {
+    signal: options.signal,
+  });
+
   if (!res.ok) throw new Error(`view metrics HTTP ${res.status}`);
+
   const data = (await res.json()) as ViewMetricsApiResponse;
   return {
     updated_at: data.updated_at,
@@ -150,9 +200,17 @@ export async function fetchViewMetrics(base: string): Promise<ViewMetrics> {
   };
 }
 
-export async function recordViewMetric(base: string): Promise<ViewMetrics> {
-  const res = await fetch(`${base}/api/metrics/views`, { method: "POST" });
+export async function recordViewMetric(
+  base = API_BASE_URL,
+  options: ApiFetchOptions = {},
+): Promise<ViewMetrics> {
+  const res = await fetch(apiUrl("/api/metrics/views", base), {
+    method: "POST",
+    signal: options.signal,
+  });
+
   if (!res.ok) throw new Error(`view metrics POST HTTP ${res.status}`);
+
   const data = (await res.json()) as ViewMetricsApiResponse;
   return {
     updated_at: data.updated_at,

@@ -1,16 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { MarketLatest, FeedItem, CandleBar, Symbol } from "../lib/types";
 import { SYMBOLS, SYMBOL_FULL } from "../lib/types";
-import { generateCandles, IS_DEV } from "../lib/mockData";
-import { fetchCandles } from "../lib/api";
 import { aggregateCandles, CHART_INTERVALS } from "../lib/candles";
 import type { ChartInterval } from "../lib/candles";
 import { useTheme } from "../lib/theme";
 
-type ChartStatus = "loading" | "ready" | "unavailable";
+export type ChartStatus = "loading" | "ready" | "unavailable";
 
 const TradingViewChart = dynamic(() => import("./TradingViewChart"), {
   ssr: false,
@@ -36,6 +34,10 @@ interface ChartPanelProps {
   market: Record<string, MarketLatest>;
   feed: FeedItem[];
   selectedIncidentId: string | null;
+  candles: CandleBar[];
+  chartStatus: ChartStatus;
+  chartInterval: ChartInterval;
+  onChartIntervalChange: (interval: ChartInterval) => void;
 }
 
 function fmtPrice(price: number, symbol: string): string {
@@ -56,53 +58,14 @@ export default function ChartPanel({
   market,
   feed,
   selectedIncidentId,
+  candles,
+  chartStatus,
+  chartInterval,
+  onChartIntervalChange,
 }: ChartPanelProps) {
   const symbolFull = SYMBOL_FULL[selectedSymbol];
   const mkt = market[symbolFull];
-
-  // Development sample candles are dev-only. In production the chart shows a
-  // loading/unavailable state until live data
-  // arrives.
-  const [candles, setCandles] = useState<CandleBar[]>(() =>
-    IS_DEV ? generateCandles(symbolFull) : [],
-  );
-  const [status, setStatus] = useState<ChartStatus>(
-    IS_DEV ? "ready" : "loading",
-  );
-  const [chartInterval, setChartInterval] = useState<ChartInterval>("15m");
   const theme = useTheme();
-
-  // Symbol change: development regenerates sample data; production resets to loading + empty.
-  useEffect(() => {
-    if (IS_DEV) {
-      setCandles(generateCandles(symbolFull));
-      setStatus("ready");
-    } else {
-      setCandles([]);
-      setStatus("loading");
-    }
-  }, [symbolFull]);
-
-  // Fetch live candles when an API base is configured; normalised by fetchCandles.
-  useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (!apiBase) {
-      if (!IS_DEV) setStatus("unavailable");
-      return;
-    }
-    fetchCandles(apiBase, symbolFull)
-      .then((data) => {
-        if (data.length > 0) {
-          setCandles(data);
-          setStatus("ready");
-        } else if (!IS_DEV) {
-          setStatus("unavailable");
-        }
-      })
-      .catch(() => {
-        if (!IS_DEV) setStatus("unavailable");
-      });
-  }, [symbolFull]);
 
   // Frontend display aggregation only — detection always uses 15m signals.
   const displayCandles = useMemo(
@@ -149,7 +112,7 @@ export default function ChartPanel({
               key={iv}
               role="tab"
               aria-selected={iv === chartInterval}
-              onClick={() => setChartInterval(iv)}
+              onClick={() => onChartIntervalChange(iv)}
               className="chart-interval-tab rounded-md px-3 py-1.5 text-xs font-semibold"
             >
               {iv}
@@ -245,7 +208,7 @@ export default function ChartPanel({
             role="status"
           >
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              {status === "loading"
+              {chartStatus === "loading"
                 ? "Loading chart…"
                 : "Market data is delayed. ByteSiren will update when new public Binance data is available."}
             </p>

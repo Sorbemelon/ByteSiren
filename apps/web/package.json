@@ -5,9 +5,9 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "deploy:pages": "wrangler pages deploy out --project-name bytesiren-web",
+    "deploy:pages": "wrangler pages deploy out --project-name bytesiren --branch main",
     "lint": "eslint src next.config.mjs postcss.config.mjs --max-warnings=0",
-    "pages:deploy": "wrangler pages deploy out --project-name bytesiren-web",
+    "pages:deploy": "wrangler pages deploy out --project-name bytesiren --branch main",
     "pages:preview": "wrangler pages dev out",
     "typecheck": "tsc --noEmit"
   },

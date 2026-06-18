@@ -9,6 +9,7 @@
     "lint": "corepack pnpm -r --if-present lint",
     "test": "corepack pnpm -r --if-present test",
     "web:build": "corepack pnpm --filter @bytesiren/web build",
+    "web:export:check": "node scripts/check-web-export.mjs",
     "web:pages:preview": "corepack pnpm --filter @bytesiren/web pages:preview",
     "web:deploy:pages": "corepack pnpm --filter @bytesiren/web deploy:pages",
     "worker:dev": "corepack pnpm --filter @bytesiren/worker dev",
