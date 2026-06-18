@@ -22,10 +22,24 @@ test("deployment boundary keeps active Wrangler configs app-local", () => {
   assert.match(workerWrangler, /main = "src\/index\.ts"/);
   assert.match(workerWrangler, /binding = "DB"/);
   assert.match(workerWrangler, /crons = \[/);
+  assert.match(workerWrangler, /"5,20,35,50 \* \* \* \*"/);
+  assert.match(workerWrangler, /"10,25,40,55 \* \* \* \*"/);
+  assert.equal(workerWrangler.includes('"*/5 * * * *"'), false);
   assert.match(webWrangler, /pages_build_output_dir = "out"/);
   assert.equal(webWrangler.includes('binding = "DB"'), false);
   assert.equal(webWrangler.includes("crons"), false);
   assert.equal(webWrangler.includes("ANTHROPIC_API_KEY"), false);
+});
+
+test("market ingest workflow imports only and leaves detector to Worker cron", () => {
+  const workflow = readRepoFile(".github/workflows/market-ingest.yml");
+
+  assert.match(workflow, /cron: "2,17,32,47 \* \* \* \*"/);
+  assert.match(
+    workflow,
+    /ByteSiren import-only run\. Detector is handled by Worker cron\./,
+  );
+  assert.equal(workflow.includes("--run-detector-last"), false);
 });
 
 test("Claude secrets stay Worker-only and no scripts depend on root Wrangler config", () => {

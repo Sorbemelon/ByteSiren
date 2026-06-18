@@ -48,6 +48,7 @@ jobs:
       - name: Schedule heartbeat
         run: |
           echo "ByteSiren scheduled market ingest started at $(date -u)"
+          echo "ByteSiren import-only run. Detector is handled by Worker cron."
 
       - name: Import Binance candles
         env:
@@ -62,7 +63,7 @@ jobs:
 
           symbols="${SYMBOLS:-BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT}"
           dry_run="${DRY_RUN:-false}"
-          args=(--symbols "$symbols" --chunk-size 500 --run-detector-last)
+          args=(--symbols "$symbols" --chunk-size 500)
 
           if [[ -n "${DAYS:-}" ]]; then
             args+=(--days "$DAYS")

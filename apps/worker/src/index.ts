@@ -1,7 +1,8 @@
 import {
   CLAUDE_ENRICHMENT_CRON,
   CLEANUP_CRON,
-  POLL_MARKET_CRON,
+  DETECTOR_CRON,
+  LEGACY_POLL_MARKET_CRON,
 } from "./config.ts";
 import { cleanupOldData } from "./jobs/cleanupOldData.ts";
 import { enrichQueuedIncidents } from "./jobs/enrichQueuedIncidents.ts";
@@ -131,7 +132,12 @@ export default {
   },
 
   async scheduled(controller: ScheduledController, env: Env): Promise<void> {
-    if (controller.cron === POLL_MARKET_CRON) {
+    if (controller.cron === DETECTOR_CRON) {
+      await runDetector(env.DB);
+      return;
+    }
+
+    if (controller.cron === LEGACY_POLL_MARKET_CRON) {
       if (isWorkerMarketFetchEnabled(env)) {
         await pollMarket(env.DB);
         await runDetector(env.DB);

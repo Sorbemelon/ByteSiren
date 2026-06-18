@@ -7,6 +7,11 @@ import { createMemoryD1 } from "./test/d1Memory.ts";
 import type { IncidentRow } from "./db/incidentRepository.ts";
 import type { MarketCandle } from "./types/market.ts";
 import { persistClaudeFixtureBriefForTest } from "./db/claudeRepository.ts";
+import {
+  CLAUDE_ENRICHMENT_CRON,
+  DETECTOR_CRON,
+  LEGACY_POLL_MARKET_CRON,
+} from "./config.ts";
 
 const symbols = [
   "BTCUSDT",
@@ -162,6 +167,14 @@ function importRequest(
     },
     body: JSON.stringify(body),
   });
+}
+
+function scheduledController(cron: string): ScheduledController {
+  return {
+    cron,
+    scheduledTime: now.getTime(),
+    noRetry() {},
+  } as ScheduledController;
 }
 
 function claudeFixture(incidentId: string) {
@@ -390,6 +403,63 @@ test("worker does not allow arbitrary CORS origins", async () => {
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("scheduled detector cron runs detector only", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+  };
+
+  await worker.scheduled(scheduledController(DETECTOR_CRON), env);
+
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "poll_market"),
+    false,
+  );
+});
+
+test("scheduled Claude cron runs enrichment only", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [seededIncident()],
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+  };
+
+  await worker.scheduled(scheduledController(CLAUDE_ENRICHMENT_CRON), env);
+
+  assert.equal(tables.incidents[0].status, "analysis_limited");
+  assert.equal(tables.incidents[0].brief_status, "analysis_limited");
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "claude_enrichment"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector"),
+    false,
+  );
+});
+
+test("legacy poll cron is inert unless Worker fetch mode is enabled", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+  };
+
+  await worker.scheduled(scheduledController(LEGACY_POLL_MARKET_CRON), env);
+
+  assert.equal(tables.job_runs.length, 0);
 });
 
 test("admin endpoint disabled returns not found without public CORS", async () => {

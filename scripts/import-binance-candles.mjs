@@ -10,6 +10,8 @@ const DEFAULT_CHUNK_SIZE = 500;
 const DEFAULT_HOURS = 6;
 const MARKET_INTERVAL = "15m";
 const ALLOWED_SYMBOLS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"];
+const TRANSIENT_WORKER_STATUSES = new Set([502, 503, 504]);
+const MAX_UPLOAD_RETRIES = 2;
 
 function readOption(argv, name) {
   const equalsPrefix = `${name}=`;
@@ -97,6 +99,12 @@ export function parseArgs(argv = process.argv.slice(2), env = process.env) {
   }
 
   return options;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function toNumber(value, field) {
@@ -212,7 +220,7 @@ export async function fetchSymbolCandles({
   );
 }
 
-async function uploadCandles({
+async function uploadCandlesOnce({
   workerUrl,
   token,
   symbol,
@@ -247,6 +255,50 @@ async function uploadCandles({
   return JSON.parse(text);
 }
 
+async function uploadCandles({
+  workerUrl,
+  token,
+  symbol,
+  candles,
+  runDetector,
+  fetchImpl,
+  logger,
+  sleep,
+}) {
+  for (let attempt = 0; attempt <= MAX_UPLOAD_RETRIES; attempt += 1) {
+    try {
+      return await uploadCandlesOnce({
+        workerUrl,
+        token,
+        symbol,
+        candles,
+        runDetector,
+        fetchImpl,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed.";
+      const statusMatch = /HTTP (\d{3})/.exec(message);
+      const status = statusMatch ? Number(statusMatch[1]) : null;
+      const canRetry =
+        status !== null &&
+        TRANSIENT_WORKER_STATUSES.has(status) &&
+        attempt < MAX_UPLOAD_RETRIES;
+
+      if (!canRetry) {
+        throw error;
+      }
+
+      const retryNumber = attempt + 1;
+      logger.log(
+        `${symbol}: Worker import HTTP ${status}; retry ${retryNumber}/${MAX_UPLOAD_RETRIES}.`,
+      );
+      await sleep(500 * retryNumber);
+    }
+  }
+
+  throw new Error(`Worker import failed for ${symbol}.`);
+}
+
 function lookbackStart(options, now) {
   if (options.days !== undefined) {
     return now.getTime() - options.days * 24 * 60 * 60 * 1000;
@@ -257,12 +309,18 @@ function lookbackStart(options, now) {
 
 export async function runImport(
   options,
-  { fetchImpl = fetch, logger = console, now = new Date() } = {},
+  { fetchImpl = fetch, logger = console, now = new Date(), sleep = wait } = {},
 ) {
   const startTimeMs = lookbackStart(options, now);
   const endTimeMs = now.getTime();
   let totalFetched = 0;
   let totalUploaded = 0;
+
+  if (options.runDetectorLast) {
+    logger.log(
+      "Manual option --run-detector-last is not recommended for scheduled production imports.",
+    );
+  }
 
   for (const [symbolIndex, symbol] of options.symbols.entries()) {
     const candles = await fetchSymbolCandles({
@@ -274,8 +332,10 @@ export async function runImport(
     const chunks = chunkArray(candles, options.chunkSize);
 
     totalFetched += candles.length;
+    const firstOpenTime = candles[0]?.open_time ?? "none";
+    const lastOpenTime = candles.at(-1)?.open_time ?? "none";
     logger.log(
-      `${symbol}: fetched ${candles.length} candles; chunks ${chunks.length}.`,
+      `${symbol}: fetched ${candles.length} candles (${firstOpenTime} -> ${lastOpenTime}); chunks ${chunks.length}.`,
     );
 
     if (options.dryRun) {
@@ -289,15 +349,20 @@ export async function runImport(
         symbolIndex === options.symbols.length - 1 &&
         chunkIndex === chunks.length - 1;
 
-      await uploadCandles({
+      const uploadResponse = await uploadCandles({
         workerUrl: options.workerUrl,
         token: options.token,
         symbol,
         candles: chunk,
         runDetector,
         fetchImpl,
+        logger,
+        sleep,
       });
       totalUploaded += chunk.length;
+      logger.log(
+        `${symbol}: chunk ${chunkIndex + 1}/${chunks.length} accepted; received=${uploadResponse.received ?? "?"}; upserted=${uploadResponse.upserted ?? "?"}; detector_ran=${uploadResponse.detector?.ran === true}.`,
+      );
     }
 
     logger.log(`${symbol}: uploaded ${candles.length} candles.`);

@@ -25,6 +25,7 @@ migrations_dir = "migrations"
 
 [triggers]
 crons = [
-  "*/15 * * * *",
+  "5,20,35,50 * * * *",
+  "10,25,40,55 * * * *",
   "17 0 * * *"
 ]

@@ -88,10 +88,14 @@ POST /api/metrics/views
 Cloudflare Worker egress to Binance may be blocked in production. The production ingestion path is:
 
 ```text
-GitHub Actions -> Binance public market API -> protected Worker import endpoint -> D1 candle upsert -> detector
+GitHub Actions -> Binance public market API -> protected Worker import endpoint -> D1 candle upsert
+Worker detector cron -> incident candidates
+Worker Claude cron -> public context enrichment
 ```
 
 The Worker keeps D1, detector, Claude enrichment, and cleanup responsibility. It should not depend on fetching Binance directly in production.
+
+Detector execution is intentionally decoupled from the import request. Initial backfills can upload many chunks, and running detector inside the final import request can exceed practical Worker request limits. The import endpoint should stay focused on validating and storing candles.
 
 1. Add GitHub repository secrets:
 
@@ -114,7 +118,9 @@ Worker var: MARKET_FETCH_MODE=external_import
 workflow_dispatch days=31
 ```
 
-4. Scheduled updates run through:
+After the seed, wait for the Worker detector cron. If a protected maintenance endpoint exists and is enabled for a controlled diagnostic window, a manual detector trigger can be used instead.
+
+4. Scheduled market imports run through GitHub Actions:
 
 ```text
 2,17,32,47 * * * *
@@ -122,7 +128,15 @@ workflow_dispatch days=31
 
 The workflow fetches a rolling lookback window, defaulting to 6 hours, because GitHub scheduled runs can be delayed or dropped.
 
-5. The scheduled importer calls:
+5. Worker scheduled jobs are staggered after import:
+
+```text
+5,20,35,50 * * * *    detector
+10,25,40,55 * * * *   Claude enrichment
+17 0 * * *            cleanup
+```
+
+6. The scheduled importer calls:
 
 ```text
 POST /api/ingest/candles
@@ -136,7 +150,17 @@ x-bytesiren-market-token
 
 The endpoint is not for frontend use, does not expose public CORS, does not call Claude, and should not be advertised as a public API.
 
-6. Keep `ENABLE_ADMIN_MAINTENANCE=false` after diagnostics. The scheduled importer uses `MARKET_IMPORT_TOKEN`, not `ADMIN_BACKFILL_TOKEN`.
+The GitHub Actions importer should not pass `--run-detector-last` in scheduled production runs. Use that script flag only for controlled manual debugging.
+
+7. Scheduled update procedure:
+
+```text
+GitHub Actions imports recent candles.
+Worker detector cron evaluates stored candles.
+Worker Claude cron enriches queued incidents.
+```
+
+8. Keep `ENABLE_ADMIN_MAINTENANCE=false` after diagnostics. The scheduled importer uses `MARKET_IMPORT_TOKEN`, not `ADMIN_BACKFILL_TOKEN`.
 
 ## C. Pages setup
 

@@ -182,7 +182,100 @@ test("upload request uses market token header and does not log it", async () => 
   assert.equal(uploaded[0].token, "super-secret-market-token");
   assert.equal(uploaded[0].body.run_detector, true);
   assert.equal(
+    logger.lines.some((line) =>
+      line.includes(
+        "BTCUSDT: fetched 2 candles (2026-06-18T00:00:00.000Z -> 2026-06-18T00:15:00.000Z)",
+      ),
+    ),
+    true,
+  );
+  assert.equal(
+    logger.lines.some((line) =>
+      line.includes("chunk 1/1 accepted; received=2"),
+    ),
+    true,
+  );
+  assert.equal(
+    logger.lines.some((line) =>
+      line.includes("--run-detector-last is not recommended"),
+    ),
+    true,
+  );
+  assert.equal(
     logger.lines.join("\n").includes("super-secret-market-token"),
     false,
   );
+});
+
+test("upload retries transient Worker 502/503/504 responses", async () => {
+  const logger = makeLogger();
+  let uploadAttempts = 0;
+  const fetchImpl = async (input, init) => {
+    const url = new URL(String(input));
+
+    if (url.hostname === "data-api.binance.vision") {
+      return new Response(JSON.stringify([klineRow()]), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      });
+    }
+
+    assert.equal(init?.headers?.["x-bytesiren-market-token"], "retry-token");
+    uploadAttempts += 1;
+
+    if (uploadAttempts === 1) {
+      return new Response(JSON.stringify({ ok: false }), { status: 502 });
+    }
+
+    if (uploadAttempts === 2) {
+      return new Response(JSON.stringify({ ok: false }), { status: 503 });
+    }
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        received: 1,
+        upserted: 1,
+        detector: { ran: false },
+      }),
+      {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      },
+    );
+  };
+
+  const result = await runImport(
+    {
+      workerUrl: "https://api.example.com",
+      token: "retry-token",
+      symbols: ["BTCUSDT"],
+      hours: 1,
+      chunkSize: 500,
+      runDetectorLast: false,
+      dryRun: false,
+    },
+    {
+      fetchImpl,
+      logger,
+      now: new Date("2026-06-18T01:00:00.000Z"),
+      sleep: async () => {},
+    },
+  );
+
+  assert.equal(result.uploaded, 1);
+  assert.equal(uploadAttempts, 3);
+  assert.equal(
+    logger.lines.some((line) => line.includes("HTTP 502; retry 1/2")),
+    true,
+  );
+  assert.equal(
+    logger.lines.some((line) => line.includes("HTTP 503; retry 2/2")),
+    true,
+  );
+  assert.equal(logger.lines.join("\n").includes("retry-token"), false);
 });
