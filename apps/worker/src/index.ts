@@ -17,6 +17,7 @@ import {
   incrementViewMetricsResponse,
   viewMetricsResponse,
 } from "./routes/metrics.ts";
+import { adminResponse } from "./routes/admin.ts";
 import type { Env } from "./types/env.ts";
 import {
   corsPreflightResponse,
@@ -31,11 +32,25 @@ function isApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/");
 }
 
+function isAdminPath(pathname: string): boolean {
+  return pathname.startsWith("/api/admin/");
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const respond = (response: Response): Response =>
-      isApiPath(url.pathname) ? withCors(request, response, env) : response;
+      isApiPath(url.pathname) && !isAdminPath(url.pathname)
+        ? withCors(request, response, env)
+        : response;
+
+    if (isAdminPath(url.pathname)) {
+      try {
+        return await adminResponse(request, env);
+      } catch (error) {
+        return jsonError(500, "internal_error", safeErrorMessage(error));
+      }
+    }
 
     if (request.method === "OPTIONS" && isApiPath(url.pathname)) {
       return corsPreflightResponse(request, env);

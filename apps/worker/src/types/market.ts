@@ -54,4 +54,8 @@ export interface SymbolPollResult {
   upserted: number;
   ok: boolean;
   error?: string;
+  error_stage?: "fetch" | "parse" | "d1_upsert";
+  error_code?: string;
+  http_status?: number | null;
+  response_summary?: string | null;
 }

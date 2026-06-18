@@ -258,6 +258,24 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         } as T;
       }
 
+      if (
+        this.sql.includes("COUNT(*) AS count") &&
+        this.sql.includes("FROM market_candles")
+      ) {
+        const [symbol, interval] = this.params as [string, string];
+        const rows = tables.market_candles
+          .filter((row) => row.symbol === symbol && row.interval === interval)
+          .sort((a, b) => a.open_time.localeCompare(b.open_time));
+        const latest = rows.at(-1);
+
+        return {
+          count: rows.length,
+          earliest_open_time: rows[0]?.open_time ?? null,
+          latest_open_time: latest?.open_time ?? null,
+          latest_close_time: latest?.close_time ?? null,
+        } as T;
+      }
+
       if (this.sql.includes("FROM incidents") && this.sql.includes("id = ?")) {
         const [id] = this.params as [string];
         return (tables.incidents.find((row) => row.id === id) ?? null) as T;
@@ -312,6 +330,61 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
     }
 
     async run() {
+      if (this.sql.includes("INSERT INTO market_candles")) {
+        const [
+          symbol,
+          interval,
+          openTime,
+          closeTime,
+          open,
+          high,
+          low,
+          close,
+          volume,
+          quoteVolume,
+          tradeCount,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number | null,
+        ];
+        const existing = tables.market_candles.find(
+          (row) =>
+            row.symbol === symbol &&
+            row.interval === interval &&
+            row.open_time === openTime,
+        );
+        const row: MarketCandle = {
+          symbol: symbol as MarketCandle["symbol"],
+          interval: interval as MarketCandle["interval"],
+          open_time: openTime,
+          close_time: closeTime,
+          open,
+          high,
+          low,
+          close,
+          volume,
+          quote_volume: quoteVolume,
+          trade_count: tradeCount,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.market_candles.push(row);
+        }
+
+        return result(1);
+      }
+
       if (this.sql.includes("INSERT INTO market_features")) {
         const [
           symbol,

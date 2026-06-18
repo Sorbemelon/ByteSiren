@@ -8,6 +8,7 @@ import {
   isAllowedSymbol,
 } from "../config.ts";
 import type { BinanceKlineRow, MarketCandle } from "../types/market.ts";
+import { safeErrorMessage } from "../utils/http.ts";
 
 export interface BinanceFetchOptions {
   baseUrl?: string;
@@ -23,6 +24,60 @@ export interface FetchKlinesInput extends BinanceFetchOptions {
 
 export interface FetchPaginatedKlinesInput extends FetchKlinesInput {
   maxPages?: number;
+}
+
+export type BinanceKlinesErrorStage = "fetch" | "parse";
+
+export class BinanceKlinesError extends Error {
+  readonly code: string;
+  readonly stage: BinanceKlinesErrorStage;
+  readonly httpStatus: number | null;
+  readonly contentType: string | null;
+  readonly responseSummary: string | null;
+
+  constructor(
+    message: string,
+    {
+      code,
+      stage,
+      httpStatus = null,
+      contentType = null,
+      responseSummary = null,
+    }: {
+      code: string;
+      stage: BinanceKlinesErrorStage;
+      httpStatus?: number | null;
+      contentType?: string | null;
+      responseSummary?: string | null;
+    },
+  ) {
+    super(message);
+    this.name = "BinanceKlinesError";
+    this.code = code;
+    this.stage = stage;
+    this.httpStatus = httpStatus;
+    this.contentType = contentType;
+    this.responseSummary = responseSummary;
+  }
+}
+
+export interface BinanceKlinesCheckResult {
+  ok: boolean;
+  symbol: MarketSymbol;
+  status: number | null;
+  content_type: string | null;
+  parsed_rows_count: number;
+  first_open_time: string | null;
+  error_code: string | null;
+  message: string | null;
+}
+
+function sanitizeDiagnosticText(value: string, maxLength = 200): string {
+  return value
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
 }
 
 function parseFiniteNumber(value: string | number, fieldName: string): number {
@@ -47,6 +102,121 @@ export function validateMarketSymbol(
   if (!isAllowedSymbol(symbol)) {
     throw new Error("Symbol is not supported.");
   }
+}
+
+function buildKlinesUrl({
+  symbol,
+  limit,
+  startTimeMs,
+  endTimeMs,
+  baseUrl,
+}: {
+  symbol: MarketSymbol;
+  limit: number;
+  startTimeMs?: number;
+  endTimeMs?: number;
+  baseUrl: string;
+}): URL {
+  const url = new URL("/api/v3/klines", baseUrl);
+  url.searchParams.set("symbol", symbol);
+  url.searchParams.set("interval", MARKET_INTERVAL);
+  url.searchParams.set("limit", String(Math.min(limit, BINANCE_KLINES_LIMIT)));
+
+  if (startTimeMs !== undefined) {
+    url.searchParams.set("startTime", String(Math.trunc(startTimeMs)));
+  }
+
+  if (endTimeMs !== undefined) {
+    url.searchParams.set("endTime", String(Math.trunc(endTimeMs)));
+  }
+
+  return url;
+}
+
+async function requestBinanceKlineRows({
+  symbol,
+  limit,
+  startTimeMs,
+  endTimeMs,
+  baseUrl,
+  fetcher,
+}: Required<
+  Pick<FetchKlinesInput, "symbol" | "limit" | "baseUrl" | "fetcher">
+> &
+  Pick<FetchKlinesInput, "startTimeMs" | "endTimeMs">): Promise<{
+  rows: unknown[];
+  status: number;
+  contentType: string | null;
+}> {
+  const url = buildKlinesUrl({
+    symbol,
+    limit,
+    startTimeMs,
+    endTimeMs,
+    baseUrl,
+  });
+  let response: Response;
+
+  try {
+    response = await fetcher(url.toString(), {
+      headers: {
+        "user-agent": BINANCE_USER_AGENT,
+      },
+    });
+  } catch (error) {
+    throw new BinanceKlinesError("Binance klines network request failed.", {
+      code: "fetch_network_error",
+      stage: "fetch",
+      responseSummary: safeErrorMessage(error),
+    });
+  }
+
+  const contentType = response.headers.get("content-type");
+  const body = await response.text();
+  const bodySummary = sanitizeDiagnosticText(body);
+
+  if (!response.ok) {
+    throw new BinanceKlinesError(
+      `Binance klines request failed with HTTP ${response.status}.`,
+      {
+        code: `fetch_http_${response.status}`,
+        stage: "fetch",
+        httpStatus: response.status,
+        contentType,
+        responseSummary: bodySummary,
+      },
+    );
+  }
+
+  let rows: unknown;
+
+  try {
+    rows = JSON.parse(body || "null");
+  } catch {
+    throw new BinanceKlinesError("Binance klines response was not JSON.", {
+      code: "parse_json_error",
+      stage: "parse",
+      httpStatus: response.status,
+      contentType,
+      responseSummary: bodySummary,
+    });
+  }
+
+  if (!Array.isArray(rows)) {
+    throw new BinanceKlinesError("Binance klines response was not an array.", {
+      code: "parse_shape_error",
+      stage: "parse",
+      httpStatus: response.status,
+      contentType,
+      responseSummary: bodySummary,
+    });
+  }
+
+  return {
+    rows,
+    status: response.status,
+    contentType,
+  };
 }
 
 export function parseBinanceKlineRow(
@@ -83,38 +253,24 @@ export async function fetchKlines({
 }: FetchKlinesInput): Promise<MarketCandle[]> {
   validateMarketSymbol(symbol);
 
-  const url = new URL("/api/v3/klines", baseUrl);
-  url.searchParams.set("symbol", symbol);
-  url.searchParams.set("interval", MARKET_INTERVAL);
-  url.searchParams.set("limit", String(Math.min(limit, BINANCE_KLINES_LIMIT)));
-
-  if (startTimeMs !== undefined) {
-    url.searchParams.set("startTime", String(Math.trunc(startTimeMs)));
-  }
-
-  if (endTimeMs !== undefined) {
-    url.searchParams.set("endTime", String(Math.trunc(endTimeMs)));
-  }
-
-  const response = await fetcher(url.toString(), {
-    headers: {
-      "user-agent": BINANCE_USER_AGENT,
-    },
+  const { rows } = await requestBinanceKlineRows({
+    symbol,
+    limit,
+    startTimeMs,
+    endTimeMs,
+    baseUrl,
+    fetcher,
   });
 
-  if (!response.ok) {
-    throw new Error(
-      `Binance klines request failed with HTTP ${response.status}.`,
-    );
+  try {
+    return rows.map((row) => parseBinanceKlineRow(row, symbol));
+  } catch (error) {
+    throw new BinanceKlinesError("Binance klines row parsing failed.", {
+      code: "parse_row_error",
+      stage: "parse",
+      responseSummary: safeErrorMessage(error),
+    });
   }
-
-  const rows = await response.json<unknown>();
-
-  if (!Array.isArray(rows)) {
-    throw new Error("Binance klines response was not an array.");
-  }
-
-  return rows.map((row) => parseBinanceKlineRow(row, symbol));
 }
 
 export async function fetchPaginatedKlines({
@@ -166,4 +322,62 @@ export async function fetchPaginatedKlines({
   }
 
   return candles;
+}
+
+export async function checkBinanceKlines({
+  symbol,
+  baseUrl = BINANCE_BASE_URL,
+  fetcher = fetch,
+}: BinanceFetchOptions & {
+  symbol: MarketSymbol;
+}): Promise<BinanceKlinesCheckResult> {
+  validateMarketSymbol(symbol);
+
+  try {
+    const { rows, status, contentType } = await requestBinanceKlineRows({
+      symbol,
+      limit: 1,
+      baseUrl,
+      fetcher,
+    });
+    const firstRow = rows[0];
+    const firstOpenMs = Array.isArray(firstRow) ? Number(firstRow[0]) : NaN;
+
+    return {
+      ok: true,
+      symbol,
+      status,
+      content_type: contentType,
+      parsed_rows_count: rows.length,
+      first_open_time: Number.isFinite(firstOpenMs)
+        ? new Date(firstOpenMs).toISOString()
+        : null,
+      error_code: null,
+      message: null,
+    };
+  } catch (error) {
+    if (error instanceof BinanceKlinesError) {
+      return {
+        ok: false,
+        symbol,
+        status: error.httpStatus,
+        content_type: error.contentType,
+        parsed_rows_count: 0,
+        first_open_time: null,
+        error_code: error.code,
+        message: error.responseSummary ?? error.message,
+      };
+    }
+
+    return {
+      ok: false,
+      symbol,
+      status: null,
+      content_type: null,
+      parsed_rows_count: 0,
+      first_open_time: null,
+      error_code: "fetch_network_error",
+      message: safeErrorMessage(error),
+    };
+  }
 }

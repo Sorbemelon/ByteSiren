@@ -88,10 +88,16 @@ function seededIncident(): IncidentRow {
 }
 
 function makeEnv(
-  options: { incidents?: IncidentRow[]; publicWebOrigins?: string } = {},
+  options: {
+    incidents?: IncidentRow[];
+    publicWebOrigins?: string;
+    adminEnabled?: boolean;
+    adminToken?: string;
+    emptyMarket?: boolean;
+  } = {},
 ): Env {
   const { db } = createMemoryD1({
-    market_candles: seededRows(),
+    market_candles: options.emptyMarket ? [] : seededRows(),
     incidents: options.incidents,
   });
 
@@ -100,7 +106,26 @@ function makeEnv(
     APP_VERSION: "0.1.0-placeholder",
     BUILD_PHASE: "phase-4a5-deployment-boundary",
     PUBLIC_WEB_ORIGINS: options.publicWebOrigins,
+    ENABLE_ADMIN_MAINTENANCE: options.adminEnabled ? "true" : "false",
+    ADMIN_BACKFILL_TOKEN: options.adminToken,
   };
+}
+
+function sampleBinanceRow(openTimeMs = 1718327700000) {
+  return [
+    openTimeMs,
+    "63000.00",
+    "65000.00",
+    "62800.00",
+    "64775.20",
+    "123.45",
+    openTimeMs + 15 * 60 * 1000 - 1,
+    "8000000.00",
+    42,
+    "0",
+    "0",
+    "0",
+  ];
 }
 
 function claudeFixture(incidentId: string) {
@@ -145,6 +170,20 @@ function claudeFixture(incidentId: string) {
 
 async function readJson(response: Response) {
   return response.json() as Promise<Record<string, unknown>>;
+}
+
+async function withMockFetch<T>(
+  fetcher: typeof fetch,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = fetcher;
+
+  try {
+    return await fn();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 }
 
 test("worker returns health and version JSON", async () => {
@@ -315,6 +354,172 @@ test("worker does not allow arbitrary CORS origins", async () => {
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("admin endpoint disabled returns not found without public CORS", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/binance-check?symbol=BTCUSDT", {
+      headers: {
+        origin: "http://localhost:3000",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+    }),
+    makeEnv({ adminEnabled: false, adminToken: "test-admin-token" }),
+  );
+
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("admin endpoint rejects wrong token without exposing token value", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/binance-check?symbol=BTCUSDT", {
+      headers: {
+        "x-bytesiren-admin-token": "wrong-token",
+      },
+    }),
+    makeEnv({ adminEnabled: true, adminToken: "secret-test-token" }),
+  );
+  const body = await response.text();
+
+  assert.equal(response.status, 404);
+  assert.equal(body.includes("secret-test-token"), false);
+  assert.equal(body.includes("wrong-token"), false);
+});
+
+test("admin binance-check validates approved symbols", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/binance-check?symbol=DOGEUSDT", {
+      headers: {
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+    }),
+    makeEnv({ adminEnabled: true, adminToken: "test-admin-token" }),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 400);
+  assert.equal(body.error && typeof body.error === "object", true);
+});
+
+test("admin binance-check uses small limit=1 request with mocked fetch", async () => {
+  const requestedUrls: string[] = [];
+  const fetcher: typeof fetch = async (input) => {
+    requestedUrls.push(String(input));
+    return new Response(JSON.stringify([sampleBinanceRow()]), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  };
+
+  await withMockFetch(fetcher, async () => {
+    const response = await worker.fetch(
+      new Request("http://localhost/api/admin/binance-check?symbol=BTCUSDT", {
+        headers: {
+          "x-bytesiren-admin-token": "test-admin-token",
+        },
+      }),
+      makeEnv({ adminEnabled: true, adminToken: "test-admin-token" }),
+    );
+    const body = await readJson(response);
+    const url = new URL(requestedUrls[0]);
+
+    assert.equal(response.status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(body.symbol, "BTCUSDT");
+    assert.equal(body.parsed_rows_count, 1);
+    assert.equal(body.first_open_time, "2024-06-14T01:15:00.000Z");
+    assert.equal(url.pathname, "/api/v3/klines");
+    assert.equal(url.searchParams.get("symbol"), "BTCUSDT");
+    assert.equal(url.searchParams.get("interval"), "15m");
+    assert.equal(url.searchParams.get("limit"), "1");
+  });
+});
+
+test("admin binance-check reports HTTP error safely", async () => {
+  const upstreamBody = `Region unavailable.\n${"x".repeat(260)}`;
+  const fetcher: typeof fetch = async () =>
+    new Response(upstreamBody, {
+      status: 451,
+      headers: {
+        "content-type": "text/plain",
+      },
+    });
+
+  await withMockFetch(fetcher, async () => {
+    const response = await worker.fetch(
+      new Request("http://localhost/api/admin/binance-check?symbol=BTCUSDT", {
+        headers: {
+          "x-bytesiren-admin-token": "test-admin-token",
+        },
+      }),
+      makeEnv({ adminEnabled: true, adminToken: "test-admin-token" }),
+    );
+    const body = await readJson(response);
+
+    assert.equal(response.status, 200);
+    assert.equal(body.ok, false);
+    assert.equal(body.status, 451);
+    assert.equal(body.error_code, "fetch_http_451");
+    assert.equal(typeof body.message, "string");
+    assert.equal((body.message as string).includes("\n"), false);
+    assert.equal((body.message as string).length, 200);
+  });
+});
+
+test("admin manual market poll requires token", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/market-poll", {
+      method: "POST",
+    }),
+    makeEnv({ adminEnabled: true, adminToken: "test-admin-token" }),
+  );
+
+  assert.equal(response.status, 404);
+});
+
+test("admin manual market poll supports small recent one-symbol seed", async () => {
+  const fetcher: typeof fetch = async (input) => {
+    const url = new URL(String(input));
+    assert.equal(url.searchParams.get("symbol"), "BTCUSDT");
+    assert.equal(url.searchParams.get("limit"), "10");
+
+    return new Response(JSON.stringify([sampleBinanceRow()]), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  };
+
+  await withMockFetch(fetcher, async () => {
+    const response = await worker.fetch(
+      new Request(
+        "http://localhost/api/admin/market-poll?mode=recent&limit=10&symbol=BTCUSDT",
+        {
+          method: "POST",
+          headers: {
+            "x-bytesiren-admin-token": "test-admin-token",
+          },
+        },
+      ),
+      makeEnv({
+        adminEnabled: true,
+        adminToken: "test-admin-token",
+        emptyMarket: true,
+      }),
+    );
+    const body = await readJson(response);
+
+    assert.equal(response.status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(body.mode, "recent");
+    assert.equal(body.symbols_attempted, 1);
+    assert.equal(body.symbols_updated, 1);
+    assert.deepEqual(body.failures, []);
+  });
 });
 
 test("worker returns public view metrics shape", async () => {

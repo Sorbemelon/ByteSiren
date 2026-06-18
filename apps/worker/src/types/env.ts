@@ -11,4 +11,6 @@ export interface Env {
   CLAUDE_ALLOWED_DOMAINS?: string;
   CLAUDE_BLOCKED_DOMAINS?: string;
   PUBLIC_WEB_ORIGINS?: string;
+  ENABLE_ADMIN_MAINTENANCE?: string;
+  ADMIN_BACKFILL_TOKEN?: string;
 }

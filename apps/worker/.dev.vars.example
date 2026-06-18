@@ -36,3 +36,8 @@ CLAUDE_BLOCKED_DOMAINS=coindcx.com,bitcoinfoundation.org,tradingkey.com,intellec
 # Comma-separated frontend origins allowed to call public Worker API routes.
 # Keep local dev origins and add the deployed Cloudflare Pages origin before deploy.
 PUBLIC_WEB_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://bytesiren.pages.dev
+
+# Protected maintenance diagnostics. Keep disabled except during controlled maintenance.
+# ADMIN_BACKFILL_TOKEN must be set as a Worker secret in production.
+ENABLE_ADMIN_MAINTENANCE=false
+ADMIN_BACKFILL_TOKEN=
