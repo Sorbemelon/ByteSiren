@@ -3,8 +3,8 @@ main = "src/index.ts"
 compatibility_date = "2026-06-16"
 
 [vars]
-APP_VERSION = "0.1.0-placeholder"
-BUILD_PHASE = "phase-4b-live-claude-enrichment"
+APP_VERSION = "0.1.0"
+BUILD_PHASE = "mvp-deployment-ready"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 CLAUDE_WEB_SEARCH_TOOL_TYPE = "web_search_20250305"
 CLAUDE_DEFAULT_MAX_USES = "1"
@@ -16,8 +16,8 @@ PUBLIC_WEB_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000,http://localho
 
 [[d1_databases]]
 binding = "DB"
-database_name = "bytesiren-placeholder"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_name = "bytesiren-db"
+database_id = "766fb8f9-4e58-4bec-ad87-37d9f62d3a8c"
 migrations_dir = "migrations"
 
 [triggers]
