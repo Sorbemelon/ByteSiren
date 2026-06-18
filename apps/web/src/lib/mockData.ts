@@ -1,5 +1,30 @@
 import type { FeedItem, MarketLatest, CandleBar } from "./types";
 
+type MockFeedItem = Omit<
+  FeedItem,
+  | "incident_key"
+  | "started_at"
+  | "ended_at"
+  | "event_start_time"
+  | "event_end_time"
+  | "peak_time"
+  | "first_detected_at"
+  | "last_evaluated_at"
+> &
+  Partial<
+    Pick<
+      FeedItem,
+      | "incident_key"
+      | "started_at"
+      | "ended_at"
+      | "event_start_time"
+      | "event_end_time"
+      | "peak_time"
+      | "first_detected_at"
+      | "last_evaluated_at"
+    >
+  >;
+
 // ─── Market latest ────────────────────────────────────────────────────────────
 
 export const MOCK_MARKET: Record<string, MarketLatest> = {
@@ -47,7 +72,7 @@ export const MOCK_MARKET: Record<string, MarketLatest> = {
 
 // ─── Feed items ───────────────────────────────────────────────────────────────
 
-export const MOCK_FEED: FeedItem[] = [
+export const MOCK_FEED: MockFeedItem[] = [
   {
     incident_id: "inc_001",
     detected_at: "2026-06-14T21:15:00Z",
@@ -606,8 +631,26 @@ export function generateCandles(symbolFull: string, days = 30): CandleBar[] {
 
 export const IS_DEV = process.env.NODE_ENV !== "production";
 
+function withEventTiming(item: MockFeedItem): FeedItem {
+  const start = item.event_start_time ?? item.started_at ?? item.detected_at;
+  const end = item.event_end_time ?? item.ended_at ?? start;
+  const peak = item.peak_time ?? item.detected_at;
+
+  return {
+    ...item,
+    incident_key: item.incident_key ?? item.incident_id,
+    started_at: item.started_at ?? start,
+    ended_at: item.ended_at ?? end,
+    event_start_time: start,
+    event_end_time: end,
+    peak_time: peak,
+    first_detected_at: item.first_detected_at ?? item.detected_at,
+    last_evaluated_at: item.last_evaluated_at ?? item.detected_at,
+  };
+}
+
 export function getInitialFeed(): FeedItem[] {
-  return IS_DEV ? MOCK_FEED : [];
+  return IS_DEV ? MOCK_FEED.map(withEventTiming) : [];
 }
 
 export function getInitialMarket(): Record<string, MarketLatest> {

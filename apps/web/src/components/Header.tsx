@@ -20,7 +20,7 @@ const UTC_MONTHS = [
   "Oct",
   "Nov",
   "Dec",
-];
+] as const;
 
 function formatUpdated(iso: string | null | undefined): {
   date: string;
@@ -29,20 +29,16 @@ function formatUpdated(iso: string | null | undefined): {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  const datePart = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
-  const timePart = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
+
+  const date = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  const time = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
     d.getUTCMinutes(),
-  ).padStart(2, "0")}`;
-  return { date: datePart, time: `${timePart} UTC` };
+  ).padStart(2, "0")} UTC`;
+
+  return { date, time };
 }
 
-function TimeValue({
-  value,
-  fallback,
-}: {
-  value: string | null | undefined;
-  fallback: string;
-}) {
+function TimeValue({ value }: { value: string | null | undefined }) {
   const formatted = formatUpdated(value);
 
   if (!formatted) {
@@ -51,7 +47,7 @@ function TimeValue({
         className="text-[13px] font-semibold sm:text-[14px]"
         style={{ color: "var(--text-secondary)" }}
       >
-        {fallback}
+        No update yet
       </span>
     );
   }
@@ -108,22 +104,20 @@ export default function Header({ marketUpdatedAt }: HeaderProps) {
 
       <div className="lg:justify-self-center">
         <div
-          className="inline-flex flex-col items-start gap-1 rounded-md text-left tabular-nums lg:items-center lg:text-center"
+          className="inline-flex flex-col items-start gap-0.5 text-left tabular-nums lg:items-center lg:text-center"
           aria-label={
             marketUpdatedAt
-              ? "Market data update timing"
-              : "Market data update not available"
+              ? "Latest market data update"
+              : "Latest market data update not available"
           }
         >
-          <div>
-            <span
-              className="text-[10px] font-medium uppercase tracking-wider sm:text-[11px]"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Market data updated
-            </span>
-            <TimeValue value={marketUpdatedAt} fallback="No update yet" />
-          </div>
+          <span
+            className="text-[10px] font-medium uppercase tracking-wider sm:text-[11px]"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Latest update
+          </span>
+          <TimeValue value={marketUpdatedAt} />
         </div>
       </div>
 

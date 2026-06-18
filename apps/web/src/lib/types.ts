@@ -43,7 +43,15 @@ export interface FeedItemSource {
 
 export interface FeedItem {
   incident_id: string;
+  incident_key: string;
   detected_at: string;
+  started_at: string;
+  ended_at: string | null;
+  event_start_time: string;
+  event_end_time: string;
+  peak_time: string;
+  first_detected_at: string;
+  last_evaluated_at: string;
   display_date: string;
   scope: "market_wide" | "market_day";
   direction: "observed_up" | "observed_down" | "two_sided";
@@ -166,8 +174,22 @@ export interface ViewMetricsApiResponse extends ViewMetrics {
   ok: boolean;
 }
 
-export type ApiFeedItem = Omit<FeedItem, "expanded_details" | "evidence"> & {
+export type ApiFeedItem = Omit<
+  FeedItem,
+  | "expanded_details"
+  | "evidence"
+  | "event_start_time"
+  | "event_end_time"
+  | "peak_time"
+  | "first_detected_at"
+  | "last_evaluated_at"
+> & {
   symbol_evidence?: ApiSymbolEvidence[];
+  event_start_time?: string;
+  event_end_time?: string;
+  peak_time?: string;
+  first_detected_at?: string;
+  last_evaluated_at?: string;
   evidence: Omit<FeedItem["evidence"], "avg_15m_change_pct"> & {
     avg_15m_change_pct?: number | null;
     evidence_summary?: string;

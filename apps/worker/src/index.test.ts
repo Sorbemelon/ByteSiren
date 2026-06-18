@@ -1134,6 +1134,11 @@ test("worker returns intelligence feed items with queued brief shape", async () 
   assert.equal(body.ok, true);
   assert.equal(items.length, 1);
   assert.equal(first?.incident_id, "bs_20260615_market_wide_up_0900");
+  assert.equal(first?.event_start_time, "2026-06-15T09:00:00.000Z");
+  assert.equal(first?.event_end_time, "2026-06-15T09:14:59.999Z");
+  assert.equal(first?.peak_time, "2026-06-15T09:00:00.000Z");
+  assert.equal(first?.first_detected_at, "2026-06-15T09:00:00.000Z");
+  assert.equal(first?.last_evaluated_at, "2026-06-15T09:00:00.000Z");
   assert.equal(Array.isArray(first?.sources), true);
   assert.equal((first?.sources as unknown[]).length, 0);
   assert.equal(brief.status, "queued_for_analysis");

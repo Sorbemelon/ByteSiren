@@ -17,6 +17,7 @@ import type {
   IncidentCandidate,
   MarketTier,
   QueryHints,
+  RawSubEventSummary,
   SymbolEvidence,
 } from "../services/detector/index.ts";
 
@@ -73,6 +74,11 @@ export interface FeedItem {
   detected_at: string;
   started_at: string;
   ended_at: string | null;
+  event_start_time: string;
+  event_end_time: string;
+  peak_time: string;
+  first_detected_at: string;
+  last_evaluated_at: string;
   display_date: string;
   scope: IncidentRow["scope"];
   direction: IncidentRow["direction"];
@@ -150,6 +156,24 @@ function displayDate(iso: string): string {
   }
 
   return `${UTC_MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}`;
+}
+
+function eventEndTime(
+  row: Pick<IncidentRow, "started_at" | "ended_at">,
+): string {
+  return row.ended_at ?? row.started_at;
+}
+
+function peakTimeFromRow(row: IncidentRow): string {
+  const subEvents = parseJsonArray<RawSubEventSummary>(row.sub_events_json);
+
+  if (subEvents.length === 0) {
+    return row.started_at;
+  }
+
+  return subEvents.reduce((peak, event) =>
+    event.max_elevated_severity > peak.max_elevated_severity ? event : peak,
+  ).detected_at;
 }
 
 function macroDayCacheKey(candidate: IncidentCandidate): string {
@@ -358,6 +382,8 @@ export function incidentRowToFeedItemWithBrief(
   const publicSources = brief
     ? sourceLinksToPublicSources(acceptedSources)
     : [];
+  const peakTime = peakTimeFromRow(row);
+  const endTime = eventEndTime(row);
 
   return {
     incident_id: row.id,
@@ -365,6 +391,11 @@ export function incidentRowToFeedItemWithBrief(
     detected_at: row.started_at,
     started_at: row.started_at,
     ended_at: row.ended_at,
+    event_start_time: row.started_at,
+    event_end_time: endTime,
+    peak_time: peakTime,
+    first_detected_at: row.created_at,
+    last_evaluated_at: row.updated_at,
     display_date: displayDate(row.started_at),
     scope: row.scope,
     direction: row.direction,
@@ -542,7 +573,7 @@ export async function getRecentIncidentsForFeed(
        FROM incidents
        WHERE started_at >= ?
          AND scope IN ('market_wide', 'market_day')
-       ORDER BY started_at DESC`,
+       ORDER BY COALESCE(ended_at, started_at) DESC, started_at DESC`,
     )
     .bind(cutoff)
     .all<IncidentRow>();
@@ -605,7 +636,7 @@ export async function getNextIncidentsForEnrichment(
        WHERE started_at >= ?
          AND scope IN ('market_wide', 'market_day')
          AND brief_status IN (${placeholders})
-       ORDER BY started_at DESC
+       ORDER BY COALESCE(ended_at, started_at) DESC, started_at DESC
        LIMIT ?`,
     )
     .bind(cutoff, ...statuses, limit)

@@ -112,6 +112,10 @@ const TERMINAL_INCIDENT_STATUSES = new Set([
   "none_found",
 ]);
 
+function incidentEventEnd(row: Pick<IncidentRow, "started_at" | "ended_at">) {
+  return row.ended_at ?? row.started_at;
+}
+
 export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
   db: D1Database;
   tables: MemoryD1Tables;
@@ -216,7 +220,11 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
                 (row.scope === "market_wide" || row.scope === "market_day") &&
                 statuses.has(row.brief_status),
             )
-            .sort((a, b) => b.started_at.localeCompare(a.started_at))
+            .sort(
+              (a, b) =>
+                incidentEventEnd(b).localeCompare(incidentEventEnd(a)) ||
+                b.started_at.localeCompare(a.started_at),
+            )
             .slice(0, limit) as T[],
         };
       }
@@ -234,7 +242,11 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
                 row.started_at >= cutoff &&
                 (row.scope === "market_wide" || row.scope === "market_day"),
             )
-            .sort((a, b) => b.started_at.localeCompare(a.started_at)) as T[],
+            .sort(
+              (a, b) =>
+                incidentEventEnd(b).localeCompare(incidentEventEnd(a)) ||
+                b.started_at.localeCompare(a.started_at),
+            ) as T[],
         };
       }
 

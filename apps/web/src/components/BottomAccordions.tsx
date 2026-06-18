@@ -425,8 +425,9 @@ export default function BottomAccordions({
         <DefinitionGrid>
           <DefinitionCard term="Evidence">
             The left side of a feed card shows the detected event facts:
-            date/time, event type, observed movement direction, how many symbols
-            signaled, average 15-minute movement, peak symbol, and Impact Score.
+            evidence window, peak signal time, observed movement direction, how
+            many symbols signaled, average 15-minute movement, peak symbol, and
+            Impact Score.
           </DefinitionCard>
           <DefinitionCard term="Public Context">
             The middle section shows Claude&apos;s public-context label and
@@ -569,6 +570,15 @@ export default function BottomAccordions({
         <DefinitionGrid>
           <DefinitionCard term={<ImpactScoreChip />}>
             Higher means the detected move was more unusual, not better.
+          </DefinitionCard>
+          <DefinitionCard term="Evidence window">
+            The candle window ByteSiren used as evidence for the feed item. A
+            single-candle event is shown as one 15-minute candle; grouped events
+            show a start-to-end window.
+          </DefinitionCard>
+          <DefinitionCard term="Peak signal">
+            The strongest representative 15-minute signal inside the evidence
+            window. The chart marker points to this time.
           </DefinitionCard>
           <DefinitionCard term="Price Z">
             Higher means a more unusual 15-minute price move compared with the

@@ -73,10 +73,23 @@ function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
   const symbolEvidence: SymbolEvidence[] = rawEvidence.map(
     normalizeSymbolEvidence,
   );
+  const eventStartTime =
+    raw.event_start_time ?? raw.started_at ?? raw.detected_at;
+  const eventEndTime =
+    raw.event_end_time ?? raw.ended_at ?? raw.started_at ?? raw.detected_at;
+  const peakTime = raw.peak_time ?? raw.detected_at ?? eventStartTime;
 
   return {
     incident_id: raw.incident_id,
+    incident_key: raw.incident_key,
     detected_at: raw.detected_at,
+    started_at: raw.started_at ?? eventStartTime,
+    ended_at: raw.ended_at ?? null,
+    event_start_time: eventStartTime,
+    event_end_time: eventEndTime,
+    peak_time: peakTime,
+    first_detected_at: raw.first_detected_at ?? raw.detected_at,
+    last_evaluated_at: raw.last_evaluated_at ?? raw.detected_at,
     display_date: raw.display_date,
     scope: raw.scope,
     direction: raw.direction,

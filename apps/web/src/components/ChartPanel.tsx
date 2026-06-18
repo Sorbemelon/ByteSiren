@@ -220,8 +220,9 @@ export default function ChartPanel({
         className="px-2 text-center text-[11px] leading-snug"
         style={{ color: "var(--text-muted)" }}
       >
-        30-day chart · {chartInterval} display · Detections use 15m signals ·
-        Binance public market data
+        30-day chart | {chartInterval} display | Detections use 15m signals |
+        Binance public market data | Evidence window band shows candles used as
+        evidence | Marker shows strongest 15m signal inside the window
       </p>
     </section>
   );

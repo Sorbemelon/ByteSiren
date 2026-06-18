@@ -108,11 +108,10 @@ export default function DashboardClient() {
       }
 
       if (marketResult.status === "fulfilled") {
-        const { market: nextMarket, updatedAt: marketUpdatedAt } =
-          marketResult.value;
+        const { market: nextMarket, updatedAt } = marketResult.value;
         setMarket(nextMarket);
-        if (marketUpdatedAt) {
-          setMarketUpdatedAt(marketUpdatedAt);
+        if (updatedAt) {
+          setMarketUpdatedAt(updatedAt);
         }
       } else if (!isAbortError(marketResult.reason)) {
         setApiError(
@@ -280,7 +279,6 @@ export default function DashboardClient() {
             expandedId={expandedId}
             onToggle={handleToggle}
             loading={feedLoading}
-            latestEventAt={feed[0]?.detected_at ?? null}
           />
         </div>
 

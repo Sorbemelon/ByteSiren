@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import type { FeedItem, FeedItemSource, SymbolEvidence } from "../lib/types";
+import { evidenceWindowLabel, peakSignalLabel } from "../lib/eventTiming";
 import { AuroraText } from "./ui/aurora-text";
 
-// ─── Label maps ────────────────────────────────────────────────────────────────
+// Label maps
 
 const DIRECTION_META: Record<
   string,
@@ -126,22 +127,7 @@ const CHIP_TONES = {
   },
 } satisfies Record<string, CSSProperties>;
 
-const UTC_MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 function briefKind(item: FeedItem): string {
   return item.brief.catalyst_status ?? item.brief.status;
@@ -157,74 +143,13 @@ function fmtPct(pct: number): string {
 }
 
 function safeVal(v: number | null | undefined, fixed = 1): string {
-  if (v == null || Number.isNaN(v)) return "—";
+  if (v == null || Number.isNaN(v)) return "-";
   return v.toFixed(fixed);
 }
 
 function breadthLabel(count: number): string {
-  if (count <= 0) return "Signals: —";
+  if (count <= 0) return "Signals: -";
   return `Signals: ${Math.min(count, 5)} of 5 symbols`;
-}
-
-function formatEventDateTimeParts(item: FeedItem): {
-  label: string;
-  date: string;
-  time: string;
-} {
-  const d = new Date(item.detected_at);
-  const datePart = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}`;
-  const timePart = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
-    d.getUTCMinutes(),
-  ).padStart(2, "0")}`;
-  if (item.scope === "market_day") {
-    const display = item.display_date?.trim().replace(/\s+/g, " ");
-    if (display && /\d{1,2}:\d{2}/.test(display)) {
-      const [date, ...timeParts] = display.split(",");
-      const time = timeParts.join(",").trim();
-
-      if (date.trim() && time) {
-        return { label: display, date: date.trim(), time };
-      }
-
-      return { label: display, date: display, time: "" };
-    }
-  }
-
-  return {
-    label: `${datePart}, ${timePart} UTC`,
-    date: datePart,
-    time: `${timePart} UTC`,
-  };
-}
-
-function formatHeaderDateTime(iso: string | null | undefined): {
-  date: string;
-  time: string;
-} | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-
-  const date = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
-  const time = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
-    d.getUTCMinutes(),
-  ).padStart(2, "0")} UTC`;
-
-  return { date, time };
-}
-
-function formatAge(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return null;
-
-  const minutes = Math.max(0, Math.floor((Date.now() - then) / 60000));
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `${hours}h ago`;
-
-  return `${Math.floor(hours / 24)}d ago`;
 }
 
 function normalizeText(value: string | null | undefined): string {
@@ -240,7 +165,7 @@ function hasDistinctContextDetails(item: FeedItem): boolean {
   return details.length > summary.length + 40;
 }
 
-// ─── Small primitives ─────────────────────────────────────────────────────────
+// Small primitives
 
 function Chip({
   children,
@@ -294,45 +219,7 @@ function SourceChip({ source }: { source: FeedItemSource }) {
   );
 }
 
-// ─── Public Context column ────────────────────────────────────────────────────
-
-function LatestDetectedEvent({
-  latestEventAt,
-}: {
-  latestEventAt?: string | null;
-}) {
-  const formatted = formatHeaderDateTime(latestEventAt);
-  const age = formatAge(latestEventAt);
-
-  return (
-    <span
-      className="inline-flex flex-wrap items-baseline gap-x-1.5 text-[11px] font-medium tabular-nums sm:text-[12px]"
-      aria-label="Latest detected feed event timing"
-      style={{ color: "var(--text-secondary)" }}
-    >
-      {formatted ? (
-        <time
-          dateTime={latestEventAt ?? undefined}
-          className="inline-flex flex-wrap items-baseline gap-x-1.5"
-        >
-          <span style={{ color: "var(--text-muted)" }}>
-            Latest detected event:
-          </span>
-          <span>{formatted.date}</span>
-          <span>{formatted.time}</span>
-        </time>
-      ) : (
-        <span>
-          <span style={{ color: "var(--text-muted)" }}>
-            Latest detected event:
-          </span>{" "}
-          No event yet
-        </span>
-      )}
-      {age && <span style={{ color: "var(--text-muted)" }}>{age}</span>}
-    </span>
-  );
-}
+// Public Context column
 
 interface PublicContextProps {
   item: FeedItem;
@@ -446,7 +333,7 @@ function PublicContext({ item, isExpanded, accentColor }: PublicContextProps) {
             {brief.price_context_check &&
               brief.price_context_check !== "unknown" && (
                 <>
-                  <span> · </span>
+                  <span> / </span>
                   <span>
                     Price: {brief.price_context_check.replace(/_/g, " ")}
                   </span>
@@ -458,7 +345,7 @@ function PublicContext({ item, isExpanded, accentColor }: PublicContextProps) {
   );
 }
 
-// ─── Expanded detail ──────────────────────────────────────────────────────────
+// Expanded detail
 
 function ExpandedRow({ item }: { item: FeedItem }) {
   const { expanded_details, brief } = item;
@@ -494,8 +381,8 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                     "Symbol",
                     "15m %",
                     "Price Z",
-                    "Vol ×",
-                    "Range ×",
+                    "Vol x",
+                    "Range x",
                     "Impact",
                   ].map((h) => (
                     <th key={h} className="px-3 py-2 text-left font-medium">
@@ -532,17 +419,17 @@ function ExpandedRow({ item }: { item: FeedItem }) {
                       }}
                     >
                       {row.change_15m_pct == null
-                        ? "—"
+                        ? "-"
                         : fmtPct(row.change_15m_pct)}
                     </td>
                     <td className="px-3 py-2 tabular-nums">
                       {safeVal(row.price_z)}
                     </td>
                     <td className="px-3 py-2 tabular-nums">
-                      {safeVal(row.volume_x)}×
+                      {safeVal(row.volume_x)}x
                     </td>
                     <td className="px-3 py-2 tabular-nums">
-                      {safeVal(row.range_x)}×
+                      {safeVal(row.range_x)}x
                     </td>
                     <td
                       className="px-3 py-2 font-semibold tabular-nums"
@@ -564,7 +451,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
             className="mt-1.5 text-[11px]"
             style={{ color: "var(--text-muted)" }}
           >
-            Price Z: standard deviations vs 24h baseline · Vol × and Range ×
+            Price Z: standard deviations vs 24h baseline / Vol x and Range x
             compare the current 15m candle to the recent 24h median
           </p>
         </div>
@@ -619,7 +506,7 @@ function ExpandedRow({ item }: { item: FeedItem }) {
   );
 }
 
-// ─── Feed card ────────────────────────────────────────────────────────────────
+// Feed card
 
 interface FeedCardProps {
   item: FeedItem;
@@ -643,7 +530,6 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
     item.scope === "market_day" ? "Market Day" : "Market-wide event";
   const avg = item.evidence.avg_15m_change_pct;
   const hasAvg = avg != null && !Number.isNaN(avg);
-  const eventTime = formatEventDateTimeParts(item);
 
   return (
     <article
@@ -654,7 +540,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
         <button
           type="button"
           aria-expanded={isExpanded}
-          aria-label={`${scopeWord} on ${eventTime.label}, ${dir.label}, ${item.brief.label}. ${isExpanded ? "Collapse details" : "Expand details"}`}
+          aria-label={`${scopeWord}, ${dir.label}, ${item.brief.label}. ${isExpanded ? "Collapse details" : "Expand details"}`}
           onClick={onToggle}
           className="absolute inset-0 cursor-pointer rounded-2xl"
           style={{
@@ -665,22 +551,22 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
         />
 
         <div className="pointer-events-none p-3.5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              <p
-                className="mr-1 flex flex-wrap items-baseline gap-x-1.5 font-semibold tabular-nums"
-                style={{ color: "var(--text-primary)" }}
-              >
-                <span className="text-[14px]">{eventTime.date},</span>
-                {eventTime.time && (
-                  <span
-                    className="text-[12.5px]"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {eventTime.time}
-                  </span>
-                )}
-              </p>
+          <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1">
+              <div className="min-w-0">
+                <p
+                  className="text-[11px] font-semibold leading-snug tabular-nums"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {evidenceWindowLabel(item)}
+                </p>
+                <p
+                  className="mt-0.5 text-[11px] leading-snug tabular-nums"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {peakSignalLabel(item)}
+                </p>
+              </div>
               <Chip
                 tone={item.scope === "market_day" ? "market" : "marketWide"}
               >
@@ -694,20 +580,22 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
 
           <div className="feed-card-grid">
             <div>
-              <Chip
-                tone={
-                  item.direction === "observed_up"
-                    ? "up"
-                    : item.direction === "observed_down"
-                      ? "down"
-                      : "twoSided"
-                }
-              >
-                <DirIcon size={12} aria-hidden />
-                {dir.label}
-              </Chip>
+              <div>
+                <Chip
+                  tone={
+                    item.direction === "observed_up"
+                      ? "up"
+                      : item.direction === "observed_down"
+                        ? "down"
+                        : "twoSided"
+                  }
+                >
+                  <DirIcon size={12} aria-hidden />
+                  {dir.label}
+                </Chip>
+              </div>
               <p
-                className="mt-1.5 text-[12.5px] font-semibold"
+                className="mt-1.5 text-[12px] font-semibold"
                 style={{ color: "var(--text-secondary)" }}
               >
                 {breadthLabel(item.symbols.length)}
@@ -727,7 +615,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                     {fmtPct(avg)}
                   </span>
                 ) : (
-                  <span>—</span>
+                  <span>-</span>
                 )}
               </p>
               <p
@@ -773,7 +661,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                     className="text-[11px]"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    —
+                    -
                   </span>
                 )}
               </div>
@@ -806,7 +694,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
   );
 }
 
-// ─── IntelligenceFeed ─────────────────────────────────────────────────────────
+// IntelligenceFeed
 
 interface IntelligenceFeedProps {
   items: FeedItem[];
@@ -814,7 +702,6 @@ interface IntelligenceFeedProps {
   expandedId: string | null;
   onToggle: (id: string) => void;
   loading: boolean;
-  latestEventAt?: string | null;
 }
 
 export default function IntelligenceFeed({
@@ -823,7 +710,6 @@ export default function IntelligenceFeed({
   expandedId,
   onToggle,
   loading,
-  latestEventAt,
 }: IntelligenceFeedProps) {
   return (
     <section
@@ -851,7 +737,6 @@ export default function IntelligenceFeed({
                 Intelligence Feed
               </AuroraText>
             </h2>
-            <LatestDetectedEvent latestEventAt={latestEventAt} />
           </div>
           <div className="mt-1.5 space-y-1">
             <p
@@ -914,7 +799,7 @@ export default function IntelligenceFeed({
         {loading && (
           <div className="flex items-center justify-center py-8">
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Loading intelligence feed…
+              Loading intelligence feed...
             </p>
           </div>
         )}
