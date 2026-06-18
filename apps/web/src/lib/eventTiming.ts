@@ -23,7 +23,7 @@ function formatUtcDateTime(iso: string | null | undefined): {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
 
-  const date = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  const date = `${UTC_MONTHS[d.getUTCMonth()] ?? "UTC"} ${d.getUTCDate()}`;
   const time = `${String(d.getUTCHours()).padStart(2, "0")}:${String(
     d.getUTCMinutes(),
   ).padStart(2, "0")} UTC`;
@@ -58,20 +58,27 @@ export function formatAge(iso: string | null | undefined): string | null {
 export function evidenceWindowLabel(
   item: Pick<FeedItem, "event_start_time" | "event_end_time">,
 ): string {
+  const parts = evidenceWindowParts(item);
+  return parts.time ? `${parts.date}, ${parts.time}` : parts.date;
+}
+
+export function evidenceWindowParts(
+  item: Pick<FeedItem, "event_start_time" | "event_end_time">,
+): { date: string; time: string | null } {
   const start = formatUtcDateTime(item.event_start_time);
   const end = formatUtcDateTime(item.event_end_time);
   const startMs = Date.parse(item.event_start_time);
   const endMs = Date.parse(item.event_end_time);
 
   if (!start || !end || !Number.isFinite(startMs) || !Number.isFinite(endMs)) {
-    return "Evidence window: unavailable";
+    return { date: "Unavailable", time: null };
   }
 
   const durationMs = Math.max(0, endMs - startMs);
   const isSingleCandle = durationMs <= 15 * 60 * 1000;
 
   if (isSingleCandle) {
-    return `Evidence window: 15m candle ending ${end.date}, ${end.time}`;
+    return { date: end.date, time: end.time };
   }
 
   const startDay = item.event_start_time.slice(0, 10);
@@ -80,15 +87,19 @@ export function evidenceWindowLabel(
   if (startDay === endDay) {
     const startTime = formatUtcTime(item.event_start_time);
     const endTime = formatUtcTime(item.event_end_time);
-    return `Evidence window: ${start.date}, ${startTime?.replace(" UTC", "")}-${endTime}`;
+    return {
+      date: start.date,
+      time: `${startTime?.replace(" UTC", "")}-${endTime}`,
+    };
   }
 
-  return `Evidence window: ${start.date}, ${start.time}-${end.date}, ${end.time}`;
+  return {
+    date: `${start.date}-${end.date}`,
+    time: `${start.time}-${end.time}`,
+  };
 }
 
 export function peakSignalLabel(item: Pick<FeedItem, "peak_time">): string {
-  const peak = formatUtcDateTime(item.peak_time);
-  return peak
-    ? `Peak signal: ${peak.date}, ${peak.time}`
-    : "Peak signal: unavailable";
+  const peak = formatUtcTime(item.peak_time);
+  return peak ? `Peak time: ${peak}` : "Peak time: unavailable";
 }

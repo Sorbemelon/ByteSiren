@@ -1,17 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { evidenceWindowLabel, peakSignalLabel } from "./eventTiming.ts";
+import {
+  evidenceWindowLabel,
+  evidenceWindowParts,
+  peakSignalLabel,
+} from "./eventTiming.ts";
 
-test("one-candle event uses 15m candle ending wording", () => {
+test("one-candle event uses date and time without year", () => {
   const label = evidenceWindowLabel({
     event_start_time: "2026-06-14T21:15:00.000Z",
     event_end_time: "2026-06-14T21:29:59.999Z",
   });
 
-  assert.equal(
-    label,
-    "Evidence window: 15m candle ending Jun 14, 2026, 21:29 UTC",
+  assert.equal(label, "Jun 14, 21:29 UTC");
+  assert.deepEqual(
+    evidenceWindowParts({
+      event_start_time: "2026-06-14T21:15:00.000Z",
+      event_end_time: "2026-06-14T21:29:59.999Z",
+    }),
+    { date: "Jun 14", time: "21:29 UTC" },
   );
 });
 
@@ -21,13 +29,13 @@ test("grouped event uses start-to-end evidence window wording", () => {
     event_end_time: "2026-06-14T23:44:59.999Z",
   });
 
-  assert.equal(label, "Evidence window: Jun 14, 2026, 21:15-23:44 UTC");
+  assert.equal(label, "Jun 14, 21:15-23:44 UTC");
 });
 
-test("peak signal wording is separate from evidence window wording", () => {
+test("peak time wording is separate from evidence window wording", () => {
   assert.equal(
     peakSignalLabel({ peak_time: "2026-06-14T22:15:00.000Z" }),
-    "Peak signal: Jun 14, 2026, 22:15 UTC",
+    "Peak time: 22:15 UTC",
   );
 });
 

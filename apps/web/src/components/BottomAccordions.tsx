@@ -576,7 +576,7 @@ export default function BottomAccordions({
             single-candle event is shown as one 15-minute candle; grouped events
             show a start-to-end window.
           </DefinitionCard>
-          <DefinitionCard term="Peak signal">
+          <DefinitionCard term="Peak time">
             The strongest representative 15-minute signal inside the evidence
             window. The chart marker points to this time.
           </DefinitionCard>

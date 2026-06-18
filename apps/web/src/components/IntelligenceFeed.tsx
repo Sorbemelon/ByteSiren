@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import type { FeedItem, FeedItemSource, SymbolEvidence } from "../lib/types";
-import { evidenceWindowLabel, peakSignalLabel } from "../lib/eventTiming";
+import { evidenceWindowParts, peakSignalLabel } from "../lib/eventTiming";
 import { AuroraText } from "./ui/aurora-text";
 
 // Label maps
@@ -530,6 +530,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
     item.scope === "market_day" ? "Market Day" : "Market-wide event";
   const avg = item.evidence.avg_15m_change_pct;
   const hasAvg = avg != null && !Number.isNaN(avg);
+  const evidenceWindow = evidenceWindowParts(item);
 
   return (
     <article
@@ -551,20 +552,24 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
         />
 
         <div className="pointer-events-none p-3.5">
-          <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-            <div className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
               <div className="min-w-0">
                 <p
-                  className="text-[11px] font-semibold leading-snug tabular-nums"
+                  className="leading-tight tabular-nums"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  {evidenceWindowLabel(item)}
-                </p>
-                <p
-                  className="mt-0.5 text-[11px] leading-snug tabular-nums"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {peakSignalLabel(item)}
+                  <span className="text-[16px] font-semibold">
+                    {evidenceWindow.date}
+                  </span>
+                  {evidenceWindow.time && (
+                    <span
+                      className="text-[12px] font-medium"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      , {evidenceWindow.time}
+                    </span>
+                  )}
                 </p>
               </div>
               <Chip
@@ -601,10 +606,16 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                 {breadthLabel(item.symbols.length)}
               </p>
               <p
+                className="mt-1 text-[11px] leading-snug tabular-nums"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {peakSignalLabel(item)}
+              </p>
+              <p
                 className="mt-1 text-[11px] tabular-nums"
                 style={{ color: "var(--text-primary)" }}
               >
-                Avg 15m{" "}
+                Avg move{" "}
                 {hasAvg ? (
                   <span
                     style={{
@@ -622,7 +633,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
                 className="mt-0.5 text-[11px] tabular-nums"
                 style={{ color: "var(--text-primary)" }}
               >
-                Peak {item.evidence.peak_symbol.replace("USDT", "")}
+                Lead {item.evidence.peak_symbol.replace("USDT", "")}
               </p>
             </div>
 
