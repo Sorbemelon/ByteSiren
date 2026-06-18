@@ -9,6 +9,7 @@ import { pollMarket } from "./jobs/pollMarket.ts";
 import { runDetector } from "./jobs/runDetector.ts";
 import { healthResponse, versionResponse } from "./routes/health.ts";
 import { intelligenceFeedResponse } from "./routes/intelligence.ts";
+import { ingestCandlesResponse } from "./routes/ingest.ts";
 import {
   latestMarketResponse,
   marketCandlesResponse,
@@ -36,11 +37,23 @@ function isAdminPath(pathname: string): boolean {
   return pathname.startsWith("/api/admin/");
 }
 
+function isIngestPath(pathname: string): boolean {
+  return pathname.startsWith("/api/ingest/");
+}
+
+function isPrivateApiPath(pathname: string): boolean {
+  return isAdminPath(pathname) || isIngestPath(pathname);
+}
+
+function isWorkerMarketFetchEnabled(env: Env): boolean {
+  return env.MARKET_FETCH_MODE?.trim().toLowerCase() === "worker_fetch";
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const respond = (response: Response): Response =>
-      isApiPath(url.pathname) && !isAdminPath(url.pathname)
+      isApiPath(url.pathname) && !isPrivateApiPath(url.pathname)
         ? withCors(request, response, env)
         : response;
 
@@ -52,7 +65,19 @@ export default {
       }
     }
 
-    if (request.method === "OPTIONS" && isApiPath(url.pathname)) {
+    if (isIngestPath(url.pathname)) {
+      try {
+        return await ingestCandlesResponse(request, env);
+      } catch (error) {
+        return jsonError(500, "internal_error", safeErrorMessage(error));
+      }
+    }
+
+    if (
+      request.method === "OPTIONS" &&
+      isApiPath(url.pathname) &&
+      !isPrivateApiPath(url.pathname)
+    ) {
       return corsPreflightResponse(request, env);
     }
 
@@ -107,8 +132,11 @@ export default {
 
   async scheduled(controller: ScheduledController, env: Env): Promise<void> {
     if (controller.cron === POLL_MARKET_CRON) {
-      await pollMarket(env.DB);
-      await runDetector(env.DB);
+      if (isWorkerMarketFetchEnabled(env)) {
+        await pollMarket(env.DB);
+        await runDetector(env.DB);
+      }
+
       return;
     }
 

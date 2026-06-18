@@ -1,0 +1,75 @@
+name: ByteSiren Market Ingest
+
+on:
+  schedule:
+    - cron: "2,17,32,47 * * * *"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Optional backfill window in days, e.g. 31"
+        required: false
+      hours:
+        description: "Optional rolling window in hours"
+        required: false
+        default: "6"
+      symbols:
+        description: "Comma-separated symbols or one symbol"
+        required: false
+        default: "BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT"
+      dry_run:
+        description: "Fetch and convert Binance data without uploading"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Import Binance candles
+        env:
+          WORKER_URL: ${{ secrets.BYTESIREN_WORKER_URL }}
+          MARKET_IMPORT_TOKEN: ${{ secrets.BYTESIREN_MARKET_IMPORT_TOKEN }}
+          DAYS: ${{ github.event.inputs.days }}
+          HOURS: ${{ github.event.inputs.hours }}
+          SYMBOLS: ${{ github.event.inputs.symbols }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          symbols="${SYMBOLS:-BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT}"
+          dry_run="${DRY_RUN:-false}"
+          args=(--symbols "$symbols" --chunk-size 500 --run-detector-last)
+
+          if [[ -n "${DAYS:-}" ]]; then
+            args+=(--days "$DAYS")
+          else
+            args+=(--hours "${HOURS:-6}")
+          fi
+
+          if [[ "$dry_run" == "true" ]]; then
+            args+=(--dry-run)
+          else
+            args+=(--worker-url "$WORKER_URL" --token "$MARKET_IMPORT_TOKEN")
+          fi
+
+          node scripts/import-binance-candles.mjs "${args[@]}"

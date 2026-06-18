@@ -37,10 +37,11 @@ corepack pnpm exec wrangler d1 migrations apply bytesiren-placeholder --remote
 
 Replace `bytesiren-placeholder` with the configured D1 database name when the production database is ready.
 
-4. Set the Worker secret:
+4. Set Worker secrets:
 
 ```text
 ANTHROPIC_API_KEY
+MARKET_IMPORT_TOKEN
 ```
 
 5. Set Worker vars:
@@ -52,11 +53,22 @@ CLAUDE_DEFAULT_MAX_USES
 CLAUDE_SECOND_SEARCH_MAX_USES
 CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT
 PUBLIC_WEB_ORIGINS
+ENABLE_MARKET_IMPORT
+MARKET_FETCH_MODE
 CLAUDE_ALLOWED_DOMAINS
 CLAUDE_BLOCKED_DOMAINS
 ```
 
 Keep `CLAUDE_ALLOWED_DOMAINS` blank unless a small curated list is proven accessible. Use either allowed domains or blocked domains, not both. `PUBLIC_WEB_ORIGINS` must include the deployed Pages origin and should not use `*`.
+
+For production market ingestion:
+
+```text
+ENABLE_MARKET_IMPORT=true
+MARKET_FETCH_MODE=external_import
+```
+
+`MARKET_IMPORT_TOKEN` is a Worker secret and must match the GitHub repository secret used by the ingestion workflow.
 
 6. Deploy the Worker after secrets, vars, and D1 binding are ready.
 7. Smoke Worker endpoints:
@@ -71,7 +83,62 @@ GET /api/metrics/views
 POST /api/metrics/views
 ```
 
-## B. Pages setup
+## B. External market ingestion through GitHub Actions
+
+Cloudflare Worker egress to Binance may be blocked in production. The production ingestion path is:
+
+```text
+GitHub Actions -> Binance public market API -> protected Worker import endpoint -> D1 candle upsert -> detector
+```
+
+The Worker keeps D1, detector, Claude enrichment, and cleanup responsibility. It should not depend on fetching Binance directly in production.
+
+1. Add GitHub repository secrets:
+
+```text
+BYTESIREN_WORKER_URL
+BYTESIREN_MARKET_IMPORT_TOKEN
+```
+
+2. Set matching Worker import values:
+
+```text
+Worker secret: MARKET_IMPORT_TOKEN
+Worker var: ENABLE_MARKET_IMPORT=true
+Worker var: MARKET_FETCH_MODE=external_import
+```
+
+3. Run an initial seed from GitHub Actions with:
+
+```text
+workflow_dispatch days=31
+```
+
+4. Scheduled updates run through:
+
+```text
+2,17,32,47 * * * *
+```
+
+The workflow fetches a rolling lookback window, defaulting to 6 hours, because GitHub scheduled runs can be delayed or dropped.
+
+5. The scheduled importer calls:
+
+```text
+POST /api/ingest/candles
+```
+
+with the private header:
+
+```text
+x-bytesiren-market-token
+```
+
+The endpoint is not for frontend use, does not expose public CORS, does not call Claude, and should not be advertised as a public API.
+
+6. Keep `ENABLE_ADMIN_MAINTENANCE=false` after diagnostics. The scheduled importer uses `MARKET_IMPORT_TOKEN`, not `ADMIN_BACKFILL_TOKEN`.
+
+## C. Pages setup
 
 1. Create a Cloudflare Pages project from the same Git repository.
 2. Configure Pages for the monorepo frontend.
@@ -113,7 +180,7 @@ no public Claude budget, quota, search count, or token count appears
 no raw Claude response or tool trace appears
 ```
 
-## C. CORS readiness
+## D. CORS readiness
 
 Worker CORS is controlled by `PUBLIC_WEB_ORIGINS`.
 
@@ -138,7 +205,7 @@ http://127.0.0.1:3001
 
 Add the deployed Pages origin to Worker vars before production smoke.
 
-## D. Security checks
+## E. Security checks
 
 Before deploy:
 
@@ -154,9 +221,10 @@ no Worker secret in Pages config or frontend code
 D1 binding exists only in apps/worker/wrangler.toml
 rejected sources are not public
 raw Claude responses and Web Search traces are not public
+market import token is not in frontend code or Pages config
 ```
 
-## E. D1 migration readiness
+## F. D1 migration readiness
 
 Migrations live in:
 
@@ -183,19 +251,20 @@ corepack pnpm --filter @bytesiren/worker exec wrangler d1 migrations apply bytes
 
 Do not run remote migrations until the production D1 database name and ID have been confirmed.
 
-## F. Post-deploy monitoring
+## G. Post-deploy monitoring
 
 After deployment:
 
 ```text
-watch Worker logs for poll, detector, enrichment, and cleanup cron runs
+watch GitHub Actions market-ingest runs
+watch Worker logs for import, detector, enrichment, and cleanup runs
 verify public view counter increments
 verify D1 row growth remains bounded by 31-day cleanup
 verify Claude Limited state appears when the daily analysis limit is reached
 verify accepted source links remain exact article/source URLs
 ```
 
-## G. SEO asset note
+## H. SEO asset note
 
 Create these later using the ByteSiren full logo:
 

@@ -13,4 +13,7 @@ export interface Env {
   PUBLIC_WEB_ORIGINS?: string;
   ENABLE_ADMIN_MAINTENANCE?: string;
   ADMIN_BACKFILL_TOKEN?: string;
+  ENABLE_MARKET_IMPORT?: string;
+  MARKET_IMPORT_TOKEN?: string;
+  MARKET_FETCH_MODE?: string;
 }

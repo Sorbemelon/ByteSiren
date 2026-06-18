@@ -93,6 +93,8 @@ function makeEnv(
     publicWebOrigins?: string;
     adminEnabled?: boolean;
     adminToken?: string;
+    marketImportEnabled?: boolean;
+    marketImportToken?: string;
     emptyMarket?: boolean;
   } = {},
 ): Env {
@@ -108,6 +110,8 @@ function makeEnv(
     PUBLIC_WEB_ORIGINS: options.publicWebOrigins,
     ENABLE_ADMIN_MAINTENANCE: options.adminEnabled ? "true" : "false",
     ADMIN_BACKFILL_TOKEN: options.adminToken,
+    ENABLE_MARKET_IMPORT: options.marketImportEnabled ? "true" : "false",
+    MARKET_IMPORT_TOKEN: options.marketImportToken,
   };
 }
 
@@ -126,6 +130,38 @@ function sampleBinanceRow(openTimeMs = 1718327700000) {
     "0",
     "0",
   ];
+}
+
+function sampleImportCandle(openTime = "2026-06-18T00:00:00.000Z") {
+  const open = Date.parse(openTime);
+
+  return {
+    open_time: new Date(open).toISOString(),
+    close_time: new Date(open + 15 * 60 * 1000 - 1).toISOString(),
+    open: 65000,
+    high: 65100,
+    low: 64900,
+    close: 65050,
+    volume: 123.45,
+    quote_volume: 8020000,
+    trade_count: 12345,
+  };
+}
+
+function importRequest(
+  body: Record<string, unknown>,
+  token = "market-import-token",
+  headers: Record<string, string> = {},
+): Request {
+  return new Request("http://localhost/api/ingest/candles", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-bytesiren-market-token": token,
+      ...headers,
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 function claudeFixture(incidentId: string) {
@@ -520,6 +556,199 @@ test("admin manual market poll supports small recent one-symbol seed", async () 
     assert.equal(body.symbols_updated, 1);
     assert.deepEqual(body.failures, []);
   });
+});
+
+test("market candle import disabled returns not found without public CORS", async () => {
+  const response = await worker.fetch(
+    importRequest(
+      {
+        symbol: "BTCUSDT",
+        interval: "15m",
+        candles: [sampleImportCandle()],
+      },
+      "market-import-token",
+      {
+        origin: "http://localhost:3000",
+      },
+    ),
+    makeEnv({
+      marketImportEnabled: false,
+      marketImportToken: "market-import-token",
+      emptyMarket: true,
+    }),
+  );
+
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("market candle import rejects wrong token without exposing token values", async () => {
+  const response = await worker.fetch(
+    importRequest(
+      {
+        symbol: "BTCUSDT",
+        interval: "15m",
+        candles: [sampleImportCandle()],
+      },
+      "wrong-market-token",
+    ),
+    makeEnv({
+      marketImportEnabled: true,
+      marketImportToken: "secret-market-token",
+      emptyMarket: true,
+    }),
+  );
+  const body = await response.text();
+
+  assert.equal(response.status, 404);
+  assert.equal(body.includes("secret-market-token"), false);
+  assert.equal(body.includes("wrong-market-token"), false);
+});
+
+test("market candle import validates symbol and interval", async () => {
+  const env = makeEnv({
+    marketImportEnabled: true,
+    marketImportToken: "market-import-token",
+    emptyMarket: true,
+  });
+  const invalidSymbol = await worker.fetch(
+    importRequest({
+      symbol: "DOGEUSDT",
+      interval: "15m",
+      candles: [sampleImportCandle()],
+    }),
+    env,
+  );
+  const invalidInterval = await worker.fetch(
+    importRequest({
+      symbol: "BTCUSDT",
+      interval: "1h",
+      candles: [sampleImportCandle()],
+    }),
+    env,
+  );
+
+  assert.equal(invalidSymbol.status, 400);
+  assert.equal(invalidInterval.status, 400);
+});
+
+test("market candle import rejects empty, oversized, and invalid OHLC payloads", async () => {
+  const env = makeEnv({
+    marketImportEnabled: true,
+    marketImportToken: "market-import-token",
+    emptyMarket: true,
+  });
+  const empty = await worker.fetch(
+    importRequest({
+      symbol: "BTCUSDT",
+      interval: "15m",
+      candles: [],
+    }),
+    env,
+  );
+  const tooMany = await worker.fetch(
+    importRequest({
+      symbol: "BTCUSDT",
+      interval: "15m",
+      candles: Array.from({ length: 501 }, () => sampleImportCandle()),
+    }),
+    env,
+  );
+  const invalidOhlc = await worker.fetch(
+    importRequest({
+      symbol: "BTCUSDT",
+      interval: "15m",
+      candles: [{ ...sampleImportCandle(), high: 100, low: 200 }],
+    }),
+    env,
+  );
+
+  assert.equal(empty.status, 400);
+  assert.equal(tooMany.status, 400);
+  assert.equal(invalidOhlc.status, 400);
+});
+
+test("market candle import upserts valid candles idempotently", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_MARKET_IMPORT: "true",
+    MARKET_IMPORT_TOKEN: "market-import-token",
+  };
+  const body = {
+    symbol: "BTCUSDT",
+    interval: "15m",
+    candles: [sampleImportCandle()],
+    run_detector: false,
+  };
+  const first = await worker.fetch(importRequest(body), env);
+  const second = await worker.fetch(importRequest(body), env);
+  const firstBody = await readJson(first);
+  const secondBody = await readJson(second);
+
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 200);
+  assert.equal(firstBody.received, 1);
+  assert.equal(secondBody.received, 1);
+  assert.equal(tables.market_candles.length, 1);
+  assert.equal(tables.market_candles[0].symbol, "BTCUSDT");
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector"),
+    false,
+  );
+});
+
+test("market candle import can run detector safely after import", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_MARKET_IMPORT: "true",
+    MARKET_IMPORT_TOKEN: "market-import-token",
+  };
+  const response = await worker.fetch(
+    importRequest({
+      symbol: "BTCUSDT",
+      interval: "15m",
+      candles: [sampleImportCandle()],
+      run_detector: true,
+    }),
+    env,
+  );
+  const body = await readJson(response);
+  const detector = body.detector as Record<string, unknown>;
+
+  assert.equal(response.status, 200);
+  assert.equal(detector.ran, true);
+  assert.equal(detector.status, "skipped");
+  assert.equal(detector.candidate_count, 0);
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector"),
+    true,
+  );
+});
+
+test("market candle import endpoint does not expose public CORS", async () => {
+  const response = await worker.fetch(
+    importRequest(
+      {
+        symbol: "BTCUSDT",
+        interval: "15m",
+        candles: [sampleImportCandle()],
+      },
+      "market-import-token",
+      {
+        origin: "http://localhost:3000",
+      },
+    ),
+    makeEnv({
+      marketImportEnabled: true,
+      marketImportToken: "market-import-token",
+      emptyMarket: true,
+    }),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
 });
 
 test("worker returns public view metrics shape", async () => {

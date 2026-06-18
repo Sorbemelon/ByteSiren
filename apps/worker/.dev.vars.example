@@ -41,3 +41,12 @@ PUBLIC_WEB_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:
 # ADMIN_BACKFILL_TOKEN must be set as a Worker secret in production.
 ENABLE_ADMIN_MAINTENANCE=false
 ADMIN_BACKFILL_TOKEN=
+
+# Protected external market import endpoint for GitHub Actions ingestion.
+# MARKET_IMPORT_TOKEN must be set as a Worker secret in production.
+ENABLE_MARKET_IMPORT=true
+MARKET_IMPORT_TOKEN=
+
+# Production market ingestion uses external_import because Binance may block
+# Cloudflare Worker egress. Use worker_fetch only for controlled local tests.
+MARKET_FETCH_MODE=external_import

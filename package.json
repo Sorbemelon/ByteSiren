@@ -16,7 +16,9 @@
     "worker:deploy:dry": "corepack pnpm --filter @bytesiren/worker deploy:dry",
     "worker:migrate:local": "corepack pnpm --filter @bytesiren/worker d1:migrations:local",
     "worker:migrate:remote": "corepack pnpm --filter @bytesiren/worker d1:migrations:remote",
-    "format:check": "prettier --check package.json pnpm-workspace.yaml tsconfig.base.json eslint.config.mjs \"apps/**/*.{json,mjs,ts,tsx,css}\""
+    "import:binance": "node scripts/import-binance-candles.mjs",
+    "import:binance:dry": "node scripts/import-binance-candles.mjs --dry-run",
+    "format:check": "prettier --check package.json pnpm-workspace.yaml tsconfig.base.json eslint.config.mjs \".github/**/*.{yml,yaml}\" \"apps/**/*.{json,mjs,ts,tsx,css}\" \"scripts/**/*.mjs\""
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
