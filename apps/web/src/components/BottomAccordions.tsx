@@ -526,7 +526,9 @@ export default function BottomAccordions({
             same 15-minute window.
           </DefinitionCard>
           <DefinitionCard term={<MarketLabelChip>Market Day</MarketLabelChip>}>
-            A day-level grouping of multiple related sub-events.
+            A day-level grouping of multiple related sub-events on the same UTC
+            date. Public context applies to the day overall, not one exact
+            15-minute candle.
           </DefinitionCard>
           <DefinitionCard
             term={

@@ -175,7 +175,7 @@ function formatEventDateTime(item: FeedItem): string {
   if (item.scope === "market_day") {
     const display = item.display_date?.trim().replace(/\s+/g, " ");
     if (display && /\d{1,2}:\d{2}/.test(display)) return display;
-    return `${datePart}, ${timePart} UTC · multi-event day`;
+    return `${datePart}, ${timePart} UTC`;
   }
   return `${datePart}, ${timePart} UTC`;
 }

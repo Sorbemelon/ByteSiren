@@ -24,6 +24,36 @@ test("source policy accepts reputable source with usable URL", () => {
   assert.equal(result.accepted[0].url, articleUrl);
 });
 
+test("source policy derives publisher label from accepted source URL", () => {
+  const result = filterSourceLinks([
+    {
+      title: "Market context",
+      url: "https://www.reuters.com/markets/2026/06/14/context/",
+      used_for: "backdrop",
+      source_strength: "acceptable",
+    },
+    {
+      publisher: "Unknown",
+      title: "Crypto market context",
+      url: "https://www.coindesk.com/markets/2026/06/14/context/",
+      used_for: "focused_catalyst",
+      source_strength: "strong",
+    },
+    {
+      title: "Regional market update",
+      url: "https://example-news.test/markets/2026/06/14/context/",
+      used_for: "backdrop",
+      source_strength: "acceptable",
+    },
+  ]);
+
+  assert.equal(result.accepted.length, 3);
+  assert.deepEqual(
+    result.accepted.map((source) => source.publisher),
+    ["Reuters", "CoinDesk", "example-news.test"],
+  );
+});
+
 test("source policy rejects generic publisher root URLs", () => {
   const result = filterSourceLinks([
     {
@@ -146,4 +176,21 @@ test("public feed source mapping excludes legacy root source URLs", () => {
     JSON.stringify(publicSources).includes("www.coindesk.com"),
     false,
   );
+});
+
+test("public feed source mapping repairs legacy Unknown publisher labels", () => {
+  const publicSources = sourceLinksToPublicSources([
+    {
+      publisher: "Unknown",
+      title: "Market context article",
+      url: "https://www.reuters.com/markets/2026/06/15/crypto-context/",
+      published_at: "2026-06-15",
+      accessed_at: null,
+      used_for: "backdrop",
+      source_strength: "acceptable",
+    },
+  ]);
+
+  assert.equal(publicSources.length, 1);
+  assert.equal(publicSources[0].publisher, "Reuters");
 });

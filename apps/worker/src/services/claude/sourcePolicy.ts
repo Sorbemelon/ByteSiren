@@ -47,6 +47,38 @@ function toStringOrNull(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+const KNOWN_PUBLISHER_LABELS: Record<string, string> = {
+  "bloomberg.com": "Bloomberg",
+  "cnbc.com": "CNBC",
+  "coindesk.com": "CoinDesk",
+  "cointelegraph.com": "Cointelegraph",
+  "finance.yahoo.com": "Yahoo Finance",
+  "reuters.com": "Reuters",
+  "theblock.co": "The Block",
+};
+
+export function publisherLabelFromUrl(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+    return KNOWN_PUBLISHER_LABELS[host] ?? host;
+  } catch {
+    return "Unknown";
+  }
+}
+
+export function publisherLabelForSource(
+  publisher: unknown,
+  url: string,
+): string {
+  const explicit = toStringOrNull(publisher);
+
+  if (explicit && explicit.toLowerCase() !== "unknown") {
+    return explicit;
+  }
+
+  return publisherLabelFromUrl(url);
+}
+
 function normalizeUrl(value: string): string | null {
   try {
     const parsed = new URL(value);
@@ -175,7 +207,7 @@ export function filterSourceLinks(
     }
 
     const title = toStringOrNull(source.title) ?? "";
-    const publisher = toStringOrNull(source.publisher) ?? "Unknown";
+    const publisher = publisherLabelForSource(source.publisher, normalized);
     const publishedAt = toStringOrNull(source.published_at);
     const accessedAt = toStringOrNull(source.accessed_at);
     const sourceText = `${publisher} ${title} ${normalizedUrlKey(normalized)}`;

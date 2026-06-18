@@ -10,7 +10,7 @@ import {
   type StoredClaudeBrief,
   type ClaudeSourceLink,
 } from "./types.ts";
-import { isUsefulSourceUrl } from "./sourcePolicy.ts";
+import { isUsefulSourceUrl, publisherLabelForSource } from "./sourcePolicy.ts";
 
 export function queuedFeedBrief(): PublicFeedBrief {
   return {
@@ -57,7 +57,7 @@ export function sourceLinksToPublicSources(
   return sources
     .filter((source) => isUsefulSourceUrl(source.url))
     .map((source) => ({
-      publisher: source.publisher,
+      publisher: publisherLabelForSource(source.publisher, source.url),
       title: source.title,
       url: source.url,
       published_at: source.published_at,
