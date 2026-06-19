@@ -25,10 +25,12 @@ apps/worker/.dev.vars.*
 !apps/web/.env.local.example
 !apps/worker/.dev.vars.example
 
-# Local tool state
+# Local development
 .crosshelix/
 .scopian/
 .claude/settings.local.json
+docs/private/
+experiments/
 
 # Logs and OS files
 *.log
