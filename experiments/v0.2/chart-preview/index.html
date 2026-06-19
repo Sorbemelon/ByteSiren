@@ -34,7 +34,10 @@
             </label>
             <div id="selection-label" class="selection-label">No selection</div>
           </div>
-          <canvas id="chart" aria-label="Candlestick chart with event windows"></canvas>
+          <canvas
+            id="chart"
+            aria-label="Candlestick chart with event windows"
+          ></canvas>
           <div class="chart-hint">
             Click a feed card or highlighted event window to inspect the chart.
           </div>
@@ -43,13 +46,20 @@
         <aside class="feed-panel" aria-label="Grouped feed preview">
           <div class="feed-toolbar">
             <button id="day-toggle" class="is-active">Collapse days</button>
+            <div
+              id="feed-diagnostics"
+              class="feed-diagnostics"
+              aria-live="polite"
+            >
+              Loading preview data...
+            </div>
           </div>
           <div id="feed" class="feed-list"></div>
         </aside>
       </section>
     </main>
 
-    <script src="./data/preview-data.js"></script>
+    <script src="./data/preview-data.generated.js"></script>
     <script src="./preview.js"></script>
   </body>
 </html>

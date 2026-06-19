@@ -8,8 +8,10 @@ Run from the repo root:
 
 ```bash
 node experiments/v0.2/src/build-feed-contract.mjs
+node experiments/v0.2/src/build-feed-preview.mjs
 node experiments/v0.2/src/build-non-public-audit.mjs
 node experiments/v0.2/src/build-chart-preview.mjs
+node experiments/v0.2/src/smoke-chart-preview.mjs
 ```
 
 The chart preview reads only local files under `experiments/v0.2/chart-preview/data/`.
@@ -17,8 +19,13 @@ It does not call the production API, Claude, D1, or any remote service.
 
 ## Open
 
-Open `index.html` directly in a browser, or serve the folder locally if your
-browser blocks large local script files:
+Direct file open is supported when `data/preview-data.generated.js` exists:
+
+```text
+experiments/v0.2/chart-preview/index.html
+```
+
+If your browser blocks local file loading, serve the folder locally:
 
 ```bash
 py -3.11 -m http.server 4177 -d experiments/v0.2/chart-preview
@@ -28,6 +35,12 @@ Then visit:
 
 ```text
 http://localhost:4177
+```
+
+If the feed is empty, run:
+
+```bash
+node experiments/v0.2/src/smoke-chart-preview.mjs
 ```
 
 ## Review Modes

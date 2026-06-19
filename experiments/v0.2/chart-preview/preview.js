@@ -1,21 +1,11 @@
-const previewData = window.BYTESIREN_PREVIEW_DATA;
-
-if (!previewData) {
-  throw new Error(
-    "Missing preview data. Run node experiments/v0.2/src/build-chart-preview.mjs.",
-  );
-}
-
-const { feedContract, auditEvents, candles } = previewData;
-const canvas = document.getElementById("chart");
-const ctx = canvas.getContext("2d");
-const feedEl = document.getElementById("feed");
-const symbolSelect = document.getElementById("symbol-select");
-const selectionLabel = document.getElementById("selection-label");
-const dayToggle = document.getElementById("day-toggle");
+const PREVIEW_DATA_ERROR =
+  "Preview data could not load. Run: py -3.11 -m http.server 4177 -d experiments/v0.2/chart-preview";
 
 const state = {
-  mode: "public",
+  mode:
+    new URLSearchParams(window.location.search).get("mode") === "audit"
+      ? "audit"
+      : "public",
   daysExpanded: true,
   dayOverrides: new Map(),
   expandedSections: new Set(),
@@ -24,19 +14,117 @@ const state = {
   hitZones: [],
 };
 
-const publicDayPosts = feedContract.day_groups;
-const publicItems = publicDayPosts.flatMap((group) => group.items);
-const publicById = new Map(publicItems.map((item) => [item.id, item]));
-const auditItems = auditEvents.items;
-const auditById = new Map(auditItems.map((item) => [item.id, item]));
-const itemToDayPost = new Map(
-  publicDayPosts.flatMap((group) =>
-    group.items.map((item) => [item.id, group.day_post_id]),
-  ),
-);
-const dayPostById = new Map(
-  publicDayPosts.map((group) => [group.day_post_id, group]),
-);
+let feedContract;
+let auditEvents;
+let candles;
+let canvas;
+let ctx;
+let feedEl;
+let feedDiagnostics;
+let symbolSelect;
+let selectionLabel;
+let dayToggle;
+let publicDayPosts = [];
+let publicItems = [];
+let publicById = new Map();
+let auditItems = [];
+let auditById = new Map();
+let itemToDayPost = new Map();
+let dayPostById = new Map();
+
+function bundledPreviewData() {
+  return (
+    window.__BYTESIREN_V02_PREVIEW__ ?? window.BYTESIREN_PREVIEW_DATA ?? null
+  );
+}
+
+async function fetchJson(path) {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`${path} returned ${response.status}`);
+  }
+  return response.json();
+}
+
+function normalizePreviewData(data) {
+  const payload = {
+    feedContract: data.feedContract,
+    groupedPreview: data.groupedPreview,
+    auditEvents: data.auditEvents,
+    candles: data.candles,
+  };
+
+  if (!payload.feedContract?.day_groups?.length) {
+    throw new Error("feedContract.day_groups is empty or missing.");
+  }
+  if (!payload.auditEvents?.items) {
+    throw new Error("auditEvents.items is missing.");
+  }
+  if (!payload.candles?.candles_by_symbol) {
+    throw new Error("candles.candles_by_symbol is missing.");
+  }
+
+  return payload;
+}
+
+async function loadPreviewData() {
+  const bundled = bundledPreviewData();
+  if (bundled) {
+    return normalizePreviewData(bundled);
+  }
+
+  const [loadedFeedContract, groupedPreview, loadedAuditEvents, loadedCandles] =
+    await Promise.all([
+      fetchJson("./data/feed_contract_v02.json"),
+      fetchJson("./data/grouped_feed_preview.json"),
+      fetchJson("./data/non_public_audit_events.json"),
+      fetchJson("./data/candles_30d.json"),
+    ]);
+
+  return normalizePreviewData({
+    feedContract: loadedFeedContract,
+    groupedPreview,
+    auditEvents: loadedAuditEvents,
+    candles: loadedCandles,
+  });
+}
+
+function renderLoadError(error) {
+  console.error(error);
+
+  const diagnostics = document.getElementById("feed-diagnostics");
+  if (diagnostics) {
+    diagnostics.textContent = PREVIEW_DATA_ERROR;
+    diagnostics.classList.add("is-error");
+  }
+
+  const feed = document.getElementById("feed");
+  if (feed) {
+    feed.innerHTML = `<div class="empty load-error">
+      <strong>${PREVIEW_DATA_ERROR}</strong>
+      <div class="card-meta">Direct file open requires ./data/preview-data.generated.js. Local HTTP fallback requires the JSON files in ./data/.</div>
+    </div>`;
+  }
+
+  const label = document.getElementById("selection-label");
+  if (label) {
+    label.textContent = "Preview data failed to load";
+  }
+
+  const chart = document.getElementById("chart");
+  const chartContext = chart?.getContext("2d");
+  if (chart && chartContext) {
+    const rect = chart.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    chart.width = Math.max(1, Math.floor(rect.width * dpr));
+    chart.height = Math.max(1, Math.floor(rect.height * dpr));
+    chartContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+    chartContext.fillStyle = "#94a3b8";
+    chartContext.font = "14px system-ui";
+    chartContext.fillText("Preview data could not load.", 18, 30);
+    chartContext.fillText("Run local server from the README command.", 18, 54);
+  }
+}
 
 function pct(value, digits = 1) {
   const rounded = Number(value || 0).toFixed(digits);
@@ -83,7 +171,39 @@ function setGlobalDaysExpanded(expanded) {
 
 function visibleItemsForPost(post) {
   if (isDayPostExpanded(post)) return post.items;
-  return post.items.filter((item) => item.id === post.default_collapsed_item_id);
+  return post.items.filter(
+    (item) => item.id === post.default_collapsed_item_id,
+  );
+}
+
+function previewCounts() {
+  const dailyCount = publicItems.filter(
+    (item) => item.item_type === "daily_overview",
+  ).length;
+  const signalCount = publicItems.filter(
+    (item) => item.item_type === "signal_event",
+  ).length;
+
+  return {
+    days: publicDayPosts.length,
+    daily: dailyCount,
+    signals: signalCount,
+    audit: auditItems.length,
+  };
+}
+
+function updateDiagnostics() {
+  if (!feedDiagnostics) return;
+
+  const counts = previewCounts();
+  feedDiagnostics.classList.remove("is-error");
+  feedDiagnostics.textContent = `Preview data loaded: ${counts.days} days · ${counts.daily} daily overviews · ${counts.signals} signal events · ${counts.audit} audit events`;
+}
+
+function syncModeButtons() {
+  document.querySelectorAll("[data-mode]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.mode === state.mode);
+  });
 }
 
 function activeCandles() {
@@ -129,7 +249,9 @@ function drawRectOverlay(plot, startIso, endIso, color, alpha, id, kind) {
 }
 
 function drawMarker(plot, item, color) {
-  const time = Date.parse(item.chart.peak_marker_time || item.chart.highlight_start);
+  const time = Date.parse(
+    item.chart.peak_marker_time || item.chart.highlight_start,
+  );
   const x = plot.xForTime(time);
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -233,7 +355,12 @@ function drawChart() {
   state.hitZones = [];
 
   const series = activeCandles();
-  if (series.length === 0) return;
+  if (series.length === 0) {
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "14px system-ui";
+    ctx.fillText(`No candles for ${state.symbol}.`, 18, 30);
+    return;
+  }
 
   const pad = { left: 48, right: 16, top: 18, bottom: 54 };
   const volumeHeight = 72;
@@ -371,7 +498,9 @@ function renderSymbolTable(item) {
             const peakClass = row.highlights?.strongest_peak_15m
               ? "cell-highlight"
               : "";
-            const symbolClass = row.highlights?.lead_mover ? "cell-highlight" : "";
+            const symbolClass = row.highlights?.lead_mover
+              ? "cell-highlight"
+              : "";
             return `<tr class="${rowClass}">
               <td class="${symbolClass}">${escapeHtml(row.symbol.replace("USDT", ""))}</td>
               <td>${pct(row.window_change_pct)}</td>
@@ -399,6 +528,7 @@ function renderDailySection(item) {
   const selected = item.id === state.selectedId;
   const expanded = state.expandedSections.has(item.id);
   const fields = item.expanded.daily_market_summary_fields;
+  const summary = fields.summary_hint || "Daily market context pending.";
 
   return `
     <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
@@ -414,10 +544,10 @@ function renderDailySection(item) {
         <span class="chip">Range ${pct(item.market_range_pct)}</span>
         <span class="chip">${item.has_publishable_signal_events ? "Has signals" : "No public signals"}</span>
       </div>
+      <div class="card-body">${escapeHtml(summary)}</div>
       ${
         expanded
           ? `<div class="card-expanded">
-              <div>${escapeHtml(fields.summary_hint)}</div>
               <div class="card-meta">Notable: ${fields.notable_symbols.map((symbol) => symbol.replace("USDT", "")).join(", ") || "none"}</div>
               <div class="card-meta">Sources placeholder: ${fields.source_query_hints.map(escapeHtml).join("; ")}</div>
             </div>`
@@ -430,6 +560,7 @@ function renderDailySection(item) {
 function renderSignalSection(item) {
   const selected = item.id === state.selectedId;
   const expanded = state.expandedSections.has(item.id);
+  const summary = `${escapeHtml(item.display_window)} · ${escapeHtml(displayDirection(item.direction))} · Signals ${item.signals_count} of ${item.n_tracked}`;
 
   return `
     <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
@@ -446,6 +577,7 @@ function renderSignalSection(item) {
         <span class="chip">Range Position: ${escapeHtml(item.event_range_context_label)}</span>
         <span class="chip">Impact: ${escapeHtml(item.impact_label)}</span>
       </div>
+      <div class="card-body">${summary}</div>
       ${
         expanded
           ? `<div class="card-expanded">
@@ -530,7 +662,9 @@ function renderFeed() {
       ? auditItems.map(renderAuditCard).join("")
       : '<div class="empty">No audit events.</div>';
   } else {
-    feedEl.innerHTML = publicDayPosts.map(renderDayPost).join("");
+    feedEl.innerHTML = publicDayPosts.length
+      ? publicDayPosts.map(renderDayPost).join("")
+      : '<div class="empty">Preview data loaded, but no public day posts were found.</div>';
   }
 
   feedEl.querySelectorAll(".section-card").forEach((card) => {
@@ -565,44 +699,78 @@ function render() {
   drawChart();
 }
 
-document.querySelectorAll("[data-mode]").forEach((button) => {
-  button.addEventListener("click", () => {
-    state.mode = button.dataset.mode;
-    state.selectedId = null;
-    document.querySelectorAll("[data-mode]").forEach((el) => {
-      el.classList.toggle("is-active", el === button);
+function startPreview(data) {
+  feedContract = data.feedContract;
+  auditEvents = data.auditEvents;
+  candles = data.candles;
+
+  canvas = document.getElementById("chart");
+  ctx = canvas.getContext("2d");
+  feedEl = document.getElementById("feed");
+  feedDiagnostics = document.getElementById("feed-diagnostics");
+  symbolSelect = document.getElementById("symbol-select");
+  selectionLabel = document.getElementById("selection-label");
+  dayToggle = document.getElementById("day-toggle");
+
+  publicDayPosts = feedContract.day_groups;
+  publicItems = publicDayPosts.flatMap((group) => group.items);
+  publicById = new Map(publicItems.map((item) => [item.id, item]));
+  auditItems = auditEvents.items;
+  auditById = new Map(auditItems.map((item) => [item.id, item]));
+  itemToDayPost = new Map(
+    publicDayPosts.flatMap((group) =>
+      group.items.map((item) => [item.id, group.day_post_id]),
+    ),
+  );
+  dayPostById = new Map(
+    publicDayPosts.map((group) => [group.day_post_id, group]),
+  );
+
+  document.querySelectorAll("[data-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.mode = button.dataset.mode;
+      state.selectedId = null;
+      syncModeButtons();
+      selectionLabel.textContent = "No selection";
+      render();
     });
-    selectionLabel.textContent = "No selection";
-    render();
   });
-});
 
-dayToggle.addEventListener("click", () => {
-  setGlobalDaysExpanded(!state.daysExpanded);
-});
+  syncModeButtons();
+  updateDiagnostics();
 
-symbolSelect.addEventListener("change", () => {
-  state.symbol = symbolSelect.value;
-  drawChart();
-});
+  dayToggle.addEventListener("click", () => {
+    setGlobalDaysExpanded(!state.daysExpanded);
+  });
 
-canvas.addEventListener("click", (event) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-  const hit = [...state.hitZones]
-    .reverse()
-    .find(
-      (zone) =>
-        x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h,
-    );
+  symbolSelect.addEventListener("change", () => {
+    state.symbol = symbolSelect.value;
+    drawChart();
+  });
 
-  if (hit) {
-    selectItem(hit.id, { expandDay: true });
-  } else if (state.selectedId) {
-    clearSelection();
-  }
-});
+  canvas.addEventListener("click", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const hit = [...state.hitZones]
+      .reverse()
+      .find(
+        (zone) =>
+          x >= zone.x &&
+          x <= zone.x + zone.w &&
+          y >= zone.y &&
+          y <= zone.y + zone.h,
+      );
 
-window.addEventListener("resize", drawChart);
-render();
+    if (hit) {
+      selectItem(hit.id, { expandDay: true });
+    } else if (state.selectedId) {
+      clearSelection();
+    }
+  });
+
+  window.addEventListener("resize", drawChart);
+  render();
+}
+
+loadPreviewData().then(startPreview).catch(renderLoadError);

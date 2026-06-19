@@ -18,10 +18,15 @@ The harness is intentionally outside the Worker and web app runtime paths. It do
 - `src/build-non-public-audit.mjs` creates the local audit view for non-public detected events.
 - `src/build-claude-payloads.mjs` creates local Signal Event and Daily Overview Claude payload proposals.
 - `src/build-chart-preview.mjs` refreshes the local static chart-preview data bundle.
+- `src/smoke-chart-preview.mjs` verifies that the chart preview has loadable local data.
 - `src/compare-vnext-ab.mjs` compares vNext-A with vNext-B.
 - `chart-preview/` contains the local-only chart and day-post feed inspector.
-- `data/` is ignored because candle snapshots can be large.
+- `data/` stores the 30-day candle snapshot used by the local preview.
 - `outputs/` is for generated JSON and Markdown comparison artifacts.
+
+## Tracking Note
+
+For the v0.2 branch, `experiments/v0.2` is temporarily tracked so the experiment workspace can be checkpointed and reverted if the experiment is not successful. The candle snapshot is public Binance market data and is kept with the experiment for reproducible local preview review.
 
 ## Commands
 
@@ -36,6 +41,7 @@ node experiments/v0.2/src/build-feed-preview.mjs
 node experiments/v0.2/src/build-non-public-audit.mjs
 node experiments/v0.2/src/build-claude-payloads.mjs
 node experiments/v0.2/src/build-chart-preview.mjs
+node experiments/v0.2/src/smoke-chart-preview.mjs
 node experiments/v0.2/src/compare-detectors.mjs
 node experiments/v0.2/src/compare-vnext-ab.mjs
 node --test experiments/v0.2/src/detector-vnext-b/detector.test.mjs
@@ -65,6 +71,55 @@ No secrets are read or required.
 
 The experiment can be rerun against the same snapshot without changing production behavior.
 
+## Regenerate v0.2D/R0 Preview Outputs
+
+Run from the repo root:
+
+```bash
+node experiments/v0.2/src/run-vnext-b.mjs
+node experiments/v0.2/src/generate-daily-overviews.mjs
+node experiments/v0.2/src/build-feed-contract.mjs
+node experiments/v0.2/src/build-feed-preview.mjs
+node experiments/v0.2/src/build-non-public-audit.mjs
+node experiments/v0.2/src/build-claude-payloads.mjs
+node experiments/v0.2/src/build-chart-preview.mjs
+node experiments/v0.2/src/smoke-chart-preview.mjs
+```
+
+## Open Chart Preview
+
+Direct file open is supported when `chart-preview/data/preview-data.generated.js` exists:
+
+```text
+experiments/v0.2/chart-preview/index.html
+```
+
+If your browser blocks local file loading, serve the preview locally:
+
+```bash
+py -3.11 -m http.server 4177 -d experiments/v0.2/chart-preview
+```
+
+Then visit:
+
+```text
+http://localhost:4177
+```
+
+Expected visible result:
+
+- 31 day posts
+- 31 Daily Overviews
+- 14 public Signal Events
+- 11 audit-only events
+- Chart with event-window and day-window highlights
+
+Troubleshooting:
+
+- If the feed is empty, run `node experiments/v0.2/src/smoke-chart-preview.mjs`.
+- If direct `file://` open fails or shows a data-load error, run the local server command above.
+- `build-chart-preview.mjs` writes both `preview-data.generated.js` for direct file open and JSON files for local HTTP fallback.
+
 ## v0.2D Feed Preview Notes
 
 - Public preview uses one parent post per UTC day.
@@ -77,4 +132,4 @@ The experiment can be rerun against the same snapshot without changing productio
 - Per-symbol evidence table uses `Window Change`, `Peak 15m`, `Volume ×`, and `Range Position`.
 - Peak 15m and Lead mover remain supporting diagnostics, shown through table highlights instead of headline metrics.
 
-Root package scripts intentionally do not reference this folder because `experiments/` is ignored and should stay out of the public repo until explicitly approved.
+Root package scripts intentionally do not reference this folder. Run experiment commands manually from this README.

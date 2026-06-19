@@ -30,6 +30,7 @@ apps/worker/.dev.vars.*
 .scopian/
 .claude/settings.local.json
 docs/private/
+# v0.2 experiment workspace is temporarily tracked on the v0.2 branch.
 # experiments/
 
 # Logs and OS files
