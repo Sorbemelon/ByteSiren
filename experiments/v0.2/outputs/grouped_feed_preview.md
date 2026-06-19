@@ -383,11 +383,13 @@ Count: 11
 
 ## Glossary
 
-- avg change: Avg Change is the median change of participating symbols across the evidence window.
+- avg change: Avg Change is the median or average change of participating symbols across the evidence window.
 - window change: Window Change is one symbol's change across the evidence window.
-- peak 15m: Peak 15m is the strongest single 15-minute change inside the event window.
-- lead mover: Lead mover is the symbol with the strongest event-window contribution, highlighted in the table.
-- range position: Range Position shows where the event sits relative to the recent 24h high/low range.
+- peak 15m: Peak 15m is the strongest single 15-minute change inside the evidence window.
+- lead mover highlight: Highlighted symbol or row marks the strongest contributor in the event window.
+- peak 15m highlight: Highlighted Peak 15m cell marks the strongest 15-minute change inside the window.
+- range position: Range Position shows where the event sits relative to the recent 24h high-low range. It is descriptive, not a trading signal.
+- evidence window: Evidence window is the candles used as event evidence, not a single timestamp.
 - daily overview: Daily Overview is a full UTC-day context summary.
 - signal event: Signal Event is a compact evidence-window anomaly.
 - show more hide: Show more and Hide expand details inside one Daily Overview or Signal Event section.

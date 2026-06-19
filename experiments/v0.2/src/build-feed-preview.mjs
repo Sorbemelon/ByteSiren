@@ -147,14 +147,19 @@ export function buildGroupedFeedPreview({
     },
     glossary: {
       avg_change:
-        "Avg Change is the median change of participating symbols across the evidence window.",
-      window_change: "Window Change is one symbol's change across the evidence window.",
+        "Avg Change is the median or average change of participating symbols across the evidence window.",
+      window_change:
+        "Window Change is one symbol's change across the evidence window.",
       peak_15m:
-        "Peak 15m is the strongest single 15-minute change inside the event window.",
-      lead_mover:
-        "Lead mover is the symbol with the strongest event-window contribution, highlighted in the table.",
+        "Peak 15m is the strongest single 15-minute change inside the evidence window.",
+      lead_mover_highlight:
+        "Highlighted symbol or row marks the strongest contributor in the event window.",
+      peak_15m_highlight:
+        "Highlighted Peak 15m cell marks the strongest 15-minute change inside the window.",
       range_position:
-        "Range Position shows where the event sits relative to the recent 24h high/low range.",
+        "Range Position shows where the event sits relative to the recent 24h high-low range. It is descriptive, not a trading signal.",
+      evidence_window:
+        "Evidence window is the candles used as event evidence, not a single timestamp.",
       daily_overview: "Daily Overview is a full UTC-day context summary.",
       signal_event: "Signal Event is a compact evidence-window anomaly.",
       show_more_hide:

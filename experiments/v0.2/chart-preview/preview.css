@@ -327,6 +327,15 @@ button.is-active {
   font-weight: 700;
 }
 
+.combined-highlight {
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 4px;
+}
+
+.cell-muted {
+  color: var(--muted);
+}
+
 .table-glossary {
   color: var(--muted);
   font-size: 0.74rem;

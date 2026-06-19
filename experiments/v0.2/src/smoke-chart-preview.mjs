@@ -33,10 +33,16 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "Signal Event",
   "24h Change",
   "Avg Change",
+  "Window Change",
+  "Peak 15m",
+  "Range Position",
+  "Volume",
   "Expand days",
   "Collapse days",
   "Show more",
   "Hide",
+  "cell-highlight",
+  "row-highlight",
 ];
 
 const FORBIDDEN_CONTROL_MARKERS = [
@@ -47,6 +53,23 @@ const FORBIDDEN_CONTROL_MARKERS = [
   "Expand day",
   "Collapse day",
 ];
+
+const FORBIDDEN_VISIBLE_MARKERS = [
+  "Avg Move",
+  "Window Move",
+  "Avg 15m",
+  "Source likelihood",
+  "Notes",
+];
+
+const ALLOWED_RANGE_LABELS = new Set([
+  "Inside range",
+  "Near high",
+  "Near low",
+  "Broke high",
+  "Broke low",
+  "—",
+]);
 
 async function exists(filePath) {
   try {
@@ -144,6 +167,17 @@ function assertNoForbiddenControls(label, value) {
   }
 }
 
+function assertNoForbiddenVisibleLabels(label, value) {
+  const text = typeof value === "string" ? value : JSON.stringify(value);
+  for (const marker of FORBIDDEN_VISIBLE_MARKERS) {
+    assert.equal(
+      text.includes(marker),
+      false,
+      `${label} contains forbidden visible marker: ${marker}`,
+    );
+  }
+}
+
 function assertDayPostCollapseContract(feedContract, groupedPreview) {
   assert.equal(feedContract.preview_state.days_expanded, true);
   assert.equal(
@@ -236,6 +270,7 @@ async function runSmoke() {
   );
   assertNoForbiddenControls("index.html", indexHtml);
   assertNoForbiddenControls("preview.js", previewJs);
+  assertNoForbiddenVisibleLabels("preview.js", previewJs);
   for (const marker of REQUIRED_PREVIEW_JS_MARKERS) {
     assert.ok(
       previewJs.includes(marker),
@@ -285,10 +320,39 @@ async function runSmoke() {
       (item) =>
         item.display_window &&
         item.avg_change_label === "Avg Change" &&
+        item.table_window_change_label === "Window Change" &&
+        item.peak_15m_label === "Peak 15m" &&
+        item.range_position_label === "Range Position" &&
         item.expanded?.per_symbol_table?.rows?.length,
     ),
     "signal cards must have visible windows, Avg Change labels, and table rows",
   );
+  assert.ok(
+    overviews.every((item) => item.daily_change_label === "24h Change"),
+    "daily overview cards must expose 24h Change label metadata",
+  );
+  assert.ok(
+    signals.every(
+      (item) =>
+        item.expanded.per_symbol_table.columns.join("|") ===
+          "Symbol|Window Change|Peak 15m|Volume ×|Range Position" &&
+        item.expanded.per_symbol_table.labels.window_change ===
+          "Window Change" &&
+        item.expanded.per_symbol_table.labels.peak_15m === "Peak 15m" &&
+        item.expanded.per_symbol_table.labels.range_position ===
+          "Range Position" &&
+        !item.expanded.per_symbol_table.columns.includes("Notes") &&
+        item.lead_mover_symbol &&
+        item.strongest_peak_symbol &&
+        item.highlight_cells?.length >= 2 &&
+        item.expanded.per_symbol_table.rows.every((row) =>
+          ALLOWED_RANGE_LABELS.has(row.range_position_label),
+        ),
+    ),
+    "signal evidence tables must expose required labels, highlights, and range labels",
+  );
+  assertNoForbiddenVisibleLabels("feed contract", feedContract);
+  assertNoForbiddenVisibleLabels("grouped preview", groupedPreview);
 
   const dataSourceSize = (await stat(data.source)).size;
   const summary = {

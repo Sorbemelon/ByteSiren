@@ -60,6 +60,13 @@ export const EVENT_RANGE_CONTEXT_LABELS = {
   inside_range: "Inside range",
 };
 
+const TABLE_LABELS = {
+  windowChange: "Window Change",
+  peak15m: "Peak 15m",
+  volume: "Volume \u00d7",
+  rangePosition: "Range Position",
+};
+
 function displayDate(dateUtc) {
   const date = new Date(`${dateUtc}T00:00:00.000Z`);
   return `${UTC_MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()} UTC`;
@@ -112,9 +119,10 @@ function tableRows(event) {
     ),
     peak_15m_pct: roundNumber(peakMoveForSymbol(event, row.symbol) ?? 0, 4),
     volume_x: roundNumber(row.max_volume_ratio ?? 0, 4),
-    range_position: row.range_position ?? "inside_range",
-    range_position_label:
-      RANGE_POSITION_LABELS[row.range_position] ?? "Inside range",
+    range_position: row.range_position ?? null,
+    range_position_label: row.range_position
+      ? (RANGE_POSITION_LABELS[row.range_position] ?? "\u2014")
+      : "\u2014",
     prev_24h_high: row.prev_24h_high ?? null,
     prev_24h_low: row.prev_24h_low ?? null,
     highlights: {
@@ -194,6 +202,10 @@ function signalItem(event) {
     n_tracked: event.n_tracked,
     avg_change_pct: roundNumber(event.window_move_pct, 4),
     avg_change_label: "Avg Change",
+    table_window_change_label: TABLE_LABELS.windowChange,
+    peak_15m_label: TABLE_LABELS.peak15m,
+    volume_label: TABLE_LABELS.volume,
+    range_position_label: TABLE_LABELS.rangePosition,
     metric_label: "Avg Change",
     metric_display: `Avg Change: ${signPct(event.window_move_pct)}`,
     impact_label: event.event_strength_label,
@@ -227,16 +239,22 @@ function signalItem(event) {
       per_symbol_table: {
         columns: [
           "Symbol",
-          "Window Change",
-          "Peak 15m",
-          "Volume ×",
-          "Range Position",
+          TABLE_LABELS.windowChange,
+          TABLE_LABELS.peak15m,
+          TABLE_LABELS.volume,
+          TABLE_LABELS.rangePosition,
         ],
+        labels: {
+          window_change: TABLE_LABELS.windowChange,
+          peak_15m: TABLE_LABELS.peak15m,
+          volume: TABLE_LABELS.volume,
+          range_position: TABLE_LABELS.rangePosition,
+        },
         rows: tableRows(event),
         highlight_glossary: [
-          "Highlighted symbol or row = lead mover for this event window.",
-          "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-          "These highlights are supporting diagnostics, not the main event headline.",
+          "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+          "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+          "Highlights are supporting diagnostics, not standalone headline metrics.",
         ],
       },
       context_details_placeholder: "Public Context placeholder",
@@ -263,6 +281,7 @@ function dailyOverviewItem(overview, daySignalEvents) {
     market_tone: overview.market_tone,
     change_pct: roundNumber(overview.market_24h_move_pct, 4),
     change_label: "24h Change",
+    daily_change_label: "24h Change",
     metric_label: "24h Change",
     metric_display: `24h Change: ${signPct(overview.market_24h_move_pct)}`,
     market_range_pct: overview.market_range_pct,

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T16:19:22.061Z",
+  "generated_at": "2026-06-19T16:26:39.421Z",
   "preview_state": {
     "days_expanded": true,
     "section_details_expanded_by_id": {
@@ -186,6 +186,7 @@
               "market_tone": "mixed",
               "change_pct": -0.9094,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.9%",
               "market_range_pct": 2.2517,
@@ -395,6 +396,7 @@
               "market_tone": "mixed",
               "change_pct": -0.9094,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.9%",
               "market_range_pct": 2.2517,
@@ -604,6 +606,7 @@
               "market_tone": "mixed",
               "change_pct": -0.9094,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.9%",
               "market_range_pct": 2.2517,
@@ -840,6 +843,7 @@
               "market_tone": "volatile",
               "change_pct": -3.2477,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -3.2%",
               "market_range_pct": 5.1046,
@@ -1070,6 +1074,7 @@
               "market_tone": "volatile",
               "change_pct": -3.2477,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -3.2%",
               "market_range_pct": 5.1046,
@@ -1232,6 +1237,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -1305,9 +1316,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -1367,6 +1378,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.3735,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.4%",
               "impact_label": "Medium",
@@ -1475,6 +1490,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -1548,9 +1569,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -1833,6 +1854,7 @@
               "market_tone": "volatile",
               "change_pct": -3.2477,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -3.2%",
               "market_range_pct": 5.1046,
@@ -1995,6 +2017,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -2068,9 +2096,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -2130,6 +2158,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.3735,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.4%",
               "impact_label": "Medium",
@@ -2238,6 +2270,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -2311,9 +2349,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -2624,6 +2662,7 @@
               "market_tone": "volatile",
               "change_pct": -2.0128,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2%",
               "market_range_pct": 4.2752,
@@ -2884,6 +2923,7 @@
               "market_tone": "volatile",
               "change_pct": -2.0128,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2%",
               "market_range_pct": 4.2752,
@@ -3074,6 +3114,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -3147,9 +3193,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -3207,6 +3253,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.2199,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.2%",
               "impact_label": "High",
@@ -3315,6 +3365,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -3388,9 +3444,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -3604,6 +3660,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -3677,9 +3739,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -3739,6 +3801,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.0278,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1%",
               "impact_label": "Medium",
@@ -3847,6 +3913,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -3920,9 +3992,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -4138,6 +4210,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -4211,9 +4289,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -4273,6 +4351,10 @@
               "n_tracked": 5,
               "avg_change_pct": -2.1325,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -2.1%",
               "impact_label": "High",
@@ -4381,6 +4463,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -4454,9 +4542,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -4741,6 +4829,7 @@
               "market_tone": "volatile",
               "change_pct": -2.0128,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2%",
               "market_range_pct": 4.2752,
@@ -4931,6 +5020,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -5004,9 +5099,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -5064,6 +5159,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.2199,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.2%",
               "impact_label": "High",
@@ -5172,6 +5271,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -5245,9 +5350,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -5461,6 +5566,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -5534,9 +5645,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -5596,6 +5707,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.0278,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1%",
               "impact_label": "Medium",
@@ -5704,6 +5819,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -5777,9 +5898,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -5995,6 +6116,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -6068,9 +6195,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -6130,6 +6257,10 @@
               "n_tracked": 5,
               "avg_change_pct": -2.1325,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -2.1%",
               "impact_label": "High",
@@ -6238,6 +6369,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -6311,9 +6448,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -6617,6 +6754,7 @@
               "market_tone": "mixed",
               "change_pct": -0.9856,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1%",
               "market_range_pct": 3.7176,
@@ -6830,6 +6968,7 @@
               "market_tone": "mixed",
               "change_pct": -0.9856,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1%",
               "market_range_pct": 3.7176,
@@ -7043,6 +7182,7 @@
               "market_tone": "mixed",
               "change_pct": -0.9856,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1%",
               "market_range_pct": 3.7176,
@@ -7279,6 +7419,7 @@
               "market_tone": "volatile",
               "change_pct": 3.7733,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +3.8%",
               "market_range_pct": 6.3415,
@@ -7492,6 +7633,7 @@
               "market_tone": "volatile",
               "change_pct": 3.7733,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +3.8%",
               "market_range_pct": 6.3415,
@@ -7705,6 +7847,7 @@
               "market_tone": "volatile",
               "change_pct": 3.7733,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +3.8%",
               "market_range_pct": 6.3415,
@@ -7944,6 +8087,7 @@
               "market_tone": "volatile",
               "change_pct": 2.6428,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +2.6%",
               "market_range_pct": 4.3749,
@@ -8176,6 +8320,7 @@
               "market_tone": "volatile",
               "change_pct": 2.6428,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +2.6%",
               "market_range_pct": 4.3749,
@@ -8340,6 +8485,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -8413,9 +8564,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -8475,6 +8626,10 @@
               "n_tracked": 5,
               "avg_change_pct": 2.3766,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +2.4%",
               "impact_label": "High",
@@ -8583,6 +8738,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -8656,9 +8817,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -8943,6 +9104,7 @@
               "market_tone": "volatile",
               "change_pct": 2.6428,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +2.6%",
               "market_range_pct": 4.3749,
@@ -9107,6 +9269,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -9180,9 +9348,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -9242,6 +9410,10 @@
               "n_tracked": 5,
               "avg_change_pct": 2.3766,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +2.4%",
               "impact_label": "High",
@@ -9350,6 +9522,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -9423,9 +9601,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -9731,6 +9909,7 @@
               "market_tone": "risk_on",
               "change_pct": 1.381,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +1.4%",
               "market_range_pct": 2.7214,
@@ -9944,6 +10123,7 @@
               "market_tone": "risk_on",
               "change_pct": 1.381,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +1.4%",
               "market_range_pct": 2.7214,
@@ -10157,6 +10337,7 @@
               "market_tone": "risk_on",
               "change_pct": 1.381,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +1.4%",
               "market_range_pct": 2.7214,
@@ -10393,6 +10574,7 @@
               "market_tone": "mixed",
               "change_pct": -0.3203,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.3%",
               "market_range_pct": 2.9234,
@@ -10606,6 +10788,7 @@
               "market_tone": "mixed",
               "change_pct": -0.3203,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.3%",
               "market_range_pct": 2.9234,
@@ -10819,6 +11002,7 @@
               "market_tone": "mixed",
               "change_pct": -0.3203,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.3%",
               "market_range_pct": 2.9234,
@@ -11055,6 +11239,7 @@
               "market_tone": "volatile",
               "change_pct": 3.4384,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +3.4%",
               "market_range_pct": 4.6995,
@@ -11268,6 +11453,7 @@
               "market_tone": "volatile",
               "change_pct": 3.4384,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +3.4%",
               "market_range_pct": 4.6995,
@@ -11481,6 +11667,7 @@
               "market_tone": "volatile",
               "change_pct": 3.4384,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +3.4%",
               "market_range_pct": 4.6995,
@@ -11722,6 +11909,7 @@
               "market_tone": "volatile",
               "change_pct": -1.1644,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.2%",
               "market_range_pct": 4.0538,
@@ -11967,6 +12155,7 @@
               "market_tone": "volatile",
               "change_pct": -1.1644,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.2%",
               "market_range_pct": 4.0538,
@@ -12143,6 +12332,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -12216,9 +12411,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -12278,6 +12473,10 @@
               "n_tracked": 5,
               "avg_change_pct": 0.8607,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +0.9%",
               "impact_label": "Low",
@@ -12386,6 +12585,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -12459,9 +12664,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -12677,6 +12882,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -12750,9 +12961,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -12812,6 +13023,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.5541,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1.6%",
               "impact_label": "Medium",
@@ -12920,6 +13135,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -12993,9 +13214,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -13279,6 +13500,7 @@
               "market_tone": "volatile",
               "change_pct": -1.1644,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.2%",
               "market_range_pct": 4.0538,
@@ -13455,6 +13677,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -13528,9 +13756,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -13590,6 +13818,10 @@
               "n_tracked": 5,
               "avg_change_pct": 0.8607,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +0.9%",
               "impact_label": "Low",
@@ -13698,6 +13930,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -13771,9 +14009,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -13989,6 +14227,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -14062,9 +14306,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -14124,6 +14368,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.5541,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1.6%",
               "impact_label": "Medium",
@@ -14232,6 +14480,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -14305,9 +14559,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -14611,6 +14865,7 @@
               "market_tone": "volatile",
               "change_pct": -2.6363,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.6%",
               "market_range_pct": 4.7493,
@@ -14824,6 +15079,7 @@
               "market_tone": "volatile",
               "change_pct": -2.6363,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.6%",
               "market_range_pct": 4.7493,
@@ -15037,6 +15293,7 @@
               "market_tone": "volatile",
               "change_pct": -2.6363,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.6%",
               "market_range_pct": 4.7493,
@@ -15273,6 +15530,7 @@
               "market_tone": "mixed",
               "change_pct": -0.0006,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0%",
               "market_range_pct": 3.9193,
@@ -15486,6 +15744,7 @@
               "market_tone": "mixed",
               "change_pct": -0.0006,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0%",
               "market_range_pct": 3.9193,
@@ -15699,6 +15958,7 @@
               "market_tone": "mixed",
               "change_pct": -0.0006,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0%",
               "market_range_pct": 3.9193,
@@ -15938,6 +16198,7 @@
               "market_tone": "volatile",
               "change_pct": 5.679,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +5.7%",
               "market_range_pct": 7.8825,
@@ -16170,6 +16431,7 @@
               "market_tone": "volatile",
               "change_pct": 5.679,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +5.7%",
               "market_range_pct": 7.8825,
@@ -16334,6 +16596,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -16407,9 +16675,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -16467,6 +16735,10 @@
               "n_tracked": 5,
               "avg_change_pct": 2.9275,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +2.9%",
               "impact_label": "High",
@@ -16575,6 +16847,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -16648,9 +16926,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -16933,6 +17211,7 @@
               "market_tone": "volatile",
               "change_pct": 5.679,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +5.7%",
               "market_range_pct": 7.8825,
@@ -17097,6 +17376,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -17170,9 +17455,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -17230,6 +17515,10 @@
               "n_tracked": 5,
               "avg_change_pct": 2.9275,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +2.9%",
               "impact_label": "High",
@@ -17338,6 +17627,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -17411,9 +17706,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -17717,6 +18012,7 @@
               "market_tone": "volatile",
               "change_pct": -0.4008,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.4%",
               "market_range_pct": 5.3948,
@@ -17930,6 +18226,7 @@
               "market_tone": "volatile",
               "change_pct": -0.4008,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.4%",
               "market_range_pct": 5.3948,
@@ -18143,6 +18440,7 @@
               "market_tone": "volatile",
               "change_pct": -0.4008,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.4%",
               "market_range_pct": 5.3948,
@@ -18379,6 +18677,7 @@
               "market_tone": "volatile",
               "change_pct": -6.0666,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -6.1%",
               "market_range_pct": 9.8997,
@@ -18592,6 +18891,7 @@
               "market_tone": "volatile",
               "change_pct": -6.0666,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -6.1%",
               "market_range_pct": 9.8997,
@@ -18805,6 +19105,7 @@
               "market_tone": "volatile",
               "change_pct": -6.0666,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -6.1%",
               "market_range_pct": 9.8997,
@@ -19041,6 +19342,7 @@
               "market_tone": "volatile",
               "change_pct": -2.5941,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.6%",
               "market_range_pct": 6.0326,
@@ -19254,6 +19556,7 @@
               "market_tone": "volatile",
               "change_pct": -2.5941,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.6%",
               "market_range_pct": 6.0326,
@@ -19467,6 +19770,7 @@
               "market_tone": "volatile",
               "change_pct": -2.5941,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.6%",
               "market_range_pct": 6.0326,
@@ -19703,6 +20007,7 @@
               "market_tone": "volatile",
               "change_pct": -3.5296,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -3.5%",
               "market_range_pct": 5.9386,
@@ -19916,6 +20221,7 @@
               "market_tone": "volatile",
               "change_pct": -3.5296,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -3.5%",
               "market_range_pct": 5.9386,
@@ -20129,6 +20435,7 @@
               "market_tone": "volatile",
               "change_pct": -3.5296,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -3.5%",
               "market_range_pct": 5.9386,
@@ -20370,6 +20677,7 @@
               "market_tone": "volatile",
               "change_pct": -6.5911,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -6.6%",
               "market_range_pct": 8.3509,
@@ -20614,6 +20922,7 @@
               "market_tone": "volatile",
               "change_pct": -6.5911,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -6.6%",
               "market_range_pct": 8.3509,
@@ -20789,6 +21098,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -20862,9 +21177,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -20924,6 +21239,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.5819,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.6%",
               "impact_label": "High",
@@ -21032,6 +21351,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -21105,9 +21430,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -21322,6 +21647,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -21395,9 +21726,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -21457,6 +21788,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.2174,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.2%",
               "impact_label": "Low",
@@ -21565,6 +21900,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -21638,9 +21979,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -21924,6 +22265,7 @@
               "market_tone": "volatile",
               "change_pct": -6.5911,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -6.6%",
               "market_range_pct": 8.3509,
@@ -22099,6 +22441,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -22172,9 +22520,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -22234,6 +22582,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.5819,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.6%",
               "impact_label": "High",
@@ -22342,6 +22694,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -22415,9 +22773,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -22632,6 +22990,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -22705,9 +23069,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -22767,6 +23131,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.2174,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.2%",
               "impact_label": "Low",
@@ -22875,6 +23243,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -22948,9 +23322,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -23254,6 +23628,7 @@
               "market_tone": "volatile",
               "change_pct": -2.4545,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.5%",
               "market_range_pct": 5.034,
@@ -23467,6 +23842,7 @@
               "market_tone": "volatile",
               "change_pct": -2.4545,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.5%",
               "market_range_pct": 5.034,
@@ -23680,6 +24056,7 @@
               "market_tone": "volatile",
               "change_pct": -2.4545,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.5%",
               "market_range_pct": 5.034,
@@ -23915,6 +24292,7 @@
               "market_tone": "mixed",
               "change_pct": -0.5892,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.6%",
               "market_range_pct": 2.7778,
@@ -24124,6 +24502,7 @@
               "market_tone": "mixed",
               "change_pct": -0.5892,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.6%",
               "market_range_pct": 2.7778,
@@ -24333,6 +24712,7 @@
               "market_tone": "mixed",
               "change_pct": -0.5892,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.6%",
               "market_range_pct": 2.7778,
@@ -24563,6 +24943,7 @@
               "market_tone": "volatile",
               "change_pct": 0.812,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.8%",
               "market_range_pct": 4.1263,
@@ -24764,6 +25145,7 @@
               "market_tone": "volatile",
               "change_pct": 0.812,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.8%",
               "market_range_pct": 4.1263,
@@ -24965,6 +25347,7 @@
               "market_tone": "volatile",
               "change_pct": 0.812,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.8%",
               "market_range_pct": 4.1263,
@@ -25195,6 +25578,7 @@
               "market_tone": "mixed",
               "change_pct": 0.2314,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.2%",
               "market_range_pct": 2.9843,
@@ -25425,6 +25809,7 @@
               "market_tone": "mixed",
               "change_pct": 0.2314,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.2%",
               "market_range_pct": 2.9843,
@@ -25587,6 +25972,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -25660,9 +26051,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -25722,6 +26113,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.1679,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1.2%",
               "impact_label": "Low",
@@ -25830,6 +26225,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -25903,9 +26304,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -26188,6 +26589,7 @@
               "market_tone": "mixed",
               "change_pct": 0.2314,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.2%",
               "market_range_pct": 2.9843,
@@ -26350,6 +26752,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -26423,9 +26831,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -26485,6 +26893,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.1679,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1.2%",
               "impact_label": "Low",
@@ -26593,6 +27005,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -26666,9 +27084,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -26975,6 +27393,7 @@
               "market_tone": "mixed",
               "change_pct": -0.7373,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.7%",
               "market_range_pct": 3.6272,
@@ -27206,6 +27625,7 @@
               "market_tone": "mixed",
               "change_pct": -0.7373,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.7%",
               "market_range_pct": 3.6272,
@@ -27369,6 +27789,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -27442,9 +27868,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -27504,6 +27930,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.5493,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.5%",
               "impact_label": "Medium",
@@ -27612,6 +28042,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -27685,9 +28121,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -27971,6 +28407,7 @@
               "market_tone": "mixed",
               "change_pct": -0.7373,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.7%",
               "market_range_pct": 3.6272,
@@ -28134,6 +28571,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -28207,9 +28650,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -28269,6 +28712,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.5493,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.5%",
               "impact_label": "Medium",
@@ -28377,6 +28824,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -28450,9 +28903,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -28757,6 +29210,7 @@
               "market_tone": "risk_off",
               "change_pct": -1.6324,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.6%",
               "market_range_pct": 2.9619,
@@ -28970,6 +29424,7 @@
               "market_tone": "risk_off",
               "change_pct": -1.6324,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.6%",
               "market_range_pct": 2.9619,
@@ -29183,6 +29638,7 @@
               "market_tone": "risk_off",
               "change_pct": -1.6324,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.6%",
               "market_range_pct": 2.9619,
@@ -29419,6 +29875,7 @@
               "market_tone": "risk_off",
               "change_pct": -1.5754,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.6%",
               "market_range_pct": 3.137,
@@ -29632,6 +30089,7 @@
               "market_tone": "risk_off",
               "change_pct": -1.5754,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.6%",
               "market_range_pct": 3.137,
@@ -29845,6 +30303,7 @@
               "market_tone": "risk_off",
               "change_pct": -1.5754,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -1.6%",
               "market_range_pct": 3.137,
@@ -30079,6 +30538,7 @@
               "market_tone": "mixed",
               "change_pct": 0.3335,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.3%",
               "market_range_pct": 2.0113,
@@ -30284,6 +30744,7 @@
               "market_tone": "mixed",
               "change_pct": 0.3335,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.3%",
               "market_range_pct": 2.0113,
@@ -30489,6 +30950,7 @@
               "market_tone": "mixed",
               "change_pct": 0.3335,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.3%",
               "market_range_pct": 2.0113,
@@ -30717,6 +31179,7 @@
               "market_tone": "mixed",
               "change_pct": -0.5448,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.5%",
               "market_range_pct": 2.7557,
@@ -30922,6 +31385,7 @@
               "market_tone": "mixed",
               "change_pct": -0.5448,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.5%",
               "market_range_pct": 2.7557,
@@ -31127,6 +31591,7 @@
               "market_tone": "mixed",
               "change_pct": -0.5448,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -0.5%",
               "market_range_pct": 2.7557,
@@ -31362,6 +31827,7 @@
               "market_tone": "volatile",
               "change_pct": 1.6051,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +1.6%",
               "market_range_pct": 5.6021,
@@ -31609,6 +32075,7 @@
               "market_tone": "volatile",
               "change_pct": 1.6051,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +1.6%",
               "market_range_pct": 5.6021,
@@ -31787,6 +32254,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -31860,9 +32333,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -31922,6 +32395,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.4171,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.4%",
               "impact_label": "High",
@@ -32030,6 +32507,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -32103,9 +32586,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -32321,6 +32804,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -32394,9 +32883,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -32456,6 +32945,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.9469,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1.9%",
               "impact_label": "High",
@@ -32564,6 +33057,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -32637,9 +33136,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -32925,6 +33424,7 @@
               "market_tone": "volatile",
               "change_pct": 1.6051,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +1.6%",
               "market_range_pct": 5.6021,
@@ -33103,6 +33603,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -33176,9 +33682,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -33238,6 +33744,10 @@
               "n_tracked": 5,
               "avg_change_pct": -1.4171,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: -1.4%",
               "impact_label": "High",
@@ -33346,6 +33856,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -33419,9 +33935,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -33637,6 +34153,12 @@
                   "Volume ×",
                   "Range Position"
                 ],
+                "labels": {
+                  "window_change": "Window Change",
+                  "peak_15m": "Peak 15m",
+                  "volume": "Volume ×",
+                  "range_position": "Range Position"
+                },
                 "rows": [
                   {
                     "symbol": "BTCUSDT",
@@ -33710,9 +34232,9 @@
                   }
                 ],
                 "highlight_glossary": [
-                  "Highlighted symbol or row = lead mover for this event window.",
-                  "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                  "These highlights are supporting diagnostics, not the main event headline."
+                  "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                  "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                  "Highlights are supporting diagnostics, not standalone headline metrics."
                 ]
               },
               "context_details_placeholder": "Public Context placeholder",
@@ -33772,6 +34294,10 @@
               "n_tracked": 5,
               "avg_change_pct": 1.9469,
               "avg_change_label": "Avg Change",
+              "table_window_change_label": "Window Change",
+              "peak_15m_label": "Peak 15m",
+              "volume_label": "Volume ×",
+              "range_position_label": "Range Position",
               "metric_label": "Avg Change",
               "metric_display": "Avg Change: +1.9%",
               "impact_label": "High",
@@ -33880,6 +34406,12 @@
                     "Volume ×",
                     "Range Position"
                   ],
+                  "labels": {
+                    "window_change": "Window Change",
+                    "peak_15m": "Peak 15m",
+                    "volume": "Volume ×",
+                    "range_position": "Range Position"
+                  },
                   "rows": [
                     {
                       "symbol": "BTCUSDT",
@@ -33953,9 +34485,9 @@
                     }
                   ],
                   "highlight_glossary": [
-                    "Highlighted symbol or row = lead mover for this event window.",
-                    "Highlighted Peak 15m cell = strongest 15-minute change inside the event window.",
-                    "These highlights are supporting diagnostics, not the main event headline."
+                    "Highlighted symbol or row marks the strongest contributor in the evidence window.",
+                    "Highlighted Peak 15m cell marks the strongest 15-minute change inside the evidence window.",
+                    "Highlights are supporting diagnostics, not standalone headline metrics."
                   ]
                 },
                 "context_details_placeholder": "Public Context placeholder",
@@ -34261,6 +34793,7 @@
               "market_tone": "risk_off",
               "change_pct": -2.8677,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.9%",
               "market_range_pct": 3.472,
@@ -34474,6 +35007,7 @@
               "market_tone": "risk_off",
               "change_pct": -2.8677,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.9%",
               "market_range_pct": 3.472,
@@ -34687,6 +35221,7 @@
               "market_tone": "risk_off",
               "change_pct": -2.8677,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: -2.9%",
               "market_range_pct": 3.472,
@@ -34922,6 +35457,7 @@
               "market_tone": "mixed",
               "change_pct": 0.4901,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.5%",
               "market_range_pct": 2.4229,
@@ -35131,6 +35667,7 @@
               "market_tone": "mixed",
               "change_pct": 0.4901,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.5%",
               "market_range_pct": 2.4229,
@@ -35340,6 +35877,7 @@
               "market_tone": "mixed",
               "change_pct": 0.4901,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.5%",
               "market_range_pct": 2.4229,
@@ -35569,6 +36107,7 @@
               "market_tone": "quiet",
               "change_pct": 0.3508,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.4%",
               "market_range_pct": 1.9111,
@@ -35766,6 +36305,7 @@
               "market_tone": "quiet",
               "change_pct": 0.3508,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.4%",
               "market_range_pct": 1.9111,
@@ -35963,6 +36503,7 @@
               "market_tone": "quiet",
               "change_pct": 0.3508,
               "change_label": "24h Change",
+              "daily_change_label": "24h Change",
               "metric_label": "24h Change",
               "metric_display": "24h Change: +0.4%",
               "market_range_pct": 1.9111,
@@ -36330,11 +36871,13 @@
     ]
   },
   "glossary": {
-    "avg_change": "Avg Change is the median change of participating symbols across the evidence window.",
+    "avg_change": "Avg Change is the median or average change of participating symbols across the evidence window.",
     "window_change": "Window Change is one symbol's change across the evidence window.",
-    "peak_15m": "Peak 15m is the strongest single 15-minute change inside the event window.",
-    "lead_mover": "Lead mover is the symbol with the strongest event-window contribution, highlighted in the table.",
-    "range_position": "Range Position shows where the event sits relative to the recent 24h high/low range.",
+    "peak_15m": "Peak 15m is the strongest single 15-minute change inside the evidence window.",
+    "lead_mover_highlight": "Highlighted symbol or row marks the strongest contributor in the event window.",
+    "peak_15m_highlight": "Highlighted Peak 15m cell marks the strongest 15-minute change inside the window.",
+    "range_position": "Range Position shows where the event sits relative to the recent 24h high-low range. It is descriptive, not a trading signal.",
+    "evidence_window": "Evidence window is the candles used as event evidence, not a single timestamp.",
     "daily_overview": "Daily Overview is a full UTC-day context summary.",
     "signal_event": "Signal Event is a compact evidence-window anomaly.",
     "show_more_hide": "Show more and Hide expand details inside one Daily Overview or Signal Event section.",

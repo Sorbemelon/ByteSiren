@@ -142,7 +142,15 @@ function marketTone(value) {
 }
 
 function rangePositionLabel(value) {
-  return String(value || "inside_range").replace(/_/g, " ");
+  if (!value) return "—";
+  const labels = {
+    inside_range: "Inside range",
+    near_high: "Near high",
+    near_low: "Near low",
+    broke_high: "Broke high",
+    broke_low: "Broke low",
+  };
+  return labels[value] ?? "—";
 }
 
 function escapeHtml(value) {
@@ -490,40 +498,52 @@ function selectItem(id, options = {}) {
 
 function renderSymbolTable(item) {
   const rows = item.expanded.per_symbol_table?.rows ?? [];
+  const labels = item.expanded.per_symbol_table?.labels ?? {};
+  const windowChangeLabel =
+    labels.window_change ?? item.table_window_change_label ?? "Window Change";
+  const peak15mLabel = labels.peak_15m ?? item.peak_15m_label ?? "Peak 15m";
+  const volumeLabel = labels.volume ?? item.volume_label ?? "Volume ×";
+  const rangePositionTableLabel =
+    labels.range_position ?? item.range_position_label ?? "Range Position";
+
   return `
     <table class="small-table">
       <thead>
         <tr>
           <th>Symbol</th>
-          <th>Window Change</th>
-          <th>Peak 15m</th>
-          <th>Volume ×</th>
-          <th>Range Position</th>
+          <th>${escapeHtml(windowChangeLabel)}</th>
+          <th>${escapeHtml(peak15mLabel)}</th>
+          <th>${escapeHtml(volumeLabel)}</th>
+          <th>${escapeHtml(rangePositionTableLabel)}</th>
         </tr>
       </thead>
       <tbody>
         ${rows
           .map((row) => {
-            const rowClass = row.highlights?.lead_mover ? "row-highlight" : "";
+            const isLead = Boolean(row.highlights?.lead_mover);
+            const isPeak = Boolean(row.highlights?.strongest_peak_15m);
+            const rowClass = isLead ? "row-highlight" : "";
             const peakClass = row.highlights?.strongest_peak_15m
+              ? `cell-highlight${isLead && isPeak ? " combined-highlight" : ""}`
+              : "";
+            const symbolClass = isLead
               ? "cell-highlight"
               : "";
-            const symbolClass = row.highlights?.lead_mover
-              ? "cell-highlight"
-              : "";
+            const rangeLabel =
+              row.range_position_label ?? rangePositionLabel(row.range_position);
             return `<tr class="${rowClass}">
               <td class="${symbolClass}">${escapeHtml(row.symbol.replace("USDT", ""))}</td>
               <td>${pct(row.window_change_pct)}</td>
               <td class="${peakClass}">${pct(row.peak_15m_pct)}</td>
               <td>${Number(row.volume_x ?? 0).toFixed(1)}x</td>
-              <td>${escapeHtml(row.range_position_label ?? rangePositionLabel(row.range_position))}</td>
+              <td class="${rangeLabel === "—" ? "cell-muted" : ""}">${escapeHtml(rangeLabel)}</td>
             </tr>`;
           })
           .join("")}
       </tbody>
     </table>
     <div class="table-glossary">
-      Highlighted symbol/row = lead mover. Highlighted Peak 15m cell = strongest 15-minute change.
+      Highlighted symbol/row = strongest contributor in the evidence window. Highlighted Peak 15m cell = strongest 15-minute change. Range Position is descriptive, not a trading signal.
     </div>`;
 }
 

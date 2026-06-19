@@ -23,6 +23,22 @@ const FORBIDDEN_CONTROL_LABELS = [
   "Collapse day",
 ];
 
+const FORBIDDEN_VISIBLE_LABELS = [
+  "Avg Move",
+  "Window Move",
+  "Avg 15m",
+  "Source likelihood",
+];
+
+const ALLOWED_RANGE_LABELS = new Set([
+  "Inside range",
+  "Near high",
+  "Near low",
+  "Broke high",
+  "Broke low",
+  "—",
+]);
+
 function publicLabelText(value) {
   return JSON.stringify(value)
     .replace(/window_move_pct|market_24h_move_pct|top_symbol_moves/g, "")
@@ -177,6 +193,16 @@ test("public labels use Avg Change, 24h Change, and Window Change", async () => 
   assert.ok(overviews.length > 0);
   assert.ok(signals.every((item) => item.avg_change_label === "Avg Change"));
   assert.ok(overviews.every((item) => item.change_label === "24h Change"));
+  assert.ok(overviews.every((item) => item.daily_change_label === "24h Change"));
+  assert.ok(
+    signals.every(
+      (item) =>
+        item.table_window_change_label === "Window Change" &&
+        item.peak_15m_label === "Peak 15m" &&
+        item.volume_label === "Volume ×" &&
+        item.range_position_label === "Range Position",
+    ),
+  );
   assert.ok(
     signals.every((item) =>
       item.expanded.per_symbol_table.columns.includes("Window Change"),
@@ -185,8 +211,20 @@ test("public labels use Avg Change, 24h Change, and Window Change", async () => 
   assert.ok(
     signals.every(
       (item) =>
+        item.expanded.per_symbol_table.columns.includes("Peak 15m") &&
         item.expanded.per_symbol_table.columns.includes("Range Position") &&
+        item.expanded.per_symbol_table.columns.includes("Volume ×") &&
         !item.expanded.per_symbol_table.columns.includes("Notes"),
+    ),
+  );
+  assert.ok(
+    signals.every(
+      (item) =>
+        item.expanded.per_symbol_table.labels.window_change ===
+          "Window Change" &&
+        item.expanded.per_symbol_table.labels.peak_15m === "Peak 15m" &&
+        item.expanded.per_symbol_table.labels.range_position ===
+          "Range Position",
     ),
   );
 });
@@ -219,10 +257,31 @@ test("range position and table highlight metadata are present", async () => {
     );
     assert.ok(
       signal.per_symbol_evidence.every(
-        (row) => row.range_position && row.range_position_label,
+        (row) =>
+          row.range_position_label &&
+          ALLOWED_RANGE_LABELS.has(row.range_position_label),
       ),
     );
+    assert.equal(
+      signal.expanded.per_symbol_table.rows.every((row) =>
+        ALLOWED_RANGE_LABELS.has(row.range_position_label),
+      ),
+      true,
+    );
   }
+});
+
+test("glossary explains evidence table wording without long theory", async () => {
+  const preview = await readJson("experiments/v0.2/outputs/grouped_feed_preview.json");
+  const glossary = preview.glossary;
+
+  assert.match(glossary.avg_change, /median or average change/i);
+  assert.match(glossary.window_change, /one symbol/i);
+  assert.match(glossary.peak_15m, /15-minute change/i);
+  assert.match(glossary.lead_mover_highlight, /highlighted symbol or row/i);
+  assert.match(glossary.peak_15m_highlight, /highlighted Peak 15m cell/i);
+  assert.match(glossary.range_position, /descriptive, not a trading signal/i);
+  assert.match(glossary.evidence_window, /not a single timestamp/i);
 });
 
 test("public labels avoid trading-style range wording", async () => {
@@ -234,6 +293,9 @@ test("public labels avoid trading-style range wording", async () => {
     glossary: preview.glossary,
   });
 
+  for (const label of FORBIDDEN_VISIBLE_LABELS) {
+    assert.equal(visibleText.includes(label.toLowerCase()), false);
+  }
   assert.equal(includesForbiddenLabel(visibleText, "support"), false);
   assert.equal(includesForbiddenLabel(visibleText, "resistance"), false);
   assert.equal(visibleText.includes("breakout signal"), false);
