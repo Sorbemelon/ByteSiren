@@ -9,7 +9,7 @@ import {
   writeJson,
 } from "./shared.mjs";
 import { DAILY_OVERVIEWS_PATH } from "./generate-daily-overviews.mjs";
-import { VNEXT_B_EVENTS_PATH } from "./run-vnext-b.mjs";
+import { VNEXT_C_EVENTS_PATH } from "./run-vnext-c.mjs";
 
 export const FEED_CONTRACT_V02_PATH = `${OUTPUTS_DIR}/feed_contract_v02.json`;
 
@@ -32,6 +32,9 @@ const SIGNAL_CLASSIFICATION_INSTRUCTIONS = [
   "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
   "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
   "Do not force a cause when sources are weak or missing.",
+  "Treat chart context as descriptive market structure, not proof of cause.",
+  "Range Position is descriptive market structure, not advice.",
+  "Use chart context to decide how hard to search and what route to try.",
   "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
   "Do not provide trading advice, forecasts, price targets, or recommendations.",
   "Return JSON only.",
@@ -54,9 +57,13 @@ export const RANGE_POSITION_LABELS = {
 };
 
 export const EVENT_RANGE_CONTEXT_LABELS = {
-  broad_break_high: "Broad broke high",
-  broad_break_low: "Broad broke low",
+  broad_break_high: "Range break",
+  broad_break_low: "Range break",
+  broad_broke_high: "Range break",
+  broad_broke_low: "Range break",
   mixed_range_position: "Mixed range position",
+  mostly_inside_range: "Inside range",
+  weak_range_context: "Inside range",
   inside_range: "Inside range",
 };
 
@@ -79,9 +86,16 @@ function displayTime(iso) {
   ).padStart(2, "0")} UTC`;
 }
 
+function displayWindowEndTime(iso) {
+  const end = new Date(Date.parse(iso) + 2);
+  return `${String(end.getUTCHours()).padStart(2, "0")}:${String(
+    end.getUTCMinutes(),
+  ).padStart(2, "0")} UTC`;
+}
+
 function displayWindow(startIso, endIso) {
   const start = displayTime(startIso).replace(" UTC", "");
-  return `${start}-${displayTime(endIso)}`;
+  return `${start}-${displayWindowEndTime(endIso)}`;
 }
 
 function directionLabel(direction) {
@@ -93,6 +107,24 @@ function directionLabel(direction) {
 function signPct(value, digits = 1) {
   const rounded = roundNumber(value, digits);
   return `${rounded >= 0 ? "+" : ""}${rounded}%`;
+}
+
+function evidenceBarCount(event) {
+  const diagnosticCount = Number(event.diagnostics?.evidence_bar_count);
+  if (Number.isFinite(diagnosticCount) && diagnosticCount > 0) {
+    return diagnosticCount;
+  }
+
+  return Math.max(1, Math.round(Number(event.duration_min ?? 15) / 15));
+}
+
+function candleCountLabel(count) {
+  return `${count} ${count === 1 ? "candle" : "candles"}`;
+}
+
+function evidenceWindowDisplay(event) {
+  const bars = evidenceBarCount(event);
+  return `${displayWindow(event.window_start, event.window_end)} - ${event.duration_min} min - ${candleCountLabel(bars)}`;
 }
 
 function peakMoveForSymbol(event, symbol) {
@@ -125,11 +157,24 @@ function tableRows(event) {
       : "\u2014",
     prev_24h_high: row.prev_24h_high ?? null,
     prev_24h_low: row.prev_24h_low ?? null,
+    range_break_direction: row.range_break_direction ?? "none",
+    range_break_type: row.range_break_type ?? "none",
+    range_break_confirmed: Boolean(row.range_break_confirmed),
+    range_break_pct: row.range_break_pct ?? 0,
+    range_break_strength: row.range_break_strength ?? 0,
+    distance_to_range_high_pct: row.distance_to_range_high_pct ?? null,
+    distance_to_range_low_pct: row.distance_to_range_low_pct ?? null,
     highlights: {
       lead_mover: leadSymbols.has(row.symbol),
       strongest_peak_15m: peakSymbols.has(row.symbol),
     },
   }));
+}
+
+function publicDiagnostics(event) {
+  const { per_symbol_chart_context: _perSymbolChartContext, ...diagnostics } =
+    event.diagnostics ?? {};
+  return diagnostics;
 }
 
 export function signalClaudePayload(event) {
@@ -141,7 +186,10 @@ export function signalClaudePayload(event) {
       start: event.window_start,
       end: event.window_end,
       duration_min: event.duration_min,
+      evidence_bar_count: evidenceBarCount(event),
+      display: evidenceWindowDisplay(event),
     },
+    evidence_bar_count: evidenceBarCount(event),
     direction: event.direction,
     signals_count: event.signals_count,
     n_tracked: event.n_tracked,
@@ -150,6 +198,15 @@ export function signalClaudePayload(event) {
     signal_strength: event.event_strength_label,
     signal_strength_score: roundNumber(event.signal_strength_score, 4),
     event_range_context: event.event_range_context,
+    chart_context_label: event.chart_context_label,
+    chart_context_score: event.chart_context_score,
+    event_story_type: event.event_story_type,
+    trend_context: event.trend_context,
+    momentum_context: event.momentum_context,
+    momentum_type: event.momentum_type,
+    volatility_context: event.volatility_context,
+    chart_context_reasons: event.chart_context_reasons,
+    chart_context_warnings: event.chart_context_warnings,
     source_route_hint: event.source_route_hint,
     per_symbol_window_evidence: tableRows(event),
     table_highlights: event.table_highlights,
@@ -180,6 +237,8 @@ export function dailyClaudePayload(overview, daySignalEvents) {
       avg_change_pct: event.window_move_pct,
       impact_label: event.event_strength_label,
       range_context: event.event_range_context,
+      chart_context_label: event.chart_context_label,
+      event_story_type: event.event_story_type,
       source_route_hint: event.source_route_hint,
     })),
     source_query_hints: overview.source_query_hints,
@@ -189,6 +248,8 @@ export function dailyClaudePayload(overview, daySignalEvents) {
 
 function signalItem(event) {
   const cardId = `card_${event.event_id}`;
+  const bars = evidenceBarCount(event);
+  const evidenceDisplay = evidenceWindowDisplay(event);
 
   return {
     item_type: "signal_event",
@@ -196,6 +257,12 @@ function signalItem(event) {
     date_utc: event.window_start.slice(0, 10),
     display_time: displayTime(event.window_start),
     display_window: displayWindow(event.window_start, event.window_end),
+    evidence_window_label: "Evidence window",
+    evidence_window_display: evidenceDisplay,
+    evidence_bar_count: bars,
+    evidence_candle_count_label: candleCountLabel(bars),
+    duration_label: "Duration",
+    duration_display: `${event.duration_min} min`,
     direction: event.direction,
     direction_label: directionLabel(event.direction),
     signals_count: event.signals_count,
@@ -213,6 +280,15 @@ function signalItem(event) {
     event_range_context: event.event_range_context,
     event_range_context_label:
       EVENT_RANGE_CONTEXT_LABELS[event.event_range_context] ?? "Inside range",
+    chart_context_score: roundNumber(event.chart_context_score ?? 0, 4),
+    chart_context_label: event.chart_context_label ?? "Weak chart context",
+    event_story_type: event.event_story_type ?? "weak_chart_context",
+    trend_context: event.trend_context ?? null,
+    momentum_context: event.momentum_context ?? null,
+    momentum_type: event.momentum_type ?? null,
+    volatility_context: event.volatility_context ?? null,
+    chart_context_reasons: event.chart_context_reasons ?? [],
+    chart_context_warnings: event.chart_context_warnings ?? [],
     publish_candidate: event.publish_candidate,
     public_context_status: "placeholder_pending_claude",
     sources: [],
@@ -221,6 +297,8 @@ function signalItem(event) {
       start: event.window_start,
       end: event.window_end,
       duration_min: event.duration_min,
+      evidence_bar_count: bars,
+      display: evidenceDisplay,
     },
     chart: {
       chart_highlight_type: "event_window",
@@ -259,11 +337,23 @@ function signalItem(event) {
       },
       context_details_placeholder: "Public Context placeholder",
       sources_placeholder: [],
-      diagnostics: event.diagnostics,
+      diagnostics: publicDiagnostics(event),
+      chart_context_details: {
+        chart_context_score: roundNumber(event.chart_context_score ?? 0, 4),
+        chart_context_label: event.chart_context_label ?? "Weak chart context",
+        event_story_type: event.event_story_type ?? "weak_chart_context",
+        trend_context: event.trend_context ?? null,
+        momentum_context: event.momentum_context ?? null,
+        volatility_context: event.volatility_context ?? null,
+        event_range_context: event.event_range_context,
+        reasons: event.chart_context_reasons ?? [],
+        warnings: event.chart_context_warnings ?? [],
+      },
       show_peak_details: event.show_peak_details,
     },
     lead_mover_symbol: event.table_highlights?.lead_mover_symbol ?? null,
-    strongest_peak_symbol: event.table_highlights?.strongest_peak_symbol ?? null,
+    strongest_peak_symbol:
+      event.table_highlights?.strongest_peak_symbol ?? null,
     highlight_cells: event.table_highlights?.highlight_cells ?? [],
     show_peak_details: event.show_peak_details,
     claude_payload: signalClaudePayload(event),
@@ -327,7 +417,9 @@ function itemSortTime(item) {
 }
 
 function latestSignalForDay(dayEvents) {
-  return [...dayEvents].sort((a, b) => b.window_start.localeCompare(a.window_start))[0];
+  return [...dayEvents].sort((a, b) =>
+    b.window_start.localeCompare(a.window_start),
+  )[0];
 }
 
 function sectionDetailsState(dayGroups) {
@@ -346,6 +438,7 @@ export function buildFeedContract({
   dailyOverviews,
   signalEvents,
   now = new Date(),
+  detectorVersion = "vnext_c",
 }) {
   const currentUtcDay = now.toISOString().slice(0, 10);
   const publicSignals = signalEvents
@@ -367,14 +460,8 @@ export function buildFeedContract({
         isCurrentUtcDay && latestSignal ? latestSignal.event_id : dailyItem.id;
       const hiddenCount = Math.max(0, items.length - 1);
       const hasExtraItems = hiddenCount > 0;
-      const expandedControlLabel = dayPostControlLabel(
-        hiddenCount,
-        "Collapse",
-      );
-      const collapsedControlLabel = dayPostControlLabel(
-        hiddenCount,
-        "Expand",
-      );
+      const expandedControlLabel = dayPostControlLabel(hiddenCount, "Collapse");
+      const collapsedControlLabel = dayPostControlLabel(hiddenCount, "Expand");
 
       return {
         day_post_id: `day_${overview.date_utc}`,
@@ -405,6 +492,10 @@ export function buildFeedContract({
   return {
     ok: true,
     updated_at: now.toISOString(),
+    detector_version: detectorVersion,
+    chart_context_enabled: signalEvents.some((event) =>
+      Number.isFinite(event.chart_context_score),
+    ),
     range_days: 30,
     grouping: "utc_day",
     day_groups: dayGroups,
@@ -420,6 +511,14 @@ export function buildFeedContract({
       global_control_label_when_collapsed: "Expand days",
       possible_global_control_labels: ["Expand days", "Collapse days"],
     },
+    preview_diagnostics: {
+      detector_version: detectorVersion,
+      public_signal_count: publicSignals.length,
+      audit_event_count: auditOnly.length,
+      chart_context_enabled: signalEvents.some((event) =>
+        Number.isFinite(event.chart_context_score),
+      ),
+    },
   };
 }
 
@@ -427,9 +526,17 @@ export async function runFeedContract(
   options,
   { now = new Date(), logger = console } = {},
 ) {
-  const dailyOverviews = (await readJson(options.dailyOverviewPath)).items ?? [];
-  const signalEvents = (await readJson(options.signalEventsPath)).events ?? [];
-  const contract = buildFeedContract({ dailyOverviews, signalEvents, now });
+  const dailyOverviews =
+    (await readJson(options.dailyOverviewPath)).items ?? [];
+  const signalPayload = await readJson(options.signalEventsPath);
+  const signalEvents = signalPayload.events ?? [];
+  const detectorVersion = signalPayload.detector ?? "vnext_c";
+  const contract = buildFeedContract({
+    dailyOverviews,
+    signalEvents,
+    now,
+    detectorVersion,
+  });
 
   await writeJson(options.outputPath, contract);
   logger.log(
@@ -442,7 +549,7 @@ export async function runFeedContract(
 export function parseArgs(argv = process.argv.slice(2)) {
   return {
     dailyOverviewPath: readOption(argv, "--daily") ?? DAILY_OVERVIEWS_PATH,
-    signalEventsPath: readOption(argv, "--events") ?? VNEXT_B_EVENTS_PATH,
+    signalEventsPath: readOption(argv, "--events") ?? VNEXT_C_EVENTS_PATH,
     outputPath: readOption(argv, "--output") ?? FEED_CONTRACT_V02_PATH,
   };
 }

@@ -15,8 +15,6 @@ const CHART_PREVIEW_DATA_DIR = path.join(CHART_PREVIEW_DIR, "data");
 const EXPECTED_COUNTS = {
   dayGroups: 31,
   dailyOverviews: 31,
-  publicSignals: 14,
-  auditEvents: 11,
   candleSymbols: 5,
 };
 
@@ -26,17 +24,26 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "function renderDailySection",
   "function renderSignalSection",
   "function renderAuditCard",
+  "function drawAllSymbolsChart",
   "function resetSelectionState",
   "function selectionTypeForItem",
   "function scrollPendingSelectionIntoView",
   "data-day-post-toggle",
   "feed-diagnostics",
   "Preview data loaded:",
+  "ALL_SYMBOL_VALUE",
+  "SYMBOL_COLORS",
+  "normalized % change",
+  "detector_version",
+  "chart_context_enabled",
+  "Chart context",
+  "Evidence window",
   "Daily Overview",
   "Signal Event",
   "24h Change",
   "Avg Change",
   "Window Change",
+  "candles",
   "Peak 15m",
   "Range Position",
   "Volume",
@@ -275,6 +282,14 @@ async function runSmoke() {
     "index.html or preview.js must reference a preview data source",
   );
   assert.ok(
+    indexHtml.includes('<option value="ALL">All</option>'),
+    "index.html must expose the all-symbol chart option",
+  );
+  assert.ok(
+    indexHtml.includes('<option value="BTCUSDT" selected>BTC</option>'),
+    "BTC must remain the default chart selection",
+  );
+  assert.ok(
     previewJs.includes("__BYTESIREN_V02_PREVIEW__"),
     "preview.js must try the direct-file-safe global bundle",
   );
@@ -308,10 +323,20 @@ async function runSmoke() {
     EXPECTED_COUNTS.dayGroups,
   );
   assertDayPostCollapseContract(feedContract, groupedPreview);
-  assert.equal(signals.length, EXPECTED_COUNTS.publicSignals);
+  assert.equal(
+    signals.length,
+    feedContract.preview_diagnostics.public_signal_count,
+  );
   assert.equal(overviews.length, EXPECTED_COUNTS.dailyOverviews);
-  assert.equal(auditEvents.count, EXPECTED_COUNTS.auditEvents);
+  assert.equal(
+    auditEvents.count,
+    feedContract.preview_diagnostics.audit_event_count,
+  );
   assert.equal(candleSymbols.length, EXPECTED_COUNTS.candleSymbols);
+  assert.equal(feedContract.detector_version, "vnext_c");
+  assert.equal(feedContract.chart_context_enabled, true);
+  assert.equal(groupedPreview.detector_version, "vnext_c");
+  assert.equal(groupedPreview.chart_context_enabled, true);
   assertLatestItemsExist(feedContract);
   assert.ok(
     signals.some((item) => item.chart?.chart_highlight_type === "event_window"),
@@ -333,13 +358,28 @@ async function runSmoke() {
     signals.every(
       (item) =>
         item.display_window &&
+        item.evidence_window_label === "Evidence window" &&
+        item.evidence_window_display?.includes("candles") &&
+        item.evidence_window?.display?.includes("candles") &&
+        Number(item.evidence_bar_count) >= 2 &&
         item.avg_change_label === "Avg Change" &&
+        item.chart_context_label &&
+        Number.isFinite(item.chart_context_score) &&
+        item.event_story_type &&
         item.table_window_change_label === "Window Change" &&
         item.peak_15m_label === "Peak 15m" &&
         item.range_position_label === "Range Position" &&
         item.expanded?.per_symbol_table?.rows?.length,
     ),
     "signal cards must have visible windows, Avg Change labels, and table rows",
+  );
+  assert.ok(
+    signals.every(
+      (item) =>
+        item.expanded?.diagnostics?.evidence_bar_count >= 2 ||
+        item.evidence_bar_count >= 2,
+    ),
+    "public signal cards must represent multi-candle evidence windows",
   );
   assert.ok(
     overviews.every((item) => item.daily_change_label === "24h Change"),

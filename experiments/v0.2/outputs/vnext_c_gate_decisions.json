@@ -1,0 +1,1278 @@
+{
+  "generated_at": "2026-06-19T17:54:56.069Z",
+  "detector": "vnext_c",
+  "publish_gate_version": "vnext_c_chart_context",
+  "detected_event_count": 28,
+  "publish_candidate_count": 5,
+  "audit_event_count": 23,
+  "decisions": [
+    {
+      "event_id": "vnext_c_390c63ce_20260521t1700",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-21T17:00:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-21T17:00:00.000Z",
+        "end": "2026-05-21T17:29:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.2855,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 81.57,
+      "chart_context_label": "Strong chart context",
+      "event_story_type": "inside_range_impulse_up",
+      "event_range_context": "weak_range_context",
+      "trend_context": {
+        "trend_context": "trend_mixed",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "building"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.0927,
+        "prior_4h_move_pct_median": 0.1538,
+        "post_window_move_pct_median": -0.1425,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "impulse",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "momentum_impulse",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_a838e493_20260522t1830",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-22T18:30:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-22T18:30:00.000Z",
+        "end": "2026-05-22T19:44:59.998Z",
+        "duration_min": 75
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -1.2917,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.3754,
+        "prior_4h_move_pct_median": -0.0886,
+        "post_window_move_pct_median": 0.306,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "impulse",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_impulse",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_c9683d2a_20260522t2315",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-22T23:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-22T23:15:00.000Z",
+        "end": "2026-05-22T23:59:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.545,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 75.67,
+      "chart_context_label": "Strong chart context",
+      "event_story_type": "inside_range_impulse_down",
+      "event_range_context": "weak_range_context",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.1294,
+        "prior_4h_move_pct_median": -0.0372,
+        "post_window_move_pct_median": -0.0553,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "no_clear_momentum",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "trend_aligned",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_60319648_20260523t2030",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-23T20:30:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-23T20:30:00.000Z",
+        "end": "2026-05-23T20:59:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.9469,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 99,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_up",
+      "event_range_context": "broad_broke_high",
+      "trend_context": {
+        "trend_context": "trend_up",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "up",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.0354,
+        "prior_4h_move_pct_median": 0.7298,
+        "post_window_move_pct_median": -0.8498,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_d38f7b57_20260524t2115",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-24T21:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-24T21:15:00.000Z",
+        "end": "2026-05-24T21:44:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.8676,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "weak"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.0153,
+        "prior_4h_move_pct_median": -0.1651,
+        "post_window_move_pct_median": 1.1165,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_cca96e5f_20260526t1015",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-26T10:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-26T10:15:00.000Z",
+        "end": "2026-05-26T10:44:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.0788,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 89.19,
+      "chart_context_label": "Volatility expansion",
+      "event_story_type": "volatility_expansion_up",
+      "event_range_context": "mostly_inside_range",
+      "trend_context": {
+        "trend_context": "trend_mixed",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "weak"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.0828,
+        "prior_4h_move_pct_median": -0.0274,
+        "post_window_move_pct_median": -0.2452,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "impulse",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "momentum_impulse",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_6be351f0_20260527t2130",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-27T21:30:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-27T21:30:00.000Z",
+        "end": "2026-05-27T21:59:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.9707,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_mixed",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.202,
+        "prior_4h_move_pct_median": 0.2563,
+        "post_window_move_pct_median": 0.1786,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "impulse",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
+      "chart_context_reasons": [
+        "broad_range_break",
+        "momentum_impulse",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_ccfd0579_20260528t0315",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-28T03:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-28T03:15:00.000Z",
+        "end": "2026-05-28T04:29:59.998Z",
+        "duration_min": 75
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -1.6669,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.1868,
+        "prior_4h_move_pct_median": -0.2664,
+        "post_window_move_pct_median": 0.2432,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "continuation",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_continuation",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_fc005a7c_20260529t1415",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-29T14:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-29T14:15:00.000Z",
+        "end": "2026-05-29T14:44:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.7148,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 59.37,
+      "chart_context_label": "Moderate chart context",
+      "event_story_type": "inside_range_impulse_down",
+      "event_range_context": "weak_range_context",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.0246,
+        "prior_4h_move_pct_median": -0.8289,
+        "post_window_move_pct_median": 1.6669,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "ordinary_volatility",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "trend_aligned",
+        "momentum_whipsaw",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_a2a441d3_20260529t1500",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-05-29T15:00:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-29T15:00:00.000Z",
+        "end": "2026-05-29T15:29:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.1684,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 93.79,
+      "chart_context_label": "Relief / reversal",
+      "event_story_type": "relief_reversal_up",
+      "event_range_context": "mostly_inside_range",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "trend_reversal_attempt",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.1138,
+        "prior_4h_move_pct_median": -0.706,
+        "post_window_move_pct_median": -0.0484,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "reversal",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "relief_or_reversal_context",
+        "momentum_reversal",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_1d67cb8b_20260601t0200",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-01T02:00:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-01T02:00:00.000Z",
+        "end": "2026-06-01T02:44:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.8949,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 86.87,
+      "chart_context_label": "Relief / reversal",
+      "event_story_type": "relief_reversal_up",
+      "event_range_context": "mostly_inside_range",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "trend_reversal_attempt",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.7044,
+        "prior_4h_move_pct_median": -0.846,
+        "post_window_move_pct_median": 0.1051,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "reversal",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "relief_or_reversal_context",
+        "momentum_reversal",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_0118579a_20260601t1515",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-01T15:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-01T15:15:00.000Z",
+        "end": "2026-06-01T15:59:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.4788,
+      "signals_count": 3,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 78.55,
+      "chart_context_label": "Momentum continuation",
+      "event_story_type": "momentum_continuation_down",
+      "event_range_context": "weak_range_context",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.1558,
+        "prior_4h_move_pct_median": -1.5908,
+        "post_window_move_pct_median": 0.1508,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "continuation",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "trend_aligned",
+        "momentum_continuation",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_7e978f69_20260602t0215",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-02T02:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-02T02:15:00.000Z",
+        "end": "2026-06-02T02:59:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.0276,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 81.25,
+      "chart_context_label": "Relief / reversal",
+      "event_story_type": "relief_reversal_up",
+      "event_range_context": "mostly_inside_range",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "trend_reversal_attempt",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "building"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.9848,
+        "prior_4h_move_pct_median": -1.3714,
+        "post_window_move_pct_median": 0.1574,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "reversal",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "relief_or_reversal_context",
+        "momentum_reversal",
+        "strong_direction_consistency"
+      ],
+      "chart_context_warnings": [
+        "weak_volume_confirmation"
+      ]
+    },
+    {
+      "event_id": "vnext_c_ad551489_20260602t2245",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-02T22:45:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-02T22:45:00.000Z",
+        "end": "2026-06-02T23:29:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -1.2174,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 97.12,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.9028,
+        "prior_4h_move_pct_median": -0.8988,
+        "post_window_move_pct_median": 0.6216,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_4fe98d48_20260604t0115",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-04T01:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-04T01:15:00.000Z",
+        "end": "2026-06-04T01:59:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -1.8986,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 99,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "weak"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.2242,
+        "prior_4h_move_pct_median": -1.8039,
+        "post_window_move_pct_median": 1.0054,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_6c394e07_20260604t0300",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-04T03:00:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-04T03:00:00.000Z",
+        "end": "2026-06-04T03:44:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 2.1407,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 92.21,
+      "chart_context_label": "Relief / reversal",
+      "event_story_type": "relief_reversal_up",
+      "event_range_context": "mostly_inside_range",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "trend_reversal_attempt",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 1.3721,
+        "prior_4h_move_pct_median": -2.4638,
+        "post_window_move_pct_median": 0.2317,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "reversal",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "relief_or_reversal_context",
+        "momentum_reversal",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_c54de378_20260605t0715",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-05T07:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-05T07:15:00.000Z",
+        "end": "2026-06-05T07:44:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 2.8182,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 96,
+      "chart_context_label": "Relief / reversal",
+      "event_story_type": "relief_reversal_up",
+      "event_range_context": "mostly_inside_range",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "trend_reversal_attempt",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.3124,
+        "prior_4h_move_pct_median": -3.3416,
+        "post_window_move_pct_median": -0.2807,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "reversal",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "relief_or_reversal_context",
+        "momentum_reversal",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_228a8778_20260607t0100",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-07T01:00:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-07T01:00:00.000Z",
+        "end": "2026-06-07T01:29:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.9891,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 88,
+      "chart_context_label": "Volatility expansion",
+      "event_story_type": "volatility_expansion_up",
+      "event_range_context": "weak_range_context",
+      "trend_context": {
+        "trend_context": "trend_flat",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "weak"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.054,
+        "prior_4h_move_pct_median": -0.1281,
+        "post_window_move_pct_median": -0.258,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "impulse",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "momentum_impulse",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_33798218_20260608t0100",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-08T01:00:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-08T01:00:00.000Z",
+        "end": "2026-06-08T01:29:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -1.3496,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 70.43,
+      "chart_context_label": "Moderate chart context",
+      "event_story_type": "inside_range_impulse_down",
+      "event_range_context": "mostly_inside_range",
+      "trend_context": {
+        "trend_context": "trend_up",
+        "trend_alignment": "trend_reversal_attempt",
+        "trend_direction_majority": "up",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.6427,
+        "prior_4h_move_pct_median": 2.765,
+        "post_window_move_pct_median": 0.756,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "relief_or_reversal_context",
+        "momentum_whipsaw",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_3e6276c8_20260609t1415",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-09T14:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-09T14:15:00.000Z",
+        "end": "2026-06-09T14:44:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -1.2106,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "weak"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.5476,
+        "prior_4h_move_pct_median": -1.1592,
+        "post_window_move_pct_median": 0.8312,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_56cdb3f3_20260611t1715",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-11T17:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-11T17:15:00.000Z",
+        "end": "2026-06-11T17:59:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 2.9119,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 93,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_up",
+      "event_range_context": "broad_broke_high",
+      "trend_context": {
+        "trend_context": "trend_mixed",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "weak"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.2756,
+        "prior_4h_move_pct_median": -0.387,
+        "post_window_move_pct_median": -0.4017,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "momentum_whipsaw",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_2b93a760_20260612t1445",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-12T14:45:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-12T14:45:00.000Z",
+        "end": "2026-06-12T15:14:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.3659,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 92.11,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_up",
+      "event_range_context": "broad_broke_high",
+      "trend_context": {
+        "trend_context": "trend_mixed",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.6775,
+        "prior_4h_move_pct_median": -0.3099,
+        "post_window_move_pct_median": -1.0982,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "momentum_whipsaw",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_22ab4df7_20260614t2115",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-14T21:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-14T21:15:00.000Z",
+        "end": "2026-06-14T21:44:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 2.3676,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_up",
+      "event_range_context": "broad_broke_high",
+      "trend_context": {
+        "trend_context": "trend_flat",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.3942,
+        "prior_4h_move_pct_median": 0.3255,
+        "post_window_move_pct_median": -0.0854,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "impulse",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
+      "chart_context_reasons": [
+        "broad_range_break",
+        "momentum_impulse",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_46379000_20260614t2345",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-14T23:45:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-14T23:45:00.000Z",
+        "end": "2026-06-15T00:14:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.6973,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 93.65,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_up",
+      "event_range_context": "broad_broke_high",
+      "trend_context": {
+        "trend_context": "trend_up",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "up",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.2181,
+        "prior_4h_move_pct_median": 3.2478,
+        "post_window_move_pct_median": -0.5302,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_a723bffc_20260615t0130",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-15T01:30:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-15T01:30:00.000Z",
+        "end": "2026-06-15T02:14:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.5188,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 67.94,
+      "chart_context_label": "Moderate chart context",
+      "event_story_type": "inside_range_impulse_up",
+      "event_range_context": "weak_range_context",
+      "trend_context": {
+        "trend_context": "trend_mixed",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.2707,
+        "prior_4h_move_pct_median": 0.1982,
+        "post_window_move_pct_median": -0.1286,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "no_clear_momentum",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "chart_context_reasons": [
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_16999967_20260615t1300",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-15T13:00:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-15T13:00:00.000Z",
+        "end": "2026-06-15T13:29:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.996,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 94.84,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_up",
+      "event_range_context": "broad_broke_high",
+      "trend_context": {
+        "trend_context": "trend_up",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "up",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.6683,
+        "prior_4h_move_pct_median": 2.2023,
+        "post_window_move_pct_median": -0.3923,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    },
+    {
+      "event_id": "vnext_c_6130787e_20260617t1915",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-17T19:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-17T19:15:00.000Z",
+        "end": "2026-06-17T19:44:59.998Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -2.1319,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_mixed",
+        "trend_alignment": "no_clear_trend",
+        "trend_direction_majority": "mixed",
+        "trend_strength_median": "strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.4236,
+        "prior_4h_move_pct_median": 0.4922,
+        "post_window_move_pct_median": 0.0568,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "impulse",
+      "volatility_context": "high_volatility_continuation",
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
+      "chart_context_reasons": [
+        "broad_range_break",
+        "momentum_impulse",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
+      "event_id": "vnext_c_1188cecc_20260618t1515",
+      "source_vnext_b_event_id": null,
+      "date_time": "2026-06-18T15:15:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-18T15:15:00.000Z",
+        "end": "2026-06-18T15:59:59.998Z",
+        "duration_min": 45
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -2.2573,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "weak"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.4474,
+        "prior_4h_move_pct_median": -0.7497,
+        "post_window_move_pct_median": 0.3697,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "whipsaw",
+      "volatility_context": "expansion_after_compression",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "noisy_range_only",
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_whipsaw",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [
+        "post_window_reversal_risk"
+      ]
+    }
+  ]
+}

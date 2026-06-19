@@ -58,7 +58,9 @@ function includesForbiddenControl(text, label) {
 }
 
 test("feed contract has 31 day groups and Daily Overview first", async () => {
-  const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
 
   assert.equal(contract.day_groups.length, 31);
   for (const group of contract.day_groups) {
@@ -70,18 +72,30 @@ test("feed contract has 31 day groups and Daily Overview first", async () => {
   }
 });
 
-test("public preview has 31 day posts and 14 public signal events", async () => {
-  const preview = await readJson("experiments/v0.2/outputs/grouped_feed_preview.json");
+test("public preview has 31 day posts and detector-derived public signal events", async () => {
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
+  const eventsPayload = await readJson(
+    "experiments/v0.2/outputs/vnext_c_events.json",
+  );
   const signals = previewSections(preview).filter(
     (item) => item.item_type === "signal_event",
   );
+  const expectedPublicSignals = eventsPayload.events.filter(
+    (event) => event.publish_candidate,
+  ).length;
 
+  assert.equal(preview.detector_version, "vnext_c");
+  assert.equal(preview.chart_context_enabled, true);
   assert.equal(preview.public_preview.day_posts.length, 31);
-  assert.equal(signals.length, 14);
+  assert.equal(signals.length, expectedPublicSignals);
 });
 
 test("global day controls replace latest-only mode", async () => {
-  const preview = await readJson("experiments/v0.2/outputs/grouped_feed_preview.json");
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
 
   assert.equal(preview.preview_state.days_expanded, true);
   assert.equal(preview.preview_state.global_control_label, "Collapse days");
@@ -112,16 +126,18 @@ test("global day controls replace latest-only mode", async () => {
 });
 
 test("day-post contract exposes collapsed and expanded metadata", async () => {
-  const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
 
   for (const group of contract.day_groups) {
     assert.ok(group.day_post_id);
     assert.ok(group.default_collapsed_item_id);
-    assert.equal(group.items.some((item) => item.id === group.default_collapsed_item_id), true);
     assert.equal(
-      group.hidden_item_count_when_collapsed,
-      group.item_count - 1,
+      group.items.some((item) => item.id === group.default_collapsed_item_id),
+      true,
     );
+    assert.equal(group.hidden_item_count_when_collapsed, group.item_count - 1);
     assert.equal(group.has_extra_items, group.item_count > 1);
     assert.deepEqual(group.visible_item_ids_when_collapsed, [
       group.default_collapsed_item_id,
@@ -131,14 +147,8 @@ test("day-post contract exposes collapsed and expanded metadata", async () => {
     if (group.item_count > 1) {
       const expandLabel = `+${group.hidden_item_count_when_collapsed} events · Expand post`;
       const collapseLabel = "Collapse post";
-      assert.equal(
-        group.day_post_control.expand_label,
-        expandLabel,
-      );
-      assert.equal(
-        group.day_post_control.collapse_label,
-        collapseLabel,
-      );
+      assert.equal(group.day_post_control.expand_label, expandLabel);
+      assert.equal(group.day_post_control.collapse_label, collapseLabel);
       assert.equal(group.collapsed_control_label, expandLabel);
       assert.equal(group.expanded_control_label, collapseLabel);
     } else {
@@ -151,7 +161,9 @@ test("day-post contract exposes collapsed and expanded metadata", async () => {
 });
 
 test("preview models collapsed and expanded visible sections per day", async () => {
-  const preview = await readJson("experiments/v0.2/outputs/grouped_feed_preview.json");
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
 
   for (const post of preview.public_preview.day_posts) {
     assert.equal(post.visible_sections_when_collapsed.length, 1);
@@ -175,7 +187,9 @@ test("preview models collapsed and expanded visible sections per day", async () 
 });
 
 test("section controls use Show more and Hide", async () => {
-  const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
 
   for (const item of contractItems(contract)) {
     assert.equal(item.expanded.section_control.collapsed_label, "Show more");
@@ -184,7 +198,9 @@ test("section controls use Show more and Hide", async () => {
 });
 
 test("public labels use Avg Change, 24h Change, and Window Change", async () => {
-  const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
   const items = contractItems(contract);
   const signals = items.filter((item) => item.item_type === "signal_event");
   const overviews = items.filter((item) => item.item_type === "daily_overview");
@@ -193,7 +209,9 @@ test("public labels use Avg Change, 24h Change, and Window Change", async () => 
   assert.ok(overviews.length > 0);
   assert.ok(signals.every((item) => item.avg_change_label === "Avg Change"));
   assert.ok(overviews.every((item) => item.change_label === "24h Change"));
-  assert.ok(overviews.every((item) => item.daily_change_label === "24h Change"));
+  assert.ok(
+    overviews.every((item) => item.daily_change_label === "24h Change"),
+  );
   assert.ok(
     signals.every(
       (item) =>
@@ -229,8 +247,70 @@ test("public labels use Avg Change, 24h Change, and Window Change", async () => 
   );
 });
 
+test("public signal cards expose multi-candle evidence windows", async () => {
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
+  const signals = contractItems(contract).filter(
+    (item) => item.item_type === "signal_event",
+  );
+  const signalSections = previewSections(preview).filter(
+    (section) => section.item_type === "signal_event",
+  );
+
+  assert.ok(signals.length > 0);
+  assert.ok(
+    signals.every(
+      (item) =>
+        item.evidence_window_label === "Evidence window" &&
+        item.evidence_window_display.includes("candles") &&
+        item.evidence_window.display.includes("candles") &&
+        item.evidence_bar_count >= 2 &&
+        item.evidence_window.evidence_bar_count >= 2,
+    ),
+  );
+  assert.ok(
+    signalSections.every(
+      (section) =>
+        section.collapsed_preview.evidence_window.includes("Evidence window") &&
+        section.collapsed_preview.evidence_window.includes("candles"),
+    ),
+  );
+});
+
+test("feed contract exposes vNext-C chart-context fields", async () => {
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
+  const signals = contractItems(contract).filter(
+    (item) => item.item_type === "signal_event",
+  );
+
+  assert.equal(contract.detector_version, "vnext_c");
+  assert.equal(contract.chart_context_enabled, true);
+  assert.ok(signals.length > 0);
+
+  for (const signal of signals) {
+    assert.equal(typeof signal.chart_context_label, "string");
+    assert.equal(Number.isFinite(signal.chart_context_score), true);
+    assert.equal(typeof signal.event_story_type, "string");
+    assert.ok(signal.trend_context);
+    assert.ok(signal.momentum_context);
+    assert.equal(typeof signal.volatility_context, "string");
+    assert.equal(typeof signal.event_range_context, "string");
+    assert.ok(Array.isArray(signal.chart_context_reasons));
+    assert.ok(Array.isArray(signal.chart_context_warnings));
+    assert.ok(signal.expanded.chart_context_details);
+  }
+});
+
 test("range position and table highlight metadata are present", async () => {
-  const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
   const signals = contractItems(contract).filter(
     (item) => item.item_type === "signal_event",
   );
@@ -272,7 +352,9 @@ test("range position and table highlight metadata are present", async () => {
 });
 
 test("glossary explains evidence table wording without long theory", async () => {
-  const preview = await readJson("experiments/v0.2/outputs/grouped_feed_preview.json");
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
   const glossary = preview.glossary;
 
   assert.match(glossary.avg_change, /median or average change/i);
@@ -285,8 +367,12 @@ test("glossary explains evidence table wording without long theory", async () =>
 });
 
 test("public labels avoid trading-style range wording", async () => {
-  const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
-  const preview = await readJson("experiments/v0.2/outputs/grouped_feed_preview.json");
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
   const visibleText = publicLabelText({
     contract,
     public_preview: preview.public_preview,
@@ -308,7 +394,9 @@ test("public labels avoid trading-style range wording", async () => {
 });
 
 test("chart model supports event/day windows and selection toggles", async () => {
-  const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
   const items = contractItems(contract);
   const signal = items.find((item) => item.item_type === "signal_event");
   const overview = items.find((item) => item.item_type === "daily_overview");
@@ -328,10 +416,19 @@ test("chart model supports event/day windows and selection toggles", async () =>
   assert.ok(Array.isArray(overview.chart.included_signal_event_ids));
 });
 
-test("audit file has exactly 11 non-public events", async () => {
-  const audit = await readJson("experiments/v0.2/outputs/non_public_audit_events.json");
+test("audit file count matches vNext-C non-public events", async () => {
+  const audit = await readJson(
+    "experiments/v0.2/outputs/non_public_audit_events.json",
+  );
+  const eventsPayload = await readJson(
+    "experiments/v0.2/outputs/vnext_c_events.json",
+  );
+  const expectedAuditCount = eventsPayload.events.filter(
+    (event) => !event.publish_candidate,
+  ).length;
 
-  assert.equal(audit.count, 11);
-  assert.equal(audit.items.length, 11);
+  assert.equal(audit.count, expectedAuditCount);
+  assert.equal(audit.items.length, expectedAuditCount);
   assert.ok(audit.items.every((item) => item.suppress_reason));
+  assert.ok(audit.items.every((item) => item.chart_context_label));
 });

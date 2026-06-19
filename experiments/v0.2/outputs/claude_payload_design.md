@@ -6,7 +6,12 @@ This is a local-only proposal for future prompt inputs. It does not change the p
 
 - Mode: `signal_event`.
 - Includes UTC date/time, evidence window start/end, direction, signals count, Avg Change, signal strength, Range Position, per-symbol Window Change, macro alignment, and source route hints.
+- Includes chart_context_label, event_story_type, trend_context, momentum_context, volatility_context, event_range_context, chart_context_reasons, and chart_context_warnings.
 - Includes table highlight metadata for lead mover and strongest Peak 15m diagnostics.
+- Chart context is descriptive market structure, not trading advice or cause proof.
+- Range Position is not support/resistance advice.
+- Claude should use chart context to decide how hard to search and what route to try.
+- If no source supports a cause, return No Clear Cause or Market Backdrop.
 - Peak 15m and lead mover are supporting diagnostics, not the main event headline.
 - Main event evidence is the evidence window, Avg Change, Signals, and Range Position.
 - Claude should not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.
@@ -14,7 +19,7 @@ This is a local-only proposal for future prompt inputs. It does not change the p
 - Source tags should map to Focused catalyst source, Likely cause source, Backdrop source, and Price check source.
 - Claude must not force a cause, provide trading advice, or return non-JSON prose.
 
-Current local payload count: 14
+Current local payload count: 5
 
 ## Daily Overview Payload
 

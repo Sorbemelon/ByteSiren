@@ -1,5 +1,14 @@
 const PREVIEW_DATA_ERROR =
   "Preview data could not load. Run: py -3.11 -m http.server 4177 -d experiments/v0.2/chart-preview";
+const ALL_SYMBOL_VALUE = "ALL";
+const DEFAULT_SYMBOLS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"];
+const SYMBOL_COLORS = {
+  BTCUSDT: "#f59e0b",
+  ETHUSDT: "#8b5cf6",
+  BNBUSDT: "#facc15",
+  SOLUSDT: "#14b8a6",
+  XRPUSDT: "#38bdf8",
+};
 
 const state = {
   mode:
@@ -133,6 +142,29 @@ function pct(value, digits = 1) {
   return `${Number(rounded) >= 0 ? "+" : ""}${rounded}%`;
 }
 
+function candleCountLabel(count) {
+  const value = Number(count || 0);
+  if (!Number.isFinite(value) || value <= 0) return "multi-candle window";
+  return `${value} ${value === 1 ? "candle" : "candles"}`;
+}
+
+function evidenceWindowSummary(item) {
+  if (item.evidence_window_display) return item.evidence_window_display;
+  if (item.evidence_window?.display) return item.evidence_window.display;
+
+  const duration = item.evidence_window?.duration_min ?? item.duration_min;
+  const bars =
+    item.evidence_bar_count ??
+    item.evidence_window?.evidence_bar_count ??
+    Math.max(1, Math.round(Number(duration || 15) / 15));
+
+  if (item.display_window && duration) {
+    return `${item.display_window} - ${duration} min - ${candleCountLabel(bars)}`;
+  }
+
+  return "Evidence window pending";
+}
+
 function displayDirection(direction) {
   if (direction === "observed_down") return "Observed Down";
   if (direction === "two_sided") return "Two-sided";
@@ -216,8 +248,12 @@ function updateDiagnostics() {
   if (!feedDiagnostics) return;
 
   const counts = previewCounts();
+  const detectorVersion = feedContract?.detector_version ?? "vnext_b";
+  const chartContext = feedContract?.chart_context_enabled
+    ? "chart context enabled"
+    : "chart context disabled";
   feedDiagnostics.classList.remove("is-error");
-  feedDiagnostics.textContent = `Preview data loaded: ${counts.days} days · ${counts.daily} daily overviews · ${counts.signals} signal events · ${counts.audit} audit events`;
+  feedDiagnostics.textContent = `Preview data loaded: detector ${detectorVersion} · ${counts.days} days · ${counts.daily} daily overviews · ${counts.signals} signal events · ${counts.audit} audit events · ${chartContext}`;
 }
 
 function syncModeButtons() {
@@ -226,8 +262,19 @@ function syncModeButtons() {
   });
 }
 
-function activeCandles() {
-  return (candles.candles_by_symbol[state.symbol] || []).map((candle) => ({
+function chartSymbols() {
+  const available = new Set(Object.keys(candles.candles_by_symbol ?? {}));
+  const defaults = DEFAULT_SYMBOLS.filter((symbol) => available.has(symbol));
+  return defaults.length ? defaults : Array.from(available).sort();
+}
+
+function symbolLabel(symbol) {
+  if (symbol === ALL_SYMBOL_VALUE) return "All";
+  return symbol.replace("USDT", "");
+}
+
+function symbolCandles(symbol) {
+  return (candles.candles_by_symbol[symbol] || []).map((candle) => ({
     time: Date.parse(candle.open_time),
     open_time: candle.open_time,
     open: Number(candle.open),
@@ -236,6 +283,10 @@ function activeCandles() {
     close: Number(candle.close),
     volume: Number(candle.quote_volume || candle.volume || 0),
   }));
+}
+
+function activeCandles() {
+  return symbolCandles(state.symbol);
 }
 
 function resizeCanvas() {
@@ -377,11 +428,142 @@ function drawActiveOverlays(plot) {
   }
 }
 
+function drawAllSymbolsChart(rect) {
+  const seriesBySymbol = chartSymbols()
+    .map((symbol) => ({
+      symbol,
+      series: symbolCandles(symbol),
+    }))
+    .filter(({ series }) => series.length > 1);
+
+  if (seriesBySymbol.length === 0) {
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "14px system-ui";
+    ctx.fillText("No candles for all-symbol chart.", 18, 30);
+    return;
+  }
+
+  const commonStart = Math.max(
+    ...seriesBySymbol.map(({ series }) => series[0].time),
+  );
+  const commonEnd = Math.min(
+    ...seriesBySymbol.map(({ series }) => series.at(-1).time),
+  );
+  const normalized = seriesBySymbol
+    .map(({ symbol, series }) => {
+      const commonSeries = series.filter(
+        (candle) => candle.time >= commonStart && candle.time <= commonEnd,
+      );
+      const baseClose = commonSeries[0]?.close;
+      if (!Number.isFinite(baseClose) || baseClose <= 0) {
+        return { symbol, points: [] };
+      }
+
+      return {
+        symbol,
+        points: commonSeries.map((candle) => ({
+          time: candle.time,
+          changePct: ((candle.close - baseClose) / baseClose) * 100,
+        })),
+      };
+    })
+    .filter(({ points }) => points.length > 1);
+
+  if (normalized.length === 0) {
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "14px system-ui";
+    ctx.fillText("No common candle range for all-symbol chart.", 18, 30);
+    return;
+  }
+
+  const allValues = normalized.flatMap(({ points }) =>
+    points.map((point) => point.changePct),
+  );
+  const minChange = Math.min(0, ...allValues);
+  const maxChange = Math.max(0, ...allValues);
+  const changePad = Math.max(0.5, (maxChange - minChange) * 0.08);
+  const low = minChange - changePad;
+  const high = maxChange + changePad;
+  const pad = { left: 52, right: 16, top: 24, bottom: 50 };
+  const plot = {
+    left: pad.left,
+    right: rect.width - pad.right,
+    top: pad.top,
+    bottom: rect.height - pad.bottom,
+    width: rect.width - pad.left - pad.right,
+    height: rect.height - pad.top - pad.bottom,
+  };
+
+  plot.xForTime = (time) => {
+    const ratio = (time - commonStart) / Math.max(1, commonEnd - commonStart);
+    return plot.left + Math.max(0, Math.min(1, ratio)) * plot.width;
+  };
+
+  const yForChange = (changePct) =>
+    plot.bottom -
+    ((changePct - low) / Math.max(0.0001, high - low)) * plot.height;
+
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.10)";
+  ctx.lineWidth = 1;
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "12px system-ui";
+  for (let i = 0; i <= 4; i += 1) {
+    const value = high - ((high - low) / 4) * i;
+    const y = yForChange(value);
+    ctx.beginPath();
+    ctx.moveTo(plot.left, y);
+    ctx.lineTo(plot.right, y);
+    ctx.stroke();
+    ctx.fillText(`${value >= 0 ? "+" : ""}${value.toFixed(1)}%`, 4, y + 4);
+  }
+
+  const zeroY = yForChange(0);
+  ctx.strokeStyle = "rgba(203, 213, 225, 0.28)";
+  ctx.beginPath();
+  ctx.moveTo(plot.left, zeroY);
+  ctx.lineTo(plot.right, zeroY);
+  ctx.stroke();
+
+  for (const { symbol, points } of normalized) {
+    ctx.strokeStyle = SYMBOL_COLORS[symbol] ?? "#cbd5e1";
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      const x = plot.xForTime(point.time);
+      const y = yForChange(point.changePct);
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  drawActiveOverlays(plot);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "12px system-ui";
+  ctx.fillText("All symbols - normalized % change", plot.left, 14);
+
+  let legendX = plot.left;
+  const legendY = rect.height - 26;
+  for (const symbol of chartSymbols()) {
+    ctx.fillStyle = SYMBOL_COLORS[symbol] ?? "#cbd5e1";
+    ctx.fillRect(legendX, legendY - 8, 10, 3);
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillText(symbolLabel(symbol), legendX + 14, legendY - 4);
+    legendX += 66;
+  }
+}
+
 function drawChart() {
   resizeCanvas();
   const rect = canvas.getBoundingClientRect();
   ctx.clearRect(0, 0, rect.width, rect.height);
   state.hitZones = [];
+
+  if (state.symbol === ALL_SYMBOL_VALUE) {
+    drawAllSymbolsChart(rect);
+    return;
+  }
 
   const series = activeCandles();
   if (series.length === 0) {
@@ -469,7 +651,7 @@ function drawChart() {
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "12px system-ui";
-  ctx.fillText(state.symbol, plot.left, 14);
+  ctx.fillText(symbolLabel(state.symbol), plot.left, 14);
   ctx.fillText(high.toFixed(2), 4, plot.top + 4);
   ctx.fillText(low.toFixed(2), 4, plot.bottom);
 }
@@ -662,21 +844,24 @@ function renderDailySection(item) {
 function renderSignalSection(item) {
   const selected = selectedClass(item, "signal_event");
   const expanded = state.expandedSections.has(item.id);
-  const summary = `${escapeHtml(item.display_window)} · ${escapeHtml(displayDirection(item.direction))} · Signals ${item.signals_count} of ${item.n_tracked}`;
+  const windowSummary = evidenceWindowSummary(item);
+  const summary = `Evidence window: ${escapeHtml(windowSummary)} - ${escapeHtml(displayDirection(item.direction))} - Signals ${item.signals_count} of ${item.n_tracked}`;
 
   return `
     <article class="section-card signal-section ${selected}" data-id="${item.id}">
       <div class="card-header">
         <div>
           <p class="card-title">Signal Event</p>
-          <div class="card-meta">${escapeHtml(item.display_window)}</div>
+          <div class="card-meta">Evidence window: ${escapeHtml(windowSummary)}</div>
         </div>
         <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(displayDirection(item.direction))}</span>
       </div>
       <div class="chips">
+        <span class="chip">${escapeHtml(candleCountLabel(item.evidence_bar_count ?? item.evidence_window?.evidence_bar_count))}</span>
         <span class="chip">Signals: ${item.signals_count} of ${item.n_tracked}</span>
         <span class="chip">Avg Change ${pct(item.avg_change_pct)}</span>
         <span class="chip">Range Position: ${escapeHtml(item.event_range_context_label)}</span>
+        <span class="chip">Chart context: ${escapeHtml(item.chart_context_label ?? "Weak chart context")}</span>
         <span class="chip">Impact: ${escapeHtml(item.impact_label)}</span>
       </div>
       <div class="card-body">${summary}</div>
@@ -728,16 +913,18 @@ function renderDayPost(post) {
 function renderAuditCard(item) {
   const selected = selectedClass(item, "audit_event");
   const expanded = state.expandedSections.has(item.id);
+  const windowSummary = evidenceWindowSummary(item);
   return `
     <article class="section-card audit-section ${selected}" data-id="${item.id}">
       <div class="card-header">
         <div>
           <p class="card-title">Non-public Event</p>
-          <div class="card-meta">${escapeHtml(item.date_time)}</div>
+          <div class="card-meta">Evidence window: ${escapeHtml(windowSummary)}</div>
         </div>
         <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(displayDirection(item.direction))}</span>
       </div>
       <div class="chips">
+        <span class="chip">${escapeHtml(candleCountLabel(item.evidence_bar_count ?? item.evidence_window?.evidence_bar_count))}</span>
         <span class="chip">Avg Change ${pct(item.avg_change_pct)}</span>
         <span class="chip">Signals: ${item.signals_count} of ${item.n_tracked}</span>
         <span class="chip">${escapeHtml(item.suppress_reason)}</span>
@@ -805,6 +992,25 @@ function render() {
   drawChart();
 }
 
+function exposePreviewRuntime() {
+  window.__BYTESIREN_V02_RUNTIME__ = {
+    feedContract,
+    auditEvents,
+    candles,
+    state,
+    publicDayPosts,
+    publicItems,
+    auditItems,
+  };
+  window.feedContract = feedContract;
+  window.auditEvents = auditEvents;
+  window.candles = candles;
+  window.state = state;
+  window.publicDayPosts = publicDayPosts;
+  window.publicItems = publicItems;
+  window.auditItems = auditItems;
+}
+
 function startPreview(data) {
   feedContract = data.feedContract;
   auditEvents = data.auditEvents;
@@ -817,6 +1023,7 @@ function startPreview(data) {
   symbolSelect = document.getElementById("symbol-select");
   selectionLabel = document.getElementById("selection-label");
   dayToggle = document.getElementById("day-toggle");
+  symbolSelect.value = state.symbol;
 
   publicDayPosts = feedContract.day_groups;
   publicItems = publicDayPosts.flatMap((group) => group.items);
@@ -831,6 +1038,7 @@ function startPreview(data) {
   dayPostById = new Map(
     publicDayPosts.map((group) => [group.day_post_id, group]),
   );
+  exposePreviewRuntime();
 
   document.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => {

@@ -156,9 +156,12 @@ class CdpSession {
     });
 
     if (result.exceptionDetails) {
+      const description =
+        result.exceptionDetails.exception?.description ??
+        result.exceptionDetails.exception?.value;
       throw new Error(
-        result.exceptionDetails.text ??
-          result.exceptionDetails.exception?.description ??
+        description ??
+          result.exceptionDetails.text ??
           "Runtime evaluation failed",
       );
     }
@@ -222,26 +225,66 @@ async function runBrowserSmoke() {
     await session.send("Page.enable");
     await waitForCondition(
       session,
-      "document.querySelectorAll('.daily-section').length === 31 && document.querySelectorAll('.signal-section').length === 14",
+      "window.feedContract?.preview_diagnostics && document.querySelectorAll('.daily-section').length === 31 && document.querySelectorAll('.signal-section').length === window.feedContract.preview_diagnostics.public_signal_count",
     );
 
     const initial = await session.evaluate(`(() => ({
       diagnostics: document.querySelector('#feed-diagnostics')?.textContent,
       dailySections: document.querySelectorAll('.daily-section').length,
       signalSections: document.querySelectorAll('.signal-section').length,
+      expectedSignals: feedContract.preview_diagnostics.public_signal_count,
+      expectedAudit: feedContract.preview_diagnostics.audit_event_count,
+      detectorVersion: feedContract.detector_version,
+      chartContextEnabled: feedContract.chart_context_enabled,
       dayToggle: document.querySelector('#day-toggle')?.textContent.trim(),
       selectedType: state.selectedType,
       selectedId: state.selectedId,
+      symbolValue: document.querySelector('#symbol-select')?.value,
       canvasWidth: document.querySelector('#chart')?.width,
       canvasHeight: document.querySelector('#chart')?.height
     }))()`);
 
     assert.match(initial.diagnostics, /31 days/);
+    assert.match(initial.diagnostics, /detector vnext_c/);
+    assert.match(initial.diagnostics, /chart context enabled/);
     assert.equal(initial.dailySections, 31);
-    assert.equal(initial.signalSections, 14);
+    assert.equal(initial.signalSections, initial.expectedSignals);
+    assert.equal(initial.detectorVersion, "vnext_c");
+    assert.equal(initial.chartContextEnabled, true);
     assert.equal(initial.dayToggle, "Collapse days");
     assert.equal(initial.selectedType, null);
+    assert.equal(initial.symbolValue, "BTCUSDT");
     assert.ok(initial.canvasWidth > 0 && initial.canvasHeight > 0);
+
+    await session.evaluate(`(() => {
+      const select = document.querySelector('#symbol-select');
+      select.value = 'ALL';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    const allSymbolMode = await session.evaluate(`(() => ({
+      symbol: state.symbol,
+      selectValue: document.querySelector('#symbol-select').value,
+      hitZones: state.hitZones.length,
+      canvasWidth: document.querySelector('#chart').width,
+      canvasHeight: document.querySelector('#chart').height
+    }))()`);
+    assert.equal(allSymbolMode.symbol, "ALL");
+    assert.equal(allSymbolMode.selectValue, "ALL");
+    assert.ok(allSymbolMode.hitZones > 0);
+    assert.ok(allSymbolMode.canvasWidth > 0 && allSymbolMode.canvasHeight > 0);
+    await session.evaluate(`(() => {
+      const select = document.querySelector('#symbol-select');
+      select.value = 'BTCUSDT';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    assert.equal(await session.evaluate(`state.symbol`), "BTCUSDT");
+
+    const visibleSignalText = await session.evaluate(
+      `document.querySelector('.signal-section')?.innerText ?? ''`,
+    );
+    assert.match(visibleSignalText, /Evidence window:/);
+    assert.match(visibleSignalText, /candles/);
+    assert.match(visibleSignalText, /Avg Change/);
 
     await session.evaluate(`document.querySelector('.section-toggle').click()`);
     assert.equal(
@@ -398,7 +441,7 @@ async function runBrowserSmoke() {
     assert.deepEqual(auditMode, {
       mode: "audit",
       selectedType: null,
-      auditSections: 11,
+      auditSections: initial.expectedAudit,
     });
 
     await session.evaluate(`document.querySelector('.audit-section').click()`);

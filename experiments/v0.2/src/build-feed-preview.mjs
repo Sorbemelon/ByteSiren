@@ -11,7 +11,7 @@ import {
 } from "./shared.mjs";
 import { buildFeedContract } from "./build-feed-contract.mjs";
 import { DAILY_OVERVIEWS_PATH } from "./generate-daily-overviews.mjs";
-import { VNEXT_B_EVENTS_PATH } from "./run-vnext-b.mjs";
+import { VNEXT_C_EVENTS_PATH } from "./run-vnext-c.mjs";
 
 export const GROUPED_FEED_PREVIEW_JSON_PATH = `${OUTPUTS_DIR}/grouped_feed_preview.json`;
 export const GROUPED_FEED_PREVIEW_MD_PATH = `${OUTPUTS_DIR}/grouped_feed_preview.md`;
@@ -19,6 +19,46 @@ export const GROUPED_FEED_PREVIEW_MD_PATH = `${OUTPUTS_DIR}/grouped_feed_preview
 function signPct(value, digits = 1) {
   const rounded = roundNumber(value, digits);
   return `${rounded >= 0 ? "+" : ""}${rounded}%`;
+}
+
+function displayTime(iso) {
+  const date = new Date(iso);
+  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(
+    date.getUTCMinutes(),
+  ).padStart(2, "0")} UTC`;
+}
+
+function displayWindowEndTime(iso) {
+  const end = new Date(Date.parse(iso) + 2);
+  return `${String(end.getUTCHours()).padStart(2, "0")}:${String(
+    end.getUTCMinutes(),
+  ).padStart(2, "0")} UTC`;
+}
+
+function displayWindow(startIso, endIso) {
+  const start = displayTime(startIso).replace(" UTC", "");
+  return `${start}-${displayWindowEndTime(endIso)}`;
+}
+
+function evidenceBarCount(event) {
+  const diagnosticCount = Number(event.diagnostics?.evidence_bar_count);
+  if (Number.isFinite(diagnosticCount) && diagnosticCount > 0) {
+    return diagnosticCount;
+  }
+
+  return Math.max(1, Math.round(Number(event.duration_min ?? 15) / 15));
+}
+
+function candleCountLabel(count) {
+  return `${count} ${count === 1 ? "candle" : "candles"}`;
+}
+
+function evidenceWindowDisplay(item) {
+  if (item.evidence_window_display) return item.evidence_window_display;
+  if (item.evidence_window?.display) return item.evidence_window.display;
+
+  const bars = item.evidence_bar_count ?? evidenceBarCount(item);
+  return `${item.display_window ?? item.window_start} - ${item.duration_min ?? item.evidence_window?.duration_min} min - ${candleCountLabel(bars)}`;
 }
 
 function sectionPreview(item) {
@@ -48,11 +88,15 @@ function sectionPreview(item) {
     date_utc: item.date_utc,
     section_control: item.expanded.section_control,
     collapsed_preview: {
+      evidence_window: `${item.evidence_window_label}: ${evidenceWindowDisplay(item)}`,
       time_window: item.display_window,
+      duration: `${item.duration_label}: ${item.duration_display}`,
+      candles: item.evidence_candle_count_label,
       direction: item.direction_label,
       signals: `Signals: ${item.signals_count} of ${item.n_tracked}`,
       avg_change: `${item.avg_change_label}: ${signPct(item.avg_change_pct)}`,
       range_context: `Range Position: ${item.event_range_context_label}`,
+      chart_context: `Chart context: ${item.chart_context_label ?? "Weak chart context"}`,
       impact: `Impact: ${item.impact_label}`,
       public_context: "Public Context placeholder",
     },
@@ -63,6 +107,9 @@ function sectionPreview(item) {
 }
 
 function auditPreview(event) {
+  const bars = evidenceBarCount(event);
+  const evidenceDisplay = `${displayWindow(event.window_start, event.window_end)} - ${event.duration_min} min - ${candleCountLabel(bars)}`;
+
   return {
     id: event.event_id,
     date_utc: event.window_start.slice(0, 10),
@@ -70,7 +117,13 @@ function auditPreview(event) {
       start: event.window_start,
       end: event.window_end,
       duration_min: event.duration_min,
+      evidence_bar_count: bars,
+      display: evidenceDisplay,
     },
+    evidence_window_label: "Evidence window",
+    evidence_window_display: evidenceDisplay,
+    evidence_bar_count: bars,
+    evidence_candle_count_label: candleCountLabel(bars),
     direction: event.direction,
     change_pct: roundNumber(event.window_move_pct, 4),
     signals_count: event.signals_count,
@@ -122,8 +175,14 @@ export function buildGroupedFeedPreview({
   dailyOverviews,
   signalEvents,
   now = new Date(),
+  detectorVersion = "vnext_c",
 }) {
-  const contract = buildFeedContract({ dailyOverviews, signalEvents, now });
+  const contract = buildFeedContract({
+    dailyOverviews,
+    signalEvents,
+    now,
+    detectorVersion,
+  });
   const auditEvents = signalEvents
     .filter((event) => !event.publish_candidate)
     .sort((a, b) => b.window_start.localeCompare(a.window_start))
@@ -131,6 +190,8 @@ export function buildGroupedFeedPreview({
 
   return {
     generated_at: now.toISOString(),
+    detector_version: contract.detector_version,
+    chart_context_enabled: contract.chart_context_enabled,
     preview_state: {
       ...contract.preview_state,
       global_controls: ["Expand days", "Collapse days"],
@@ -139,6 +200,9 @@ export function buildGroupedFeedPreview({
     public_preview: {
       grouping: "utc_day",
       day_post_count: contract.day_groups.length,
+      public_signal_count: signalEvents.filter(
+        (event) => event.publish_candidate,
+      ).length,
       day_posts: contract.day_groups.map(dayPostPreview),
     },
     audit_only: {
@@ -158,8 +222,18 @@ export function buildGroupedFeedPreview({
         "Highlighted Peak 15m cell marks the strongest 15-minute change inside the window.",
       range_position:
         "Range Position shows where the event sits relative to the recent 24h high-low range. It is descriptive, not a trading signal.",
+      chart_context:
+        "Chart context summarizes range, trend, momentum, and volatility structure for the evidence window.",
+      range_break:
+        "Range break means the event moved beyond the recent 24h high-low range with confirmation.",
+      trend_context:
+        "Trend context describes prior direction and strength before the evidence window.",
+      momentum_context:
+        "Momentum context describes whether the window continued, reversed, or stayed unclear.",
+      volatility_expansion:
+        "Volatility expansion describes a move from quieter range behavior into a wider event window.",
       evidence_window:
-        "Evidence window is the candles used as event evidence, not a single timestamp.",
+        "Evidence window is the multi-candle span used as event evidence, not a single timestamp or one 15-minute candle.",
       daily_overview: "Daily Overview is a full UTC-day context summary.",
       signal_event: "Signal Event is a compact evidence-window anomaly.",
       show_more_hide:
@@ -177,7 +251,7 @@ function markdownSectionLine(section) {
     return `${section.collapsed_preview.market_tone}; ${section.collapsed_preview.change}; ${section.collapsed_preview.summary_hint}`;
   }
 
-  return `${section.collapsed_preview.time_window}; ${section.collapsed_preview.direction}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.avg_change}; ${section.collapsed_preview.range_context}; ${section.collapsed_preview.impact}`;
+  return `${section.collapsed_preview.evidence_window}; ${section.collapsed_preview.direction}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.avg_change}; ${section.collapsed_preview.range_context}; ${section.collapsed_preview.chart_context}; ${section.collapsed_preview.impact}`;
 }
 
 function markdownPost(lines, post, sections, controlLabel) {
@@ -204,6 +278,8 @@ function markdown(preview) {
   const lines = [
     "# Grouped Feed Preview",
     "",
+    `Detector version: ${preview.detector_version}`,
+    `Chart context enabled: ${preview.chart_context_enabled}`,
     `Days expanded: ${preview.preview_state.days_expanded}`,
     `Global control: ${preview.preview_state.global_control_label}`,
     `Global controls: ${preview.preview_state.global_controls.join(", ")}`,
@@ -241,7 +317,7 @@ function markdown(preview) {
 
   for (const item of preview.audit_only.non_publishable_detected_events) {
     lines.push(
-      `- ${item.evidence_window.start}: ${item.direction}; Avg Change ${signPct(item.change_pct)}; Signals ${item.signals_count} of ${item.n_tracked}; ${item.suppress_reason}`,
+      `- ${item.evidence_window_display}: ${item.direction}; Avg Change ${signPct(item.change_pct)}; Signals ${item.signals_count} of ${item.n_tracked}; ${item.suppress_reason}`,
     );
   }
 
@@ -259,9 +335,16 @@ export async function runFeedPreview(
   options,
   { now = new Date(), logger = console } = {},
 ) {
-  const dailyOverviews = (await readJson(options.dailyOverviewPath)).items ?? [];
-  const signalEvents = (await readJson(options.signalEventsPath)).events ?? [];
-  const preview = buildGroupedFeedPreview({ dailyOverviews, signalEvents, now });
+  const dailyOverviews =
+    (await readJson(options.dailyOverviewPath)).items ?? [];
+  const signalPayload = await readJson(options.signalEventsPath);
+  const signalEvents = signalPayload.events ?? [];
+  const preview = buildGroupedFeedPreview({
+    dailyOverviews,
+    signalEvents,
+    now,
+    detectorVersion: signalPayload.detector ?? "vnext_c",
+  });
 
   await writeJson(options.jsonOutputPath, preview);
   await writeText(options.markdownOutputPath, markdown(preview));
@@ -275,7 +358,7 @@ export async function runFeedPreview(
 export function parseArgs(argv = process.argv.slice(2)) {
   return {
     dailyOverviewPath: readOption(argv, "--daily") ?? DAILY_OVERVIEWS_PATH,
-    signalEventsPath: readOption(argv, "--events") ?? VNEXT_B_EVENTS_PATH,
+    signalEventsPath: readOption(argv, "--events") ?? VNEXT_C_EVENTS_PATH,
     jsonOutputPath:
       readOption(argv, "--json-output") ?? GROUPED_FEED_PREVIEW_JSON_PATH,
     markdownOutputPath:

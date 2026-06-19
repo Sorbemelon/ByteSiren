@@ -9,7 +9,7 @@ import {
   writeText,
 } from "./shared.mjs";
 import { DAILY_OVERVIEWS_PATH } from "./generate-daily-overviews.mjs";
-import { VNEXT_B_EVENTS_PATH } from "./run-vnext-b.mjs";
+import { VNEXT_C_EVENTS_PATH } from "./run-vnext-c.mjs";
 import {
   dailyClaudePayload,
   signalClaudePayload,
@@ -45,7 +45,12 @@ function designMarkdown({ signalPayloads, dailyPayloads }) {
     "",
     "- Mode: `signal_event`.",
     "- Includes UTC date/time, evidence window start/end, direction, signals count, Avg Change, signal strength, Range Position, per-symbol Window Change, macro alignment, and source route hints.",
+    "- Includes chart_context_label, event_story_type, trend_context, momentum_context, volatility_context, event_range_context, chart_context_reasons, and chart_context_warnings.",
     "- Includes table highlight metadata for lead mover and strongest Peak 15m diagnostics.",
+    "- Chart context is descriptive market structure, not trading advice or cause proof.",
+    "- Range Position is not support/resistance advice.",
+    "- Claude should use chart context to decide how hard to search and what route to try.",
+    "- If no source supports a cause, return No Clear Cause or Market Backdrop.",
     "- Peak 15m and lead mover are supporting diagnostics, not the main event headline.",
     "- Main event evidence is the evidence window, Avg Change, Signals, and Range Position.",
     "- Claude should not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
@@ -87,7 +92,8 @@ function designMarkdown({ signalPayloads, dailyPayloads }) {
 }
 
 export async function runClaudePayloads(options, { logger = console } = {}) {
-  const dailyOverviews = (await readJson(options.dailyOverviewPath)).items ?? [];
+  const dailyOverviews =
+    (await readJson(options.dailyOverviewPath)).items ?? [];
   const signalEvents = (await readJson(options.signalEventsPath)).events ?? [];
   const payloads = buildClaudePayloads({ dailyOverviews, signalEvents });
 
@@ -112,7 +118,7 @@ export async function runClaudePayloads(options, { logger = console } = {}) {
 export function parseArgs(argv = process.argv.slice(2)) {
   return {
     dailyOverviewPath: readOption(argv, "--daily") ?? DAILY_OVERVIEWS_PATH,
-    signalEventsPath: readOption(argv, "--events") ?? VNEXT_B_EVENTS_PATH,
+    signalEventsPath: readOption(argv, "--events") ?? VNEXT_C_EVENTS_PATH,
     signalOutputPath:
       readOption(argv, "--signal-output") ?? CLAUDE_SIGNAL_PAYLOADS_PATH,
     dailyOutputPath:

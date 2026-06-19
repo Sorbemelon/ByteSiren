@@ -1,5 +1,7 @@
 # Grouped Feed Preview
 
+Detector version: vnext_c
+Chart context enabled: true
 Days expanded: true
 Global control: Collapse days
 Global controls: Expand days, Collapse days
@@ -13,23 +15,16 @@ Post: 1 items; collapsed item daily_2026-06-19
   Section control: Show more / Hide
 
 ### Jun 18, 2026 UTC
-Post: 2 items; collapsed item daily_2026-06-18
-Control: Collapse post
+Post: 1 items; collapsed item daily_2026-06-18
 - Daily Overview: Market tone: volatile; 24h Change: -3.2%; volatile day; 24h change -3.2%; notable range 5.1%.
-  Section control: Show more / Hide
-- Signal Event: 15:30-15:59 UTC; Observed Down; Signals: 5 of 5; Avg Change: -1.4%; Range Position: Broad broke low; Impact: Medium
   Section control: Show more / Hide
 
 ### Jun 17, 2026 UTC
-Post: 4 items; collapsed item daily_2026-06-17
+Post: 2 items; collapsed item daily_2026-06-17
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: -2%; volatile day; 24h change -2%; notable range 4.3%.
   Section control: Show more / Hide
-- Signal Event: 18:00-18:14 UTC; Observed Down; Signals: 5 of 5; Avg Change: -1.2%; Range Position: Mixed range position; Impact: High
-  Section control: Show more / Hide
-- Signal Event: 18:30-18:44 UTC; Observed Up; Signals: 5 of 5; Avg Change: +1%; Range Position: Inside range; Impact: Medium
-  Section control: Show more / Hide
-- Signal Event: 19:15-19:44 UTC; Observed Down; Signals: 5 of 5; Avg Change: -2.1%; Range Position: Broad broke low; Impact: High
+- Signal Event: Evidence window: 19:15-19:45 UTC - 30 min - 2 candles; Observed Down; Signals: 5 of 5; Avg Change: -2.1%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### Jun 16, 2026 UTC
@@ -47,7 +42,7 @@ Post: 2 items; collapsed item daily_2026-06-14
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: +2.6%; volatile day; 24h change +2.6%; notable range 4.4%.
   Section control: Show more / Hide
-- Signal Event: 21:15-21:44 UTC; Observed Up; Signals: 5 of 5; Avg Change: +2.4%; Range Position: Broad broke high; Impact: High
+- Signal Event: Evidence window: 21:15-21:45 UTC - 30 min - 2 candles; Observed Up; Signals: 5 of 5; Avg Change: +2.4%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### Jun 13, 2026 UTC
@@ -66,13 +61,8 @@ Post: 1 items; collapsed item daily_2026-06-11
   Section control: Show more / Hide
 
 ### Jun 10, 2026 UTC
-Post: 3 items; collapsed item daily_2026-06-10
-Control: Collapse post
+Post: 1 items; collapsed item daily_2026-06-10
 - Daily Overview: Market tone: volatile; 24h Change: -1.2%; volatile day; 24h change -1.2%; notable range 4.1%.
-  Section control: Show more / Hide
-- Signal Event: 12:30-12:44 UTC; Observed Up; Signals: 5 of 5; Avg Change: +0.9%; Range Position: Inside range; Impact: Low
-  Section control: Show more / Hide
-- Signal Event: 13:30-13:44 UTC; Observed Up; Signals: 5 of 5; Avg Change: +1.6%; Range Position: Inside range; Impact: Medium
   Section control: Show more / Hide
 
 ### Jun 9, 2026 UTC
@@ -86,11 +76,8 @@ Post: 1 items; collapsed item daily_2026-06-08
   Section control: Show more / Hide
 
 ### Jun 7, 2026 UTC
-Post: 2 items; collapsed item daily_2026-06-07
-Control: Collapse post
+Post: 1 items; collapsed item daily_2026-06-07
 - Daily Overview: Market tone: volatile; 24h Change: +5.7%; volatile day; 24h change +5.7%; notable range 7.9%.
-  Section control: Show more / Hide
-- Signal Event: 22:00-22:14 UTC; Observed Up; Signals: 5 of 5; Avg Change: +2.9%; Range Position: Broad broke high; Impact: High
   Section control: Show more / Hide
 
 ### Jun 6, 2026 UTC
@@ -114,13 +101,8 @@ Post: 1 items; collapsed item daily_2026-06-03
   Section control: Show more / Hide
 
 ### Jun 2, 2026 UTC
-Post: 3 items; collapsed item daily_2026-06-02
-Control: Collapse post
+Post: 1 items; collapsed item daily_2026-06-02
 - Daily Overview: Market tone: volatile; 24h Change: -6.6%; volatile day; 24h change -6.6%; notable range 8.4%.
-  Section control: Show more / Hide
-- Signal Event: 14:15-14:29 UTC; Observed Down; Signals: 5 of 5; Avg Change: -1.6%; Range Position: Broad broke low; Impact: High
-  Section control: Show more / Hide
-- Signal Event: 22:45-23:29 UTC; Observed Down; Signals: 5 of 5; Avg Change: -1.2%; Range Position: Broad broke low; Impact: Low
   Section control: Show more / Hide
 
 ### Jun 1, 2026 UTC
@@ -139,11 +121,8 @@ Post: 1 items; collapsed item daily_2026-05-30
   Section control: Show more / Hide
 
 ### May 29, 2026 UTC
-Post: 2 items; collapsed item daily_2026-05-29
-Control: Collapse post
+Post: 1 items; collapsed item daily_2026-05-29
 - Daily Overview: Market tone: mixed; 24h Change: +0.2%; mixed day; 24h change +0.2%; notable range 3%.
-  Section control: Show more / Hide
-- Signal Event: 15:00-15:29 UTC; Observed Up; Signals: 5 of 5; Avg Change: +1.2%; Range Position: Inside range; Impact: Low
   Section control: Show more / Hide
 
 ### May 28, 2026 UTC
@@ -151,12 +130,15 @@ Post: 2 items; collapsed item daily_2026-05-28
 Control: Collapse post
 - Daily Overview: Market tone: mixed; 24h Change: -0.7%; mixed day; 24h change -0.7%; notable range 3.6%.
   Section control: Show more / Hide
-- Signal Event: 03:15-03:59 UTC; Observed Down; Signals: 5 of 5; Avg Change: -1.5%; Range Position: Broad broke low; Impact: Medium
+- Signal Event: Evidence window: 03:15-04:30 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -1.7%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### May 27, 2026 UTC
-Post: 1 items; collapsed item daily_2026-05-27
+Post: 2 items; collapsed item daily_2026-05-27
+Control: Collapse post
 - Daily Overview: Market tone: risk off; 24h Change: -1.6%; risk off day; 24h change -1.6%; notable range 3%.
+  Section control: Show more / Hide
+- Signal Event: Evidence window: 21:30-22:00 UTC - 30 min - 2 candles; Observed Down; Signals: 5 of 5; Avg Change: -1%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### May 26, 2026 UTC
@@ -175,18 +157,16 @@ Post: 1 items; collapsed item daily_2026-05-24
   Section control: Show more / Hide
 
 ### May 23, 2026 UTC
-Post: 3 items; collapsed item daily_2026-05-23
-Control: Collapse post
+Post: 1 items; collapsed item daily_2026-05-23
 - Daily Overview: Market tone: volatile; 24h Change: +1.6%; volatile day; 24h change +1.6%; notable range 5.6%.
-  Section control: Show more / Hide
-- Signal Event: 07:45-07:59 UTC; Observed Down; Signals: 5 of 5; Avg Change: -1.4%; Range Position: Broad broke low; Impact: High
-  Section control: Show more / Hide
-- Signal Event: 20:30-20:59 UTC; Observed Up; Signals: 5 of 5; Avg Change: +1.9%; Range Position: Broad broke high; Impact: High
   Section control: Show more / Hide
 
 ### May 22, 2026 UTC
-Post: 1 items; collapsed item daily_2026-05-22
+Post: 2 items; collapsed item daily_2026-05-22
+Control: Collapse post
 - Daily Overview: Market tone: risk off; 24h Change: -2.9%; risk off day; 24h change -2.9%; notable range 3.5%.
+  Section control: Show more / Hide
+- Signal Event: Evidence window: 18:30-19:45 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -1.3%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### May 21, 2026 UTC
@@ -207,14 +187,13 @@ Post: 1 items; collapsed item daily_2026-06-19
   Section control: Show more / Hide
 
 ### Jun 18, 2026 UTC
-Post: 2 items; collapsed item daily_2026-06-18
-Control: +1 events · Expand post
+Post: 1 items; collapsed item daily_2026-06-18
 - Daily Overview: Market tone: volatile; 24h Change: -3.2%; volatile day; 24h change -3.2%; notable range 5.1%.
   Section control: Show more / Hide
 
 ### Jun 17, 2026 UTC
-Post: 4 items; collapsed item daily_2026-06-17
-Control: +3 events · Expand post
+Post: 2 items; collapsed item daily_2026-06-17
+Control: +1 events · Expand post
 - Daily Overview: Market tone: volatile; 24h Change: -2%; volatile day; 24h change -2%; notable range 4.3%.
   Section control: Show more / Hide
 
@@ -250,8 +229,7 @@ Post: 1 items; collapsed item daily_2026-06-11
   Section control: Show more / Hide
 
 ### Jun 10, 2026 UTC
-Post: 3 items; collapsed item daily_2026-06-10
-Control: +2 events · Expand post
+Post: 1 items; collapsed item daily_2026-06-10
 - Daily Overview: Market tone: volatile; 24h Change: -1.2%; volatile day; 24h change -1.2%; notable range 4.1%.
   Section control: Show more / Hide
 
@@ -266,8 +244,7 @@ Post: 1 items; collapsed item daily_2026-06-08
   Section control: Show more / Hide
 
 ### Jun 7, 2026 UTC
-Post: 2 items; collapsed item daily_2026-06-07
-Control: +1 events · Expand post
+Post: 1 items; collapsed item daily_2026-06-07
 - Daily Overview: Market tone: volatile; 24h Change: +5.7%; volatile day; 24h change +5.7%; notable range 7.9%.
   Section control: Show more / Hide
 
@@ -292,8 +269,7 @@ Post: 1 items; collapsed item daily_2026-06-03
   Section control: Show more / Hide
 
 ### Jun 2, 2026 UTC
-Post: 3 items; collapsed item daily_2026-06-02
-Control: +2 events · Expand post
+Post: 1 items; collapsed item daily_2026-06-02
 - Daily Overview: Market tone: volatile; 24h Change: -6.6%; volatile day; 24h change -6.6%; notable range 8.4%.
   Section control: Show more / Hide
 
@@ -313,8 +289,7 @@ Post: 1 items; collapsed item daily_2026-05-30
   Section control: Show more / Hide
 
 ### May 29, 2026 UTC
-Post: 2 items; collapsed item daily_2026-05-29
-Control: +1 events · Expand post
+Post: 1 items; collapsed item daily_2026-05-29
 - Daily Overview: Market tone: mixed; 24h Change: +0.2%; mixed day; 24h change +0.2%; notable range 3%.
   Section control: Show more / Hide
 
@@ -325,7 +300,8 @@ Control: +1 events · Expand post
   Section control: Show more / Hide
 
 ### May 27, 2026 UTC
-Post: 1 items; collapsed item daily_2026-05-27
+Post: 2 items; collapsed item daily_2026-05-27
+Control: +1 events · Expand post
 - Daily Overview: Market tone: risk off; 24h Change: -1.6%; risk off day; 24h change -1.6%; notable range 3%.
   Section control: Show more / Hide
 
@@ -345,13 +321,13 @@ Post: 1 items; collapsed item daily_2026-05-24
   Section control: Show more / Hide
 
 ### May 23, 2026 UTC
-Post: 3 items; collapsed item daily_2026-05-23
-Control: +2 events · Expand post
+Post: 1 items; collapsed item daily_2026-05-23
 - Daily Overview: Market tone: volatile; 24h Change: +1.6%; volatile day; 24h change +1.6%; notable range 5.6%.
   Section control: Show more / Hide
 
 ### May 22, 2026 UTC
-Post: 1 items; collapsed item daily_2026-05-22
+Post: 2 items; collapsed item daily_2026-05-22
+Control: +1 events · Expand post
 - Daily Overview: Market tone: risk off; 24h Change: -2.9%; risk off day; 24h change -2.9%; notable range 3.5%.
   Section control: Show more / Hide
 
@@ -367,19 +343,31 @@ Post: 1 items; collapsed item daily_2026-05-20
 
 ## Audit-only non-public detected events
 
-Count: 11
+Count: 23
 
-- 2026-06-15T11:15:00.000Z: observed_up; Avg Change +0.9%; Signals 5 of 5; below_publish_gate
-- 2026-06-14T14:30:00.000Z: observed_down; Avg Change -0.5%; Signals 5 of 5; weak_window_move_lt_1pct
-- 2026-06-13T21:30:00.000Z: observed_up; Avg Change +0.7%; Signals 5 of 5; weak_weekend_overnight_micro_move
-- 2026-06-07T22:15:00.000Z: observed_down; Avg Change -0.9%; Signals 5 of 5; micro_retrace_after_parent
-- 2026-05-27T21:30:00.000Z: observed_down; Avg Change -0.8%; Signals 5 of 5; below_publish_gate
-- 2026-05-26T14:30:00.000Z: observed_down; Avg Change -1.2%; Signals 5 of 5; below_publish_gate
-- 2026-05-26T10:15:00.000Z: observed_up; Avg Change +0.9%; Signals 5 of 5; below_publish_gate
-- 2026-05-25T02:00:00.000Z: observed_up; Avg Change +0.6%; Signals 5 of 5; weak_window_move_lt_1pct
-- 2026-05-24T22:00:00.000Z: observed_up; Avg Change +1.1%; Signals 5 of 5; weak_weekend_overnight_micro_move
-- 2026-05-22T19:30:00.000Z: observed_down; Avg Change -0.6%; Signals 5 of 5; weak_window_move_lt_1pct
-- 2026-05-21T17:15:00.000Z: observed_up; Avg Change +0.8%; Signals 5 of 5; below_publish_gate
+- 15:15-16:00 UTC - 45 min - 3 candles: observed_down; Avg Change -2.3%; Signals 5 of 5; noisy_range_only
+- 13:00-13:30 UTC - 30 min - 2 candles: observed_up; Avg Change +1%; Signals 5 of 5; noisy_range_only
+- 01:30-02:15 UTC - 45 min - 3 candles: observed_up; Avg Change +0.5%; Signals 5 of 5; no_strong_context_path
+- 23:45-00:15 UTC - 30 min - 2 candles: observed_up; Avg Change +0.7%; Signals 5 of 5; noisy_range_only
+- 14:45-15:15 UTC - 30 min - 2 candles: observed_up; Avg Change +1.4%; Signals 5 of 5; noisy_range_only
+- 17:15-18:00 UTC - 45 min - 3 candles: observed_up; Avg Change +2.9%; Signals 5 of 5; noisy_range_only
+- 14:15-14:45 UTC - 30 min - 2 candles: observed_down; Avg Change -1.2%; Signals 5 of 5; noisy_range_only
+- 01:00-01:30 UTC - 30 min - 2 candles: observed_down; Avg Change -1.3%; Signals 5 of 5; noisy_range_only
+- 01:00-01:30 UTC - 30 min - 2 candles: observed_up; Avg Change +2%; Signals 5 of 5; no_strong_context_path
+- 07:15-07:45 UTC - 30 min - 2 candles: observed_up; Avg Change +2.8%; Signals 5 of 5; no_strong_context_path
+- 03:00-03:45 UTC - 45 min - 3 candles: observed_up; Avg Change +2.1%; Signals 5 of 5; no_strong_context_path
+- 01:15-02:00 UTC - 45 min - 3 candles: observed_down; Avg Change -1.9%; Signals 5 of 5; noisy_range_only
+- 22:45-23:30 UTC - 45 min - 3 candles: observed_down; Avg Change -1.2%; Signals 5 of 5; noisy_range_only
+- 02:15-03:00 UTC - 45 min - 3 candles: observed_up; Avg Change +1%; Signals 5 of 5; no_strong_context_path
+- 15:15-16:00 UTC - 45 min - 3 candles: observed_down; Avg Change -0.5%; Signals 3 of 5; no_strong_context_path
+- 02:00-02:45 UTC - 45 min - 3 candles: observed_up; Avg Change +0.9%; Signals 5 of 5; no_strong_context_path
+- 15:00-15:30 UTC - 30 min - 2 candles: observed_up; Avg Change +1.2%; Signals 5 of 5; no_strong_context_path
+- 14:15-14:45 UTC - 30 min - 2 candles: observed_down; Avg Change -0.7%; Signals 5 of 5; noisy_range_only
+- 10:15-10:45 UTC - 30 min - 2 candles: observed_up; Avg Change +1.1%; Signals 5 of 5; no_strong_context_path
+- 21:15-21:45 UTC - 30 min - 2 candles: observed_down; Avg Change -0.9%; Signals 5 of 5; noisy_range_only
+- 20:30-21:00 UTC - 30 min - 2 candles: observed_up; Avg Change +1.9%; Signals 5 of 5; noisy_range_only
+- 23:15-00:00 UTC - 45 min - 3 candles: observed_down; Avg Change -0.5%; Signals 5 of 5; no_strong_context_path
+- 17:00-17:30 UTC - 30 min - 2 candles: observed_up; Avg Change +1.3%; Signals 5 of 5; no_strong_context_path
 
 ## Glossary
 
@@ -389,7 +377,12 @@ Count: 11
 - lead mover highlight: Highlighted symbol or row marks the strongest contributor in the event window.
 - peak 15m highlight: Highlighted Peak 15m cell marks the strongest 15-minute change inside the window.
 - range position: Range Position shows where the event sits relative to the recent 24h high-low range. It is descriptive, not a trading signal.
-- evidence window: Evidence window is the candles used as event evidence, not a single timestamp.
+- chart context: Chart context summarizes range, trend, momentum, and volatility structure for the evidence window.
+- range break: Range break means the event moved beyond the recent 24h high-low range with confirmation.
+- trend context: Trend context describes prior direction and strength before the evidence window.
+- momentum context: Momentum context describes whether the window continued, reversed, or stayed unclear.
+- volatility expansion: Volatility expansion describes a move from quieter range behavior into a wider event window.
+- evidence window: Evidence window is the multi-candle span used as event evidence, not a single timestamp or one 15-minute candle.
 - daily overview: Daily Overview is a full UTC-day context summary.
 - signal event: Signal Event is a compact evidence-window anomaly.
 - show more hide: Show more and Hide expand details inside one Daily Overview or Signal Event section.
