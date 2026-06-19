@@ -11,6 +11,8 @@ const state = {
   expandedSections: new Set(),
   symbol: "BTCUSDT",
   selectedId: null,
+  selectedType: null,
+  pendingScrollId: null,
   hitZones: [],
 };
 
@@ -297,7 +299,10 @@ function publicSignalItems() {
 
 function drawActiveOverlays(plot) {
   if (state.mode === "audit") {
-    const selected = auditById.get(state.selectedId);
+    const selected =
+      state.selectedType === "audit_event"
+        ? auditById.get(state.selectedId)
+        : null;
     const events = selected ? [selected] : auditItems;
 
     for (const item of events) {
@@ -316,9 +321,13 @@ function drawActiveOverlays(plot) {
     return;
   }
 
-  const selected = publicById.get(state.selectedId);
+  const selected =
+    state.selectedType === "daily_overview" ||
+    state.selectedType === "signal_event"
+      ? publicById.get(state.selectedId)
+      : null;
 
-  if (selected?.item_type === "daily_overview") {
+  if (state.selectedType === "daily_overview" && selected) {
     drawRectOverlay(
       plot,
       selected.chart.highlight_start,
@@ -345,7 +354,9 @@ function drawActiveOverlays(plot) {
   }
 
   const events =
-    selected?.item_type === "signal_event" ? [selected] : publicSignalItems();
+    state.selectedType === "signal_event" && selected
+      ? [selected]
+      : publicSignalItems();
 
   for (const item of events) {
     const isSelected = item.id === state.selectedId;
@@ -463,37 +474,99 @@ function drawChart() {
   ctx.fillText(low.toFixed(2), 4, plot.bottom);
 }
 
-function clearSelection() {
+function resetSelectionState() {
   state.selectedId = null;
-  selectionLabel.textContent = "No selection";
+  state.selectedType = null;
+  state.pendingScrollId = null;
+  if (selectionLabel) {
+    selectionLabel.textContent = "No selection";
+  }
+}
+
+function clearSelection() {
+  resetSelectionState();
   render();
 }
 
+function selectionTypeForItem(item) {
+  if (!item) return null;
+  if (auditById.has(item.id)) return "audit_event";
+  return item.item_type === "daily_overview"
+    ? "daily_overview"
+    : "signal_event";
+}
+
+function revealDayPostForItem(id) {
+  const dayPostId = itemToDayPost.get(id);
+  if (dayPostId) {
+    state.dayOverrides.set(dayPostId, true);
+  }
+}
+
+function updateSelectionLabel(item, selectedType) {
+  if (!selectionLabel) return;
+
+  if (selectedType === "daily_overview") {
+    selectionLabel.textContent = `Selected: Daily Overview ${item.date_utc}`;
+  } else if (selectedType === "audit_event") {
+    selectionLabel.textContent = `Selected audit: ${item.id}`;
+  } else {
+    selectionLabel.textContent = `Selected signal: ${item.id}`;
+  }
+}
+
 function selectItem(id, options = {}) {
-  if (state.selectedId === id) {
+  const item =
+    state.mode === "audit"
+      ? auditById.get(id) || publicById.get(id)
+      : publicById.get(id) || auditById.get(id);
+  const selectedType = selectionTypeForItem(item);
+
+  if (!item || !selectedType) {
+    clearSelection();
+    return;
+  }
+
+  if (state.selectedId === id && state.selectedType === selectedType) {
     clearSelection();
     return;
   }
 
   state.selectedId = id;
-  const item = publicById.get(id) || auditById.get(id);
+  state.selectedType = selectedType;
 
-  if (options.expandDay) {
-    const dayPostId = itemToDayPost.get(id);
-    if (dayPostId) {
-      state.dayOverrides.set(dayPostId, true);
-    }
+  if (options.expandDay && selectedType !== "audit_event") {
+    revealDayPostForItem(id);
   }
 
-  if (!item) {
-    selectionLabel.textContent = "No selection";
-  } else if (item.item_type === "daily_overview") {
-    selectionLabel.textContent = `Selected: Daily Overview ${item.date_utc}`;
-  } else {
-    selectionLabel.textContent = `Selected: ${item.id}`;
+  if (options.scrollIntoView) {
+    state.pendingScrollId = id;
   }
 
+  updateSelectionLabel(item, selectedType);
   render();
+}
+
+function selectedClass(item, type) {
+  const selected = item.id === state.selectedId && state.selectedType === type;
+  if (!selected) return "";
+  if (type === "daily_overview") return "is-selected selected-daily";
+  if (type === "audit_event") return "is-selected selected-audit";
+  return "is-selected selected-signal";
+}
+
+function scrollPendingSelectionIntoView() {
+  if (!state.pendingScrollId || !feedEl) return;
+
+  const selectedCard = Array.from(
+    feedEl.querySelectorAll(".section-card"),
+  ).find((card) => card.dataset.id === state.pendingScrollId);
+
+  if (selectedCard) {
+    selectedCard.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  state.pendingScrollId = null;
 }
 
 function renderSymbolTable(item) {
@@ -526,11 +599,10 @@ function renderSymbolTable(item) {
             const peakClass = row.highlights?.strongest_peak_15m
               ? `cell-highlight${isLead && isPeak ? " combined-highlight" : ""}`
               : "";
-            const symbolClass = isLead
-              ? "cell-highlight"
-              : "";
+            const symbolClass = isLead ? "cell-highlight" : "";
             const rangeLabel =
-              row.range_position_label ?? rangePositionLabel(row.range_position);
+              row.range_position_label ??
+              rangePositionLabel(row.range_position);
             return `<tr class="${rowClass}">
               <td class="${symbolClass}">${escapeHtml(row.symbol.replace("USDT", ""))}</td>
               <td>${pct(row.window_change_pct)}</td>
@@ -555,13 +627,13 @@ function sectionControl(item) {
 }
 
 function renderDailySection(item) {
-  const selected = item.id === state.selectedId;
+  const selected = selectedClass(item, "daily_overview");
   const expanded = state.expandedSections.has(item.id);
   const fields = item.expanded.daily_market_summary_fields;
   const summary = fields.summary_hint || "Daily market context pending.";
 
   return `
-    <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
+    <article class="section-card daily-section ${selected}" data-id="${item.id}">
       <div class="card-header">
         <div>
           <p class="card-title">Daily Overview</p>
@@ -588,12 +660,12 @@ function renderDailySection(item) {
 }
 
 function renderSignalSection(item) {
-  const selected = item.id === state.selectedId;
+  const selected = selectedClass(item, "signal_event");
   const expanded = state.expandedSections.has(item.id);
   const summary = `${escapeHtml(item.display_window)} · ${escapeHtml(displayDirection(item.direction))} · Signals ${item.signals_count} of ${item.n_tracked}`;
 
   return `
-    <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
+    <article class="section-card signal-section ${selected}" data-id="${item.id}">
       <div class="card-header">
         <div>
           <p class="card-title">Signal Event</p>
@@ -654,10 +726,10 @@ function renderDayPost(post) {
 }
 
 function renderAuditCard(item) {
-  const selected = item.id === state.selectedId;
+  const selected = selectedClass(item, "audit_event");
   const expanded = state.expandedSections.has(item.id);
   return `
-    <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
+    <article class="section-card audit-section ${selected}" data-id="${item.id}">
       <div class="card-header">
         <div>
           <p class="card-title">Non-public Event</p>
@@ -723,6 +795,8 @@ function renderFeed() {
       render();
     });
   });
+
+  scrollPendingSelectionIntoView();
 }
 
 function render() {
@@ -761,9 +835,8 @@ function startPreview(data) {
   document.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       state.mode = button.dataset.mode;
-      state.selectedId = null;
+      resetSelectionState();
       syncModeButtons();
-      selectionLabel.textContent = "No selection";
       render();
     });
   });
@@ -778,6 +851,12 @@ function startPreview(data) {
   symbolSelect.addEventListener("change", () => {
     state.symbol = symbolSelect.value;
     drawChart();
+  });
+
+  feedEl.addEventListener("click", (event) => {
+    if (event.target === feedEl && state.selectedId) {
+      clearSelection();
+    }
   });
 
   canvas.addEventListener("click", (event) => {
@@ -795,7 +874,7 @@ function startPreview(data) {
       );
 
     if (hit) {
-      selectItem(hit.id, { expandDay: true });
+      selectItem(hit.id, { expandDay: true, scrollIntoView: true });
     } else if (state.selectedId) {
       clearSelection();
     }

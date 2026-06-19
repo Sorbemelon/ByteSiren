@@ -26,6 +26,9 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "function renderDailySection",
   "function renderSignalSection",
   "function renderAuditCard",
+  "function resetSelectionState",
+  "function selectionTypeForItem",
+  "function scrollPendingSelectionIntoView",
   "data-day-post-toggle",
   "feed-diagnostics",
   "Preview data loaded:",
@@ -43,6 +46,11 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "Hide",
   "cell-highlight",
   "row-highlight",
+  "selectedType",
+  "selected-signal",
+  "selected-daily",
+  "selected-audit",
+  "scrollIntoView",
 ];
 
 const FORBIDDEN_CONTROL_MARKERS = [
@@ -188,7 +196,10 @@ function assertDayPostCollapseContract(feedContract, groupedPreview) {
     feedContract.preview_state.global_control_label_when_collapsed,
     "Expand days",
   );
-  assertNoForbiddenControls("feed contract preview_state", feedContract.preview_state);
+  assertNoForbiddenControls(
+    "feed contract preview_state",
+    feedContract.preview_state,
+  );
 
   for (const group of feedContract.day_groups) {
     assert.ok(group.day_post_id, `${group.date_utc} missing day_post_id`);
@@ -228,7 +239,10 @@ function assertDayPostCollapseContract(feedContract, groupedPreview) {
     "Expand days",
     "Collapse days",
   ]);
-  assertNoForbiddenControls("grouped preview_state", groupedPreview.preview_state);
+  assertNoForbiddenControls(
+    "grouped preview_state",
+    groupedPreview.preview_state,
+  );
 
   for (const post of groupedPreview.public_preview.day_posts) {
     assert.equal(post.visible_sections_when_collapsed.length, 1);

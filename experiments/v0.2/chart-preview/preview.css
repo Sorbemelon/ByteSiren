@@ -232,6 +232,7 @@ button.is-active {
   padding: 10px;
   border-bottom: 1px solid var(--border);
   flex: 0 0 auto;
+  cursor: pointer;
 }
 
 .section-card:last-child {
@@ -241,6 +242,27 @@ button.is-active {
 .section-card.is-selected {
   border-color: rgba(245, 158, 11, 0.75);
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.22);
+}
+
+.section-card.selected-signal {
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow:
+    inset 3px 0 0 rgba(245, 158, 11, 0.85),
+    0 0 0 1px rgba(245, 158, 11, 0.26);
+}
+
+.section-card.selected-daily {
+  background: rgba(96, 165, 250, 0.08);
+  box-shadow:
+    inset 3px 0 0 rgba(96, 165, 250, 0.85),
+    0 0 0 1px rgba(96, 165, 250, 0.24);
+}
+
+.section-card.selected-audit {
+  background: rgba(167, 139, 250, 0.08);
+  box-shadow:
+    inset 3px 0 0 rgba(167, 139, 250, 0.85),
+    0 0 0 1px rgba(167, 139, 250, 0.24);
 }
 
 .card-header {
