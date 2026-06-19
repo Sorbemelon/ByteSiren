@@ -24,6 +24,7 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "function renderDailySection",
   "function renderSignalSection",
   "function renderAuditCard",
+  "function renderCombinedAuditGroup",
   "function drawAllSymbolsChart",
   "function resetSelectionState",
   "function selectionTypeForItem",
@@ -57,6 +58,7 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "selected-signal",
   "selected-daily",
   "selected-audit",
+  "combined-audit-group",
   "scrollIntoView",
 ];
 
@@ -290,12 +292,20 @@ async function runSmoke() {
     "BTC must remain the default chart selection",
   );
   assert.ok(
+    indexHtml.includes('data-mode="both"'),
+    "index.html must expose the Both feed mode",
+  );
+  assert.ok(
     previewJs.includes("__BYTESIREN_V02_PREVIEW__"),
     "preview.js must try the direct-file-safe global bundle",
   );
   assert.ok(
     previewJs.includes("Preview data could not load"),
     "preview.js must render a visible data-load error",
+  );
+  assert.ok(
+    previewJs.includes('state.mode === "both"'),
+    "preview.js must render a combined public/audit mode",
   );
   assertNoForbiddenControls("index.html", indexHtml);
   assertNoForbiddenControls("preview.js", previewJs);

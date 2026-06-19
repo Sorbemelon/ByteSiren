@@ -429,6 +429,73 @@ async function runBrowserSmoke() {
     })()`);
     assert.equal(await session.evaluate(`state.selectedType`), null);
 
+    await session.evaluate(`(() => {
+      state.daysExpanded = true;
+      state.dayOverrides.clear();
+      render();
+    })()`);
+    assert.equal(
+      await session.evaluate(
+        `document.querySelector('#day-toggle').textContent.trim()`,
+      ),
+      "Collapse days",
+    );
+
+    await session.evaluate(
+      `document.querySelector('[data-mode="both"]').click()`,
+    );
+    const bothMode = await session.evaluate(`(() => ( {
+      mode: state.mode,
+      selectedType: state.selectedType,
+      dailySections: document.querySelectorAll('.daily-section').length,
+      signalSections: document.querySelectorAll('.signal-section').length,
+      auditSections: document.querySelectorAll('.audit-section').length,
+      combinedHeader: document.querySelector('.combined-audit-header')?.innerText ?? '',
+      dayToggle: document.querySelector('#day-toggle').textContent.trim(),
+      dayToggleDisabled: document.querySelector('#day-toggle').disabled,
+      hasBothButton: Boolean(document.querySelector('[data-mode="both"].is-active'))
+    }))()`);
+    assert.equal(bothMode.mode, "both");
+    assert.equal(bothMode.selectedType, null);
+    assert.equal(bothMode.dailySections, 31);
+    assert.equal(bothMode.signalSections, initial.expectedSignals);
+    assert.equal(bothMode.auditSections, initial.expectedAudit);
+    assert.match(bothMode.combinedHeader, /Audit events/i);
+    assert.equal(bothMode.dayToggle, "Collapse days");
+    assert.equal(bothMode.dayToggleDisabled, false);
+    assert.equal(bothMode.hasBothButton, true);
+
+    await session.evaluate(
+      `document.querySelector('.combined-audit-group .audit-section').click()`,
+    );
+    assert.equal(await session.evaluate(`state.selectedType`), "audit_event");
+    assert.equal(
+      await session.evaluate(
+        `Boolean(document.querySelector('.combined-audit-group .audit-section.is-selected.selected-audit'))`,
+      ),
+      true,
+    );
+    await session.evaluate(
+      `document.querySelector('.combined-audit-group .audit-section.is-selected').click()`,
+    );
+    assert.equal(await session.evaluate(`state.selectedType`), null);
+
+    await session.evaluate(
+      `document.querySelector('[data-mode="public"]').click()`,
+    );
+    assert.deepEqual(
+      await session.evaluate(`(() => ({
+        mode: state.mode,
+        selectedType: state.selectedType,
+        auditSections: document.querySelectorAll('.audit-section').length
+      }))()`),
+      {
+        mode: "public",
+        selectedType: null,
+        auditSections: 0,
+      },
+    );
+
     await session.evaluate(`document.querySelector('.signal-section').click()`);
     await session.evaluate(
       `document.querySelector('[data-mode="audit"]').click()`,
@@ -505,6 +572,8 @@ async function runBrowserSmoke() {
             "chart_window_toggle",
             "daily_overview_toggle",
             "neutral_chart_clear",
+            "both_mode_public_and_audit_cards",
+            "both_mode_audit_card_toggle",
             "mode_switch_clear",
             "audit_card_toggle",
             "audit_chart_toggle",

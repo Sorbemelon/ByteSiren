@@ -81,6 +81,14 @@ export function highlightsForSelection({
     (item) => item.item_type === "signal_event",
   );
 
+  if (mode === "both" && selection.selected_type === "audit_event") {
+    return {
+      dayWindowIds: [],
+      signalWindowIds: [],
+      auditWindowIds: selection.selected_id ? [selection.selected_id] : [],
+    };
+  }
+
   if (selection.selected_type === "daily_overview") {
     const overview = publicItems.find(
       (item) => item.id === selection.selected_id,
@@ -109,6 +117,7 @@ export function highlightsForSelection({
   return {
     dayWindowIds: [],
     signalWindowIds: signals.map((item) => item.id),
-    auditWindowIds: [],
+    auditWindowIds:
+      mode === "both" ? auditItems.map((item) => item.id) : [],
   };
 }

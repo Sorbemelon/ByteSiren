@@ -47,5 +47,6 @@ node experiments/v0.2/src/smoke-chart-preview.mjs
 
 - Public feed: 31 Daily Overviews plus public signal events.
 - Audit events: non-public detected events only.
+- Both: public day posts and audit events in one review panel.
 - Expand days and Collapse days mirror the proposed parent day-post controls.
 - Show more and Hide expand details inside one Daily Overview or Signal Event section.

@@ -153,3 +153,34 @@ test("audit event selection and highlight filtering work", async () => {
   assert.deepEqual(highlights.auditWindowIds, [auditItem.id]);
   assert.deepEqual(toggleSelection(selected, target), EMPTY_SELECTION);
 });
+
+test("both mode shows public and audit highlights until an item is selected", async () => {
+  const { publicItems, signals, audit, auditIds } = await loadFixture();
+  const defaultHighlights = highlightsForSelection({
+    mode: "both",
+    selection: EMPTY_SELECTION,
+    publicItems,
+    auditItems: audit.items,
+  });
+
+  assert.equal(defaultHighlights.signalWindowIds.length, signals.length);
+  assert.equal(defaultHighlights.auditWindowIds.length, audit.items.length);
+
+  const auditItem = audit.items[0];
+  const selectedAudit = toggleSelection(
+    EMPTY_SELECTION,
+    selectionTargetForItem(auditItem, {
+      mode: "both",
+      auditIds,
+    }),
+  );
+  const selectedHighlights = highlightsForSelection({
+    mode: "both",
+    selection: selectedAudit,
+    publicItems,
+    auditItems: audit.items,
+  });
+
+  assert.deepEqual(selectedHighlights.signalWindowIds, []);
+  assert.deepEqual(selectedHighlights.auditWindowIds, [auditItem.id]);
+});

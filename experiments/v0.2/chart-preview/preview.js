@@ -1,6 +1,7 @@
 const PREVIEW_DATA_ERROR =
   "Preview data could not load. Run: py -3.11 -m http.server 4177 -d experiments/v0.2/chart-preview";
 const ALL_SYMBOL_VALUE = "ALL";
+const VALID_MODES = new Set(["public", "audit", "both"]);
 const DEFAULT_SYMBOLS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"];
 const SYMBOL_COLORS = {
   BTCUSDT: "#f59e0b",
@@ -11,10 +12,7 @@ const SYMBOL_COLORS = {
 };
 
 const state = {
-  mode:
-    new URLSearchParams(window.location.search).get("mode") === "audit"
-      ? "audit"
-      : "public",
+  mode: initialMode(),
   daysExpanded: true,
   dayOverrides: new Map(),
   expandedSections: new Set(),
@@ -42,6 +40,19 @@ let auditItems = [];
 let auditById = new Map();
 let itemToDayPost = new Map();
 let dayPostById = new Map();
+
+function initialMode() {
+  const mode = new URLSearchParams(window.location.search).get("mode");
+  return VALID_MODES.has(mode) ? mode : "public";
+}
+
+function publicFeedVisible() {
+  return state.mode === "public" || state.mode === "both";
+}
+
+function auditFeedVisible() {
+  return state.mode === "audit" || state.mode === "both";
+}
 
 function bundledPreviewData() {
   return (
@@ -223,9 +234,10 @@ function anyDayPostExpanded() {
 function syncDayToggle() {
   if (!dayToggle) return;
 
-  const hasExpandedDay = state.mode === "public" && anyDayPostExpanded();
+  const hasExpandedDay = publicFeedVisible() && anyDayPostExpanded();
   dayToggle.textContent = hasExpandedDay ? "Collapse days" : "Expand days";
   dayToggle.classList.toggle("is-active", hasExpandedDay);
+  dayToggle.disabled = !publicFeedVisible();
 }
 
 function previewCounts() {
@@ -338,6 +350,19 @@ function drawMarker(plot, item, color) {
   });
 }
 
+function drawAuditOverlay(plot, item, isSelected = false) {
+  drawRectOverlay(
+    plot,
+    item.chart.highlight_start,
+    item.chart.highlight_end,
+    "rgb(245, 158, 11)",
+    isSelected ? 0.2 : 0.07,
+    item.id,
+    "audit",
+  );
+  drawMarker(plot, { id: item.id, chart: item.chart }, "#f59e0b");
+}
+
 function signalItemsForDay(dateUtc) {
   return publicItems.filter(
     (item) => item.item_type === "signal_event" && item.date_utc === dateUtc,
@@ -357,17 +382,17 @@ function drawActiveOverlays(plot) {
     const events = selected ? [selected] : auditItems;
 
     for (const item of events) {
-      const isSelected = item.id === state.selectedId;
-      drawRectOverlay(
-        plot,
-        item.chart.highlight_start,
-        item.chart.highlight_end,
-        "rgb(245, 158, 11)",
-        isSelected ? 0.2 : 0.07,
-        item.id,
-        "audit",
-      );
-      drawMarker(plot, { id: item.id, chart: item.chart }, "#f59e0b");
+      drawAuditOverlay(plot, item, item.id === state.selectedId);
+    }
+    return;
+  }
+
+  if (state.mode === "both" && state.selectedType === "audit_event") {
+    const selected = auditById.get(state.selectedId);
+    const events = selected ? [selected] : auditItems;
+
+    for (const item of events) {
+      drawAuditOverlay(plot, item, item.id === state.selectedId);
     }
     return;
   }
@@ -425,6 +450,12 @@ function drawActiveOverlays(plot) {
       "signal",
     );
     drawMarker(plot, item, colorForDirection(item.direction));
+  }
+
+  if (state.mode === "both" && !state.selectedType) {
+    for (const item of auditItems) {
+      drawAuditOverlay(plot, item, false);
+    }
   }
 }
 
@@ -698,10 +729,9 @@ function updateSelectionLabel(item, selectedType) {
 }
 
 function selectItem(id, options = {}) {
-  const item =
-    state.mode === "audit"
-      ? auditById.get(id) || publicById.get(id)
-      : publicById.get(id) || auditById.get(id);
+  const item = auditFeedVisible() && !publicFeedVisible()
+    ? auditById.get(id) || publicById.get(id)
+    : publicById.get(id) || auditById.get(id);
   const selectedType = selectionTypeForItem(item);
 
   if (!item || !selectedType) {
@@ -945,11 +975,35 @@ function renderAuditCard(item) {
     </article>`;
 }
 
+function renderAuditFeed() {
+  return auditItems.length
+    ? auditItems.map(renderAuditCard).join("")
+    : '<div class="empty">No audit events.</div>';
+}
+
+function renderCombinedAuditGroup() {
+  return `
+    <section class="combined-audit-group" aria-label="Audit events in combined view">
+      <div class="combined-audit-header">
+        <div>
+          <h2 class="combined-title">Audit events</h2>
+          <div class="combined-meta">${auditItems.length} non-public event${auditItems.length === 1 ? "" : "s"}</div>
+        </div>
+      </div>
+      <div class="combined-audit-list">
+        ${renderAuditFeed()}
+      </div>
+    </section>`;
+}
+
 function renderFeed() {
   if (state.mode === "audit") {
-    feedEl.innerHTML = auditItems.length
-      ? auditItems.map(renderAuditCard).join("")
-      : '<div class="empty">No audit events.</div>';
+    feedEl.innerHTML = renderAuditFeed();
+  } else if (state.mode === "both") {
+    const publicHtml = publicDayPosts.length
+      ? publicDayPosts.map(renderDayPost).join("")
+      : '<div class="empty">Preview data loaded, but no public day posts were found.</div>';
+    feedEl.innerHTML = `${publicHtml}${renderCombinedAuditGroup()}`;
   } else {
     feedEl.innerHTML = publicDayPosts.length
       ? publicDayPosts.map(renderDayPost).join("")
