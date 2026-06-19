@@ -30,7 +30,7 @@ apps/worker/.dev.vars.*
 .scopian/
 .claude/settings.local.json
 docs/private/
-experiments/
+# experiments/
 
 # Logs and OS files
 *.log

@@ -1,0 +1,608 @@
+const previewData = window.BYTESIREN_PREVIEW_DATA;
+
+if (!previewData) {
+  throw new Error(
+    "Missing preview data. Run node experiments/v0.2/src/build-chart-preview.mjs.",
+  );
+}
+
+const { feedContract, auditEvents, candles } = previewData;
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+const feedEl = document.getElementById("feed");
+const symbolSelect = document.getElementById("symbol-select");
+const selectionLabel = document.getElementById("selection-label");
+const dayToggle = document.getElementById("day-toggle");
+
+const state = {
+  mode: "public",
+  daysExpanded: true,
+  dayOverrides: new Map(),
+  expandedSections: new Set(),
+  symbol: "BTCUSDT",
+  selectedId: null,
+  hitZones: [],
+};
+
+const publicDayPosts = feedContract.day_groups;
+const publicItems = publicDayPosts.flatMap((group) => group.items);
+const publicById = new Map(publicItems.map((item) => [item.id, item]));
+const auditItems = auditEvents.items;
+const auditById = new Map(auditItems.map((item) => [item.id, item]));
+const itemToDayPost = new Map(
+  publicDayPosts.flatMap((group) =>
+    group.items.map((item) => [item.id, group.day_post_id]),
+  ),
+);
+const dayPostById = new Map(
+  publicDayPosts.map((group) => [group.day_post_id, group]),
+);
+
+function pct(value, digits = 1) {
+  const rounded = Number(value || 0).toFixed(digits);
+  return `${Number(rounded) >= 0 ? "+" : ""}${rounded}%`;
+}
+
+function displayDirection(direction) {
+  if (direction === "observed_down") return "Observed Down";
+  if (direction === "two_sided") return "Two-sided";
+  return "Observed Up";
+}
+
+function marketTone(value) {
+  return String(value || "").replace(/_/g, " ");
+}
+
+function rangePositionLabel(value) {
+  return String(value || "inside_range").replace(/_/g, " ");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function isDayPostExpanded(post) {
+  if (state.dayOverrides.has(post.day_post_id)) {
+    return state.dayOverrides.get(post.day_post_id);
+  }
+
+  return state.daysExpanded;
+}
+
+function setGlobalDaysExpanded(expanded) {
+  state.daysExpanded = expanded;
+  state.dayOverrides.clear();
+  dayToggle.textContent = expanded ? "Collapse days" : "Expand days";
+  dayToggle.classList.toggle("is-active", expanded);
+  render();
+}
+
+function visibleItemsForPost(post) {
+  if (isDayPostExpanded(post)) return post.items;
+  return post.items.filter((item) => item.id === post.default_collapsed_item_id);
+}
+
+function activeCandles() {
+  return (candles.candles_by_symbol[state.symbol] || []).map((candle) => ({
+    time: Date.parse(candle.open_time),
+    open_time: candle.open_time,
+    open: Number(candle.open),
+    high: Number(candle.high),
+    low: Number(candle.low),
+    close: Number(candle.close),
+    volume: Number(candle.quote_volume || candle.volume || 0),
+  }));
+}
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+  canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function colorForDirection(direction) {
+  if (direction === "observed_down") return "#f43f5e";
+  if (direction === "two_sided") return "#a78bfa";
+  return "#10b981";
+}
+
+function drawRectOverlay(plot, startIso, endIso, color, alpha, id, kind) {
+  const start = Date.parse(startIso);
+  const end = Date.parse(endIso);
+  const left = plot.xForTime(Math.min(start, end));
+  const right = plot.xForTime(Math.max(start, end));
+  const x = Math.max(plot.left, Math.min(left, right));
+  const w = Math.max(4, Math.min(plot.right, Math.max(left, right)) - x);
+
+  ctx.fillStyle = color.replace(")", `, ${alpha})`).replace("rgb", "rgba");
+  ctx.fillRect(x, plot.top, w, plot.height);
+  ctx.strokeStyle = color.replace(")", ", 0.45)").replace("rgb", "rgba");
+  ctx.strokeRect(x, plot.top, w, plot.height);
+
+  state.hitZones.push({ id, kind, x, y: plot.top, w, h: plot.height });
+}
+
+function drawMarker(plot, item, color) {
+  const time = Date.parse(item.chart.peak_marker_time || item.chart.highlight_start);
+  const x = plot.xForTime(time);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, plot.top + 18, 5, 0, Math.PI * 2);
+  ctx.fill();
+  state.hitZones.push({
+    id: item.id,
+    kind: "marker",
+    x: x - 10,
+    y: plot.top,
+    w: 20,
+    h: 35,
+  });
+}
+
+function signalItemsForDay(dateUtc) {
+  return publicItems.filter(
+    (item) => item.item_type === "signal_event" && item.date_utc === dateUtc,
+  );
+}
+
+function publicSignalItems() {
+  return publicItems.filter((item) => item.item_type === "signal_event");
+}
+
+function drawActiveOverlays(plot) {
+  if (state.mode === "audit") {
+    const selected = auditById.get(state.selectedId);
+    const events = selected ? [selected] : auditItems;
+
+    for (const item of events) {
+      const isSelected = item.id === state.selectedId;
+      drawRectOverlay(
+        plot,
+        item.chart.highlight_start,
+        item.chart.highlight_end,
+        "rgb(245, 158, 11)",
+        isSelected ? 0.2 : 0.07,
+        item.id,
+        "audit",
+      );
+      drawMarker(plot, { id: item.id, chart: item.chart }, "#f59e0b");
+    }
+    return;
+  }
+
+  const selected = publicById.get(state.selectedId);
+
+  if (selected?.item_type === "daily_overview") {
+    drawRectOverlay(
+      plot,
+      selected.chart.highlight_start,
+      selected.chart.highlight_end,
+      "rgb(96, 165, 250)",
+      0.12,
+      selected.id,
+      "daily",
+    );
+
+    for (const item of signalItemsForDay(selected.date_utc)) {
+      drawRectOverlay(
+        plot,
+        item.chart.highlight_start,
+        item.chart.highlight_end,
+        "rgb(245, 158, 11)",
+        0.18,
+        item.id,
+        "signal",
+      );
+      drawMarker(plot, item, colorForDirection(item.direction));
+    }
+    return;
+  }
+
+  const events =
+    selected?.item_type === "signal_event" ? [selected] : publicSignalItems();
+
+  for (const item of events) {
+    const isSelected = item.id === state.selectedId;
+    const color =
+      item.direction === "observed_down"
+        ? "rgb(244, 63, 94)"
+        : "rgb(16, 185, 129)";
+    drawRectOverlay(
+      plot,
+      item.chart.highlight_start,
+      item.chart.highlight_end,
+      color,
+      isSelected ? 0.22 : 0.055,
+      item.id,
+      "signal",
+    );
+    drawMarker(plot, item, colorForDirection(item.direction));
+  }
+}
+
+function drawChart() {
+  resizeCanvas();
+  const rect = canvas.getBoundingClientRect();
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  state.hitZones = [];
+
+  const series = activeCandles();
+  if (series.length === 0) return;
+
+  const pad = { left: 48, right: 16, top: 18, bottom: 54 };
+  const volumeHeight = 72;
+  const priceTop = pad.top;
+  const priceBottom = rect.height - pad.bottom - volumeHeight;
+  const plot = {
+    left: pad.left,
+    right: rect.width - pad.right,
+    top: priceTop,
+    bottom: priceBottom,
+    width: rect.width - pad.left - pad.right,
+    height: priceBottom - priceTop,
+  };
+  const firstTime = series[0].time;
+  const lastTime = series.at(-1).time;
+  const minPrice = Math.min(...series.map((candle) => candle.low));
+  const maxPrice = Math.max(...series.map((candle) => candle.high));
+  const maxVolume = Math.max(...series.map((candle) => candle.volume));
+  const pricePad = (maxPrice - minPrice) * 0.08 || 1;
+  const low = minPrice - pricePad;
+  const high = maxPrice + pricePad;
+
+  plot.xForTime = (time) => {
+    const ratio = (time - firstTime) / Math.max(1, lastTime - firstTime);
+    return plot.left + Math.max(0, Math.min(1, ratio)) * plot.width;
+  };
+  const yForPrice = (price) =>
+    plot.bottom - ((price - low) / Math.max(1, high - low)) * plot.height;
+
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.10)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i += 1) {
+    const y = plot.top + (plot.height / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(plot.left, y);
+    ctx.lineTo(plot.right, y);
+    ctx.stroke();
+  }
+
+  const candleStep = plot.width / Math.max(1, series.length - 1);
+  const bodyWidth = Math.max(1, Math.min(5, candleStep * 0.72));
+  for (const candle of series) {
+    const x = plot.xForTime(candle.time);
+    const up = candle.close >= candle.open;
+    ctx.strokeStyle = up ? "#10b981" : "#f43f5e";
+    ctx.fillStyle = up ? "#10b981" : "#f43f5e";
+    const highY = yForPrice(candle.high);
+    const lowY = yForPrice(candle.low);
+    const openY = yForPrice(candle.open);
+    const closeY = yForPrice(candle.close);
+
+    ctx.beginPath();
+    ctx.moveTo(x, highY);
+    ctx.lineTo(x, lowY);
+    ctx.stroke();
+    ctx.fillRect(
+      x - bodyWidth / 2,
+      Math.min(openY, closeY),
+      bodyWidth,
+      Math.max(1, Math.abs(closeY - openY)),
+    );
+
+    const volTop =
+      rect.height -
+      pad.bottom -
+      (candle.volume / Math.max(1, maxVolume)) * volumeHeight;
+    ctx.fillStyle = up ? "rgba(16, 185, 129, 0.22)" : "rgba(244, 63, 94, 0.22)";
+    ctx.fillRect(
+      x - bodyWidth / 2,
+      volTop,
+      bodyWidth,
+      rect.height - pad.bottom - volTop,
+    );
+  }
+
+  drawActiveOverlays(plot);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "12px system-ui";
+  ctx.fillText(state.symbol, plot.left, 14);
+  ctx.fillText(high.toFixed(2), 4, plot.top + 4);
+  ctx.fillText(low.toFixed(2), 4, plot.bottom);
+}
+
+function clearSelection() {
+  state.selectedId = null;
+  selectionLabel.textContent = "No selection";
+  render();
+}
+
+function selectItem(id, options = {}) {
+  if (state.selectedId === id) {
+    clearSelection();
+    return;
+  }
+
+  state.selectedId = id;
+  const item = publicById.get(id) || auditById.get(id);
+
+  if (options.expandDay) {
+    const dayPostId = itemToDayPost.get(id);
+    if (dayPostId) {
+      state.dayOverrides.set(dayPostId, true);
+    }
+  }
+
+  if (!item) {
+    selectionLabel.textContent = "No selection";
+  } else if (item.item_type === "daily_overview") {
+    selectionLabel.textContent = `Selected: Daily Overview ${item.date_utc}`;
+  } else {
+    selectionLabel.textContent = `Selected: ${item.id}`;
+  }
+
+  render();
+}
+
+function renderSymbolTable(item) {
+  const rows = item.expanded.per_symbol_table?.rows ?? [];
+  return `
+    <table class="small-table">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Window Change</th>
+          <th>Peak 15m</th>
+          <th>Volume ×</th>
+          <th>Range Position</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((row) => {
+            const rowClass = row.highlights?.lead_mover ? "row-highlight" : "";
+            const peakClass = row.highlights?.strongest_peak_15m
+              ? "cell-highlight"
+              : "";
+            const symbolClass = row.highlights?.lead_mover ? "cell-highlight" : "";
+            return `<tr class="${rowClass}">
+              <td class="${symbolClass}">${escapeHtml(row.symbol.replace("USDT", ""))}</td>
+              <td>${pct(row.window_change_pct)}</td>
+              <td class="${peakClass}">${pct(row.peak_15m_pct)}</td>
+              <td>${Number(row.volume_x ?? 0).toFixed(1)}x</td>
+              <td>${escapeHtml(row.range_position_label ?? rangePositionLabel(row.range_position))}</td>
+            </tr>`;
+          })
+          .join("")}
+      </tbody>
+    </table>
+    <div class="table-glossary">
+      Highlighted symbol/row = lead mover. Highlighted Peak 15m cell = strongest 15-minute change.
+    </div>`;
+}
+
+function sectionControl(item) {
+  const expanded = state.expandedSections.has(item.id);
+  return `<button class="section-toggle" data-section-toggle="${item.id}">
+    ${expanded ? "Hide" : "Show more"}
+  </button>`;
+}
+
+function renderDailySection(item) {
+  const selected = item.id === state.selectedId;
+  const expanded = state.expandedSections.has(item.id);
+  const fields = item.expanded.daily_market_summary_fields;
+
+  return `
+    <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
+      <div class="card-header">
+        <div>
+          <p class="card-title">Daily Overview</p>
+          <div class="card-meta">${item.display_time}</div>
+        </div>
+        <span class="chip">24h Change ${pct(item.change_pct)}</span>
+      </div>
+      <div class="chips">
+        <span class="chip">Market tone: ${escapeHtml(marketTone(item.market_tone))}</span>
+        <span class="chip">Range ${pct(item.market_range_pct)}</span>
+        <span class="chip">${item.has_publishable_signal_events ? "Has signals" : "No public signals"}</span>
+      </div>
+      ${
+        expanded
+          ? `<div class="card-expanded">
+              <div>${escapeHtml(fields.summary_hint)}</div>
+              <div class="card-meta">Notable: ${fields.notable_symbols.map((symbol) => symbol.replace("USDT", "")).join(", ") || "none"}</div>
+              <div class="card-meta">Sources placeholder: ${fields.source_query_hints.map(escapeHtml).join("; ")}</div>
+            </div>`
+          : ""
+      }
+      ${sectionControl(item)}
+    </article>`;
+}
+
+function renderSignalSection(item) {
+  const selected = item.id === state.selectedId;
+  const expanded = state.expandedSections.has(item.id);
+
+  return `
+    <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
+      <div class="card-header">
+        <div>
+          <p class="card-title">Signal Event</p>
+          <div class="card-meta">${escapeHtml(item.display_window)}</div>
+        </div>
+        <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(displayDirection(item.direction))}</span>
+      </div>
+      <div class="chips">
+        <span class="chip">Signals: ${item.signals_count} of ${item.n_tracked}</span>
+        <span class="chip">Avg Change ${pct(item.avg_change_pct)}</span>
+        <span class="chip">Range Position: ${escapeHtml(item.event_range_context_label)}</span>
+        <span class="chip">Impact: ${escapeHtml(item.impact_label)}</span>
+      </div>
+      ${
+        expanded
+          ? `<div class="card-expanded">
+              ${renderSymbolTable(item)}
+              <div class="card-meta">Public Context placeholder</div>
+              <div class="card-meta">Sources placeholder</div>
+            </div>`
+          : ""
+      }
+      ${sectionControl(item)}
+    </article>`;
+}
+
+function renderPublicSection(item) {
+  return item.item_type === "daily_overview"
+    ? renderDailySection(item)
+    : renderSignalSection(item);
+}
+
+function renderDayPost(post) {
+  const expanded = isDayPostExpanded(post);
+  const visibleItems = visibleItemsForPost(post);
+  const label = expanded
+    ? post.day_post_control.collapse_label
+    : post.day_post_control.expand_label;
+
+  return `
+    <section class="day-post" data-day-post-id="${post.day_post_id}">
+      <div class="day-post-header">
+        <div>
+          <h2 class="day-title">${escapeHtml(post.display_date)}</h2>
+          <div class="day-meta">${post.item_count} item${post.item_count === 1 ? "" : "s"}</div>
+        </div>
+        ${
+          label
+            ? `<button class="day-post-toggle" data-day-post-toggle="${post.day_post_id}">${escapeHtml(label)}</button>`
+            : ""
+        }
+      </div>
+      <div class="day-post-sections">
+        ${visibleItems.map(renderPublicSection).join("")}
+      </div>
+    </section>`;
+}
+
+function renderAuditCard(item) {
+  const selected = item.id === state.selectedId;
+  const expanded = state.expandedSections.has(item.id);
+  return `
+    <article class="section-card ${selected ? "is-selected" : ""}" data-id="${item.id}">
+      <div class="card-header">
+        <div>
+          <p class="card-title">Non-public Event</p>
+          <div class="card-meta">${escapeHtml(item.date_time)}</div>
+        </div>
+        <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(displayDirection(item.direction))}</span>
+      </div>
+      <div class="chips">
+        <span class="chip">Avg Change ${pct(item.avg_change_pct)}</span>
+        <span class="chip">Signals: ${item.signals_count} of ${item.n_tracked}</span>
+        <span class="chip">${escapeHtml(item.suppress_reason)}</span>
+      </div>
+      ${
+        expanded
+          ? `<div class="card-expanded">
+              <div>${escapeHtml(item.why_suppressed)}</div>
+              <div class="card-meta">Nearby public event: ${
+                item.nearby_public_event
+                  ? `${escapeHtml(item.nearby_public_event.id)} (${item.nearby_public_event.delta_min} min)`
+                  : "none nearby"
+              }</div>
+            </div>`
+          : ""
+      }
+      ${sectionControl(item)}
+    </article>`;
+}
+
+function renderFeed() {
+  if (state.mode === "audit") {
+    feedEl.innerHTML = auditItems.length
+      ? auditItems.map(renderAuditCard).join("")
+      : '<div class="empty">No audit events.</div>';
+  } else {
+    feedEl.innerHTML = publicDayPosts.map(renderDayPost).join("");
+  }
+
+  feedEl.querySelectorAll(".section-card").forEach((card) => {
+    card.addEventListener("click", () => selectItem(card.dataset.id));
+  });
+
+  feedEl.querySelectorAll("[data-section-toggle]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const id = button.dataset.sectionToggle;
+      if (state.expandedSections.has(id)) {
+        state.expandedSections.delete(id);
+      } else {
+        state.expandedSections.add(id);
+      }
+      render();
+    });
+  });
+
+  feedEl.querySelectorAll("[data-day-post-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const post = dayPostById.get(button.dataset.dayPostToggle);
+      if (!post) return;
+      state.dayOverrides.set(post.day_post_id, !isDayPostExpanded(post));
+      render();
+    });
+  });
+}
+
+function render() {
+  renderFeed();
+  drawChart();
+}
+
+document.querySelectorAll("[data-mode]").forEach((button) => {
+  button.addEventListener("click", () => {
+    state.mode = button.dataset.mode;
+    state.selectedId = null;
+    document.querySelectorAll("[data-mode]").forEach((el) => {
+      el.classList.toggle("is-active", el === button);
+    });
+    selectionLabel.textContent = "No selection";
+    render();
+  });
+});
+
+dayToggle.addEventListener("click", () => {
+  setGlobalDaysExpanded(!state.daysExpanded);
+});
+
+symbolSelect.addEventListener("change", () => {
+  state.symbol = symbolSelect.value;
+  drawChart();
+});
+
+canvas.addEventListener("click", (event) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  const hit = [...state.hitZones]
+    .reverse()
+    .find(
+      (zone) =>
+        x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h,
+    );
+
+  if (hit) {
+    selectItem(hit.id, { expandDay: true });
+  } else if (state.selectedId) {
+    clearSelection();
+  }
+});
+
+window.addEventListener("resize", drawChart);
+render();

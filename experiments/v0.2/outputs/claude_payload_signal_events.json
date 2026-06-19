@@ -1,0 +1,1809 @@
+{
+  "generated_at": "2026-06-19T13:34:15.617Z",
+  "item_count": 14,
+  "items": [
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_bd7eadf3_20260523t0745",
+      "date_utc": "2026-05-23",
+      "evidence_window": {
+        "start": "2026-05-23T07:45:00.000Z",
+        "end": "2026-05-23T07:59:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -1.4171,
+      "signal_strength": "High",
+      "signal_strength_score": 100,
+      "event_range_context": "broad_break_low",
+      "source_route_hint": [
+        "broad_market",
+        "weekend_overnight"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -0.9074,
+          "peak_15m_pct": -0.9074,
+          "volume_x": 17.3557,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 77584.94,
+          "prev_24h_low": 75158.44,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -1.4171,
+          "peak_15m_pct": -1.4171,
+          "volume_x": 29.2723,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 2138,
+          "prev_24h_low": 2053,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -1.328,
+          "peak_15m_pct": -1.328,
+          "volume_x": 14.7356,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 664.2,
+          "prev_24h_low": 645.01,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -1.9783,
+          "peak_15m_pct": -1.9666,
+          "volume_x": 28.8923,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 87.85,
+          "prev_24h_low": 83.82,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -1.4421,
+          "peak_15m_pct": -1.4421,
+          "volume_x": 20.7301,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.3705,
+          "prev_24h_low": 1.3272,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": false,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 26205
+      },
+      "macro_delta_min": 26205,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_fdc31c9f_20260523t2030",
+      "date_utc": "2026-05-23",
+      "evidence_window": {
+        "start": "2026-05-23T20:30:00.000Z",
+        "end": "2026-05-23T20:59:59.999Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": 1.9469,
+      "signal_strength": "High",
+      "signal_strength_score": 94.3857,
+      "event_range_context": "broad_break_high",
+      "source_route_hint": [
+        "broad_market",
+        "weekend_overnight",
+        "possible_liquidation_context"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": 1.6942,
+          "peak_15m_pct": 1.0929,
+          "volume_x": 4.7489,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 76192.23,
+          "prev_24h_low": 74289.6,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": 3.3261,
+          "peak_15m_pct": 2.5698,
+          "volume_x": 18.9842,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 2083.64,
+          "prev_24h_low": 2009.3,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": 1.3826,
+          "peak_15m_pct": 0.8399,
+          "volume_x": 6.6704,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 654.03,
+          "prev_24h_low": 635.29,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": 2.604,
+          "peak_15m_pct": 1.8619,
+          "volume_x": 16.581,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 85.28,
+          "prev_24h_low": 81.5,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": 1.9469,
+          "peak_15m_pct": 1.4416,
+          "volume_x": 8.8723,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 1.3506,
+          "prev_24h_low": 1.3019,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "ETHUSDT",
+        "strongest_peak_symbol": "ETHUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "ETHUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "ETHUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 25440
+      },
+      "macro_delta_min": 25440,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_a43ac588_20260528t0315",
+      "date_utc": "2026-05-28",
+      "evidence_window": {
+        "start": "2026-05-28T03:15:00.000Z",
+        "end": "2026-05-28T03:59:59.999Z",
+        "duration_min": 45
+      },
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -1.5493,
+      "signal_strength": "Medium",
+      "signal_strength_score": 61.5041,
+      "event_range_context": "broad_break_low",
+      "source_route_hint": [
+        "broad_market",
+        "weekend_overnight"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -1.2855,
+          "peak_15m_pct": -0.6272,
+          "volume_x": 15.1951,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 76174.15,
+          "prev_24h_low": 74127.57,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -1.6093,
+          "peak_15m_pct": -1.2592,
+          "volume_x": 18.0905,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 2097.4,
+          "prev_24h_low": 2010.37,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -0.9504,
+          "peak_15m_pct": -0.4005,
+          "volume_x": 10.0306,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 659.9,
+          "prev_24h_low": 643.6,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -1.5493,
+          "peak_15m_pct": -0.6955,
+          "volume_x": 9.5243,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 84.84,
+          "prev_24h_low": 81.8,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -1.7212,
+          "peak_15m_pct": -0.922,
+          "volume_x": 9.9234,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.3437,
+          "prev_24h_low": 1.2979,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "XRPUSDT",
+        "strongest_peak_symbol": "ETHUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "XRPUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "ETHUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": false,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 19275
+      },
+      "macro_delta_min": 19275,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_dac278c4_20260529t1500",
+      "date_utc": "2026-05-29",
+      "evidence_window": {
+        "start": "2026-05-29T15:00:00.000Z",
+        "end": "2026-05-29T15:29:59.999Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": 1.1679,
+      "signal_strength": "Low",
+      "signal_strength_score": 44.9419,
+      "event_range_context": "inside_range",
+      "source_route_hint": [
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": 0.7841,
+          "peak_15m_pct": 0.8193,
+          "volume_x": 4.875,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 73949.22,
+          "prev_24h_low": 72512.49,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": 1.1679,
+          "peak_15m_pct": 0.9037,
+          "volume_x": 6.5219,
+          "range_position": "near_high",
+          "range_position_label": "Near high",
+          "prev_24h_high": 2030,
+          "prev_24h_low": 1976.48,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": 0.8521,
+          "peak_15m_pct": 0.5891,
+          "volume_x": 3.4958,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 642.59,
+          "prev_24h_low": 630.86,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": 1.5984,
+          "peak_15m_pct": 0.9714,
+          "volume_x": 5.1412,
+          "range_position": "near_high",
+          "range_position_label": "Near high",
+          "prev_24h_high": 83.01,
+          "prev_24h_low": 80.35,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": 1.2157,
+          "peak_15m_pct": 0.7264,
+          "volume_x": 3.3499,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1.3385,
+          "prev_24h_low": 1.2945,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": false,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 17130
+      },
+      "macro_delta_min": 17130,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_2559ab4c_20260602t1415",
+      "date_utc": "2026-06-02",
+      "evidence_window": {
+        "start": "2026-06-02T14:15:00.000Z",
+        "end": "2026-06-02T14:29:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -1.5819,
+      "signal_strength": "High",
+      "signal_strength_score": 75.2338,
+      "event_range_context": "broad_break_low",
+      "source_route_hint": [
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -1.0203,
+          "peak_15m_pct": -1.0202,
+          "volume_x": 8.9533,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 71800.73,
+          "prev_24h_low": 68307.8,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -1.5819,
+          "peak_15m_pct": -1.5819,
+          "volume_x": 11.1611,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 2009.2,
+          "prev_24h_low": 1958.79,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -1.0039,
+          "peak_15m_pct": -1.0039,
+          "volume_x": 4.0855,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 701.73,
+          "prev_24h_low": 671.72,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -1.8173,
+          "peak_15m_pct": -1.8173,
+          "volume_x": 12.0255,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 81.65,
+          "prev_24h_low": 78.25,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -2.0342,
+          "peak_15m_pct": -2.0342,
+          "volume_x": 15.7231,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.3053,
+          "prev_24h_low": 1.2509,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "XRPUSDT",
+        "strongest_peak_symbol": "XRPUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "XRPUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "XRPUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 11415
+      },
+      "macro_delta_min": 11415,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_d21993f9_20260602t2245",
+      "date_utc": "2026-06-02",
+      "evidence_window": {
+        "start": "2026-06-02T22:45:00.000Z",
+        "end": "2026-06-02T23:29:59.999Z",
+        "duration_min": 45
+      },
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -1.2174,
+      "signal_strength": "Low",
+      "signal_strength_score": 44.6141,
+      "event_range_context": "broad_break_low",
+      "source_route_hint": [
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -0.7647,
+          "peak_15m_pct": -0.8525,
+          "volume_x": 3.3857,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 71583.29,
+          "prev_24h_low": 66432,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -2.3288,
+          "peak_15m_pct": -1.2718,
+          "volume_x": 8.1901,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 2008.38,
+          "prev_24h_low": 1873.92,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -0.9636,
+          "peak_15m_pct": -0.832,
+          "volume_x": 7.1903,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 695.94,
+          "prev_24h_low": 652.36,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -2.3781,
+          "peak_15m_pct": -1.5765,
+          "volume_x": 6.8277,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 81.65,
+          "prev_24h_low": 74.5,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -1.2174,
+          "peak_15m_pct": -1.2174,
+          "volume_x": 8.0522,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.3013,
+          "prev_24h_low": 1.207,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": false,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 10905
+      },
+      "macro_delta_min": 10905,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_2fa494ec_20260607t2200",
+      "date_utc": "2026-06-07",
+      "evidence_window": {
+        "start": "2026-06-07T22:00:00.000Z",
+        "end": "2026-06-07T22:14:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": 2.9275,
+      "signal_strength": "High",
+      "signal_strength_score": 96.2382,
+      "event_range_context": "broad_break_high",
+      "source_route_hint": [
+        "broad_market",
+        "weekend_overnight",
+        "possible_liquidation_context"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": 2.9275,
+          "peak_15m_pct": 2.9275,
+          "volume_x": 6.577,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 62960,
+          "prev_24h_low": 60429.09,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": 4.0636,
+          "peak_15m_pct": 4.0636,
+          "volume_x": 8.0092,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 1648.7,
+          "prev_24h_low": 1551.57,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": 2.195,
+          "peak_15m_pct": 2.1967,
+          "volume_x": 5.389,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 599,
+          "prev_24h_low": 570.93,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": 4.1306,
+          "peak_15m_pct": 4.1467,
+          "volume_x": 6.2028,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 66.11,
+          "prev_24h_low": 61.47,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": 2.8218,
+          "peak_15m_pct": 2.8309,
+          "volume_x": 4.1032,
+          "range_position": "near_high",
+          "range_position_label": "Near high",
+          "prev_24h_high": 1.1702,
+          "prev_24h_low": 1.0816,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 3750
+      },
+      "macro_delta_min": 3750,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_1b8c81d3_20260610t1230",
+      "date_utc": "2026-06-10",
+      "evidence_window": {
+        "start": "2026-06-10T12:30:00.000Z",
+        "end": "2026-06-10T12:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": 0.8607,
+      "signal_strength": "Low",
+      "signal_strength_score": 45.6114,
+      "event_range_context": "inside_range",
+      "source_route_hint": [
+        "macro_aligned",
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": 0.8468,
+          "peak_15m_pct": 0.8468,
+          "volume_x": 6.1638,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 62738,
+          "prev_24h_low": 60755,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": 0.8607,
+          "peak_15m_pct": 0.8601,
+          "volume_x": 4.5733,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1680.63,
+          "prev_24h_low": 1606.01,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": 0.7452,
+          "peak_15m_pct": 0.7469,
+          "volume_x": 4.3056,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 598.62,
+          "prev_24h_low": 580.68,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": 1.2439,
+          "peak_15m_pct": 1.228,
+          "volume_x": 7.6289,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 66.38,
+          "prev_24h_low": 62.95,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": 1.1381,
+          "peak_15m_pct": 1.1381,
+          "volume_x": 6.2579,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1.1666,
+          "prev_24h_low": 1.0994,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": true,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 0
+      },
+      "macro_delta_min": 0,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_da58fd31_20260610t1330",
+      "date_utc": "2026-06-10",
+      "evidence_window": {
+        "start": "2026-06-10T13:30:00.000Z",
+        "end": "2026-06-10T13:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": 1.5541,
+      "signal_strength": "Medium",
+      "signal_strength_score": 63.3362,
+      "event_range_context": "inside_range",
+      "source_route_hint": [
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": 1.3423,
+          "peak_15m_pct": 1.3423,
+          "volume_x": 4.7703,
+          "range_position": "near_high",
+          "range_position_label": "Near high",
+          "prev_24h_high": 62540,
+          "prev_24h_low": 60755,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": 1.8007,
+          "peak_15m_pct": 1.8001,
+          "volume_x": 5.1098,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1678.47,
+          "prev_24h_low": 1606.01,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": 1.2666,
+          "peak_15m_pct": 1.2631,
+          "volume_x": 4.4012,
+          "range_position": "near_high",
+          "range_position_label": "Near high",
+          "prev_24h_high": 598.62,
+          "prev_24h_low": 580.68,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": 1.5841,
+          "peak_15m_pct": 1.5841,
+          "volume_x": 6.1946,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 66.22,
+          "prev_24h_low": 62.95,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": 1.5541,
+          "peak_15m_pct": 1.5451,
+          "volume_x": 4.2907,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1.1634,
+          "prev_24h_low": 1.0994,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "ETHUSDT",
+        "strongest_peak_symbol": "ETHUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "ETHUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "ETHUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": false,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 60
+      },
+      "macro_delta_min": 60,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_51361797_20260614t2115",
+      "date_utc": "2026-06-14",
+      "evidence_window": {
+        "start": "2026-06-14T21:15:00.000Z",
+        "end": "2026-06-14T21:44:59.999Z",
+        "duration_min": 30
+      },
+      "direction": "observed_up",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": 2.3766,
+      "signal_strength": "High",
+      "signal_strength_score": 100,
+      "event_range_context": "broad_break_high",
+      "source_route_hint": [
+        "broad_market",
+        "weekend_overnight",
+        "possible_liquidation_context"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": 1.8207,
+          "peak_15m_pct": 1.0474,
+          "volume_x": 22.9168,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 64762.77,
+          "prev_24h_low": 63678.83,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": 2.629,
+          "peak_15m_pct": 1.7047,
+          "volume_x": 25.7925,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 1697.28,
+          "prev_24h_low": 1654.9,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": 1.5229,
+          "peak_15m_pct": 1.0345,
+          "volume_x": 8.0157,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 613.03,
+          "prev_24h_low": 602.79,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": 3.2339,
+          "peak_15m_pct": 1.8377,
+          "volume_x": 13.5933,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 69.59,
+          "prev_24h_low": 66.94,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": 2.3766,
+          "peak_15m_pct": 1.4293,
+          "volume_x": 18.1089,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 1.1568,
+          "prev_24h_low": 1.1268,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "fomc_decision_2026_06_17",
+        "type": "FOMC decision",
+        "title": "FOMC decision",
+        "scheduled_at": "2026-06-17T18:00:00.000Z",
+        "source_query_hint": "FOMC decision June 17 2026 Bitcoin crypto reaction",
+        "delta_min": 4125
+      },
+      "macro_delta_min": 4125,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_4ab7f2a1_20260617t1800",
+      "date_utc": "2026-06-17",
+      "evidence_window": {
+        "start": "2026-06-17T18:00:00.000Z",
+        "end": "2026-06-17T18:14:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -1.2199,
+      "signal_strength": "High",
+      "signal_strength_score": 81.1444,
+      "event_range_context": "mixed_range_position",
+      "source_route_hint": [
+        "macro_aligned",
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -1.2199,
+          "peak_15m_pct": -1.2141,
+          "volume_x": 8.5598,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 66445.93,
+          "prev_24h_low": 64565,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -1.3581,
+          "peak_15m_pct": -1.3581,
+          "volume_x": 10.842,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1810.21,
+          "prev_24h_low": 1741.05,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -0.759,
+          "peak_15m_pct": -0.7574,
+          "volume_x": 4.1433,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 612.5,
+          "prev_24h_low": 600.9,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -1.4149,
+          "peak_15m_pct": -1.4282,
+          "volume_x": 8.6384,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 74.69,
+          "prev_24h_low": 71.59,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -1.1738,
+          "peak_15m_pct": -1.1819,
+          "volume_x": 6.1917,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1.2311,
+          "prev_24h_low": 1.1883,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": true,
+      "nearest_macro_event": {
+        "id": "fomc_decision_2026_06_17",
+        "type": "FOMC decision",
+        "title": "FOMC decision",
+        "scheduled_at": "2026-06-17T18:00:00.000Z",
+        "source_query_hint": "FOMC decision June 17 2026 Bitcoin crypto reaction",
+        "delta_min": 0
+      },
+      "macro_delta_min": 0,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_28a60d1b_20260617t1830",
+      "date_utc": "2026-06-17",
+      "evidence_window": {
+        "start": "2026-06-17T18:30:00.000Z",
+        "end": "2026-06-17T18:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": 1.0278,
+      "signal_strength": "Medium",
+      "signal_strength_score": 56.8101,
+      "event_range_context": "inside_range",
+      "source_route_hint": [
+        "macro_aligned",
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": 0.9674,
+          "peak_15m_pct": 0.9674,
+          "volume_x": 4.8397,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 66445.93,
+          "prev_24h_low": 64565,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": 1.0278,
+          "peak_15m_pct": 1.0278,
+          "volume_x": 5.4365,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1810.21,
+          "prev_24h_low": 1741.05,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": 0.6914,
+          "peak_15m_pct": 0.6914,
+          "volume_x": 2.3332,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 612.5,
+          "prev_24h_low": 600.39,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": 1.5166,
+          "peak_15m_pct": 1.5166,
+          "volume_x": 5.8244,
+          "range_position": "near_high",
+          "range_position_label": "Near high",
+          "prev_24h_high": 74.69,
+          "prev_24h_low": 71.59,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": 1.2735,
+          "peak_15m_pct": 1.2819,
+          "volume_x": 4.3895,
+          "range_position": "inside_range",
+          "range_position_label": "Inside range",
+          "prev_24h_high": 1.2302,
+          "prev_24h_low": 1.1883,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": true,
+      "nearest_macro_event": {
+        "id": "fomc_press_conference_2026_06_17",
+        "type": "FOMC press conference",
+        "title": "FOMC press conference",
+        "scheduled_at": "2026-06-17T18:30:00.000Z",
+        "source_query_hint": "FOMC press conference June 17 2026 crypto market volatility",
+        "delta_min": 0
+      },
+      "macro_delta_min": 0,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_666c4278_20260617t1915",
+      "date_utc": "2026-06-17",
+      "evidence_window": {
+        "start": "2026-06-17T19:15:00.000Z",
+        "end": "2026-06-17T19:44:59.999Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -2.1325,
+      "signal_strength": "High",
+      "signal_strength_score": 86.2218,
+      "event_range_context": "broad_break_low",
+      "source_route_hint": [
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -1.8171,
+          "peak_15m_pct": -1.3708,
+          "volume_x": 5.0669,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 66445.93,
+          "prev_24h_low": 64565,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -2.1325,
+          "peak_15m_pct": -1.7493,
+          "volume_x": 8.3003,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1810.21,
+          "prev_24h_low": 1741.05,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -1.5849,
+          "peak_15m_pct": -1.1525,
+          "volume_x": 3.7579,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 612.5,
+          "prev_24h_low": 600.39,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -2.5711,
+          "peak_15m_pct": -2,
+          "volume_x": 5.4562,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 74.69,
+          "prev_24h_low": 71.59,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -2.3333,
+          "peak_15m_pct": -1.812,
+          "volume_x": 5.4014,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.2283,
+          "prev_24h_low": 1.1883,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "fomc_press_conference_2026_06_17",
+        "type": "FOMC press conference",
+        "title": "FOMC press conference",
+        "scheduled_at": "2026-06-17T18:30:00.000Z",
+        "source_query_hint": "FOMC press conference June 17 2026 crypto market volatility",
+        "delta_min": 45
+      },
+      "macro_delta_min": 45,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_b_3f586e87_20260618t1530",
+      "date_utc": "2026-06-18",
+      "evidence_window": {
+        "start": "2026-06-18T15:30:00.000Z",
+        "end": "2026-06-18T15:59:59.999Z",
+        "duration_min": 30
+      },
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -1.3735,
+      "signal_strength": "Medium",
+      "signal_strength_score": 53.3499,
+      "event_range_context": "broad_break_low",
+      "source_route_hint": [
+        "broad_market"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -1.3735,
+          "peak_15m_pct": -0.7147,
+          "volume_x": 7.6456,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 66445.93,
+          "prev_24h_low": 63198,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -2.2244,
+          "peak_15m_pct": -1.2688,
+          "volume_x": 8.7687,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1796.08,
+          "prev_24h_low": 1717.65,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -1.3616,
+          "peak_15m_pct": -0.753,
+          "volume_x": 8.5524,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 609.75,
+          "prev_24h_low": 581.27,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -2.1167,
+          "peak_15m_pct": -1.2729,
+          "volume_x": 10.6599,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 74.69,
+          "prev_24h_low": 69.8,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -0.8798,
+          "peak_15m_pct": -0.8797,
+          "volume_x": 6.9091,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.2251,
+          "prev_24h_low": 1.1458,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "ETHUSDT",
+        "strongest_peak_symbol": "SOLUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "ETHUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "SOLUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": true,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "fomc_press_conference_2026_06_17",
+        "type": "FOMC press conference",
+        "title": "FOMC press conference",
+        "scheduled_at": "2026-06-17T18:30:00.000Z",
+        "source_query_hint": "FOMC press conference June 17 2026 crypto market volatility",
+        "delta_min": 1260
+      },
+      "macro_delta_min": 1260,
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    }
+  ]
+}

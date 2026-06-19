@@ -1,0 +1,287 @@
+{
+  "generated_at": "2026-06-19T13:30:32.051Z",
+  "count": 11,
+  "items": [
+    {
+      "id": "vnext_b_12474bab_20260521t1715",
+      "date_time": "2026-05-21 17:15 UTC",
+      "evidence_window": {
+        "start": "2026-05-21T17:15:00.000Z",
+        "end": "2026-05-21T17:29:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.84,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "below_publish_gate",
+      "why_suppressed": "Did not pass the public publish gate for change, macro alignment, or very high breadth-confirmed strength.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-05-21T17:15:00.000Z",
+        "highlight_end": "2026-05-21T17:29:59.999Z",
+        "peak_marker_time": "2026-05-21T17:15:00.000Z",
+        "feed_card_id": "audit_vnext_b_12474bab_20260521t1715"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_5677a786_20260522t1930",
+      "date_time": "2026-05-22 19:30 UTC",
+      "evidence_window": {
+        "start": "2026-05-22T19:30:00.000Z",
+        "end": "2026-05-22T19:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.5836,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "weak_window_move_lt_1pct",
+      "why_suppressed": "The event stayed below the weak-change floor, so it is retained for audit but not public review.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-05-22T19:30:00.000Z",
+        "highlight_end": "2026-05-22T19:44:59.999Z",
+        "peak_marker_time": "2026-05-22T19:30:00.000Z",
+        "feed_card_id": "audit_vnext_b_5677a786_20260522t1930"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_48f965c3_20260524t2200",
+      "date_time": "2026-05-24 22:00 UTC",
+      "evidence_window": {
+        "start": "2026-05-24T22:00:00.000Z",
+        "end": "2026-05-24T22:14:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 1.0946,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "weak_weekend_overnight_micro_move",
+      "why_suppressed": "Weekend or overnight UTC change stayed in the micro-change band and is likely poor public-feed signal.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-05-24T22:00:00.000Z",
+        "highlight_end": "2026-05-24T22:14:59.999Z",
+        "peak_marker_time": "2026-05-24T22:00:00.000Z",
+        "feed_card_id": "audit_vnext_b_48f965c3_20260524t2200"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_64d50655_20260525t0200",
+      "date_time": "2026-05-25 02:00 UTC",
+      "evidence_window": {
+        "start": "2026-05-25T02:00:00.000Z",
+        "end": "2026-05-25T02:14:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.5952,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "weak_window_move_lt_1pct",
+      "why_suppressed": "The event stayed below the weak-change floor, so it is retained for audit but not public review.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-05-25T02:00:00.000Z",
+        "highlight_end": "2026-05-25T02:14:59.999Z",
+        "peak_marker_time": "2026-05-25T02:00:00.000Z",
+        "feed_card_id": "audit_vnext_b_64d50655_20260525t0200"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_4b16e684_20260526t1015",
+      "date_time": "2026-05-26 10:15 UTC",
+      "evidence_window": {
+        "start": "2026-05-26T10:15:00.000Z",
+        "end": "2026-05-26T10:29:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.9002,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "below_publish_gate",
+      "why_suppressed": "Did not pass the public publish gate for change, macro alignment, or very high breadth-confirmed strength.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-05-26T10:15:00.000Z",
+        "highlight_end": "2026-05-26T10:29:59.999Z",
+        "peak_marker_time": "2026-05-26T10:15:00.000Z",
+        "feed_card_id": "audit_vnext_b_4b16e684_20260526t1015"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_17a48846_20260526t1430",
+      "date_time": "2026-05-26 14:30 UTC",
+      "evidence_window": {
+        "start": "2026-05-26T14:30:00.000Z",
+        "end": "2026-05-26T14:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -1.2324,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "below_publish_gate",
+      "why_suppressed": "Did not pass the public publish gate for change, macro alignment, or very high breadth-confirmed strength.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-05-26T14:30:00.000Z",
+        "highlight_end": "2026-05-26T14:44:59.999Z",
+        "peak_marker_time": "2026-05-26T14:30:00.000Z",
+        "feed_card_id": "audit_vnext_b_17a48846_20260526t1430"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_6ff65be3_20260527t2130",
+      "date_time": "2026-05-27 21:30 UTC",
+      "evidence_window": {
+        "start": "2026-05-27T21:30:00.000Z",
+        "end": "2026-05-27T21:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.8353,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "below_publish_gate",
+      "why_suppressed": "Did not pass the public publish gate for change, macro alignment, or very high breadth-confirmed strength.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-05-27T21:30:00.000Z",
+        "highlight_end": "2026-05-27T21:44:59.999Z",
+        "peak_marker_time": "2026-05-27T21:30:00.000Z",
+        "feed_card_id": "audit_vnext_b_6ff65be3_20260527t2130"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_1c971dbd_20260607t2215",
+      "date_time": "2026-06-07 22:15 UTC",
+      "evidence_window": {
+        "start": "2026-06-07T22:15:00.000Z",
+        "end": "2026-06-07T22:29:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.9304,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "micro_retrace_after_parent",
+      "why_suppressed": "Opposite-direction retrace opened within one bar after a stronger public parent event.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-06-07T22:15:00.000Z",
+        "highlight_end": "2026-06-07T22:29:59.999Z",
+        "peak_marker_time": "2026-06-07T22:15:00.000Z",
+        "feed_card_id": "audit_vnext_b_1c971dbd_20260607t2215"
+      },
+      "nearby_public_event": {
+        "id": "vnext_b_2fa494ec_20260607t2200",
+        "window_start": "2026-06-07T22:00:00.000Z",
+        "direction": "observed_up",
+        "avg_change_pct": 2.9275,
+        "delta_min": 15
+      },
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_ba19ab1b_20260613t2130",
+      "date_time": "2026-06-13 21:30 UTC",
+      "evidence_window": {
+        "start": "2026-06-13T21:30:00.000Z",
+        "end": "2026-06-13T21:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.6782,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "weak_weekend_overnight_micro_move",
+      "why_suppressed": "Weekend or overnight UTC change stayed in the micro-change band and is likely poor public-feed signal.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-06-13T21:30:00.000Z",
+        "highlight_end": "2026-06-13T21:44:59.999Z",
+        "peak_marker_time": "2026-06-13T21:30:00.000Z",
+        "feed_card_id": "audit_vnext_b_ba19ab1b_20260613t2130"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_c810b1d1_20260614t1430",
+      "date_time": "2026-06-14 14:30 UTC",
+      "evidence_window": {
+        "start": "2026-06-14T14:30:00.000Z",
+        "end": "2026-06-14T14:44:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.5315,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "weak_window_move_lt_1pct",
+      "why_suppressed": "The event stayed below the weak-change floor, so it is retained for audit but not public review.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-06-14T14:30:00.000Z",
+        "highlight_end": "2026-06-14T14:44:59.999Z",
+        "peak_marker_time": "2026-06-14T14:30:00.000Z",
+        "feed_card_id": "audit_vnext_b_c810b1d1_20260614t1430"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    },
+    {
+      "id": "vnext_b_e9e64a19_20260615t1115",
+      "date_time": "2026-06-15 11:15 UTC",
+      "evidence_window": {
+        "start": "2026-06-15T11:15:00.000Z",
+        "end": "2026-06-15T11:29:59.999Z",
+        "duration_min": 15
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 0.8744,
+      "avg_change_label": "Avg Change",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "suppress_reason": "below_publish_gate",
+      "why_suppressed": "Did not pass the public publish gate for change, macro alignment, or very high breadth-confirmed strength.",
+      "chart": {
+        "chart_highlight_type": "event_window",
+        "highlight_start": "2026-06-15T11:15:00.000Z",
+        "highlight_end": "2026-06-15T11:29:59.999Z",
+        "peak_marker_time": "2026-06-15T11:15:00.000Z",
+        "feed_card_id": "audit_vnext_b_e9e64a19_20260615t1115"
+      },
+      "nearby_public_event": null,
+      "reviewer_notes": ""
+    }
+  ]
+}

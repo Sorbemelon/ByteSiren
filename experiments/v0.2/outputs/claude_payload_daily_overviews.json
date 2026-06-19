@@ -1,0 +1,1079 @@
+{
+  "generated_at": "2026-06-19T13:34:15.619Z",
+  "item_count": 31,
+  "items": [
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-20",
+      "day_start": "2026-05-20T00:00:00.000Z",
+      "day_end": "2026-05-20T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 0.3508,
+      "market_tone": "quiet",
+      "notable_symbols": [
+        "SOLUSDT"
+      ],
+      "market_range_pct": 1.9111,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-20",
+        "bitcoin ethereum solana xrp market context 2026-05-20"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-21",
+      "day_start": "2026-05-21T00:00:00.000Z",
+      "day_end": "2026-05-21T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 0.4901,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ETHUSDT"
+      ],
+      "market_range_pct": 2.4229,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-21",
+        "bitcoin ethereum solana xrp market context 2026-05-21"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-22",
+      "day_start": "2026-05-22T00:00:00.000Z",
+      "day_end": "2026-05-22T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -2.8677,
+      "market_tone": "risk_off",
+      "notable_symbols": [
+        "SOLUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 3.472,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-22",
+        "bitcoin ethereum solana xrp market context 2026-05-22"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-23",
+      "day_start": "2026-05-23T00:00:00.000Z",
+      "day_end": "2026-05-23T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 1.6051,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "ETHUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 5.6021,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_bd7eadf3_20260523t0745",
+          "window_start": "2026-05-23T07:45:00.000Z",
+          "window_end": "2026-05-23T07:59:59.999Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.4171,
+          "impact_label": "High",
+          "range_context": "broad_break_low",
+          "source_route_hint": [
+            "broad_market",
+            "weekend_overnight"
+          ]
+        },
+        {
+          "event_id": "vnext_b_fdc31c9f_20260523t2030",
+          "window_start": "2026-05-23T20:30:00.000Z",
+          "window_end": "2026-05-23T20:59:59.999Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.9469,
+          "impact_label": "High",
+          "range_context": "broad_break_high",
+          "source_route_hint": [
+            "broad_market",
+            "weekend_overnight",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-05-23",
+        "bitcoin ethereum solana xrp market context 2026-05-23"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-24",
+      "day_start": "2026-05-24T00:00:00.000Z",
+      "day_end": "2026-05-24T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.5448,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT"
+      ],
+      "market_range_pct": 2.7557,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-24",
+        "bitcoin ethereum solana xrp market context 2026-05-24"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-25",
+      "day_start": "2026-05-25T00:00:00.000Z",
+      "day_end": "2026-05-25T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 0.3335,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "BNBUSDT",
+        "ETHUSDT",
+        "SOLUSDT"
+      ],
+      "market_range_pct": 2.0113,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-25",
+        "bitcoin ethereum solana xrp market context 2026-05-25"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-26",
+      "day_start": "2026-05-26T00:00:00.000Z",
+      "day_end": "2026-05-26T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -1.5754,
+      "market_tone": "risk_off",
+      "notable_symbols": [
+        "ETHUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 3.137,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-26",
+        "bitcoin ethereum solana xrp market context 2026-05-26"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-27",
+      "day_start": "2026-05-27T00:00:00.000Z",
+      "day_end": "2026-05-27T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -1.6324,
+      "market_tone": "risk_off",
+      "notable_symbols": [
+        "ETHUSDT",
+        "BTCUSDT",
+        "XRPUSDT",
+        "SOLUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 2.9619,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-27",
+        "bitcoin ethereum solana xrp market context 2026-05-27"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-28",
+      "day_start": "2026-05-28T00:00:00.000Z",
+      "day_end": "2026-05-28T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.7373,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "SOLUSDT"
+      ],
+      "market_range_pct": 3.6272,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_a43ac588_20260528t0315",
+          "window_start": "2026-05-28T03:15:00.000Z",
+          "window_end": "2026-05-28T03:59:59.999Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.5493,
+          "impact_label": "Medium",
+          "range_context": "broad_break_low",
+          "source_route_hint": [
+            "broad_market",
+            "weekend_overnight"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-05-28",
+        "bitcoin ethereum solana xrp market context 2026-05-28"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-29",
+      "day_start": "2026-05-29T00:00:00.000Z",
+      "day_end": "2026-05-29T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 0.2314,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "XRPUSDT",
+        "BNBUSDT",
+        "ETHUSDT",
+        "BTCUSDT",
+        "SOLUSDT"
+      ],
+      "market_range_pct": 2.9843,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_dac278c4_20260529t1500",
+          "window_start": "2026-05-29T15:00:00.000Z",
+          "window_end": "2026-05-29T15:29:59.999Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.1679,
+          "impact_label": "Low",
+          "range_context": "inside_range",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-05-29",
+        "bitcoin ethereum solana xrp market context 2026-05-29"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-30",
+      "day_start": "2026-05-30T00:00:00.000Z",
+      "day_end": "2026-05-30T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 0.812,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "BNBUSDT",
+        "XRPUSDT"
+      ],
+      "market_range_pct": 4.1263,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-30",
+        "bitcoin ethereum solana xrp market context 2026-05-30"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-05-31",
+      "day_start": "2026-05-31T00:00:00.000Z",
+      "day_end": "2026-05-31T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.5892,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "BNBUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "SOLUSDT"
+      ],
+      "market_range_pct": 2.7778,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-05-31",
+        "bitcoin ethereum solana xrp market context 2026-05-31"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-01",
+      "day_start": "2026-06-01T00:00:00.000Z",
+      "day_end": "2026-06-01T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -2.4545,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "BTCUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "ETHUSDT"
+      ],
+      "market_range_pct": 5.034,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-01",
+        "bitcoin ethereum solana xrp market context 2026-06-01"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-02",
+      "day_start": "2026-06-02T00:00:00.000Z",
+      "day_end": "2026-06-02T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -6.5911,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "SOLUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 8.3509,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_2559ab4c_20260602t1415",
+          "window_start": "2026-06-02T14:15:00.000Z",
+          "window_end": "2026-06-02T14:29:59.999Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.5819,
+          "impact_label": "High",
+          "range_context": "broad_break_low",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        },
+        {
+          "event_id": "vnext_b_d21993f9_20260602t2245",
+          "window_start": "2026-06-02T22:45:00.000Z",
+          "window_end": "2026-06-02T23:29:59.999Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.2174,
+          "impact_label": "Low",
+          "range_context": "broad_break_low",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-06-02",
+        "bitcoin ethereum solana xrp market context 2026-06-02"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-03",
+      "day_start": "2026-06-03T00:00:00.000Z",
+      "day_end": "2026-06-03T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -3.5296,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "ETHUSDT",
+        "XRPUSDT"
+      ],
+      "market_range_pct": 5.9386,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-03",
+        "bitcoin ethereum solana xrp market context 2026-06-03"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-04",
+      "day_start": "2026-06-04T00:00:00.000Z",
+      "day_end": "2026-06-04T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -2.5941,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "ETHUSDT",
+        "BTCUSDT"
+      ],
+      "market_range_pct": 6.0326,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-04",
+        "bitcoin ethereum solana xrp market context 2026-06-04"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-05",
+      "day_start": "2026-06-05T00:00:00.000Z",
+      "day_end": "2026-06-05T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -6.0666,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "BTCUSDT"
+      ],
+      "market_range_pct": 9.8997,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-05",
+        "bitcoin ethereum solana xrp market context 2026-06-05"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-06",
+      "day_start": "2026-06-06T00:00:00.000Z",
+      "day_end": "2026-06-06T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.4008,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "SOLUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "XRPUSDT",
+        "BTCUSDT"
+      ],
+      "market_range_pct": 5.3948,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-06",
+        "bitcoin ethereum solana xrp market context 2026-06-06"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-07",
+      "day_start": "2026-06-07T00:00:00.000Z",
+      "day_end": "2026-06-07T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 5.679,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "BTCUSDT"
+      ],
+      "market_range_pct": 7.8825,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_2fa494ec_20260607t2200",
+          "window_start": "2026-06-07T22:00:00.000Z",
+          "window_end": "2026-06-07T22:14:59.999Z",
+          "direction": "observed_up",
+          "avg_change_pct": 2.9275,
+          "impact_label": "High",
+          "range_context": "broad_break_high",
+          "source_route_hint": [
+            "broad_market",
+            "weekend_overnight",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-06-07",
+        "bitcoin ethereum solana xrp market context 2026-06-07"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-08",
+      "day_start": "2026-06-08T00:00:00.000Z",
+      "day_end": "2026-06-08T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.0006,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "XRPUSDT",
+        "SOLUSDT",
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "market_range_pct": 3.9193,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-08",
+        "bitcoin ethereum solana xrp market context 2026-06-08"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-09",
+      "day_start": "2026-06-09T00:00:00.000Z",
+      "day_end": "2026-06-09T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -2.6363,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 4.7493,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-09",
+        "bitcoin ethereum solana xrp market context 2026-06-09"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-10",
+      "day_start": "2026-06-10T00:00:00.000Z",
+      "day_end": "2026-06-10T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -1.1644,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "XRPUSDT",
+        "SOLUSDT",
+        "BNBUSDT",
+        "ETHUSDT",
+        "BTCUSDT"
+      ],
+      "market_range_pct": 4.0538,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_1b8c81d3_20260610t1230",
+          "window_start": "2026-06-10T12:30:00.000Z",
+          "window_end": "2026-06-10T12:44:59.999Z",
+          "direction": "observed_up",
+          "avg_change_pct": 0.8607,
+          "impact_label": "Low",
+          "range_context": "inside_range",
+          "source_route_hint": [
+            "macro_aligned",
+            "broad_market"
+          ]
+        },
+        {
+          "event_id": "vnext_b_da58fd31_20260610t1330",
+          "window_start": "2026-06-10T13:30:00.000Z",
+          "window_end": "2026-06-10T13:44:59.999Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.5541,
+          "impact_label": "Medium",
+          "range_context": "inside_range",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-06-10",
+        "bitcoin ethereum solana xrp market context 2026-06-10"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-11",
+      "day_start": "2026-06-11T00:00:00.000Z",
+      "day_end": "2026-06-11T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 3.4384,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT",
+        "ETHUSDT"
+      ],
+      "market_range_pct": 4.6995,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-11",
+        "bitcoin ethereum solana xrp market context 2026-06-11"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-12",
+      "day_start": "2026-06-12T00:00:00.000Z",
+      "day_end": "2026-06-12T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.3203,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "XRPUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "BTCUSDT"
+      ],
+      "market_range_pct": 2.9234,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-12",
+        "bitcoin ethereum solana xrp market context 2026-06-12"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-13",
+      "day_start": "2026-06-13T00:00:00.000Z",
+      "day_end": "2026-06-13T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 1.381,
+      "market_tone": "risk_on",
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT",
+        "ETHUSDT"
+      ],
+      "market_range_pct": 2.7214,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-13",
+        "bitcoin ethereum solana xrp market context 2026-06-13"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-14",
+      "day_start": "2026-06-14T00:00:00.000Z",
+      "day_end": "2026-06-14T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 2.6428,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "ETHUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 4.3749,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_51361797_20260614t2115",
+          "window_start": "2026-06-14T21:15:00.000Z",
+          "window_end": "2026-06-14T21:44:59.999Z",
+          "direction": "observed_up",
+          "avg_change_pct": 2.3766,
+          "impact_label": "High",
+          "range_context": "broad_break_high",
+          "source_route_hint": [
+            "broad_market",
+            "weekend_overnight",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-06-14",
+        "bitcoin ethereum solana xrp market context 2026-06-14"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-15",
+      "day_start": "2026-06-15T00:00:00.000Z",
+      "day_end": "2026-06-15T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": 3.7733,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "XRPUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 6.3415,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-15",
+        "bitcoin ethereum solana xrp market context 2026-06-15"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-16",
+      "day_start": "2026-06-16T00:00:00.000Z",
+      "day_end": "2026-06-16T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.9856,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "BNBUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "ETHUSDT"
+      ],
+      "market_range_pct": 3.7176,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-16",
+        "bitcoin ethereum solana xrp market context 2026-06-16"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-17",
+      "day_start": "2026-06-17T00:00:00.000Z",
+      "day_end": "2026-06-17T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -2.0128,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "XRPUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 4.2752,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_4ab7f2a1_20260617t1800",
+          "window_start": "2026-06-17T18:00:00.000Z",
+          "window_end": "2026-06-17T18:14:59.999Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.2199,
+          "impact_label": "High",
+          "range_context": "mixed_range_position",
+          "source_route_hint": [
+            "macro_aligned",
+            "broad_market"
+          ]
+        },
+        {
+          "event_id": "vnext_b_28a60d1b_20260617t1830",
+          "window_start": "2026-06-17T18:30:00.000Z",
+          "window_end": "2026-06-17T18:44:59.999Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.0278,
+          "impact_label": "Medium",
+          "range_context": "inside_range",
+          "source_route_hint": [
+            "macro_aligned",
+            "broad_market"
+          ]
+        },
+        {
+          "event_id": "vnext_b_666c4278_20260617t1915",
+          "window_start": "2026-06-17T19:15:00.000Z",
+          "window_end": "2026-06-17T19:44:59.999Z",
+          "direction": "observed_down",
+          "avg_change_pct": -2.1325,
+          "impact_label": "High",
+          "range_context": "broad_break_low",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-06-17",
+        "bitcoin ethereum solana xrp market context 2026-06-17"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-18",
+      "day_start": "2026-06-18T00:00:00.000Z",
+      "day_end": "2026-06-18T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -3.2477,
+      "market_tone": "volatile",
+      "notable_symbols": [
+        "BNBUSDT",
+        "XRPUSDT",
+        "SOLUSDT",
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "market_range_pct": 5.1046,
+      "signal_events": [
+        {
+          "event_id": "vnext_b_3f586e87_20260618t1530",
+          "window_start": "2026-06-18T15:30:00.000Z",
+          "window_end": "2026-06-18T15:59:59.999Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.3735,
+          "impact_label": "Medium",
+          "range_context": "broad_break_low",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
+      "source_query_hints": [
+        "crypto market overview 2026-06-18",
+        "bitcoin ethereum solana xrp market context 2026-06-18"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "daily_overview",
+      "date_utc": "2026-06-19",
+      "day_start": "2026-06-19T00:00:00.000Z",
+      "day_end": "2026-06-19T23:59:59.999Z",
+      "change_label": "24h Change",
+      "market_24h_change_pct": -0.9094,
+      "market_tone": "mixed",
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "ETHUSDT",
+        "BNBUSDT"
+      ],
+      "market_range_pct": 2.2517,
+      "signal_events": [],
+      "source_query_hints": [
+        "crypto market overview 2026-06-19",
+        "bitcoin ethereum solana xrp market context 2026-06-19"
+      ],
+      "instructions": [
+        "Summarize the day's crypto market context using relevant public sources.",
+        "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
+        "Use separate Daily Overview labels unless referring to a specific included signal event.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    }
+  ]
+}
