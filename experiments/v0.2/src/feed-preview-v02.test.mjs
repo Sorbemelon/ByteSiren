@@ -304,6 +304,24 @@ test("feed contract exposes vNext-C chart-context fields", async () => {
     assert.ok(Array.isArray(signal.chart_context_reasons));
     assert.ok(Array.isArray(signal.chart_context_warnings));
     assert.ok(signal.expanded.chart_context_details);
+    assert.ok(
+      ["compressed", "normal", "expanding", "compressed_to_expanding"].includes(
+        signal.volatility_state,
+      ),
+    );
+    assert.equal(typeof signal.history_support_type, "string");
+    assert.ok(signal.source_likelihood >= 0 && signal.source_likelihood <= 1);
+    assert.ok(
+      ["low", "medium", "high"].includes(signal.source_likelihood_band),
+    );
+    assert.ok(signal.publish_gate);
+    assert.equal(signal.publish_gate.decision, "public");
+    assert.equal(signal.avg_change_method, "median");
+    assert.ok(signal.evidence_window_stats);
+    assert.equal(
+      Number.isFinite(signal.evidence_window_stats.window_change_median),
+      true,
+    );
   }
 });
 

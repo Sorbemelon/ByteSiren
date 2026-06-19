@@ -11,6 +11,9 @@ This is a local-only proposal for future prompt inputs. It does not change the p
 - Chart context is descriptive market structure, not trading advice or cause proof.
 - Range Position is not support/resistance advice.
 - Claude should use chart context to decide how hard to search and what route to try.
+- Gate search effort by source_likelihood: high -> search harder and expect Focused/Likely; low -> No Clear Cause is acceptable and preferred over forcing a narrative.
+- history_support_type names the prior-chart structure that supports the event (range break, compression breakout, trend continuation, relief reversal).
+- retrospective_post_window stats are post-event only and must never be treated as the cause or as detection evidence.
 - If no source supports a cause, return No Clear Cause or Market Backdrop.
 - Peak 15m and lead mover are supporting diagnostics, not the main event headline.
 - Main event evidence is the evidence window, Avg Change, Signals, and Range Position.
@@ -19,7 +22,7 @@ This is a local-only proposal for future prompt inputs. It does not change the p
 - Source tags should map to Focused catalyst source, Likely cause source, Backdrop source, and Price check source.
 - Claude must not force a cause, provide trading advice, or return non-JSON prose.
 
-Current local payload count: 5
+Current local payload count: 23
 
 ## Daily Overview Payload
 

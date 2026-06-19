@@ -8,7 +8,8 @@ import {
   computeChartContextForEvent,
   computeSymbolChartContext,
   detectVNextCEvents,
-  enrichVNextBEvents,
+  enrichVNextCEvents,
+  ordinalMedian,
   summarizeVNextC,
 } from "./index.mjs";
 
@@ -229,23 +230,40 @@ function baseEvent(overrides = {}) {
 }
 
 test("vNext-C emits chart-context fields and summary metadata", () => {
-  const events = enrichVNextBEvents([baseEvent()], {
+  const events = enrichVNextCEvents([baseEvent()], {
     candlesBySymbol: candlesBySymbol("break_up"),
   });
   const [event] = events;
   const summary = summarizeVNextC(events);
 
   assert.equal(event.detector_version, "vnext_c");
-  assert.equal(event.publish_gate_version, "vnext_c_chart_context");
+  assert.equal(event.publish_gate_version, "vnext_c_r5_history_gate");
   assert.equal(Number.isFinite(event.chart_context_score), true);
   assert.equal(typeof event.chart_context_label, "string");
   assert.equal(typeof event.event_story_type, "string");
   assert.ok(event.trend_context);
   assert.equal(typeof event.trend_context.trend_context, "string");
   assert.equal(typeof event.trend_context.trend_alignment, "string");
+  assert.ok(
+    ["weak", "building", "strong", "very_strong"].includes(
+      event.trend_context.trend_strength_median,
+    ),
+  );
   assert.ok(event.momentum_context);
   assert.equal(typeof event.volatility_context, "string");
+  assert.ok(
+    ["compressed", "normal", "expanding", "compressed_to_expanding"].includes(
+      event.volatility_state,
+    ),
+  );
   assert.equal(typeof event.event_range_context, "string");
+  assert.equal(typeof event.history_support_type, "string");
+  assert.ok(event.source_likelihood >= 0 && event.source_likelihood <= 1);
+  assert.ok(["low", "medium", "high"].includes(event.source_likelihood_band));
+  assert.ok(event.publish_gate);
+  assert.ok(["public", "audit"].includes(event.publish_gate.decision));
+  assert.equal(event.publish_gate.decision === "public", event.publish_candidate);
+  assert.ok(Array.isArray(event.publish_gate.reasons));
   assert.equal(summary.detector, "vnext_c");
   assert.equal(summary.chart_context_enabled, true);
 });
@@ -331,7 +349,7 @@ test("micro-retrace remains suppressible in vNext-C recalibration", () => {
     peak_time: "2026-06-10T12:30:00.000Z",
   });
   const candles = candlesBySymbol("break_up");
-  const events = enrichVNextBEvents([parent, retrace], {
+  const events = enrichVNextCEvents([parent, retrace], {
     candlesBySymbol: candles,
   });
 
@@ -357,12 +375,20 @@ test("vNext-C builds events from its own window builder", async () => {
   assert.ok(
     result.events.every(
       (event) =>
+        event.flash_event ||
         event.diagnostics.evidence_bar_count >= result.options.minDetectedBars,
     ),
   );
-  assert.equal(
-    result.events.some((event) => event.source_vnext_b_event_id),
-    false,
+  // Flash (1-bar) events are detected but never public (audit-only).
+  assert.ok(
+    result.events.every(
+      (event) => !event.flash_event || !event.publish_candidate,
+    ),
+  );
+  assert.ok(
+    result.events.every(
+      (event) => event.diagnostics.source_detector === "vnext_c_window_builder",
+    ),
   );
 });
 
@@ -377,6 +403,8 @@ test("vNext-C public gate requires confirmed multi-bar context paths", async () 
     "broad_confirmed_break",
     "compression_expansion_break",
     "strong_continuation_breadth_trend",
+    "broad_impulse",
+    "relief_reversal",
     "macro_aligned_confirmed_window",
   ]);
 
@@ -384,11 +412,14 @@ test("vNext-C public gate requires confirmed multi-bar context paths", async () 
   assert.ok(
     publicEvents.every(
       (event) =>
-        event.diagnostics.evidence_bar_count >= payload.options.minPublicBars &&
+        (event.flash_event ||
+          event.diagnostics.evidence_bar_count >=
+            payload.options.minPublicBars) &&
         event.diagnostics.evidence_bar_count <= payload.options.maxPublicBars &&
         Math.abs(event.window_move_pct) >=
           payload.options.minAvgChangePublicPct &&
         event.direction_consistency_score >= payload.options.minBreadthPublic &&
+        event.history_support_type !== "none" &&
         allowedReasons.has(event.publish_reason),
     ),
   );
@@ -470,5 +501,63 @@ test("range classifier keeps descriptive labels", () => {
       "broke_high",
       "broke_low",
     ].includes(result.range_position),
+  );
+});
+
+test("ordinalMedian returns the median bucket, not the mode", () => {
+  const order = ["weak", "building", "strong", "very_strong"];
+  // ranks [0,0,2,3,1] -> sorted [0,0,1,2,3] -> median rank 1 -> "building".
+  assert.equal(
+    ordinalMedian(
+      ["weak", "weak", "strong", "very_strong", "building"],
+      order,
+      "weak",
+    ),
+    "building",
+  );
+  assert.equal(ordinalMedian([], order, "weak"), "weak");
+});
+
+test("broad consensus break publishes with history support and source likelihood", () => {
+  const [event] = enrichVNextCEvents([baseEvent({ move: 1.5 })], {
+    candlesBySymbol: candlesBySymbol("break_up"),
+  });
+
+  assert.equal(event.event_range_context, "broad_broke_high");
+  assert.notEqual(event.history_support_type, "none");
+  assert.equal(event.publish_candidate, true);
+  assert.equal(event.publish_gate.decision, "public");
+  assert.ok(event.publish_gate.reasons.length > 0);
+  assert.ok(event.source_likelihood > 0);
+});
+
+test("vNext-C detection/publish never uses look-ahead (no whipsaw, post-window retrospective)", async () => {
+  const snapshot = await readJson("experiments/v0.2/data/candles_30d.json");
+  const result = detectVNextCEvents({
+    candlesBySymbol: snapshot.candles_by_symbol,
+  });
+
+  assert.ok(result.events.every((event) => event.momentum_type !== "whipsaw"));
+  assert.ok(
+    result.events.every(
+      (event) =>
+        event.momentum_context.retrospective_post_window_only === true,
+    ),
+  );
+  assert.equal(
+    typeof result.source_detector_result.flash_event_count,
+    "number",
+  );
+  const publicEvents = result.events.filter((event) => event.publish_candidate);
+  assert.ok(publicEvents.length > 0);
+  assert.ok(
+    publicEvents.every(
+      (event) =>
+        event.source_likelihood >= 0 &&
+        event.source_likelihood <= 1 &&
+        event.evidence_window_stats &&
+        Number.isFinite(event.evidence_window_stats.window_change_median) &&
+        event.publish_gate.decision === "public",
+    ),
   );
 });

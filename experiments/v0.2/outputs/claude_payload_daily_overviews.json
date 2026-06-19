@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T17:55:10.047Z",
+  "generated_at": "2026-06-19T19:53:15.386Z",
   "item_count": 31,
   "items": [
     {
@@ -85,6 +85,20 @@
           "source_route_hint": [
             "broad_market"
           ]
+        },
+        {
+          "event_id": "vnext_c_ae635df8_20260522t2315",
+          "window_start": "2026-05-22T23:15:00.000Z",
+          "window_end": "2026-05-23T00:44:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -0.8001,
+          "impact_label": "High",
+          "range_context": "weak_range_context",
+          "chart_context_label": "Strong chart context",
+          "event_story_type": "inside_range_impulse_down",
+          "source_route_hint": [
+            "no_clear_route"
+          ]
         }
       ],
       "source_query_hints": [
@@ -115,7 +129,22 @@
         "BNBUSDT"
       ],
       "market_range_pct": 5.6021,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_60319648_20260523t2030",
+          "window_start": "2026-05-23T20:30:00.000Z",
+          "window_end": "2026-05-23T20:59:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.9469,
+          "impact_label": "High",
+          "range_context": "broad_broke_high",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_up",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-05-23",
         "bitcoin ethereum solana xrp market context 2026-05-23"
@@ -142,7 +171,23 @@
         "XRPUSDT"
       ],
       "market_range_pct": 2.7557,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_d38f7b57_20260524t2115",
+          "window_start": "2026-05-24T21:15:00.000Z",
+          "window_end": "2026-05-24T21:44:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -0.8676,
+          "impact_label": "High",
+          "range_context": "broad_broke_low",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_down",
+          "source_route_hint": [
+            "broad_market",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-05-24",
         "bitcoin ethereum solana xrp market context 2026-05-24"
@@ -198,7 +243,22 @@
         "BNBUSDT"
       ],
       "market_range_pct": 3.137,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_cca96e5f_20260526t1015",
+          "window_start": "2026-05-26T10:15:00.000Z",
+          "window_end": "2026-05-26T10:44:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.0788,
+          "impact_label": "High",
+          "range_context": "mostly_inside_range",
+          "chart_context_label": "Volatility expansion",
+          "event_story_type": "volatility_expansion_up",
+          "source_route_hint": [
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-05-26",
         "bitcoin ethereum solana xrp market context 2026-05-26"
@@ -316,7 +376,22 @@
         "SOLUSDT"
       ],
       "market_range_pct": 2.9843,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_fc005a7c_20260529t1415",
+          "window_start": "2026-05-29T14:15:00.000Z",
+          "window_end": "2026-05-29T14:44:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -0.7148,
+          "impact_label": "High",
+          "range_context": "weak_range_context",
+          "chart_context_label": "Momentum continuation",
+          "event_story_type": "momentum_continuation_down",
+          "source_route_hint": [
+            "no_clear_route"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-05-29",
         "bitcoin ethereum solana xrp market context 2026-05-29"
@@ -428,7 +503,22 @@
         "BNBUSDT"
       ],
       "market_range_pct": 8.3509,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_ad551489_20260602t2245",
+          "window_start": "2026-06-02T22:45:00.000Z",
+          "window_end": "2026-06-02T23:29:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.2174,
+          "impact_label": "High",
+          "range_context": "broad_broke_low",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_down",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-02",
         "bitcoin ethereum solana xrp market context 2026-06-02"
@@ -486,7 +576,37 @@
         "BTCUSDT"
       ],
       "market_range_pct": 6.0326,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_dc56b382_20260604t0015",
+          "window_start": "2026-06-04T00:15:00.000Z",
+          "window_end": "2026-06-04T01:59:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -3.4301,
+          "impact_label": "High",
+          "range_context": "broad_broke_low",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_down",
+          "source_route_hint": [
+            "broad_market",
+            "possible_liquidation_context"
+          ]
+        },
+        {
+          "event_id": "vnext_c_ddbc80a1_20260604t0215",
+          "window_start": "2026-06-04T02:15:00.000Z",
+          "window_end": "2026-06-04T03:44:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 3.6127,
+          "impact_label": "High",
+          "range_context": "mostly_inside_range",
+          "chart_context_label": "Relief / reversal",
+          "event_story_type": "relief_reversal_up",
+          "source_route_hint": [
+            "possible_relief_rally"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-04",
         "bitcoin ethereum solana xrp market context 2026-06-04"
@@ -515,7 +635,22 @@
         "BTCUSDT"
       ],
       "market_range_pct": 9.8997,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_c54de378_20260605t0715",
+          "window_start": "2026-06-05T07:15:00.000Z",
+          "window_end": "2026-06-05T07:44:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 2.8182,
+          "impact_label": "High",
+          "range_context": "mostly_inside_range",
+          "chart_context_label": "Relief / reversal",
+          "event_story_type": "relief_reversal_up",
+          "source_route_hint": [
+            "possible_relief_rally"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-05",
         "bitcoin ethereum solana xrp market context 2026-06-05"
@@ -573,7 +708,22 @@
         "BTCUSDT"
       ],
       "market_range_pct": 7.8825,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_228a8778_20260607t0100",
+          "window_start": "2026-06-07T01:00:00.000Z",
+          "window_end": "2026-06-07T01:29:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.9891,
+          "impact_label": "High",
+          "range_context": "weak_range_context",
+          "chart_context_label": "Volatility expansion",
+          "event_story_type": "volatility_expansion_up",
+          "source_route_hint": [
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-07",
         "bitcoin ethereum solana xrp market context 2026-06-07"
@@ -602,7 +752,22 @@
         "ETHUSDT"
       ],
       "market_range_pct": 3.9193,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_33798218_20260608t0100",
+          "window_start": "2026-06-08T01:00:00.000Z",
+          "window_end": "2026-06-08T01:29:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.3496,
+          "impact_label": "High",
+          "range_context": "mostly_inside_range",
+          "chart_context_label": "Relief / reversal",
+          "event_story_type": "relief_reversal_down",
+          "source_route_hint": [
+            "possible_relief_rally"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-08",
         "bitcoin ethereum solana xrp market context 2026-06-08"
@@ -631,7 +796,23 @@
         "BNBUSDT"
       ],
       "market_range_pct": 4.7493,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_3870ebb2_20260609t1415",
+          "window_start": "2026-06-09T14:15:00.000Z",
+          "window_end": "2026-06-09T15:29:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -1.086,
+          "impact_label": "High",
+          "range_context": "broad_broke_low",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_down",
+          "source_route_hint": [
+            "broad_market",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-09",
         "bitcoin ethereum solana xrp market context 2026-06-09"
@@ -689,7 +870,23 @@
         "ETHUSDT"
       ],
       "market_range_pct": 4.6995,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_56cdb3f3_20260611t1715",
+          "window_start": "2026-06-11T17:15:00.000Z",
+          "window_end": "2026-06-11T17:59:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 2.9119,
+          "impact_label": "High",
+          "range_context": "broad_broke_high",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_up",
+          "source_route_hint": [
+            "broad_market",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-11",
         "bitcoin ethereum solana xrp market context 2026-06-11"
@@ -718,7 +915,23 @@
         "BTCUSDT"
       ],
       "market_range_pct": 2.9234,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_2b93a760_20260612t1445",
+          "window_start": "2026-06-12T14:45:00.000Z",
+          "window_end": "2026-06-12T15:14:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.3659,
+          "impact_label": "High",
+          "range_context": "broad_broke_high",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_up",
+          "source_route_hint": [
+            "broad_market",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-12",
         "bitcoin ethereum solana xrp market context 2026-06-12"
@@ -790,6 +1003,20 @@
           "source_route_hint": [
             "broad_market"
           ]
+        },
+        {
+          "event_id": "vnext_c_6e7738b4_20260614t2230",
+          "window_start": "2026-06-14T22:30:00.000Z",
+          "window_end": "2026-06-15T00:14:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 1.03,
+          "impact_label": "High",
+          "range_context": "broad_broke_high",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_up",
+          "source_route_hint": [
+            "broad_market"
+          ]
         }
       ],
       "source_query_hints": [
@@ -820,7 +1047,22 @@
         "BNBUSDT"
       ],
       "market_range_pct": 6.3415,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_16999967_20260615t1300",
+          "window_start": "2026-06-15T13:00:00.000Z",
+          "window_end": "2026-06-15T13:29:59.998Z",
+          "direction": "observed_up",
+          "avg_change_pct": 0.996,
+          "impact_label": "High",
+          "range_context": "broad_broke_high",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_up",
+          "source_route_hint": [
+            "broad_market"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-15",
         "bitcoin ethereum solana xrp market context 2026-06-15"
@@ -849,7 +1091,22 @@
         "ETHUSDT"
       ],
       "market_range_pct": 3.7176,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_fcff80b4_20260616t1300",
+          "window_start": "2026-06-16T13:00:00.000Z",
+          "window_end": "2026-06-16T14:29:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -2.3572,
+          "impact_label": "High",
+          "range_context": "weak_range_context",
+          "chart_context_label": "Volatility expansion",
+          "event_story_type": "volatility_expansion_down",
+          "source_route_hint": [
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-16",
         "bitcoin ethereum solana xrp market context 2026-06-16"
@@ -880,16 +1137,17 @@
       "market_range_pct": 4.2752,
       "signal_events": [
         {
-          "event_id": "vnext_c_6130787e_20260617t1915",
-          "window_start": "2026-06-17T19:15:00.000Z",
+          "event_id": "vnext_c_e71b58af_20260617t1800",
+          "window_start": "2026-06-17T18:00:00.000Z",
           "window_end": "2026-06-17T19:44:59.998Z",
           "direction": "observed_down",
-          "avg_change_pct": -2.1319,
+          "avg_change_pct": -3.0711,
           "impact_label": "High",
           "range_context": "broad_broke_low",
-          "chart_context_label": "Range break",
+          "chart_context_label": "Macro-aligned context",
           "event_story_type": "range_break_down",
           "source_route_hint": [
+            "macro_aligned",
             "broad_market"
           ]
         }
@@ -922,7 +1180,23 @@
         "ETHUSDT"
       ],
       "market_range_pct": 5.1046,
-      "signal_events": [],
+      "signal_events": [
+        {
+          "event_id": "vnext_c_1188cecc_20260618t1515",
+          "window_start": "2026-06-18T15:15:00.000Z",
+          "window_end": "2026-06-18T15:59:59.998Z",
+          "direction": "observed_down",
+          "avg_change_pct": -2.2573,
+          "impact_label": "High",
+          "range_context": "broad_broke_low",
+          "chart_context_label": "Range break",
+          "event_story_type": "range_break_down",
+          "source_route_hint": [
+            "broad_market",
+            "possible_liquidation_context"
+          ]
+        }
+      ],
       "source_query_hints": [
         "crypto market overview 2026-06-18",
         "bitcoin ethereum solana xrp market context 2026-06-18"

@@ -16,7 +16,7 @@ export const DEFAULT_VNEXT_C_OPTIONS = {
   robustLookbackBars: 96,
   triggerStrengthZ: 3.5,
   sustainStrengthZ: 1.5,
-  debounceBars: 1,
+  debounceBars: 2,
   maxEventBars: 8,
   minDetectedBars: 2,
   minPublicBars: 2,
@@ -24,6 +24,9 @@ export const DEFAULT_VNEXT_C_OPTIONS = {
   minValidSymbols: 3,
   highStrengthMin: 88,
   microRetraceBars: 1,
+  // Window builder recovery of genuine short flashes and fragmented spikes.
+  flashKeepAvgZ: 6,
+  mergeGapBars: 2,
   rangeLookbackBars: 96,
   atrPeriod: 20,
   adxPeriod: 14,
@@ -46,10 +49,23 @@ export const DEFAULT_VNEXT_C_OPTIONS = {
   minStrongContinuationBreadth: 0.8,
   minStrongContinuationAvgChangePct: 0.7,
   minStrongContinuationAdx: 25,
+  // Strong-consensus publish paths (broad impulse / relief reversal).
+  broadImpulseMinPct: 1.0,
+  broadImpulseMinBreadth: 0.8,
+  reliefReversalMinPct: 1.0,
+  // A broad break publishes when meaningfully sized OR strongly confirmed.
+  broadBreakMinPct: 0.8,
+  broadBreakStrongConfirmRatio: 0.8,
+  // Prior-history support detection (pre-window only).
+  historyContinuationPrior4hPct: 0.5,
+  historyReliefPrior4hPct: 0.8,
+  // Source-likelihood bands (publish lever + Claude search effort).
+  sourceLikelihoodMedBand: 0.4,
+  sourceLikelihoodHighBand: 0.6,
   chartContextWeakScore: 40,
   chartContextModerateScore: 55,
   chartContextStrongScore: 72,
-  publishGateVersion: "vnext_c_chart_context",
+  publishGateVersion: "vnext_c_r5_history_gate",
 };
 
 const EPSILON = 1e-9;
@@ -460,6 +476,8 @@ function barState({ time, candlesBySymbol, indicesBySymbol, options }) {
     participating: winner.participating,
     breadth_count: winner.breadth_count,
     breadth_ratio: winner.breadth_ratio,
+    avg_return_z: winner.avg_return_z,
+    peak_z: winner.peak_z,
     market_strength: winner.market_strength,
     trigger:
       winner.breadth_count >= options.minValidSymbols &&
@@ -471,13 +489,17 @@ function barState({ time, candlesBySymbol, indicesBySymbol, options }) {
 }
 
 function closeWindow(active, endCursor) {
+  const states = active.states.slice();
   return {
     start_cursor: active.startCursor,
     end_cursor: endCursor,
     direction: active.direction,
     peak_cursor: active.peakCursor,
     peak_strength: active.peakStrength,
-    states: active.states.slice(),
+    peak_z: Math.max(0, ...states.map((state) => state.peak_z ?? 0)),
+    peak_avg_z: Math.max(0, ...states.map((state) => state.avg_return_z ?? 0)),
+    max_breadth: Math.max(0, ...states.map((state) => state.breadth_count ?? 0)),
+    states,
   };
 }
 
@@ -552,6 +574,50 @@ export function detectVNextCWindows({ candlesBySymbol, options = {} }) {
   }
 
   return { windows, states, times, indicesBySymbol, options: mergedOptions };
+}
+
+// Consolidate fragmented same-direction windows that are separated by only a
+// couple of calm bars into one evidence window, without exceeding the bar cap.
+function mergeAdjacentWindows(windows, options) {
+  if (windows.length === 0) return windows;
+  const merged = [windows[0]];
+
+  for (let index = 1; index < windows.length; index += 1) {
+    const previous = merged[merged.length - 1];
+    const current = windows[index];
+    const gapBars = current.start_cursor - previous.end_cursor - 1;
+    const combinedBars = current.end_cursor - previous.start_cursor + 1;
+
+    if (
+      current.direction === previous.direction &&
+      gapBars >= 0 &&
+      gapBars <= options.mergeGapBars &&
+      combinedBars <= options.maxEventBars
+    ) {
+      const keepPreviousPeak = previous.peak_strength >= current.peak_strength;
+      merged[merged.length - 1] = {
+        start_cursor: previous.start_cursor,
+        end_cursor: current.end_cursor,
+        direction: previous.direction,
+        peak_cursor: keepPreviousPeak
+          ? previous.peak_cursor
+          : current.peak_cursor,
+        peak_strength: Math.max(previous.peak_strength, current.peak_strength),
+        peak_z: Math.max(previous.peak_z ?? 0, current.peak_z ?? 0),
+        peak_avg_z: Math.max(previous.peak_avg_z ?? 0, current.peak_avg_z ?? 0),
+        max_breadth: Math.max(
+          previous.max_breadth ?? 0,
+          current.max_breadth ?? 0,
+        ),
+        states: [...previous.states, ...current.states],
+        merged_from: (previous.merged_from ?? 1) + 1,
+      };
+    } else {
+      merged.push(current);
+    }
+  }
+
+  return merged;
 }
 
 export function classifyRangePosition({
@@ -814,6 +880,23 @@ function majorityValue(values, fallback = "mixed") {
   return winner ?? fallback;
 }
 
+const TREND_STRENGTH_ORDER = ["weak", "building", "strong", "very_strong"];
+
+// True median of ordinal categories (e.g. trend strength), not the mode.
+export function ordinalMedian(values, order, fallback) {
+  const ranks = values
+    .map((value) => order.indexOf(value))
+    .filter((rank) => rank >= 0)
+    .sort((a, b) => a - b);
+  if (ranks.length === 0) return fallback;
+  const mid = Math.floor(ranks.length / 2);
+  const rank =
+    ranks.length % 2 === 1
+      ? ranks[mid]
+      : Math.round((ranks[mid - 1] + ranks[mid]) / 2);
+  return order[clamp(rank, 0, order.length - 1)];
+}
+
 function rangeContextFromSymbols(symbols, options) {
   const valid = symbols.filter((item) => item.valid_chart_context);
   const denominator = Math.max(valid.length, 1);
@@ -904,21 +987,15 @@ function momentumContextFromSymbols({
     : 0;
   const continuationAfterWindow = roundNumber(sign * post, 4);
   const reversalAfterWindow = roundNumber(Math.max(0, -sign * post), 4);
+  // Causal momentum only (prior-window structure). The post-window reversal is
+  // kept as a retrospective diagnostic and MUST NOT drive detection/publish.
   let momentumType = "no_clear_momentum";
 
-  if (reversalAfterWindow >= 0.35) {
-    momentumType = "whipsaw";
-  } else if (sign * prior4h > 0.25 && trendAlign === "aligned_with_trend") {
+  if (sign * prior4h > 0.25 && trendAlign === "aligned_with_trend") {
     momentumType = "continuation";
-  } else if (
-    sign * prior4h < -0.25 &&
-    trendAlign === "trend_reversal_attempt"
-  ) {
+  } else if (sign * prior4h < -0.25 && trendAlign === "trend_reversal_attempt") {
     momentumType = "reversal";
-  } else if (
-    Math.abs(avgChangePct) >= 0.6 &&
-    directionConsistencyScore >= 0.6
-  ) {
+  } else if (Math.abs(avgChangePct) >= 0.6 && directionConsistencyScore >= 0.6) {
     momentumType = "impulse";
   }
 
@@ -927,6 +1004,7 @@ function momentumContextFromSymbols({
       prior_1h_move_pct_median: roundNumber(prior1h, 4),
       prior_4h_move_pct_median: roundNumber(prior4h, 4),
       post_window_move_pct_median: roundNumber(post, 4),
+      post_window_reversal_flag: reversalAfterWindow >= 0.35,
       retrospective_post_window_only: true,
     },
     momentum_type: momentumType,
@@ -964,6 +1042,82 @@ function volatilityContextFromSymbols(symbols) {
   };
 }
 
+// R5 volatility_state enum: compressed | normal | expanding | compressed_to_expanding.
+function volatilityStateForEvent(volatilityContext, valid) {
+  const denom = Math.max(valid.length, 1);
+  const compressionRatio =
+    countBy(valid, (item) => item.compression_flag) / denom;
+  const expansionRatio =
+    countBy(valid, (item) => item.volatility_expansion_flag) / denom;
+
+  if (volatilityContext === "expansion_after_compression") {
+    return "compressed_to_expanding";
+  }
+  if (volatilityContext === "high_volatility_continuation" || expansionRatio >= 0.6) {
+    return "expanding";
+  }
+  if (compressionRatio >= 0.6) return "compressed";
+  return "normal";
+}
+
+// Does the PRIOR-window chart structure support detecting this point? Uses only
+// causal (pre-window) signals: confirmed prior-24h break, compression that built
+// up then expanded, trend continuation, or a sharp relief reversal after a strong
+// prior counter-move. Events with no support stay in audit (gate prerequisite).
+function historySupportForEvent({
+  eventRangeContext,
+  confirmedBreakRatio,
+  volatilityContext,
+  trendAlign,
+  prior4hMedian,
+  direction,
+  options,
+}) {
+  const sign = eventDirectionSign(direction);
+  const supports = [];
+
+  if (
+    eventRangeContext === "broad_broke_high" ||
+    eventRangeContext === "broad_broke_low" ||
+    confirmedBreakRatio >= options.minConfirmedBreakRatio
+  ) {
+    supports.push({
+      type: "range_break",
+      score: 0.5 + 0.5 * clamp(confirmedBreakRatio, 0, 1),
+    });
+  }
+  if (volatilityContext === "expansion_after_compression") {
+    supports.push({ type: "compression_breakout", score: 0.75 });
+  }
+  if (trendAlign === "aligned_with_trend") {
+    supports.push({ type: "trend_continuation", score: 0.7 });
+  }
+  if (
+    trendAlign === "trend_reversal_attempt" &&
+    sign * prior4hMedian <= -options.historyReliefPrior4hPct
+  ) {
+    supports.push({ type: "relief_reversal", score: 0.65 });
+  }
+
+  if (supports.length === 0) {
+    return {
+      history_support_type: "none",
+      history_support_score: 0,
+      history_support_factors: [],
+    };
+  }
+
+  const primary = supports.toSorted((a, b) => b.score - a.score)[0];
+  return {
+    history_support_type: primary.type,
+    history_support_score: roundNumber(
+      clamp(primary.score + 0.1 * (supports.length - 1), 0, 1),
+      4,
+    ),
+    history_support_factors: supports.map((item) => item.type),
+  };
+}
+
 function chartContextScore({
   event,
   eventRangeContext,
@@ -974,6 +1128,7 @@ function chartContextScore({
   directionConsistencyScore,
   medianVolumeX,
   avgChangePct,
+  historySupportScore = 0,
 }) {
   let score = 15;
 
@@ -996,12 +1151,13 @@ function chartContextScore({
 
   if (momentumType === "continuation") score += 10;
   if (momentumType === "reversal") score += 8;
-  if (momentumType === "whipsaw") score -= 14;
   if (momentumType === "impulse") score += 6;
 
   if (volatilityContext === "expansion_after_compression") score += 12;
   if (volatilityContext === "high_volatility_continuation") score += 7;
   score += clamp(volatilityExpansionScore / 100, 0, 1) * 5;
+
+  score += clamp(historySupportScore, 0, 1) * 15;
 
   if (event.macro_aligned) score += 8;
   if (Math.abs(avgChangePct) < 0.45) score -= 12;
@@ -1096,7 +1252,6 @@ function chartContextReasons({
 
 function chartContextWarnings({
   eventRangeContext,
-  momentumType,
   avgChangePct,
   medianVolumeX,
 }) {
@@ -1104,7 +1259,6 @@ function chartContextWarnings({
 
   if (eventRangeContext === "mixed_range_position")
     warnings.push("mixed_range_position");
-  if (momentumType === "whipsaw") warnings.push("post_window_reversal_risk");
   if (Math.abs(avgChangePct) < 0.45) warnings.push("weak_avg_change");
   if (medianVolumeX < 1.0) warnings.push("weak_volume_confirmation");
 
@@ -1151,6 +1305,18 @@ export function computeChartContextForEvent({
     trendAlign,
   });
   const medianVolumeX = median(valid.map((item) => item.volume_x)) ?? 1;
+  const confirmedBreakRatio = valid.length
+    ? countBy(valid, (item) => item.range_break_confirmed) / valid.length
+    : 0;
+  const history = historySupportForEvent({
+    eventRangeContext,
+    confirmedBreakRatio,
+    volatilityContext: volatility.volatility_context,
+    trendAlign,
+    prior4hMedian: momentum.momentum_context.prior_4h_move_pct_median ?? 0,
+    direction: event.direction,
+    options,
+  });
   const score = chartContextScore({
     event,
     eventRangeContext,
@@ -1161,6 +1327,7 @@ export function computeChartContextForEvent({
     directionConsistencyScore: momentum.direction_consistency_score,
     medianVolumeX,
     avgChangePct,
+    historySupportScore: history.history_support_score,
   });
   const label = chartContextLabel({
     event,
@@ -1169,6 +1336,27 @@ export function computeChartContextForEvent({
     volatilityContext: volatility.volatility_context,
     chartContextScoreValue: score,
   });
+  const ratioOf = (predicate) =>
+    valid.length ? roundNumber(countBy(valid, predicate) / valid.length, 4) : 0;
+  const breadthUpRatio = ratioOf(
+    (item) => item.window_change_pct >= options.minAbsSymbolMovePct,
+  );
+  const breadthDownRatio = ratioOf(
+    (item) => item.window_change_pct <= -options.minAbsSymbolMovePct,
+  );
+  const breakHighRatio = ratioOf((item) => item.range_position === "broke_high");
+  const breakLowRatio = ratioOf((item) => item.range_position === "broke_low");
+  const squeezeBreakRatio = ratioOf((item) => item.squeeze_break_flag);
+  const medianAdx14 = roundNumber(
+    median(valid.map((item) => item.adx14)) ?? 0,
+    4,
+  );
+  const volatilityState = volatilityStateForEvent(
+    volatility.volatility_context,
+    valid,
+  );
+  const eventSqueezeBreakFlag =
+    squeezeBreakRatio >= options.minCompressionExpansionRatio;
 
   return {
     chart_context_score: score,
@@ -1187,8 +1375,9 @@ export function computeChartContextForEvent({
         valid.map((item) => item.trend_direction),
         "mixed",
       ),
-      trend_strength_median: majorityValue(
+      trend_strength_median: ordinalMedian(
         valid.map((item) => item.trend_strength),
+        TREND_STRENGTH_ORDER,
         "weak",
       ),
     },
@@ -1200,6 +1389,17 @@ export function computeChartContextForEvent({
     direction_consistency_score: momentum.direction_consistency_score,
     volatility_context: volatility.volatility_context,
     volatility_expansion_score: volatility.volatility_expansion_score,
+    volatility_state: volatilityState,
+    history_support_type: history.history_support_type,
+    history_support_score: history.history_support_score,
+    history_support_factors: history.history_support_factors,
+    breadth_up_ratio: breadthUpRatio,
+    breadth_down_ratio: breadthDownRatio,
+    break_high_ratio: breakHighRatio,
+    break_low_ratio: breakLowRatio,
+    confirmed_break_ratio: roundNumber(confirmedBreakRatio, 4),
+    squeeze_break_ratio: squeezeBreakRatio,
+    squeeze_break_flag: eventSqueezeBreakFlag,
     event_range_context: eventRangeContext,
     chart_context_reasons: chartContextReasons({
       eventRangeContext,
@@ -1211,67 +1411,17 @@ export function computeChartContextForEvent({
     }),
     chart_context_warnings: chartContextWarnings({
       eventRangeContext,
-      momentumType: momentum.momentum_type,
       avgChangePct,
       medianVolumeX,
     }),
     chart_context_stats: {
-      breadth_up_ratio:
-        valid.length > 0
-          ? roundNumber(
-              countBy(
-                valid,
-                (item) => item.window_change_pct >= options.minAbsSymbolMovePct,
-              ) / valid.length,
-              4,
-            )
-          : 0,
-      breadth_down_ratio:
-        valid.length > 0
-          ? roundNumber(
-              countBy(
-                valid,
-                (item) =>
-                  item.window_change_pct <= -options.minAbsSymbolMovePct,
-              ) / valid.length,
-              4,
-            )
-          : 0,
-      break_high_ratio:
-        valid.length > 0
-          ? roundNumber(
-              countBy(valid, (item) => item.range_position === "broke_high") /
-                valid.length,
-              4,
-            )
-          : 0,
-      break_low_ratio:
-        valid.length > 0
-          ? roundNumber(
-              countBy(valid, (item) => item.range_position === "broke_low") /
-                valid.length,
-              4,
-            )
-          : 0,
-      confirmed_break_ratio:
-        valid.length > 0
-          ? roundNumber(
-              countBy(valid, (item) => item.range_break_confirmed) /
-                valid.length,
-              4,
-            )
-          : 0,
-      squeeze_break_ratio:
-        valid.length > 0
-          ? roundNumber(
-              countBy(valid, (item) => item.squeeze_break_flag) / valid.length,
-              4,
-            )
-          : 0,
-      median_adx14: roundNumber(
-        median(valid.map((item) => item.adx14)) ?? 0,
-        4,
-      ),
+      breadth_up_ratio: breadthUpRatio,
+      breadth_down_ratio: breadthDownRatio,
+      break_high_ratio: breakHighRatio,
+      break_low_ratio: breakLowRatio,
+      confirmed_break_ratio: roundNumber(confirmedBreakRatio, 4),
+      squeeze_break_ratio: squeezeBreakRatio,
+      median_adx14: medianAdx14,
       median_volume_x: roundNumber(medianVolumeX, 4),
       valid_symbol_count: valid.length,
     },
@@ -1491,10 +1641,18 @@ function windowToCandidateEvent({
   );
   const eventMove =
     median(participated.map((item) => item.window_change_pct)) ?? 0;
+  const eventMoveMean =
+    mean(participated.map((item) => item.window_change_pct)) ?? 0;
   const maxAbsMove = Math.max(
     0,
     ...perSymbol.map((item) => Math.abs(item.window_change_pct)),
   );
+  const peak15mAbsMax = Math.max(
+    0,
+    ...perSymbol.map((item) => Math.abs(item.peak_15m_move_pct)),
+  );
+  const relativeVolumeMedian =
+    median(perSymbol.map((item) => item.max_volume_ratio)) ?? 1;
   const leadMover =
     perSymbol.toSorted(
       (a, b) =>
@@ -1533,10 +1691,20 @@ function windowToCandidateEvent({
     signals_count: involved.length,
     breadth_count: involved.length,
     n_tracked: N_TRACKED,
+    flash_event: Boolean(window.flash_event),
     symbols_involved: involved,
     window_move_pct: roundNumber(eventMove, 4),
     window_move_pct_by_symbol: movesBySymbol,
     max_abs_window_move_pct: roundNumber(maxAbsMove, 4),
+    avg_change_method: "median",
+    event_direction: eventDirectionWord(window.direction),
+    evidence_window_stats: {
+      window_change_median: roundNumber(eventMove, 4),
+      window_change_mean: roundNumber(eventMoveMean, 4),
+      window_change_abs_max: roundNumber(maxAbsMove, 4),
+      peak_15m_abs_max: roundNumber(peak15mAbsMax, 4),
+      relative_volume_median: roundNumber(relativeVolumeMedian, 4),
+    },
     event_strength_label: eventStrengthLabel(strength),
     signal_strength_score: strength,
     source_route_hint: ["no_clear_route"],
@@ -1624,6 +1792,83 @@ function updatePerSymbolEvidence(event, chartContext) {
   });
 }
 
+// Doc-2 source-likelihood (0-1): how likely a findable public cause exists.
+// Sets the publish lever (broad_impulse/relief paths) and Claude search effort.
+// Uses only causal fields (breadth, magnitude, macro, prior-history support,
+// single-name concentration); penalizes pure volatility and thin liquidity.
+function scoreSourceLikelihood(event, options) {
+  const stats = event.chart_context_stats ?? {};
+  const breadth = event.direction_consistency_score ?? 0;
+  const avgAbs = Math.abs(event.window_move_pct ?? 0);
+  const maxAbs = event.max_abs_window_move_pct ?? avgAbs;
+  const medianVolumeX = stats.median_volume_x ?? 1;
+  const historySupport = event.history_support_score ?? 0;
+  const reasons = [];
+  let score = 0.1;
+
+  score += clamp(avgAbs / 2, 0, 1) * 0.3;
+  if (avgAbs >= 1) reasons.push("large_move");
+
+  score += clamp(breadth, 0, 1) * 0.25;
+  if (breadth >= options.broadImpulseMinBreadth) {
+    reasons.push("broad_participation");
+  }
+
+  score += clamp(historySupport, 0, 1) * 0.15;
+  if (historySupport > 0) {
+    reasons.push(`history_${event.history_support_type}`);
+  }
+
+  if (event.macro_aligned) {
+    score += 0.15;
+    reasons.push("macro_aligned");
+  }
+
+  if (breadth < options.minBreadthPublic && maxAbs >= avgAbs * 1.8 && maxAbs >= 1) {
+    score += 0.1;
+    reasons.push("single_name_concentration");
+  }
+
+  if (medianVolumeX >= options.minVolumeXPublic) {
+    score += 0.1;
+    reasons.push("volume_confirmation");
+  }
+
+  if (
+    (event.volatility_context === "expansion_after_compression" ||
+      event.volatility_context === "high_volatility_continuation") &&
+    medianVolumeX < options.minVolumeXPublic
+  ) {
+    score -= 0.15;
+    reasons.push("pure_volatility_no_volume");
+  }
+
+  const startDate = new Date(event.window_start);
+  const utcDay = startDate.getUTCDay();
+  const utcHour = startDate.getUTCHours();
+  if (utcDay === 0 || utcDay === 6) {
+    score -= 0.12;
+    reasons.push("weekend_thin_liquidity");
+  } else if (utcHour < 6) {
+    score -= 0.05;
+    reasons.push("overnight_thin_liquidity");
+  }
+
+  const finalScore = roundNumber(clamp(score, 0, 1), 4);
+  const band =
+    finalScore >= options.sourceLikelihoodHighBand
+      ? "high"
+      : finalScore >= options.sourceLikelihoodMedBand
+        ? "medium"
+        : "low";
+
+  return {
+    source_likelihood: finalScore,
+    source_likelihood_band: band,
+    source_likelihood_reasons: reasons,
+  };
+}
+
 function publishDecisionC({ event, previousPublished, options }) {
   const gapFromPreviousMin =
     previousPublished && previousPublished.window_end
@@ -1642,7 +1887,6 @@ function publishDecisionC({ event, previousPublished, options }) {
   const evidenceBarCount = event.diagnostics?.evidence_bar_count ?? 1;
   const validSymbolCount = event.chart_context_stats?.valid_symbol_count ?? 0;
   const breadthRatio = event.direction_consistency_score ?? 0;
-  const hardBreadth = breadthRatio >= options.minBreadthPublic;
   const broadBreak =
     event.event_range_context === "broad_broke_high" ||
     event.event_range_context === "broad_broke_low";
@@ -1651,138 +1895,133 @@ function publishDecisionC({ event, previousPublished, options }) {
   const squeezeBreakRatio = event.chart_context_stats?.squeeze_break_ratio ?? 0;
   const medianAdx = event.chart_context_stats?.median_adx14 ?? 0;
   const medianVolumeX = event.chart_context_stats?.median_volume_x ?? 1;
+  const volumeConfirmed = medianVolumeX >= options.minVolumeXPublic;
+  const historyType = event.history_support_type ?? "none";
+  const sourceLikelihood = event.source_likelihood ?? 0;
   const trendContext = event.trend_context?.trend_context ?? "trend_mixed";
   const trendAligned =
     event.trend_alignment === "aligned_with_trend" ||
     (event.direction === "observed_up" && trendContext === "trend_up") ||
     (event.direction === "observed_down" && trendContext === "trend_down");
+  const leadSqueeze = Boolean(
+    event.diagnostics?.per_symbol_chart_context?.find(
+      (item) => item.symbol === event.table_highlights?.lead_mover_symbol,
+    )?.squeeze_break_flag,
+  );
+  const exceptionallyStrong =
+    avgAbs >= options.minStrongContinuationAvgChangePct &&
+    breadthRatio >= options.minStrongContinuationBreadth &&
+    volumeConfirmed;
 
-  if (isOppositeRetrace) {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "micro_retrace_after_parent",
-    };
-  }
+  const suppress = (reason) => ({
+    publish_candidate: false,
+    publish_reason: null,
+    suppress_reason: reason,
+    reasons: [reason],
+  });
+  const publish = (reason, extra = []) => ({
+    publish_candidate: true,
+    publish_reason: reason,
+    suppress_reason: null,
+    reasons: [reason, ...extra],
+  });
 
+  // Hard minimums (all causal; no post-window/look-ahead inputs). One-bar
+  // windows (incl. extreme flashes) are detected but stay audit-only, keeping
+  // the public feed multi-candle ("evidence window, not single point").
+  if (isOppositeRetrace) return suppress("micro_retrace_after_parent");
   if (evidenceBarCount < options.minPublicBars) {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "one_bar_unconfirmed_window",
-    };
+    return suppress("one_bar_unconfirmed_window");
   }
-
   if (evidenceBarCount > options.maxPublicBars) {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "long_vague_window",
-    };
+    return suppress("long_vague_window");
   }
-
   if (validSymbolCount < options.minValidSymbols) {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "insufficient_valid_symbols",
-    };
+    return suppress("insufficient_valid_symbols");
   }
-
   if (avgAbs < options.minAvgChangePublicPct) {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "weak_avg_change",
-    };
+    return suppress("weak_avg_change");
   }
-
-  if (!hardBreadth) {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "weak_breadth",
-    };
+  if (breadthRatio < options.minBreadthPublic) {
+    return suppress("weak_breadth");
   }
-
-  if (event.event_range_context === "mixed_range_position") {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "mixed_range_position",
-    };
-  }
-
   if (
-    event.momentum_type === "whipsaw" ||
-    (event.chart_context_warnings ?? []).includes("post_window_reversal_risk")
+    event.event_range_context === "mixed_range_position" &&
+    !exceptionallyStrong
   ) {
-    return {
-      publish_candidate: false,
-      publish_reason: null,
-      suppress_reason: "noisy_range_only",
-    };
+    return suppress("mixed_range_position");
   }
+  // The detection point must be supported by prior chart history.
+  if (historyType === "none") return suppress("no_prior_history_support");
 
+  // Strong-context publish paths (specific structure first, then catch-alls).
   if (
     broadBreak &&
     confirmedBreakRatio >= options.minConfirmedBreakRatio &&
-    (trendAligned || medianAdx >= options.minStrongContinuationAdx)
+    (trendAligned || medianAdx >= options.minStrongContinuationAdx) &&
+    (avgAbs >= options.broadBreakMinPct ||
+      confirmedBreakRatio >= options.broadBreakStrongConfirmRatio)
   ) {
-    return {
-      publish_candidate: true,
-      publish_reason: "broad_confirmed_break",
-      suppress_reason: null,
-    };
+    return publish("broad_confirmed_break", [
+      "confirmed_break_ge_min",
+      trendAligned ? "trend_aligned" : "adx_median_ge_25",
+      avgAbs >= options.broadBreakMinPct ? "move_ge_min" : "strong_confirmation",
+    ]);
   }
 
   if (
     event.volatility_context === "expansion_after_compression" &&
-    squeezeBreakRatio >= options.minCompressionExpansionRatio &&
-    medianVolumeX >= options.minVolumeXPublic
+    (squeezeBreakRatio >= options.minCompressionExpansionRatio ||
+      leadSqueeze ||
+      historyType === "compression_breakout") &&
+    volumeConfirmed
   ) {
-    return {
-      publish_candidate: true,
-      publish_reason: "compression_expansion_break",
-      suppress_reason: null,
-    };
+    return publish("compression_expansion_break", ["volume_confirmation"]);
   }
 
   if (
-    event.momentum_type === "continuation" &&
-    trendContext !== "trend_mixed" &&
-    trendContext !== "trend_flat" &&
-    medianAdx >= options.minStrongContinuationAdx &&
+    historyType === "trend_continuation" &&
     breadthRatio >= options.minStrongContinuationBreadth &&
-    avgAbs >= options.minStrongContinuationAvgChangePct
+    avgAbs >= options.minStrongContinuationAvgChangePct &&
+    medianAdx >= options.minStrongContinuationAdx
   ) {
-    return {
-      publish_candidate: true,
-      publish_reason: "strong_continuation_breadth_trend",
-      suppress_reason: null,
-    };
+    return publish("strong_continuation_breadth_trend", ["adx_median_ge_25"]);
   }
 
+  if (
+    historyType === "relief_reversal" &&
+    breadthRatio >= options.minStrongContinuationBreadth &&
+    avgAbs >= options.reliefReversalMinPct &&
+    volumeConfirmed
+  ) {
+    return publish("relief_reversal", ["volume_confirmation"]);
+  }
+
+  if (
+    breadthRatio >= options.broadImpulseMinBreadth &&
+    avgAbs >= options.broadImpulseMinPct &&
+    volumeConfirmed &&
+    sourceLikelihood >= options.sourceLikelihoodHighBand
+  ) {
+    return publish("broad_impulse", [
+      "high_source_likelihood",
+      "volume_confirmation",
+    ]);
+  }
+
+  // Subordinate macro path (after the structural paths).
   if (
     event.macro_aligned &&
     event.chart_context_score >= options.chartContextModerateScore &&
-    medianVolumeX >= options.minVolumeXPublic
+    volumeConfirmed
   ) {
-    return {
-      publish_candidate: true,
-      publish_reason: "macro_aligned_confirmed_window",
-      suppress_reason: null,
-    };
+    return publish("macro_aligned_confirmed_window", ["volume_confirmation"]);
   }
 
-  return {
-    publish_candidate: false,
-    publish_reason: null,
-    suppress_reason: "no_strong_context_path",
-  };
+  return suppress("no_strong_context_path");
 }
 
-export function enrichVNextBEvents(events, { candlesBySymbol, options = {} }) {
+export function enrichVNextCEvents(events, { candlesBySymbol, options = {} }) {
   const mergedOptions = { ...DEFAULT_VNEXT_C_OPTIONS, ...options };
   const indicatorsBySymbol = Object.fromEntries(
     Object.entries(candlesBySymbol ?? {}).map(([symbol, candles]) => [
@@ -1800,13 +2039,10 @@ export function enrichVNextBEvents(events, { candlesBySymbol, options = {} }) {
     const perSymbolEvidence = updatePerSymbolEvidence(event, chartContext);
     const eventId = vnextCEventId(event);
 
-    return {
+    const base = {
       ...event,
       event_id: eventId,
       source_event_id: event.diagnostics?.source_event_id ?? event.event_id,
-      source_vnext_b_event_id:
-        event.source_vnext_b_event_id ??
-        (event.detector_version === "vnext_b" ? event.event_id : null),
       detector_version: "vnext_c",
       publish_gate_version: mergedOptions.publishGateVersion,
       per_symbol_evidence: perSymbolEvidence,
@@ -1823,20 +2059,25 @@ export function enrichVNextBEvents(events, { candlesBySymbol, options = {} }) {
       direction_consistency_score: chartContext.direction_consistency_score,
       volatility_context: chartContext.volatility_context,
       volatility_expansion_score: chartContext.volatility_expansion_score,
+      volatility_state: chartContext.volatility_state,
+      history_support_type: chartContext.history_support_type,
+      history_support_score: chartContext.history_support_score,
+      history_support_factors: chartContext.history_support_factors,
+      breadth_up_ratio: chartContext.breadth_up_ratio,
+      breadth_down_ratio: chartContext.breadth_down_ratio,
+      break_high_ratio: chartContext.break_high_ratio,
+      break_low_ratio: chartContext.break_low_ratio,
+      squeeze_break_flag: chartContext.squeeze_break_flag,
       chart_context_reasons: chartContext.chart_context_reasons,
       chart_context_warnings: chartContext.chart_context_warnings,
       chart_context_stats: chartContext.chart_context_stats,
       diagnostics: {
         ...event.diagnostics,
-        source_vnext_b_event_id:
-          event.source_vnext_b_event_id ??
-          (event.detector_version === "vnext_b" ? event.event_id : null),
-        vnext_b_publish_candidate: event.publish_candidate,
-        vnext_b_publish_reason: event.publish_reason,
-        vnext_b_suppress_reason: event.suppress_reason,
         per_symbol_chart_context: chartContext.per_symbol_chart_context,
       },
     };
+
+    return { ...base, ...scoreSourceLikelihood(base, mergedOptions) };
   });
   const recalibrated = [];
   let previousPublished = null;
@@ -1854,6 +2095,10 @@ export function enrichVNextBEvents(events, { candlesBySymbol, options = {} }) {
       publish_candidate: decision.publish_candidate,
       publish_reason: decision.publish_reason,
       suppress_reason: decision.suppress_reason,
+      publish_gate: {
+        decision: decision.publish_candidate ? "public" : "audit",
+        reasons: decision.reasons ?? [],
+      },
       source_route_hint: sourceRouteHintForEvent({
         ...event,
         publish_candidate: decision.publish_candidate,
@@ -1885,11 +2130,24 @@ export function detectVNextCEvents({
     candlesBySymbol,
     options: mergedOptions,
   });
-  const emittedWindows = detected.windows.filter(
-    (window) =>
-      window.end_cursor - window.start_cursor + 1 >=
-      mergedOptions.minDetectedBars,
-  );
+  const mergedWindows = mergeAdjacentWindows(detected.windows, mergedOptions);
+  const emittedWindows = mergedWindows
+    .map((window) => {
+      const bars = window.end_cursor - window.start_cursor + 1;
+      // Flash-keep is deliberately rare: a sub-min window is only rescued when
+      // the bar's MEDIAN robust z (avg_return_z) is exceptional (>= flashKeepAvgZ,
+      // well above the 3.5 trigger), i.e. a genuine market-wide one-bar spike.
+      const isExtremeFlash =
+        (window.peak_avg_z ?? 0) >= mergedOptions.flashKeepAvgZ;
+      return {
+        ...window,
+        flash_event: bars < mergedOptions.minDetectedBars && isExtremeFlash,
+      };
+    })
+    .filter((window) => {
+      const bars = window.end_cursor - window.start_cursor + 1;
+      return bars >= mergedOptions.minDetectedBars || window.flash_event;
+    });
   const candidateEvents = emittedWindows.map((window) =>
     windowToCandidateEvent({
       window,
@@ -1900,7 +2158,7 @@ export function detectVNextCEvents({
       options: mergedOptions,
     }),
   );
-  const events = enrichVNextBEvents(candidateEvents, {
+  const events = enrichVNextCEvents(candidateEvents, {
     candlesBySymbol,
     options: mergedOptions,
   });
@@ -1914,8 +2172,11 @@ export function detectVNextCEvents({
       detector: "vnext_c_window_builder",
       windows: emittedWindows,
       raw_windows_detected: detected.windows.length,
+      merged_window_count: mergedWindows.length,
       raw_windows_filtered_below_min_bars:
-        detected.windows.length - emittedWindows.length,
+        mergedWindows.length - emittedWindows.length,
+      flash_event_count: emittedWindows.filter((window) => window.flash_event)
+        .length,
       bar_state_count: detected.states.length,
     },
     options: mergedOptions,
