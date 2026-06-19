@@ -319,6 +319,7 @@ function sectionDetailsState(dayGroups) {
 
 function dayPostControlLabel(hiddenCount, action) {
   if (hiddenCount <= 0) return null;
+  if (action === "Collapse") return "Collapse post";
   return `+${hiddenCount} events · ${action} post`;
 }
 
@@ -346,6 +347,15 @@ export function buildFeedContract({
       const defaultCollapsedItemId =
         isCurrentUtcDay && latestSignal ? latestSignal.event_id : dailyItem.id;
       const hiddenCount = Math.max(0, items.length - 1);
+      const hasExtraItems = hiddenCount > 0;
+      const expandedControlLabel = dayPostControlLabel(
+        hiddenCount,
+        "Collapse",
+      );
+      const collapsedControlLabel = dayPostControlLabel(
+        hiddenCount,
+        "Expand",
+      );
 
       return {
         day_post_id: `day_${overview.date_utc}`,
@@ -354,13 +364,17 @@ export function buildFeedContract({
         is_current_utc_day: isCurrentUtcDay,
         item_count: items.length,
         hidden_item_count_when_collapsed: hiddenCount,
+        has_extra_items: hasExtraItems,
         latest_item_id: defaultCollapsedItemId,
         default_collapsed_item_id: defaultCollapsedItemId,
+        expanded_control_label: expandedControlLabel,
+        collapsed_control_label: collapsedControlLabel,
         day_post_control: {
-          expand_label: dayPostControlLabel(hiddenCount, "Expand"),
-          collapse_label: dayPostControlLabel(hiddenCount, "Collapse"),
+          expand_label: collapsedControlLabel,
+          collapse_label: expandedControlLabel,
         },
         visible_item_ids_when_collapsed: [defaultCollapsedItemId],
+        visible_item_ids_when_expanded: items.map((item) => item.id),
         items: items.sort((a, b) => {
           if (a.item_type === "daily_overview") return -1;
           if (b.item_type === "daily_overview") return 1;
@@ -383,6 +397,8 @@ export function buildFeedContract({
       days_expanded: true,
       section_details_expanded_by_id: sectionDetailsState(dayGroups),
       global_control_label: "Collapse days",
+      global_control_label_when_expanded: "Collapse days",
+      global_control_label_when_collapsed: "Expand days",
       possible_global_control_labels: ["Expand days", "Collapse days"],
     },
   };

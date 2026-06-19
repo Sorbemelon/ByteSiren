@@ -21,10 +21,12 @@ const EXPECTED_COUNTS = {
 };
 
 const REQUIRED_PREVIEW_JS_MARKERS = [
+  "function syncDayToggle",
   "function renderDayPost",
   "function renderDailySection",
   "function renderSignalSection",
   "function renderAuditCard",
+  "data-day-post-toggle",
   "feed-diagnostics",
   "Preview data loaded:",
   "Daily Overview",
@@ -33,6 +35,17 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "Avg Change",
   "Expand days",
   "Collapse days",
+  "Show more",
+  "Hide",
+];
+
+const FORBIDDEN_CONTROL_MARKERS = [
+  "Latest only",
+  "latest_only",
+  "Expand all",
+  "Collapse all",
+  "Expand day",
+  "Collapse day",
 ];
 
 async function exists(filePath) {
@@ -116,6 +129,83 @@ function assertLatestItemsExist(feedContract) {
   }
 }
 
+function assertNoForbiddenControls(label, value) {
+  const text = typeof value === "string" ? value : JSON.stringify(value);
+  for (const marker of FORBIDDEN_CONTROL_MARKERS) {
+    const hasMarker =
+      marker === "latest_only"
+        ? text.includes(marker)
+        : new RegExp(`\\b${marker}\\b`, "i").test(text);
+    assert.equal(
+      hasMarker,
+      false,
+      `${label} contains forbidden control marker: ${marker}`,
+    );
+  }
+}
+
+function assertDayPostCollapseContract(feedContract, groupedPreview) {
+  assert.equal(feedContract.preview_state.days_expanded, true);
+  assert.equal(
+    feedContract.preview_state.global_control_label_when_expanded,
+    "Collapse days",
+  );
+  assert.equal(
+    feedContract.preview_state.global_control_label_when_collapsed,
+    "Expand days",
+  );
+  assertNoForbiddenControls("feed contract preview_state", feedContract.preview_state);
+
+  for (const group of feedContract.day_groups) {
+    assert.ok(group.day_post_id, `${group.date_utc} missing day_post_id`);
+    assert.ok(
+      group.default_collapsed_item_id,
+      `${group.date_utc} missing default_collapsed_item_id`,
+    );
+    assert.equal(
+      group.hidden_item_count_when_collapsed,
+      group.item_count - 1,
+      `${group.date_utc} hidden count mismatch`,
+    );
+    assert.equal(
+      group.has_extra_items,
+      group.item_count > 1,
+      `${group.date_utc} has_extra_items mismatch`,
+    );
+    assert.deepEqual(Array.from(group.visible_item_ids_when_collapsed), [
+      group.default_collapsed_item_id,
+    ]);
+    assert.equal(group.visible_item_ids_when_expanded.length, group.item_count);
+
+    if (group.has_extra_items) {
+      assert.equal(
+        group.collapsed_control_label,
+        `+${group.hidden_item_count_when_collapsed} events · Expand post`,
+      );
+      assert.equal(group.expanded_control_label, "Collapse post");
+    } else {
+      assert.equal(group.collapsed_control_label, null);
+      assert.equal(group.expanded_control_label, null);
+    }
+  }
+
+  assert.equal(groupedPreview.preview_state.days_expanded, true);
+  assert.deepEqual(Array.from(groupedPreview.preview_state.global_controls), [
+    "Expand days",
+    "Collapse days",
+  ]);
+  assertNoForbiddenControls("grouped preview_state", groupedPreview.preview_state);
+
+  for (const post of groupedPreview.public_preview.day_posts) {
+    assert.equal(post.visible_sections_when_collapsed.length, 1);
+    assert.equal(
+      post.visible_sections_when_collapsed[0].section_id,
+      post.default_collapsed_item_id,
+    );
+    assert.equal(post.visible_sections_when_expanded.length, post.item_count);
+  }
+}
+
 async function runSmoke() {
   const requiredStaticFiles = [
     path.join(CHART_PREVIEW_DIR, "index.html"),
@@ -144,6 +234,8 @@ async function runSmoke() {
     previewJs.includes("Preview data could not load"),
     "preview.js must render a visible data-load error",
   );
+  assertNoForbiddenControls("index.html", indexHtml);
+  assertNoForbiddenControls("preview.js", previewJs);
   for (const marker of REQUIRED_PREVIEW_JS_MARKERS) {
     assert.ok(
       previewJs.includes(marker),
@@ -166,6 +258,7 @@ async function runSmoke() {
     groupedPreview.public_preview.day_posts.length,
     EXPECTED_COUNTS.dayGroups,
   );
+  assertDayPostCollapseContract(feedContract, groupedPreview);
   assert.equal(signals.length, EXPECTED_COUNTS.publicSignals);
   assert.equal(overviews.length, EXPECTED_COUNTS.dailyOverviews);
   assert.equal(auditEvents.count, EXPECTED_COUNTS.auditEvents);

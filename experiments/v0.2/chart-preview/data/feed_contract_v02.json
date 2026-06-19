@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "updated_at": "2026-06-19T14:33:26.335Z",
+  "updated_at": "2026-06-19T16:19:22.004Z",
   "range_days": 30,
   "grouping": "utc_day",
   "day_groups": [
@@ -11,13 +11,19 @@
       "is_current_utc_day": true,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-19",
       "default_collapsed_item_id": "daily_2026-06-19",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-19"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-19"
       ],
       "items": [
@@ -150,14 +156,21 @@
       "is_current_utc_day": false,
       "item_count": 2,
       "hidden_item_count_when_collapsed": 1,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-06-18",
       "default_collapsed_item_id": "daily_2026-06-18",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+1 events · Expand post",
       "day_post_control": {
         "expand_label": "+1 events · Expand post",
-        "collapse_label": "+1 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-06-18"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-06-18",
+        "vnext_b_3f586e87_20260618t1530"
       ],
       "items": [
         {
@@ -685,14 +698,23 @@
       "is_current_utc_day": false,
       "item_count": 4,
       "hidden_item_count_when_collapsed": 3,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-06-17",
       "default_collapsed_item_id": "daily_2026-06-17",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+3 events · Expand post",
       "day_post_control": {
         "expand_label": "+3 events · Expand post",
-        "collapse_label": "+3 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-06-17"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-06-17",
+        "vnext_b_4ab7f2a1_20260617t1800",
+        "vnext_b_28a60d1b_20260617t1830",
+        "vnext_b_666c4278_20260617t1915"
       ],
       "items": [
         {
@@ -2004,13 +2026,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-16",
       "default_collapsed_item_id": "daily_2026-06-16",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-16"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-16"
       ],
       "items": [
@@ -2146,13 +2174,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-15",
       "default_collapsed_item_id": "daily_2026-06-15",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-15"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-15"
       ],
       "items": [
@@ -2288,14 +2322,21 @@
       "is_current_utc_day": false,
       "item_count": 2,
       "hidden_item_count_when_collapsed": 1,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-06-14",
       "default_collapsed_item_id": "daily_2026-06-14",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+1 events · Expand post",
       "day_post_control": {
         "expand_label": "+1 events · Expand post",
-        "collapse_label": "+1 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-06-14"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-06-14",
+        "vnext_b_51361797_20260614t2115"
       ],
       "items": [
         {
@@ -2827,13 +2868,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-13",
       "default_collapsed_item_id": "daily_2026-06-13",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-13"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-13"
       ],
       "items": [
@@ -2969,13 +3016,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-12",
       "default_collapsed_item_id": "daily_2026-06-12",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-12"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-12"
       ],
       "items": [
@@ -3111,13 +3164,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-11",
       "default_collapsed_item_id": "daily_2026-06-11",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-11"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-11"
       ],
       "items": [
@@ -3253,14 +3312,22 @@
       "is_current_utc_day": false,
       "item_count": 3,
       "hidden_item_count_when_collapsed": 2,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-06-10",
       "default_collapsed_item_id": "daily_2026-06-10",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+2 events · Expand post",
       "day_post_control": {
         "expand_label": "+2 events · Expand post",
-        "collapse_label": "+2 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-06-10"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-06-10",
+        "vnext_b_1b8c81d3_20260610t1230",
+        "vnext_b_da58fd31_20260610t1330"
       ],
       "items": [
         {
@@ -4181,13 +4248,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-09",
       "default_collapsed_item_id": "daily_2026-06-09",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-09"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-09"
       ],
       "items": [
@@ -4323,13 +4396,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-08",
       "default_collapsed_item_id": "daily_2026-06-08",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-08"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-08"
       ],
       "items": [
@@ -4465,14 +4544,21 @@
       "is_current_utc_day": false,
       "item_count": 2,
       "hidden_item_count_when_collapsed": 1,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-06-07",
       "default_collapsed_item_id": "daily_2026-06-07",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+1 events · Expand post",
       "day_post_control": {
         "expand_label": "+1 events · Expand post",
-        "collapse_label": "+1 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-06-07"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-06-07",
+        "vnext_b_2fa494ec_20260607t2200"
       ],
       "items": [
         {
@@ -5002,13 +5088,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-06",
       "default_collapsed_item_id": "daily_2026-06-06",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-06"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-06"
       ],
       "items": [
@@ -5144,13 +5236,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-05",
       "default_collapsed_item_id": "daily_2026-06-05",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-05"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-05"
       ],
       "items": [
@@ -5286,13 +5384,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-04",
       "default_collapsed_item_id": "daily_2026-06-04",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-04"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-04"
       ],
       "items": [
@@ -5428,13 +5532,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-03",
       "default_collapsed_item_id": "daily_2026-06-03",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-03"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-03"
       ],
       "items": [
@@ -5570,14 +5680,22 @@
       "is_current_utc_day": false,
       "item_count": 3,
       "hidden_item_count_when_collapsed": 2,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-06-02",
       "default_collapsed_item_id": "daily_2026-06-02",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+2 events · Expand post",
       "day_post_control": {
         "expand_label": "+2 events · Expand post",
-        "collapse_label": "+2 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-06-02"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-06-02",
+        "vnext_b_2559ab4c_20260602t1415",
+        "vnext_b_d21993f9_20260602t2245"
       ],
       "items": [
         {
@@ -6496,13 +6614,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-06-01",
       "default_collapsed_item_id": "daily_2026-06-01",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-06-01"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-06-01"
       ],
       "items": [
@@ -6638,13 +6762,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-31",
       "default_collapsed_item_id": "daily_2026-05-31",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-31"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-31"
       ],
       "items": [
@@ -6777,13 +6907,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-30",
       "default_collapsed_item_id": "daily_2026-05-30",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-30"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-30"
       ],
       "items": [
@@ -6910,14 +7046,21 @@
       "is_current_utc_day": false,
       "item_count": 2,
       "hidden_item_count_when_collapsed": 1,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-05-29",
       "default_collapsed_item_id": "daily_2026-05-29",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+1 events · Expand post",
       "day_post_control": {
         "expand_label": "+1 events · Expand post",
-        "collapse_label": "+1 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-05-29"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-05-29",
+        "vnext_b_dac278c4_20260529t1500"
       ],
       "items": [
         {
@@ -7445,14 +7588,21 @@
       "is_current_utc_day": false,
       "item_count": 2,
       "hidden_item_count_when_collapsed": 1,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-05-28",
       "default_collapsed_item_id": "daily_2026-05-28",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+1 events · Expand post",
       "day_post_control": {
         "expand_label": "+1 events · Expand post",
-        "collapse_label": "+1 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-05-28"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-05-28",
+        "vnext_b_a43ac588_20260528t0315"
       ],
       "items": [
         {
@@ -7982,13 +8132,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-27",
       "default_collapsed_item_id": "daily_2026-05-27",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-27"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-27"
       ],
       "items": [
@@ -8124,13 +8280,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-26",
       "default_collapsed_item_id": "daily_2026-05-26",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-26"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-26"
       ],
       "items": [
@@ -8266,13 +8428,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-25",
       "default_collapsed_item_id": "daily_2026-05-25",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-25"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-25"
       ],
       "items": [
@@ -8402,13 +8570,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-24",
       "default_collapsed_item_id": "daily_2026-05-24",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-24"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-24"
       ],
       "items": [
@@ -8538,14 +8712,22 @@
       "is_current_utc_day": false,
       "item_count": 3,
       "hidden_item_count_when_collapsed": 2,
+      "has_extra_items": true,
       "latest_item_id": "daily_2026-05-23",
       "default_collapsed_item_id": "daily_2026-05-23",
+      "expanded_control_label": "Collapse post",
+      "collapsed_control_label": "+2 events · Expand post",
       "day_post_control": {
         "expand_label": "+2 events · Expand post",
-        "collapse_label": "+2 events · Collapse post"
+        "collapse_label": "Collapse post"
       },
       "visible_item_ids_when_collapsed": [
         "daily_2026-05-23"
+      ],
+      "visible_item_ids_when_expanded": [
+        "daily_2026-05-23",
+        "vnext_b_bd7eadf3_20260523t0745",
+        "vnext_b_fdc31c9f_20260523t2030"
       ],
       "items": [
         {
@@ -9470,13 +9652,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-22",
       "default_collapsed_item_id": "daily_2026-05-22",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-22"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-22"
       ],
       "items": [
@@ -9612,13 +9800,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-21",
       "default_collapsed_item_id": "daily_2026-05-21",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-21"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-21"
       ],
       "items": [
@@ -9751,13 +9945,19 @@
       "is_current_utc_day": false,
       "item_count": 1,
       "hidden_item_count_when_collapsed": 0,
+      "has_extra_items": false,
       "latest_item_id": "daily_2026-05-20",
       "default_collapsed_item_id": "daily_2026-05-20",
+      "expanded_control_label": null,
+      "collapsed_control_label": null,
       "day_post_control": {
         "expand_label": null,
         "collapse_label": null
       },
       "visible_item_ids_when_collapsed": [
+        "daily_2026-05-20"
+      ],
+      "visible_item_ids_when_expanded": [
         "daily_2026-05-20"
       ],
       "items": [
@@ -9929,6 +10129,8 @@
       "daily_2026-05-20": false
     },
     "global_control_label": "Collapse days",
+    "global_control_label_when_expanded": "Collapse days",
+    "global_control_label_when_collapsed": "Expand days",
     "possible_global_control_labels": [
       "Expand days",
       "Collapse days"

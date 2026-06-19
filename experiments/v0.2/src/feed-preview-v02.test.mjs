@@ -14,6 +14,15 @@ function previewSections(preview) {
   return preview.public_preview.day_posts.flatMap((post) => post.sections);
 }
 
+const FORBIDDEN_CONTROL_LABELS = [
+  "Latest only",
+  "latest_only",
+  "Expand all",
+  "Collapse all",
+  "Expand day",
+  "Collapse day",
+];
+
 function publicLabelText(value) {
   return JSON.stringify(value)
     .replace(/window_move_pct|market_24h_move_pct|top_symbol_moves/g, "")
@@ -22,6 +31,14 @@ function publicLabelText(value) {
 
 function includesForbiddenLabel(text, label) {
   return new RegExp(`\\b${label}\\b`, "i").test(text);
+}
+
+function includesForbiddenControl(text, label) {
+  if (label === "latest_only") {
+    return text.includes(label);
+  }
+
+  return includesForbiddenLabel(text, label);
 }
 
 test("feed contract has 31 day groups and Daily Overview first", async () => {
@@ -52,36 +69,91 @@ test("global day controls replace latest-only mode", async () => {
 
   assert.equal(preview.preview_state.days_expanded, true);
   assert.equal(preview.preview_state.global_control_label, "Collapse days");
+  assert.equal(
+    preview.preview_state.global_control_label_when_expanded,
+    "Collapse days",
+  );
+  assert.equal(
+    preview.preview_state.global_control_label_when_collapsed,
+    "Expand days",
+  );
   assert.deepEqual(preview.preview_state.possible_global_control_labels, [
+    "Expand days",
+    "Collapse days",
+  ]);
+  assert.deepEqual(preview.preview_state.global_controls, [
     "Expand days",
     "Collapse days",
   ]);
   assert.equal("expanded_mode" in preview.preview_state, false);
   assert.equal("possible_modes" in preview.preview_state, false);
   assert.equal("latest_item_id" in preview.preview_state, false);
+
+  const controlText = JSON.stringify(preview.preview_state);
+  for (const label of FORBIDDEN_CONTROL_LABELS) {
+    assert.equal(includesForbiddenControl(controlText, label), false);
+  }
 });
 
-test("collapsed day posts expose exactly their default collapsed item", async () => {
+test("day-post contract exposes collapsed and expanded metadata", async () => {
   const contract = await readJson("experiments/v0.2/outputs/feed_contract_v02.json");
 
   for (const group of contract.day_groups) {
+    assert.ok(group.day_post_id);
+    assert.ok(group.default_collapsed_item_id);
+    assert.equal(group.items.some((item) => item.id === group.default_collapsed_item_id), true);
+    assert.equal(
+      group.hidden_item_count_when_collapsed,
+      group.item_count - 1,
+    );
+    assert.equal(group.has_extra_items, group.item_count > 1);
     assert.deepEqual(group.visible_item_ids_when_collapsed, [
       group.default_collapsed_item_id,
     ]);
+    assert.equal(group.visible_item_ids_when_expanded.length, group.item_count);
 
     if (group.item_count > 1) {
-      assert.equal(
-        group.hidden_item_count_when_collapsed,
-        group.item_count - 1,
-      );
+      const expandLabel = `+${group.hidden_item_count_when_collapsed} events · Expand post`;
+      const collapseLabel = "Collapse post";
       assert.equal(
         group.day_post_control.expand_label,
-        `+${group.hidden_item_count_when_collapsed} events · Expand post`,
+        expandLabel,
       );
       assert.equal(
         group.day_post_control.collapse_label,
-        `+${group.hidden_item_count_when_collapsed} events · Collapse post`,
+        collapseLabel,
       );
+      assert.equal(group.collapsed_control_label, expandLabel);
+      assert.equal(group.expanded_control_label, collapseLabel);
+    } else {
+      assert.equal(group.day_post_control.expand_label, null);
+      assert.equal(group.day_post_control.collapse_label, null);
+      assert.equal(group.collapsed_control_label, null);
+      assert.equal(group.expanded_control_label, null);
+    }
+  }
+});
+
+test("preview models collapsed and expanded visible sections per day", async () => {
+  const preview = await readJson("experiments/v0.2/outputs/grouped_feed_preview.json");
+
+  for (const post of preview.public_preview.day_posts) {
+    assert.equal(post.visible_sections_when_collapsed.length, 1);
+    assert.equal(
+      post.visible_sections_when_collapsed[0].section_id,
+      post.default_collapsed_item_id,
+    );
+    assert.equal(post.visible_sections_when_expanded.length, post.item_count);
+
+    if (post.item_count > 1) {
+      assert.equal(
+        post.collapsed_control_label,
+        `+${post.hidden_item_count_when_collapsed} events · Expand post`,
+      );
+      assert.equal(post.expanded_control_label, "Collapse post");
+    } else {
+      assert.equal(post.collapsed_control_label, null);
+      assert.equal(post.expanded_control_label, null);
     }
   }
 });

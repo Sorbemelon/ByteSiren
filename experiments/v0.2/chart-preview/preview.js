@@ -164,8 +164,6 @@ function isDayPostExpanded(post) {
 function setGlobalDaysExpanded(expanded) {
   state.daysExpanded = expanded;
   state.dayOverrides.clear();
-  dayToggle.textContent = expanded ? "Collapse days" : "Expand days";
-  dayToggle.classList.toggle("is-active", expanded);
   render();
 }
 
@@ -174,6 +172,18 @@ function visibleItemsForPost(post) {
   return post.items.filter(
     (item) => item.id === post.default_collapsed_item_id,
   );
+}
+
+function anyDayPostExpanded() {
+  return publicDayPosts.some((post) => isDayPostExpanded(post));
+}
+
+function syncDayToggle() {
+  if (!dayToggle) return;
+
+  const hasExpandedDay = state.mode === "public" && anyDayPostExpanded();
+  dayToggle.textContent = hasExpandedDay ? "Collapse days" : "Expand days";
+  dayToggle.classList.toggle("is-active", hasExpandedDay);
 }
 
 function previewCounts() {
@@ -685,7 +695,8 @@ function renderFeed() {
   });
 
   feedEl.querySelectorAll("[data-day-post-toggle]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
       const post = dayPostById.get(button.dataset.dayPostToggle);
       if (!post) return;
       state.dayOverrides.set(post.day_post_id, !isDayPostExpanded(post));
@@ -695,6 +706,7 @@ function renderFeed() {
 }
 
 function render() {
+  syncDayToggle();
   renderFeed();
   drawChart();
 }
@@ -740,7 +752,7 @@ function startPreview(data) {
   updateDiagnostics();
 
   dayToggle.addEventListener("click", () => {
-    setGlobalDaysExpanded(!state.daysExpanded);
+    setGlobalDaysExpanded(!anyDayPostExpanded());
   });
 
   symbolSelect.addEventListener("change", () => {

@@ -101,12 +101,17 @@ function dayPostPreview(group) {
     is_current_utc_day: group.is_current_utc_day,
     item_count: group.item_count,
     hidden_item_count_when_collapsed: group.hidden_item_count_when_collapsed,
+    has_extra_items: group.has_extra_items,
     latest_item_id: group.latest_item_id,
     default_collapsed_item_id: group.default_collapsed_item_id,
+    expanded_control_label: group.expanded_control_label,
+    collapsed_control_label: group.collapsed_control_label,
     day_post_control: {
       expand_label: group.day_post_control.expand_label,
       collapse_label: group.day_post_control.collapse_label,
     },
+    visible_item_ids_when_collapsed: group.visible_item_ids_when_collapsed,
+    visible_item_ids_when_expanded: group.visible_item_ids_when_expanded,
     visible_sections_when_collapsed: collapsedSections,
     visible_sections_when_expanded: sections,
     sections,
@@ -128,7 +133,7 @@ export function buildGroupedFeedPreview({
     generated_at: now.toISOString(),
     preview_state: {
       ...contract.preview_state,
-      day_post_controls: ["Expand days", "Collapse days"],
+      global_controls: ["Expand days", "Collapse days"],
       section_controls: ["Show more", "Hide"],
     },
     public_preview: {
@@ -157,9 +162,37 @@ export function buildGroupedFeedPreview({
       expand_days_collapse_days:
         "Expand days and Collapse days expand or collapse parent day posts.",
       day_post_control:
-        "+N events · Expand post and +N events · Collapse post control whether one day post shows all items or only the default latest item.",
+        "+N events · Expand post shows hidden items for one day post; Collapse post returns that post to its default item.",
     },
   };
+}
+
+function markdownSectionLine(section) {
+  if (section.item_type === "daily_overview") {
+    return `${section.collapsed_preview.market_tone}; ${section.collapsed_preview.change}; ${section.collapsed_preview.summary_hint}`;
+  }
+
+  return `${section.collapsed_preview.time_window}; ${section.collapsed_preview.direction}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.avg_change}; ${section.collapsed_preview.range_context}; ${section.collapsed_preview.impact}`;
+}
+
+function markdownPost(lines, post, sections, controlLabel) {
+  lines.push(`### ${post.display_date}`);
+  lines.push(
+    `Post: ${post.item_count} items; collapsed item ${post.default_collapsed_item_id}`,
+  );
+
+  if (controlLabel) {
+    lines.push(`Control: ${controlLabel}`);
+  }
+
+  for (const section of sections) {
+    lines.push(`- ${section.title}: ${markdownSectionLine(section)}`);
+    lines.push(
+      `  Section control: ${section.section_control.collapsed_label} / ${section.section_control.expanded_label}`,
+    );
+  }
+
+  lines.push("");
 }
 
 function markdown(preview) {
@@ -168,41 +201,32 @@ function markdown(preview) {
     "",
     `Days expanded: ${preview.preview_state.days_expanded}`,
     `Global control: ${preview.preview_state.global_control_label}`,
-    `Day controls: ${preview.preview_state.day_post_controls.join(", ")}`,
+    `Global controls: ${preview.preview_state.global_controls.join(", ")}`,
     `Section controls: ${preview.preview_state.section_controls.join(", ")}`,
+    "",
+    "## Expanded Days State",
     "",
   ];
 
   for (const post of preview.public_preview.day_posts) {
-    lines.push(`## ${post.display_date}`);
-    lines.push(
-      `Post: ${post.item_count} items; collapsed item ${post.default_collapsed_item_id}`,
+    markdownPost(
+      lines,
+      post,
+      post.visible_sections_when_expanded,
+      post.expanded_control_label,
     );
+  }
 
-    if (post.hidden_item_count_when_collapsed > 0) {
-      lines.push(`Control: ${post.day_post_control.expand_label}`);
-      lines.push(`Control: ${post.day_post_control.collapse_label}`);
-    }
+  lines.push("## Collapsed Days State");
+  lines.push("");
 
-    for (const section of post.sections) {
-      lines.push(`### ${section.title}`);
-
-      if (section.item_type === "daily_overview") {
-        lines.push(
-          `${section.collapsed_preview.market_tone}; ${section.collapsed_preview.change}; ${section.collapsed_preview.summary_hint}`,
-        );
-      } else {
-        lines.push(
-          `${section.collapsed_preview.time_window}; ${section.collapsed_preview.direction}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.avg_change}; ${section.collapsed_preview.range_context}; ${section.collapsed_preview.impact}`,
-        );
-      }
-
-      lines.push(
-        `Section control: ${section.section_control.collapsed_label} / ${section.section_control.expanded_label}`,
-      );
-    }
-
-    lines.push("");
+  for (const post of preview.public_preview.day_posts) {
+    markdownPost(
+      lines,
+      post,
+      post.visible_sections_when_collapsed,
+      post.collapsed_control_label,
+    );
   }
 
   lines.push("## Audit-only non-public detected events");
