@@ -176,13 +176,11 @@ test("market stories are anchored to the start-trigger UTC day", async () => {
       story.included_signal_event_ids.length === 0 &&
       story.included_audit_event_ids.length === 3 &&
       [
-        "2026-06-01T01:00",
-        "2026-06-01T15:15",
-        "2026-06-02T02:15",
-      ].every((start) =>
-        story.expanded.story_details.included_audit_events.some((event) =>
-          event.window_start.startsWith(start),
-        ),
+        "vnext_c_fae265e5_20260601t0100",
+        "vnext_c_0118579a_20260601t1515",
+        "vnext_c_7e978f69_20260602t0215",
+      ].every((eventId) =>
+        story.expanded.story_details.included_audit_event_ids.includes(eventId),
       ),
   );
   assert.ok(
@@ -304,7 +302,25 @@ test("market stories are anchored to the start-trigger UTC day", async () => {
       story.chart.included_audit_event_ids,
       story.included_audit_event_ids,
     );
-    assert.ok(Array.isArray(story.expanded.story_details.included_audit_events));
+    assert.ok(
+      Array.isArray(story.expanded.story_details.included_signal_event_ids),
+    );
+    assert.ok(
+      Array.isArray(story.expanded.story_details.included_audit_event_ids),
+    );
+    assert.ok(
+      Array.isArray(story.expanded.story_details.supporting_audit_event_ids),
+    );
+    assert.equal("included_signal_events" in story.expanded.story_details, false);
+    assert.equal("included_audit_events" in story.expanded.story_details, false);
+    assert.equal("supporting_audit_events" in story.expanded.story_details, false);
+    assert.equal("claude_payload" in story, false);
+    assert.equal("public_context_status" in story, false);
+    assert.equal("sources" in story, false);
+    assert.ok(story.deterministic_context);
+    assert.equal(story.public_story_candidate, true);
+    assert.equal(story.publish_candidate, true);
+    assert.ok(story.publish_reason);
   }
 
   assert.ok(

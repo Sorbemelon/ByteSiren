@@ -2,57 +2,60 @@
 
 This is a local-only proposal for future prompt inputs. It does not change the production Claude prompt or call Claude.
 
+Claude is designed for two future feed modes only: Signal Event and Daily Overview. Market Story is deterministic-only.
+
 ## Signal Event Payload
 
 - Mode: `signal_event`.
-- Includes UTC date/time, evidence window start/end, direction, signals count, Avg Change, signal strength, Range Position, per-symbol Window Change, macro alignment, and source route hints.
-- Includes chart_context_label, event_story_type, trend_context, momentum_context, volatility_context, event_range_context, chart_context_reasons, and chart_context_warnings.
-- Includes table highlight metadata for lead mover and strongest Peak 15m diagnostics.
+- Uses Claude.
+- Compact evidence-window context.
+- Event-specific source search.
+- Includes UTC date/time, evidence window start/end, direction, Signals, Avg Change, event strength, Range Position, per-symbol Window Change, macro alignment, source route hints, and suggested search queries.
+- Includes chart context fields: chart_context_label, event_story_type, trend_context, momentum_context, volatility_context, event_range_context, chart_context_reasons, and chart_context_warnings.
+- Includes table-highlight metadata for lead mover and strongest Peak 15m diagnostics.
 - Chart context is descriptive market structure, not trading advice or cause proof.
 - Range Position is not support/resistance advice.
-- Claude should use chart context to decide how hard to search and what route to try.
-- Gate search effort by source_likelihood: high -> search harder and expect Focused/Likely; low -> No Clear Cause is acceptable and preferred over forcing a narrative.
-- history_support_type names the prior-chart structure that supports the event (range break, compression breakout, trend continuation, relief reversal).
-- retrospective_post_window stats are post-event only and must never be treated as the cause or as detection evidence.
-- If no source supports a cause, return No Clear Cause or Market Backdrop.
+- Claude should use chart context to decide search route, but must not infer cause from chart context alone.
+- If no source supports a cause, return No Clear Cause or Market Backdrop instead of forcing a narrative.
 - Peak 15m and lead mover are supporting diagnostics, not the main event headline.
 - Main event evidence is the evidence window, Avg Change, Signals, and Range Position.
-- Claude should not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.
 - Claude should classify the signal as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.
 - Source tags should map to Focused catalyst source, Likely cause source, Backdrop source, and Price check source.
-- Claude must not force a cause, provide trading advice, or return non-JSON prose.
-
-Current local payload count: 23
-
-## Market Story Payload
-
-- Mode: `market_story`.
-- Includes the story window, anchor UTC day, included Signal Event IDs, included audit-event IDs, supporting audit-event IDs, direction, Swing Change, and story context label.
-- Uses one selected story_context_label for the Market Story; structural scores remain diagnostics, not extra public labels.
-- Includes story_window_context and story_label_decision_reasons so Claude can see how the full candle path influenced the single Market Story label.
-- Includes adaptive gap metadata so Claude can see whether the story was bridged by chart context rather than a fixed clock rule.
-- Includes primary_story_family, story_context_scores, two_sided_swing, and minimum_story_range so Claude can see the headline direction, structural family, and why the wrapper is broader than a single Signal Event.
-- Market Stories are multi-swing context wrappers and can cross UTC day boundaries.
-- Market Stories may be signal-only, mixed signal/audit, or audit-only when strong audit detections form the full sequence.
-- Audit-only Market Stories require strong chart context and no full market reset across the adaptive bridge.
-- A one Signal Event plus one audit-event sequence can qualify when chart context is strong.
-- Audit-only detections can be story members without becoming standalone public Signal Events.
-- Market Stories appear on the UTC day where the first trigger starts.
-- Claude should summarize the chart-context sequence only and should not infer a news cause from chart context alone.
+- Focused Cause requires at least one Focused catalyst source.
+- Likely Cause requires at least one Focused catalyst source or Likely cause source.
+- If only Backdrop sources remain, status should become Market Backdrop.
+- Price check source confirms levels/move but does not explain cause.
+- Rejected, low-quality, stale, conflicting, or generic root URLs must not be public.
 - Claude must not provide trading advice or return non-JSON prose.
 
-Current local payload count: 9
+Current local payload count: 23
 
 ## Daily Overview Payload
 
 - Mode: `daily_overview`.
-- Includes UTC date, 24h Change, market tone, notable symbols, daily range, same-day signal events, and source query hints.
+- Uses Claude.
+- Full UTC-day context.
+- Includes UTC date, 24h Change, market tone, notable symbols, daily range, same-day Signal Event IDs, Market Story IDs for the day, audit-event count, and source query hints.
 - Claude should summarize the day's market context using relevant public sources.
 - Daily Overview labels are separate from Signal Event labels.
-- Do not classify the Daily Overview itself with Focused Cause or Likely Cause unless referring to a specific included Signal Event.
+- Do not classify the Daily Overview itself with Focused Cause or Likely Cause.
+- Suggested labels: Daily Context, Quiet Day, Mixed Day, Volatile Day, Risk-on Day, Risk-off Day, No Major Driver, Claude Limited.
+- Source tags should map to Main daily context source, Supporting daily source, Price check source, and Backdrop source.
 - Claude must not provide trading advice or return non-JSON prose.
 
 Current local payload count: 31
+
+## Market Story
+
+- Mode: deterministic chart-pattern context only.
+- Does NOT use Claude.
+- Does NOT have Claude status, Claude source tags, source placeholders, or a Claude payload.
+- Standalone feed section.
+- Does not nest Signal Event cards.
+- Supports broader chart-pattern context around Signal Events and audit-only detections.
+- Uses deterministic fields such as Story window, Swing Change, Pattern, Range/trend/momentum/volatility context, and decision reasons.
+- It can appear publicly only when the existing Market Story criteria pass.
+- Daily Overview already covers day-level Claude context, so Market Story should not ask Claude for another narrative.
 
 ## Daily Overview Claude Usage Model
 
@@ -62,6 +65,7 @@ Current local payload count: 31
 - Daily Overview should be included in the same future `GET /api/intelligence/feed` endpoint.
 - Daily Overview should not replace Signal Events.
 - Signal Event and Daily Overview should use different labels and different prompt modes.
+- Market Story remains deterministic and is not part of the Claude usage model.
 
 ## Output Expectations
 

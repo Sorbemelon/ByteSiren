@@ -1032,18 +1032,15 @@ function renderStorySection(item) {
   const expanded = state.expandedSections.has(item.id);
   const details = item.expanded.story_details;
   const contextLabel = item.story_context_label ?? "Market Story";
-  const signalLines = (details.included_signal_events ?? [])
-    .map(
-      (event) =>
-        `<li>${escapeHtml(event.window_start.slice(0, 16).replace("T", " "))} · ${escapeHtml(displayDirection(event.direction))} · Avg Change ${pct(event.avg_change_pct)}</li>`,
-    )
+  const signalLines = (details.included_signal_event_ids ?? [])
+    .map((id) => `<li>${escapeHtml(id)}</li>`)
     .join("");
-  const auditLines = (details.included_audit_events ?? [])
-    .map(
-      (event) =>
-        `<li>${escapeHtml(event.window_start.slice(0, 16).replace("T", " "))} · ${escapeHtml(displayDirection(event.direction))} · Avg Change ${pct(event.avg_change_pct)} · ${escapeHtml(event.suppress_reason ?? "audit-only")}</li>`,
-    )
+  const auditLines = (details.included_audit_event_ids ?? [])
+    .map((id) => `<li>${escapeHtml(id)}</li>`)
     .join("");
+  const supportingAuditCount = (
+    details.supporting_audit_event_ids ?? []
+  ).length;
   const windowContext = details.story_window_context ?? item.story_window_context;
   const recoveryRatio =
     windowContext?.median_recovery_ratio === null ||
@@ -1079,7 +1076,7 @@ function renderStorySection(item) {
         expanded
           ? `<div class="card-expanded">
               <div class="card-meta">Included Signal Events</div>
-              <ul class="compact-list">${signalLines}</ul>
+              <ul class="compact-list">${signalLines || "<li>none</li>"}</ul>
               <div class="card-meta">Included Audit Events</div>
               <ul class="compact-list">${auditLines || "<li>none</li>"}</ul>
               <div class="card-meta">Story-window context: ${escapeHtml(windowContext?.story_window_context_version ?? "n/a")}</div>
@@ -1087,7 +1084,8 @@ function renderStorySection(item) {
               <div class="card-meta">Label decision: ${escapeHtml(labelReasons || "n/a")}</div>
               <div class="card-meta">${escapeHtml(details.adaptive_gap_summary ?? item.adaptive_gap_summary ?? "Adaptive gap: n/a")}</div>
               <div class="card-meta">Eligibility: ${escapeHtml((details.eligibility_reason ?? item.eligibility_reason ?? "n/a").replace(/_/g, " "))}</div>
-              <div class="card-meta">Nearby audit-only context: ${(details.supporting_audit_events ?? []).length}</div>
+              <div class="card-meta">Nearby audit-only context: ${supportingAuditCount}</div>
+              <div class="card-meta">Deterministic only · no Claude payload or source status</div>
               <div class="card-meta">${escapeHtml(details.note)}</div>
             </div>`
           : ""

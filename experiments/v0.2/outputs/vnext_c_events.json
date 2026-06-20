@@ -1,7 +1,7 @@
 {
   "detector": "vnext_c",
   "experiment_version": "v0.2A",
-  "generated_at": "2026-06-20T00:34:34.737Z",
+  "generated_at": "2026-06-20T07:04:36.403Z",
   "options": {
     "macroThresholdBars": 1,
     "barMinutes": 15,

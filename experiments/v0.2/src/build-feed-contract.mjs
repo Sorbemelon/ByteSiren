@@ -30,29 +30,29 @@ const UTC_MONTHS = [
 ];
 
 const SIGNAL_CLASSIFICATION_INSTRUCTIONS = [
-  "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+  "Classify the Signal Event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
   "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+  "Focused Cause requires at least one Focused catalyst source.",
+  "Likely Cause requires at least one Focused catalyst source or Likely cause source.",
+  "If only Backdrop sources remain, return Market Backdrop.",
+  "Price check source confirms the observed move but does not explain cause.",
   "Do not force a cause when sources are weak or missing.",
   "Treat chart context as descriptive market structure, not proof of cause.",
   "Range Position is descriptive market structure, not advice.",
-  "Use chart context to decide how hard to search and what route to try.",
+  "Search for public context tied to the exact UTC evidence window.",
+  "Use ET conversion when macro events may matter.",
+  "Attempt event-specific source matching before broad market backdrop.",
   "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
   "Do not provide trading advice, forecasts, price targets, or recommendations.",
   "Return JSON only.",
 ];
 
 const DAILY_OVERVIEW_INSTRUCTIONS = [
-  "Summarize the day's crypto market context using relevant public sources.",
+  "Summarize the UTC day's public crypto market context using relevant public sources.",
+  "Mention major macro, regulatory, exchange, project, or market-structure context only when source-supported.",
+  "Mention when no major public driver is found.",
   "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
-  "Use separate Daily Overview labels unless referring to a specific included signal event.",
-  "Do not provide trading advice, forecasts, price targets, or recommendations.",
-  "Return JSON only.",
-];
-
-const DAY_STORY_INSTRUCTIONS = [
-  "Summarize the multi-swing chart context only.",
-  "Do not infer a news cause from chart context alone.",
-  "Use Market Story labels separately from Signal Event and Daily Overview labels.",
+  "Use Daily Overview labels separately from Signal Event cause labels.",
   "Do not provide trading advice, forecasts, price targets, or recommendations.",
   "Return JSON only.",
 ];
@@ -186,9 +186,55 @@ function publicDiagnostics(event) {
   return diagnostics;
 }
 
+function etTimestamp(iso) {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZoneName: "short",
+    }).format(new Date(iso));
+  } catch {
+    return null;
+  }
+}
+
+function sourceRouteHints(event) {
+  const hints = event.source_route_hint ?? [];
+  return Array.isArray(hints) ? hints : [hints].filter(Boolean);
+}
+
+function suggestedSignalQueries(event) {
+  const date = event.window_start.slice(0, 10);
+  const directionWord =
+    event.direction === "observed_down"
+      ? "drop"
+      : event.direction === "two_sided"
+        ? "volatility"
+        : "rally";
+  const routeHints = sourceRouteHints(event);
+  const macroQuery = event.macro_aligned
+    ? [`crypto market ${directionWord} ${date} macro Fed CPI FOMC`]
+    : [];
+
+  return [
+    `crypto market ${directionWord} ${date} bitcoin ethereum solana xrp`,
+    `bitcoin ethereum crypto ${directionWord} cause ${date}`,
+    ...macroQuery,
+    ...routeHints.map((hint) =>
+      `crypto ${hint.replace(/_/g, " ")} ${directionWord} ${date}`,
+    ),
+  ];
+}
+
 export function signalClaudePayload(event) {
+  const rows = tableRows(event);
   return {
-    event_mode: "signal_event",
+    mode: "signal_event",
     event_id: event.event_id,
     date_utc: event.window_start.slice(0, 10),
     evidence_window: {
@@ -197,108 +243,147 @@ export function signalClaudePayload(event) {
       duration_min: event.duration_min,
       evidence_bar_count: evidenceBarCount(event),
       display: evidenceWindowDisplay(event),
+      start_et: etTimestamp(event.window_start),
+      end_et: etTimestamp(event.window_end),
     },
-    evidence_bar_count: evidenceBarCount(event),
     direction: event.direction,
     signals_count: event.signals_count,
     n_tracked: event.n_tracked,
-    avg_change_label: "Avg Change",
     avg_change_pct: roundNumber(event.window_move_pct, 4),
+    avg_change_label: "Avg Change",
     avg_change_method: event.avg_change_method ?? "median",
-    event_direction: event.event_direction ?? null,
-    evidence_window_stats: event.evidence_window_stats ?? null,
-    signal_strength: event.event_strength_label,
-    signal_strength_score: roundNumber(event.signal_strength_score, 4),
-    event_range_context: event.event_range_context,
-    chart_context_label: event.chart_context_label,
-    chart_context_score: event.chart_context_score,
-    event_story_type: event.event_story_type,
-    trend_context: event.trend_context,
-    momentum_context: event.momentum_context,
-    momentum_type: event.momentum_type,
-    volatility_context: event.volatility_context,
-    volatility_state: event.volatility_state ?? null,
-    history_support_type: event.history_support_type ?? null,
-    history_support_score: event.history_support_score ?? null,
-    source_likelihood: event.source_likelihood ?? null,
-    source_likelihood_band: event.source_likelihood_band ?? null,
-    source_likelihood_reasons: event.source_likelihood_reasons ?? [],
-    publish_gate: event.publish_gate ?? null,
-    chart_context_reasons: event.chart_context_reasons,
-    chart_context_warnings: event.chart_context_warnings,
-    source_route_hint: event.source_route_hint,
-    per_symbol_window_evidence: tableRows(event),
+    event_strength_score: roundNumber(event.signal_strength_score, 4),
+    impact_label: event.event_strength_label,
+    range_context: {
+      event_range_context: event.event_range_context,
+      event_range_context_label:
+        EVENT_RANGE_CONTEXT_LABELS[event.event_range_context] ??
+        "Inside range",
+      per_symbol_range_positions: rows.map((row) => ({
+        symbol: row.symbol,
+        range_position: row.range_position,
+        range_position_label: row.range_position_label,
+      })),
+    },
+    chart_context: {
+      chart_context_label: event.chart_context_label,
+      chart_context_score: event.chart_context_score,
+      event_story_type: event.event_story_type,
+      trend_context: event.trend_context,
+      momentum_context: event.momentum_context,
+      momentum_type: event.momentum_type,
+      volatility_context: event.volatility_context,
+      volatility_state: event.volatility_state ?? null,
+      chart_context_reasons: event.chart_context_reasons ?? [],
+      chart_context_warnings: event.chart_context_warnings ?? [],
+      history_support_type: event.history_support_type ?? null,
+      history_support_score: event.history_support_score ?? null,
+    },
+    macro_context: {
+      macro_aligned: Boolean(event.macro_aligned),
+      nearest_macro_event: event.nearest_macro_event ?? null,
+      macro_delta_min: event.macro_delta_min ?? null,
+      evidence_window_start_et: etTimestamp(event.window_start),
+      evidence_window_end_et: etTimestamp(event.window_end),
+    },
+    per_symbol_evidence: rows.map((row) => ({
+      symbol: row.symbol,
+      window_change_pct: row.window_change_pct,
+      peak_15m_change_pct: row.peak_15m_pct,
+      volume_ratio: row.volume_x,
+      volume_confirmation: (event.diagnostics?.volume_confirmation_by_symbol ??
+        {})[row.symbol] ?? null,
+      range_position: row.range_position,
+      range_position_label: row.range_position_label,
+      is_lead_mover: Boolean(row.highlights.lead_mover),
+      is_peak_15m_highlight: Boolean(row.highlights.strongest_peak_15m),
+    })),
     table_highlights: event.table_highlights,
-    show_peak_details: event.show_peak_details,
-    macro_aligned: event.macro_aligned,
-    nearest_macro_event: event.nearest_macro_event,
-    macro_delta_min: event.macro_delta_min,
-    retrospective_post_window: {
-      post_window_move_pct_median:
-        event.momentum_context?.post_window_move_pct_median ?? null,
-      post_window_reversal_flag:
-        event.momentum_context?.post_window_reversal_flag ?? false,
-      note: "Retrospective only; not used for detection or publishing.",
+    source_route_hint: sourceRouteHints(event),
+    suggested_search_queries: suggestedSignalQueries(event),
+    no_trading_advice: true,
+    allowed_public_labels: [
+      "Focused Cause",
+      "Likely Cause",
+      "Market Backdrop",
+      "No Clear Cause",
+      "Claude Limited",
+    ],
+    source_tag_rules: {
+      allowed_tags: [
+        "Focused catalyst source",
+        "Likely cause source",
+        "Backdrop source",
+        "Price check source",
+      ],
+      focused_cause_requires: "Focused catalyst source",
+      likely_cause_requires:
+        "Focused catalyst source or Likely cause source",
+      backdrop_only_rule:
+        "If only Backdrop sources remain, return Market Backdrop.",
+      price_check_rule:
+        "Price check source confirms the observed move but does not explain cause.",
+      reject_public_display:
+        "Rejected, low-quality, stale, conflicting, or generic root URLs must not be public.",
     },
     instructions: SIGNAL_CLASSIFICATION_INSTRUCTIONS,
   };
 }
 
-export function dayStoryClaudePayload(story) {
+export function dailyClaudePayload(
+  overview,
+  daySignalEvents,
+  dayMarketStories = [],
+  dayAuditEvents = [],
+) {
   return {
-    event_mode: "market_story",
-    story_id: story.id,
-    anchor_date_utc: story.anchor_date_utc,
-    story_window: {
-      start: story.story_start,
-      end: story.story_end,
-      duration_min: story.duration_min,
-      crosses_utc_day: story.crosses_utc_day,
-    },
-    direction: story.direction,
-    story_context_label: story.story_context_label,
-    story_type: story.story_type,
-    primary_story_family: story.primary_story_family ?? null,
-    member_dominant_story_family:
-      story.member_dominant_story_family ?? story.primary_story_family ?? null,
-    story_context_scores: story.story_context_scores ?? {},
-    story_window_context: story.story_window_context ?? null,
-    story_label_decision_reasons: story.story_label_decision_reasons ?? [],
-    minimum_story_range: story.minimum_story_range ?? null,
-    two_sided_swing: story.two_sided_swing ?? null,
-    story_source_type: story.story_source_type ?? "signal_sequence",
-    story_source_label: story.story_source_label ?? "Signal story",
-    signal_event_count: story.signal_event_count,
-    audit_event_count: story.audit_event_count ?? 0,
-    total_event_count: story.total_event_count ?? story.signal_event_count,
-    included_signal_event_ids: story.included_signal_event_ids,
-    included_audit_event_ids: story.included_audit_event_ids ?? [],
-    supporting_audit_event_ids: story.supporting_audit_event_ids,
-    gap_model_version: story.gap_model_version ?? story.story_layer_version,
-    eligibility_reason: story.eligibility_reason ?? null,
-    adaptive_gap_links: story.adaptive_gap_links ?? [],
-    max_event_gap_minutes: story.max_event_gap_minutes ?? 0,
-    adaptive_gap_summary: story.adaptive_gap_summary ?? null,
-    swing_change_label: "Swing Change",
-    total_swing_change_pct: story.total_swing_change_pct,
-    net_signal_change_pct: story.net_signal_change_pct,
-    audit_swing_change_pct: story.audit_swing_change_pct ?? 0,
-    summary_hint: story.summary_hint,
-    instructions: DAY_STORY_INSTRUCTIONS,
-  };
-}
-
-export function dailyClaudePayload(overview, daySignalEvents) {
-  return {
-    event_mode: "daily_overview",
+    mode: "daily_overview",
     date_utc: overview.date_utc,
     day_start: overview.day_start,
     day_end: overview.day_end,
-    change_label: "24h Change",
-    market_24h_change_pct: overview.market_24h_move_pct,
     market_tone: overview.market_tone,
-    notable_symbols: overview.notable_symbols,
+    daily_change_pct: overview.market_24h_move_pct,
+    daily_change_label: "24h Change",
     market_range_pct: overview.market_range_pct,
+    notable_symbols: overview.notable_symbols,
+    top_symbol_moves: overview.top_symbol_moves ?? [],
+    signal_event_ids_for_day: daySignalEvents.map((event) => event.event_id),
+    market_story_ids_for_day: dayMarketStories.map((story) => story.id),
+    audit_event_count_for_day: dayAuditEvents.length,
+    daily_chart_context_summary: {
+      signal_event_count: daySignalEvents.length,
+      market_story_count: dayMarketStories.length,
+      market_story_labels: [
+        ...new Set(dayMarketStories.map((story) => story.story_context_label)),
+      ],
+      signal_chart_context_labels: [
+        ...new Set(
+          daySignalEvents.map((event) => event.chart_context_label).filter(Boolean),
+        ),
+      ],
+    },
+    source_query_hints: overview.source_query_hints,
+    no_trading_advice: true,
+    suggested_daily_labels: [
+      "Daily Context",
+      "Quiet Day",
+      "Mixed Day",
+      "Volatile Day",
+      "Risk-on Day",
+      "Risk-off Day",
+      "No Major Driver",
+      "Claude Limited",
+    ],
+    source_tag_rules: {
+      allowed_tags: [
+        "Main daily context source",
+        "Supporting daily source",
+        "Price check source",
+        "Backdrop source",
+      ],
+      reject_public_display:
+        "Rejected, low-quality, stale, conflicting, or generic root URLs must not be public.",
+    },
     signal_events: daySignalEvents.map((event) => ({
       event_id: event.event_id,
       window_start: event.window_start,
@@ -311,7 +396,6 @@ export function dailyClaudePayload(overview, daySignalEvents) {
       event_story_type: event.event_story_type,
       source_route_hint: event.source_route_hint,
     })),
-    source_query_hints: overview.source_query_hints,
     instructions: DAILY_OVERVIEW_INSTRUCTIONS,
   };
 }
@@ -439,7 +523,12 @@ function signalItem(event) {
   };
 }
 
-function dailyOverviewItem(overview, daySignalEvents) {
+function dailyOverviewItem(
+  overview,
+  daySignalEvents,
+  dayMarketStories = [],
+  dayAuditEvents = [],
+) {
   const includedSignalEventIds = daySignalEvents.map((event) => event.event_id);
 
   return {
@@ -485,7 +574,12 @@ function dailyOverviewItem(overview, daySignalEvents) {
         sources_placeholder: [],
       },
     },
-    claude_payload: dailyClaudePayload(overview, daySignalEvents),
+    claude_payload: dailyClaudePayload(
+      overview,
+      daySignalEvents,
+      dayMarketStories,
+      dayAuditEvents,
+    ),
   };
 }
 
@@ -503,6 +597,8 @@ function storyItem(story) {
     direction: story.direction,
     direction_label: directionLabel(story.direction),
     story_context_label: story.story_context_label,
+    story_family: story.primary_story_family ?? null,
+    event_story_type: story.story_type,
     story_type: story.story_type,
     primary_story_family: story.primary_story_family ?? null,
     member_dominant_story_family:
@@ -533,6 +629,7 @@ function storyItem(story) {
     crosses_utc_day: story.crosses_utc_day,
     duration_min: story.duration_min,
     swing_change_label: "Swing Change",
+    swing_change_pct: roundNumber(story.total_swing_change_pct, 4),
     total_swing_change_pct: roundNumber(story.total_swing_change_pct, 4),
     net_signal_change_pct: roundNumber(story.net_signal_change_pct, 4),
     audit_swing_change_pct: roundNumber(story.audit_swing_change_pct ?? 0, 4),
@@ -541,8 +638,36 @@ function storyItem(story) {
     dominant_chart_context_label: story.dominant_chart_context_label,
     event_range_contexts: story.event_range_contexts ?? [],
     summary_hint: story.summary_hint,
-    public_context_status: "placeholder_pending_market_story",
-    sources: [],
+    public_story_candidate: true,
+    publish_candidate: true,
+    publish_reason: story.eligibility_reason ?? "market_story_criteria_met",
+    suppress_reason: null,
+    deterministic_context: {
+      story_label: story.story_context_label,
+      story_source: story.story_source_label ?? "Signal story",
+      chart_context_score:
+        story.eligibility_detail?.average_chart_context_score ?? null,
+      range_context: story.event_range_contexts ?? [],
+      trend_context: {
+        first_direction: story.story_window_context?.first_direction ?? null,
+        final_direction: story.story_window_context?.final_direction ?? null,
+      },
+      momentum_context: {
+        direction: story.direction,
+        two_sided_swing: story.two_sided_swing ?? null,
+        total_swing_change_pct: roundNumber(story.total_swing_change_pct, 4),
+      },
+      volatility_context: {
+        median_volatility_expansion_ratio:
+          story.story_window_context?.median_volatility_expansion_ratio ??
+          null,
+        volatility_expansion_count:
+          story.story_window_context?.volatility_expansion_count ?? 0,
+        compression_expansion_count:
+          story.story_window_context?.compression_expansion_count ?? 0,
+      },
+      decision_reasons: story.story_label_decision_reasons ?? [],
+    },
     story_window: {
       start: story.story_start,
       end: story.story_end,
@@ -594,15 +719,13 @@ function storyItem(story) {
         signal_event_count: story.signal_event_count,
         audit_event_count: story.audit_event_count ?? 0,
         total_event_count: story.total_event_count ?? story.signal_event_count,
-        included_signal_events: story.included_signal_events ?? [],
-        included_audit_events: story.included_audit_events ?? [],
-        supporting_audit_events: story.supporting_audit_events ?? [],
+        included_signal_event_ids: story.included_signal_event_ids ?? [],
+        included_audit_event_ids: story.included_audit_event_ids ?? [],
+        supporting_audit_event_ids: story.supporting_audit_event_ids ?? [],
         summary_hint: story.summary_hint,
-        note: "Market Stories summarize related Signal Events and audit-only detections. They use an adaptive chart-context gap, can cross UTC day boundaries, and are placed in the day where the first trigger starts.",
+        note: "Market Stories are deterministic chart-pattern context. They do not use Claude, do not carry source tags, and do not nest Signal Event cards.",
       },
-      sources_placeholder: [],
     },
-    claude_payload: dayStoryClaudePayload(story),
   };
 }
 
@@ -667,7 +790,15 @@ export function buildFeedContract({
         .filter((story) => story.anchor_date_utc === overview.date_utc)
         .sort((a, b) => a.story_start.localeCompare(b.story_start))
         .map(storyItem);
-      const dailyItem = dailyOverviewItem(overview, dayEvents);
+      const dayAuditEvents = auditOnly.filter(
+        (event) => event.window_start.slice(0, 10) === overview.date_utc,
+      );
+      const dailyItem = dailyOverviewItem(
+        overview,
+        dayEvents,
+        storyItems,
+        dayAuditEvents,
+      );
       const signalItems = dayEvents.map(signalItem);
       const items = sortDayItems([dailyItem, ...storyItems, ...signalItems]);
       const isCurrentUtcDay = overview.date_utc === currentUtcDay;

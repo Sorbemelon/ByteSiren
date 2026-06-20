@@ -467,7 +467,7 @@ Count: 18
 - evidence window: Evidence window is the multi-candle span used as event evidence, not a single timestamp or one 15-minute candle.
 - daily overview: Daily Overview is a full UTC-day context summary.
 - signal event: Signal Event is a compact evidence-window anomaly.
-- market story: Market Story is a multi-swing context wrapper around related Signal Events and audit-only detections. It uses an adaptive chart-context gap plus a minimum story duration and Swing Change floor, then checks the full story-window candle path before choosing one label.
+- market story: Market Story is a deterministic multi-swing context wrapper around related Signal Events and audit-only detections. It uses an adaptive chart-context gap plus a minimum story duration and Swing Change floor, then checks the full story-window candle path before choosing one label. It does not use Claude.
 - story window context: Story-window context measures the full candle path between the first and last story event, including stress, recovery, range, and label-decision reasons.
 - show more hide: Show more and Hide expand details inside one Daily Overview or Signal Event section.
 - expand days collapse days: Expand days and Collapse days expand or collapse parent day posts.

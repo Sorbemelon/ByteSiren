@@ -47,6 +47,7 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "Evidence window",
   "Daily Overview",
   "Market Story",
+  "Deterministic only",
   "Story-window context",
   "Label decision",
   "Adaptive gap",
@@ -392,9 +393,23 @@ async function runSmoke() {
       `${story.id} should not expose secondary story labels`,
     );
     assert.equal(
-      "story_context_labels" in (story.claude_payload ?? {}),
+      "claude_payload" in story,
       false,
-      `${story.id} Claude payload should use one story_context_label only`,
+      `${story.id} should not include a Claude payload`,
+    );
+    assert.equal(
+      "public_context_status" in story,
+      false,
+      `${story.id} should not include a Claude/public context status`,
+    );
+    assert.equal(
+      "sources" in story,
+      false,
+      `${story.id} should not include Claude source placeholders`,
+    );
+    assert.ok(
+      story.deterministic_context,
+      `${story.id} should expose deterministic chart-pattern context`,
     );
     assert.ok(
       story.story_window_context?.available,
@@ -475,14 +490,14 @@ async function runSmoke() {
         item.included_audit_event_ids.length === 3 &&
         item.eligibility_reason === "strong_audit_context_sequence" &&
         item.max_event_gap_minutes > 720 &&
-        item.expanded.story_details.included_audit_events.some((event) =>
-          event.window_start.startsWith("2026-06-01T01:00"),
+        item.expanded.story_details.included_audit_event_ids.includes(
+          "vnext_c_fae265e5_20260601t0100",
         ) &&
-        item.expanded.story_details.included_audit_events.some((event) =>
-          event.window_start.startsWith("2026-06-01T15:15"),
+        item.expanded.story_details.included_audit_event_ids.includes(
+          "vnext_c_0118579a_20260601t1515",
         ) &&
-        item.expanded.story_details.included_audit_events.some((event) =>
-          event.window_start.startsWith("2026-06-02T02:15"),
+        item.expanded.story_details.included_audit_event_ids.includes(
+          "vnext_c_7e978f69_20260602t0215",
         ),
     ),
     "the strong June 1-2 audit-only sequence should become one Market Story",
@@ -523,9 +538,13 @@ async function runSmoke() {
         item.audit_event_count === item.included_audit_event_ids.length &&
         item.chart.included_audit_event_ids.length ===
           item.included_audit_event_ids.length &&
-        Array.isArray(item.expanded.story_details.included_audit_events),
+        Array.isArray(item.expanded.story_details.included_signal_event_ids) &&
+        Array.isArray(item.expanded.story_details.included_audit_event_ids) &&
+        Array.isArray(item.expanded.story_details.supporting_audit_event_ids) &&
+        !("included_signal_events" in item.expanded.story_details) &&
+        !("included_audit_events" in item.expanded.story_details),
     ),
-    "Market Story cards must expose story-window chart fields and included signal/audit events",
+    "Market Story cards must expose story-window chart fields and included signal/audit IDs",
   );
   assert.equal(overviews.length, EXPECTED_COUNTS.dailyOverviews);
   assert.equal(

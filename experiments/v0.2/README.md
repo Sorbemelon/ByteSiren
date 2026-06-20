@@ -18,6 +18,7 @@ The harness is intentionally outside the Worker and web app runtime paths. It do
 - `src/build-feed-contract.mjs` creates a local proposal for a future grouped `GET /api/intelligence/feed` response.
 - `src/build-non-public-audit.mjs` creates the local audit view for non-public detected events.
 - `src/build-claude-payloads.mjs` creates local Signal Event and Daily Overview Claude payload proposals.
+- Market Story is deterministic-only in this experiment; it has no Claude payload, Claude status, Claude source tags, or nested Signal Event cards.
 - `src/build-chart-preview.mjs` refreshes the local static chart-preview data bundle.
 - `src/smoke-chart-preview.mjs` verifies that the chart preview has loadable local data.
 - `src/compare-vnext-ab.mjs` compares vNext-A with vNext-B.
@@ -50,6 +51,7 @@ node experiments/v0.2/src/compare-vnext-ab.mjs
 node experiments/v0.2/src/compare-vnext-bc.mjs
 node --test experiments/v0.2/src/detector-vnext-b/detector.test.mjs
 node --test experiments/v0.2/src/feed-preview-v02.test.mjs
+node --test experiments/v0.2/src/claude-payload-v02.test.mjs
 ```
 
 `API_BASE_URL` may be used instead of `--api-base-url`. There is no default API base; pass one explicitly so the script cannot accidentally call an unintended service.
@@ -133,6 +135,7 @@ Troubleshooting:
 - Daily Overview appears first inside each day post, followed by public Signal Events.
 - vNext-C Signal Events are capped as compact evidence windows (12 bars / 3 hours max); longer related moves should appear as Market Stories instead of one stretched Signal Event.
 - Market Story sections can appear between Daily Overview and Signal Events when nearby Signal Events and/or audit-only detections form a broader multi-swing context. The story layer uses an adaptive chart-context gap plus a minimum story duration and Swing Change floor, can qualify one public Signal Event plus one audit event when chart context is strong, allows audit-only sequences only when chart context is strong and no full market reset is detected, can cross UTC days, and appears on the day where its first trigger starts.
+- Market Story sections are deterministic chart-pattern context only. They do not use Claude, do not show Claude status/source tags, and do not nest Signal Event cards.
 - Global controls are `Expand days` and `Collapse days`.
 - Day-post controls use `+N events · Expand post` and `+N events · Collapse post`.
 - Section-level details use `Show more` and `Hide`.

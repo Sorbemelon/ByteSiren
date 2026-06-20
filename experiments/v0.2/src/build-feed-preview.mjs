@@ -107,7 +107,6 @@ function sectionPreview(item) {
         crosses_utc_day: item.crosses_utc_day
           ? "Crosses UTC day"
           : "Same UTC day",
-        public_context: "Public Context placeholder",
         summary_hint: item.summary_hint,
       },
       expanded_preview: item.expanded,
@@ -275,7 +274,7 @@ export function buildGroupedFeedPreview({
       daily_overview: "Daily Overview is a full UTC-day context summary.",
       signal_event: "Signal Event is a compact evidence-window anomaly.",
       market_story:
-        "Market Story is a multi-swing context wrapper around related Signal Events and audit-only detections. It uses an adaptive chart-context gap plus a minimum story duration and Swing Change floor, then checks the full story-window candle path before choosing one label.",
+        "Market Story is a deterministic multi-swing context wrapper around related Signal Events and audit-only detections. It uses an adaptive chart-context gap plus a minimum story duration and Swing Change floor, then checks the full story-window candle path before choosing one label. It does not use Claude.",
       story_window_context:
         "Story-window context measures the full candle path between the first and last story event, including stress, recovery, range, and label-decision reasons.",
       show_more_hide:
