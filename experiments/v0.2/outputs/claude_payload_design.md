@@ -24,6 +24,25 @@ This is a local-only proposal for future prompt inputs. It does not change the p
 
 Current local payload count: 23
 
+## Market Story Payload
+
+- Mode: `market_story`.
+- Includes the story window, anchor UTC day, included Signal Event IDs, included audit-event IDs, supporting audit-event IDs, direction, Swing Change, and story context label.
+- Uses one selected story_context_label for the Market Story; structural scores remain diagnostics, not extra public labels.
+- Includes story_window_context and story_label_decision_reasons so Claude can see how the full candle path influenced the single Market Story label.
+- Includes adaptive gap metadata so Claude can see whether the story was bridged by chart context rather than a fixed clock rule.
+- Includes primary_story_family, story_context_scores, two_sided_swing, and minimum_story_range so Claude can see the headline direction, structural family, and why the wrapper is broader than a single Signal Event.
+- Market Stories are multi-swing context wrappers and can cross UTC day boundaries.
+- Market Stories may be signal-only, mixed signal/audit, or audit-only when strong audit detections form the full sequence.
+- Audit-only Market Stories require strong chart context and no full market reset across the adaptive bridge.
+- A one Signal Event plus one audit-event sequence can qualify when chart context is strong.
+- Audit-only detections can be story members without becoming standalone public Signal Events.
+- Market Stories appear on the UTC day where the first trigger starts.
+- Claude should summarize the chart-context sequence only and should not infer a news cause from chart context alone.
+- Claude must not provide trading advice or return non-JSON prose.
+
+Current local payload count: 9
+
 ## Daily Overview Payload
 
 - Mode: `daily_overview`.

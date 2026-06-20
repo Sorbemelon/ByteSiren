@@ -29,6 +29,9 @@ async function loadFixture() {
   const overviews = publicItems.filter(
     (item) => item.item_type === "daily_overview",
   );
+  const stories = publicItems.filter(
+    (item) => item.item_type === "market_story",
+  );
 
   return {
     contract,
@@ -36,6 +39,7 @@ async function loadFixture() {
     publicItems,
     signals,
     overviews,
+    stories,
     auditIds: new Set(audit.items.map((item) => item.id)),
   };
 }
@@ -92,6 +96,26 @@ test("daily overview highlight is hidden by default", async () => {
 
   assert.deepEqual(highlights.dayWindowIds, []);
   assert.equal(highlights.signalWindowIds.length, signals.length);
+});
+
+test("market story selection includes signal and audit windows", async () => {
+  const { publicItems, stories } = await loadFixture();
+  const story = stories.find(
+    (item) => item.story_source_type === "audit_only_sequence",
+  );
+  const target = selectionTargetForItem(story);
+  const selected = toggleSelection(EMPTY_SELECTION, target);
+  const highlights = highlightsForSelection({
+    mode: "public",
+    selection: selected,
+    publicItems,
+  });
+
+  assert.equal(selected.selected_type, "market_story");
+  assert.deepEqual(highlights.signalWindowIds, []);
+  assert.deepEqual(highlights.signalWindowIds, story.chart.included_signal_event_ids);
+  assert.deepEqual(highlights.auditWindowIds, story.chart.included_audit_event_ids);
+  assert.deepEqual(toggleSelection(selected, target), EMPTY_SELECTION);
 });
 
 test("chart event selection can reveal a signal hidden by collapsed day post", async () => {

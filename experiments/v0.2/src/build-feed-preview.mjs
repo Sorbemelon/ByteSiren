@@ -11,6 +11,7 @@ import {
 } from "./shared.mjs";
 import { buildFeedContract } from "./build-feed-contract.mjs";
 import { DAILY_OVERVIEWS_PATH } from "./generate-daily-overviews.mjs";
+import { DAY_STORIES_JSON_PATH } from "./generate-day-stories.mjs";
 import { VNEXT_C_EVENTS_PATH } from "./run-vnext-c.mjs";
 
 export const GROUPED_FEED_PREVIEW_JSON_PATH = `${OUTPUTS_DIR}/grouped_feed_preview.json`;
@@ -74,6 +75,40 @@ function sectionPreview(item) {
         change: `${item.change_label}: ${signPct(item.change_pct)}`,
         summary_hint: item.expanded.daily_market_summary_fields.summary_hint,
         public_context: "Public Context placeholder",
+      },
+      expanded_preview: item.expanded,
+      chart_interaction: item.chart,
+      contract_item: item,
+    };
+  }
+
+  if (item.item_type === "market_story") {
+    return {
+      section_id: item.id,
+      item_type: "market_story",
+      title: "Market Story",
+      date_utc: item.date_utc,
+      section_control: item.expanded.section_control,
+      collapsed_preview: {
+        story_window: `${item.story_window_label}: ${item.story_window_display}`,
+        context: item.story_context_label,
+        source: item.story_source_label ?? "Signal story",
+        direction: item.direction_label,
+        signals: `Signal Events: ${item.signal_event_count}`,
+        audit_events: `Audit Events: ${item.audit_event_count ?? 0}`,
+        label_decision: `Label decision: ${
+          item.story_label_decision_reasons?.join(", ") || "n/a"
+        }`,
+        swing_change: `${item.swing_change_label}: ${signPct(item.total_swing_change_pct)}`,
+        adaptive_gap: item.adaptive_gap_summary ?? "Adaptive gap: n/a",
+        eligibility: item.eligibility_reason
+          ? `Eligibility: ${item.eligibility_reason.replace(/_/g, " ")}`
+          : "Eligibility: n/a",
+        crosses_utc_day: item.crosses_utc_day
+          ? "Crosses UTC day"
+          : "Same UTC day",
+        public_context: "Public Context placeholder",
+        summary_hint: item.summary_hint,
       },
       expanded_preview: item.expanded,
       chart_interaction: item.chart,
@@ -174,12 +209,14 @@ function dayPostPreview(group) {
 export function buildGroupedFeedPreview({
   dailyOverviews,
   signalEvents,
+  dayStories = [],
   now = new Date(),
   detectorVersion = "vnext_c",
 }) {
   const contract = buildFeedContract({
     dailyOverviews,
     signalEvents,
+    dayStories,
     now,
     detectorVersion,
   });
@@ -200,6 +237,7 @@ export function buildGroupedFeedPreview({
     public_preview: {
       grouping: "utc_day",
       day_post_count: contract.day_groups.length,
+      market_story_count: dayStories.length,
       public_signal_count: signalEvents.filter(
         (event) => event.publish_candidate,
       ).length,
@@ -236,6 +274,10 @@ export function buildGroupedFeedPreview({
         "Evidence window is the multi-candle span used as event evidence, not a single timestamp or one 15-minute candle.",
       daily_overview: "Daily Overview is a full UTC-day context summary.",
       signal_event: "Signal Event is a compact evidence-window anomaly.",
+      market_story:
+        "Market Story is a multi-swing context wrapper around related Signal Events and audit-only detections. It uses an adaptive chart-context gap plus a minimum story duration and Swing Change floor, then checks the full story-window candle path before choosing one label.",
+      story_window_context:
+        "Story-window context measures the full candle path between the first and last story event, including stress, recovery, range, and label-decision reasons.",
       show_more_hide:
         "Show more and Hide expand details inside one Daily Overview or Signal Event section.",
       expand_days_collapse_days:
@@ -249,6 +291,10 @@ export function buildGroupedFeedPreview({
 function markdownSectionLine(section) {
   if (section.item_type === "daily_overview") {
     return `${section.collapsed_preview.market_tone}; ${section.collapsed_preview.change}; ${section.collapsed_preview.summary_hint}`;
+  }
+
+  if (section.item_type === "market_story") {
+    return `${section.collapsed_preview.story_window}; ${section.collapsed_preview.context}; ${section.collapsed_preview.source}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.audit_events}; ${section.collapsed_preview.label_decision}; ${section.collapsed_preview.swing_change}; ${section.collapsed_preview.adaptive_gap}; ${section.collapsed_preview.crosses_utc_day}; ${section.collapsed_preview.summary_hint}`;
   }
 
   return `${section.collapsed_preview.evidence_window}; ${section.collapsed_preview.direction}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.avg_change}; ${section.collapsed_preview.range_context}; ${section.collapsed_preview.chart_context}; ${section.collapsed_preview.impact}`;
@@ -280,6 +326,7 @@ function markdown(preview) {
     "",
     `Detector version: ${preview.detector_version}`,
     `Chart context enabled: ${preview.chart_context_enabled}`,
+    `Market Stories: ${preview.public_preview.market_story_count}`,
     `Days expanded: ${preview.preview_state.days_expanded}`,
     `Global control: ${preview.preview_state.global_control_label}`,
     `Global controls: ${preview.preview_state.global_controls.join(", ")}`,
@@ -337,11 +384,18 @@ export async function runFeedPreview(
 ) {
   const dailyOverviews =
     (await readJson(options.dailyOverviewPath)).items ?? [];
+  let dayStories = [];
+  try {
+    dayStories = (await readJson(options.dayStoriesPath)).items ?? [];
+  } catch {
+    dayStories = [];
+  }
   const signalPayload = await readJson(options.signalEventsPath);
   const signalEvents = signalPayload.events ?? [];
   const preview = buildGroupedFeedPreview({
     dailyOverviews,
     signalEvents,
+    dayStories,
     now,
     detectorVersion: signalPayload.detector ?? "vnext_c",
   });
@@ -358,6 +412,7 @@ export async function runFeedPreview(
 export function parseArgs(argv = process.argv.slice(2)) {
   return {
     dailyOverviewPath: readOption(argv, "--daily") ?? DAILY_OVERVIEWS_PATH,
+    dayStoriesPath: readOption(argv, "--stories") ?? DAY_STORIES_JSON_PATH,
     signalEventsPath: readOption(argv, "--events") ?? VNEXT_C_EVENTS_PATH,
     jsonOutputPath:
       readOption(argv, "--json-output") ?? GROUPED_FEED_PREVIEW_JSON_PATH,

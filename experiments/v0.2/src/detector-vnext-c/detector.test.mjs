@@ -392,6 +392,33 @@ test("vNext-C builds events from its own window builder", async () => {
   );
 });
 
+test("Signal Events are capped while Market Stories own longer context", async () => {
+  const snapshot = await readJson("experiments/v0.2/data/candles_30d.json");
+  const result = detectVNextCEvents({
+    candlesBySymbol: snapshot.candles_by_symbol,
+  });
+
+  assert.equal(result.options.debounceBars, 3);
+  assert.equal(result.options.mergeGapBars, 2);
+  assert.equal(result.options.maxEventBars, 12);
+  assert.equal(result.options.maxPublicBars, 12);
+  assert.ok(
+    result.events.every(
+      (event) =>
+        event.flash_event ||
+        event.diagnostics.evidence_bar_count <= result.options.maxEventBars,
+    ),
+  );
+  assert.ok(
+    result.events
+      .filter((event) => event.publish_candidate)
+      .every(
+        (event) =>
+          event.diagnostics.evidence_bar_count <= result.options.maxPublicBars,
+      ),
+  );
+});
+
 test("vNext-C public gate requires confirmed multi-bar context paths", async () => {
   const payload = await readJson(
     "experiments/v0.2/outputs/vnext_c_events.json",
@@ -411,16 +438,23 @@ test("vNext-C public gate requires confirmed multi-bar context paths", async () 
   assert.ok(publicEvents.length > 0);
   assert.ok(
     publicEvents.every(
-      (event) =>
-        (event.flash_event ||
-          event.diagnostics.evidence_bar_count >=
-            payload.options.minPublicBars) &&
-        event.diagnostics.evidence_bar_count <= payload.options.maxPublicBars &&
-        Math.abs(event.window_move_pct) >=
-          payload.options.minAvgChangePublicPct &&
-        event.direction_consistency_score >= payload.options.minBreadthPublic &&
-        event.history_support_type !== "none" &&
-        allowedReasons.has(event.publish_reason),
+      (event) => {
+        const withinMax =
+          !Number.isFinite(payload.options.maxPublicBars) ||
+          event.diagnostics.evidence_bar_count <= payload.options.maxPublicBars;
+        return (
+          (event.flash_event ||
+            event.diagnostics.evidence_bar_count >=
+              payload.options.minPublicBars) &&
+          withinMax &&
+          Math.abs(event.window_move_pct) >=
+            payload.options.minAvgChangePublicPct &&
+          event.direction_consistency_score >=
+            payload.options.minBreadthPublic &&
+          event.history_support_type !== "none" &&
+          allowedReasons.has(event.publish_reason)
+        );
+      },
     ),
   );
 });

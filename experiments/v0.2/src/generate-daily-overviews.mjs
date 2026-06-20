@@ -12,7 +12,7 @@ import {
   roundNumber,
   writeJson,
 } from "./shared.mjs";
-import { VNEXT_B_EVENTS_PATH } from "./run-vnext-b.mjs";
+import { VNEXT_C_EVENTS_PATH } from "./run-vnext-c.mjs";
 
 export const DAILY_OVERVIEWS_PATH = `${OUTPUTS_DIR}/daily_overviews.json`;
 
@@ -168,7 +168,7 @@ export async function runDailyOverviews(
 export function parseArgs(argv = process.argv.slice(2)) {
   return {
     inputPath: readOption(argv, "--input"),
-    signalEventsPath: readOption(argv, "--events") ?? VNEXT_B_EVENTS_PATH,
+    signalEventsPath: readOption(argv, "--events") ?? VNEXT_C_EVENTS_PATH,
     outputPath: readOption(argv, "--output") ?? DAILY_OVERVIEWS_PATH,
   };
 }

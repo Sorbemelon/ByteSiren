@@ -39,6 +39,8 @@ const ALLOWED_RANGE_LABELS = new Set([
   "—",
 ]);
 
+const DAY_STORY_GAP_MODEL_VERSION = "adaptive_chart_context_gap_v3";
+
 function publicLabelText(value) {
   return JSON.stringify(value)
     .replace(/window_move_pct|market_24h_move_pct|top_symbol_moves/g, "")
@@ -90,6 +92,253 @@ test("public preview has 31 day posts and detector-derived public signal events"
   assert.equal(preview.chart_context_enabled, true);
   assert.equal(preview.public_preview.day_posts.length, 31);
   assert.equal(signals.length, expectedPublicSignals);
+});
+
+test("market stories are anchored to the start-trigger UTC day", async () => {
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
+  const storiesPayload = await readJson(
+    "experiments/v0.2/outputs/day_stories.json",
+  );
+  const stories = contractItems(contract).filter(
+    (item) => item.item_type === "market_story",
+  );
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
+  const storySections = previewSections(preview).filter(
+    (item) => item.item_type === "market_story",
+  );
+
+  assert.equal(stories.length, storiesPayload.count);
+  assert.equal(storiesPayload.story_layer_version, DAY_STORY_GAP_MODEL_VERSION);
+  assert.equal(
+    storiesPayload.options.gapModelVersion,
+    DAY_STORY_GAP_MODEL_VERSION,
+  );
+  assert.ok(storiesPayload.options.baseGapMinutes < storiesPayload.options.maxGapMinutes);
+  assert.equal(preview.public_preview.market_story_count, storiesPayload.count);
+  assert.equal(storySections.length, storiesPayload.count);
+  assert.ok(stories.length > 0);
+  assert.equal(storiesPayload.options.minStoryDurationMinutes, 240);
+  assert.equal(storiesPayload.options.minStorySwingChangePct, 2);
+  assert.ok(
+    storiesPayload.items.every(
+      (story) =>
+        story.minimum_story_range?.eligible === true &&
+        story.duration_min >= storiesPayload.options.minStoryDurationMinutes &&
+        story.total_swing_change_pct >=
+          storiesPayload.options.minStorySwingChangePct,
+    ),
+    "Market Stories should pass the minimum duration and Swing Change floor",
+  );
+  assert.ok(
+    !storiesPayload.items.some(
+      (story) =>
+        story.duration_min < storiesPayload.options.minStoryDurationMinutes ||
+        story.total_swing_change_pct <
+          storiesPayload.options.minStorySwingChangePct,
+    ),
+    "short or low-swing clusters should not become Market Stories",
+  );
+  assert.ok(stories.some((story) => story.story_window.crosses_utc_day));
+  assert.ok(
+    stories.some((story) => story.max_event_gap_minutes > 480),
+    "adaptive gaps should allow strongly connected stories past the old fixed 8h bridge",
+  );
+  assert.ok(
+    stories.some(
+      (story) =>
+        story.eligibility_reason ===
+          "mixed_public_audit_strong_chart_context" &&
+        story.included_signal_event_ids.length === 1 &&
+        story.included_audit_event_ids.length === 1,
+    ),
+    "one public plus one audit event should qualify when chart context is strong",
+  );
+  assert.ok(
+    stories.some((story) => story.included_audit_event_ids.length > 0),
+    "at least one Market Story should include audit-only detections",
+  );
+  assert.ok(
+    stories.some(
+      (story) =>
+        story.story_source_type === "audit_only_sequence" &&
+        story.included_signal_event_ids.length === 0 &&
+        story.included_audit_event_ids.length >= 2,
+    ),
+    "at least one Market Story should be allowed from audit-only detections",
+  );
+  const juneAuditStory = stories.find(
+    (story) =>
+      story.story_source_type === "audit_only_sequence" &&
+      story.included_signal_event_ids.length === 0 &&
+      story.included_audit_event_ids.length === 3 &&
+      [
+        "2026-06-01T01:00",
+        "2026-06-01T15:15",
+        "2026-06-02T02:15",
+      ].every((start) =>
+        story.expanded.story_details.included_audit_events.some((event) =>
+          event.window_start.startsWith(start),
+        ),
+      ),
+  );
+  assert.ok(
+    juneAuditStory,
+    "strong audit-only sequence should bridge the three June 1-2 audit events",
+  );
+  assert.equal(
+    juneAuditStory.eligibility_reason,
+    "strong_audit_context_sequence",
+  );
+  assert.equal(
+    juneAuditStory.story_context_label,
+    "Reversal sequence",
+  );
+  assert.equal(
+    juneAuditStory.story_type,
+    "multi_swing_relief_reversal_two_sided",
+  );
+  assert.equal(juneAuditStory.primary_story_family, "relief_reversal");
+  assert.equal(
+    juneAuditStory.member_dominant_story_family,
+    "relief_reversal",
+  );
+  assert.equal(
+    juneAuditStory.story_window_context.story_window_context_version,
+    "story_window_path_v2",
+  );
+  assert.equal(
+    juneAuditStory.story_window_context.reversal_sequence_score >= 55,
+    true,
+  );
+  assert.equal(
+    juneAuditStory.story_label_decision_reasons.includes(
+      "story_window_reversal_score",
+    ),
+    true,
+  );
+  assert.equal(juneAuditStory.story_context_scores.range_break, 0);
+  assert.equal(juneAuditStory.two_sided_swing.eligible, true);
+  assert.equal("story_context_labels" in juneAuditStory, false);
+  assert.equal("story_context_secondary_labels" in juneAuditStory, false);
+  assert.ok(juneAuditStory.max_event_gap_minutes > 720);
+  assert.ok(
+    juneAuditStory.adaptive_gap_links.every(
+      (link) =>
+        link.strong_audit_sequence_bridge &&
+        link.coherent_story_structure &&
+        !link.full_market_reset_detected,
+    ),
+  );
+
+  for (const story of stories) {
+    assert.equal(story.date_utc, story.chart.anchor_date_utc);
+    assert.equal(story.date_utc, story.story_window.start.slice(0, 10));
+    assert.equal(story.story_window_label, "Story window");
+    assert.equal(story.swing_change_label, "Swing Change");
+    assert.equal(story.chart.chart_highlight_type, "story_window");
+    assert.equal(story.gap_model_version, DAY_STORY_GAP_MODEL_VERSION);
+    assert.ok(story.eligibility_reason);
+    assert.ok(story.primary_story_family);
+    assert.ok(story.member_dominant_story_family);
+    assert.ok(story.story_context_scores);
+    assert.ok(story.story_window_context?.available);
+    assert.equal(
+      story.story_window_context.story_window_context_version,
+      "story_window_path_v2",
+    );
+    assert.equal(
+      Number.isFinite(
+        story.story_window_context.volatility_expansion_sequence_score,
+      ),
+      true,
+    );
+    assert.equal(
+      Number.isFinite(
+        story.story_window_context.inside_range_impulse_sequence_score,
+      ),
+      true,
+    );
+    assert.ok(Array.isArray(story.story_label_decision_reasons));
+    assert.ok(story.story_label_decision_reasons.length > 0);
+    assert.equal(typeof story.story_context_label, "string");
+    assert.notEqual(story.story_context_label, "Two-sided sequence");
+    assert.notEqual(story.story_context_label, "Multi-swing context");
+    assert.equal("story_context_labels" in story, false);
+    assert.equal("story_context_secondary_labels" in story, false);
+    assert.ok(story.minimum_story_range?.eligible);
+    if (story.direction === "two_sided") {
+      assert.equal(story.two_sided_swing?.eligible, true);
+    }
+    assert.ok(Array.isArray(story.adaptive_gap_links));
+    assert.equal(typeof story.adaptive_gap_summary, "string");
+    assert.equal(typeof story.max_event_gap_minutes, "number");
+    for (const link of story.adaptive_gap_links) {
+      assert.ok(link.previous_event_id);
+      assert.ok(link.next_event_id);
+      assert.equal(typeof link.gap_minutes, "number");
+      assert.equal(typeof link.allowed_gap_minutes, "number");
+      assert.equal(link.bridge_allowed, true);
+      assert.ok(link.gap_minutes <= link.allowed_gap_minutes);
+      assert.ok(Array.isArray(link.bridge_reasons));
+      assert.ok(link.bridge_reasons.length > 0);
+    }
+    assert.ok(story.story_source_label);
+    assert.ok(story.total_event_count >= 2);
+    assert.equal(
+      story.total_event_count,
+      story.included_signal_event_ids.length +
+        story.included_audit_event_ids.length,
+    );
+    if (story.story_source_type === "audit_only_sequence") {
+      assert.equal(story.included_signal_event_ids.length, 0);
+      assert.ok(story.included_audit_event_ids.length >= 2);
+    } else {
+      assert.ok(story.included_signal_event_ids.length > 0);
+    }
+    assert.equal(story.audit_event_count, story.included_audit_event_ids.length);
+    assert.deepEqual(
+      story.chart.included_audit_event_ids,
+      story.included_audit_event_ids,
+    );
+    assert.ok(Array.isArray(story.expanded.story_details.included_audit_events));
+  }
+
+  assert.ok(
+    stories.some(
+      (story) =>
+        story.direction === "two_sided" &&
+        story.story_context_label !== "Two-sided sequence",
+    ),
+    "two-sided direction should not automatically override the story-window label",
+  );
+  assert.ok(
+    stories.every(
+      (story) =>
+        !["Two-sided sequence", "Multi-swing context"].includes(
+          story.story_context_label,
+        ),
+    ),
+    "Market Story headlines should use one specific chart-pattern label or the mixed fallback",
+  );
+
+  assert.ok(
+    stories.some(
+      (story) =>
+        story.story_context_label === "Reversal sequence" &&
+        story.primary_story_family === "relief_reversal" &&
+        story.two_sided_swing?.eligible === true,
+    ),
+    "Market Stories should still classify full-window reversal sequences after Signal Event caps split compact evidence windows",
+  );
+
+  for (const story of storiesPayload.items) {
+    assert.equal("story_context_labels" in story, false);
+    assert.equal("story_context_secondary_labels" in story, false);
+  }
 });
 
 test("global day controls replace latest-only mode", async () => {
@@ -382,6 +631,7 @@ test("glossary explains evidence table wording without long theory", async () =>
   assert.match(glossary.peak_15m_highlight, /highlighted Peak 15m cell/i);
   assert.match(glossary.range_position, /descriptive, not a trading signal/i);
   assert.match(glossary.evidence_window, /not a single timestamp/i);
+  assert.match(glossary.market_story, /audit-only detections/i);
 });
 
 test("public labels avoid trading-style range wording", async () => {
@@ -418,6 +668,7 @@ test("chart model supports event/day windows and selection toggles", async () =>
   const items = contractItems(contract);
   const signal = items.find((item) => item.item_type === "signal_event");
   const overview = items.find((item) => item.item_type === "daily_overview");
+  const story = items.find((item) => item.item_type === "market_story");
 
   assert.equal(signal.chart.chart_highlight_type, "event_window");
   assert.ok(signal.chart.highlight_start);
@@ -432,6 +683,13 @@ test("chart model supports event/day windows and selection toggles", async () =>
   assert.equal(overview.chart.hide_other_days_on_select, true);
   assert.equal(overview.chart.selection_toggle, "select_again_to_clear");
   assert.ok(Array.isArray(overview.chart.included_signal_event_ids));
+
+  assert.equal(story.chart.chart_highlight_type, "story_window");
+  assert.ok(story.chart.highlight_start);
+  assert.ok(story.chart.highlight_end);
+  assert.equal(story.chart.selection_toggle, "select_again_to_clear");
+  assert.ok(Array.isArray(story.chart.included_signal_event_ids));
+  assert.ok(Array.isArray(story.chart.included_audit_event_ids));
 });
 
 test("audit file count matches vNext-C non-public events", async () => {

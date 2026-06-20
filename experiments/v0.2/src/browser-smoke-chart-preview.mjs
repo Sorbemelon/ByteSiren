@@ -231,7 +231,15 @@ async function runBrowserSmoke() {
     const initial = await session.evaluate(`(() => ({
       diagnostics: document.querySelector('#feed-diagnostics')?.textContent,
       dailySections: document.querySelectorAll('.daily-section').length,
+      storySections: document.querySelectorAll('.story-section').length,
+      storyIndexItems: document.querySelectorAll('.story-index-item').length,
+      storyHitZones: state.hitZones.filter((hit) => hit.kind === 'story').length,
       signalSections: document.querySelectorAll('.signal-section').length,
+      expectedStories: feedContract.preview_diagnostics.market_story_count,
+      expectedAuditStories: publicItems.filter((item) =>
+        item.item_type === 'market_story' &&
+        item.chart.included_audit_event_ids.length > 0
+      ).length,
       expectedSignals: feedContract.preview_diagnostics.public_signal_count,
       expectedAudit: feedContract.preview_diagnostics.audit_event_count,
       detectorVersion: feedContract.detector_version,
@@ -246,8 +254,13 @@ async function runBrowserSmoke() {
 
     assert.match(initial.diagnostics, /31 days/);
     assert.match(initial.diagnostics, /detector vnext_c/);
+    assert.match(initial.diagnostics, /market stories/);
     assert.match(initial.diagnostics, /chart context enabled/);
     assert.equal(initial.dailySections, 31);
+    assert.equal(initial.storySections, initial.expectedStories);
+    assert.equal(initial.storyIndexItems, 0);
+    assert.equal(initial.storyHitZones, initial.expectedStories);
+    assert.ok(initial.storySections > 0);
     assert.equal(initial.signalSections, initial.expectedSignals);
     assert.equal(initial.detectorVersion, "vnext_c");
     assert.equal(initial.chartContextEnabled, true);
@@ -265,12 +278,14 @@ async function runBrowserSmoke() {
       symbol: state.symbol,
       selectValue: document.querySelector('#symbol-select').value,
       hitZones: state.hitZones.length,
+      storyHitZones: state.hitZones.filter((hit) => hit.kind === 'story').length,
       canvasWidth: document.querySelector('#chart').width,
       canvasHeight: document.querySelector('#chart').height
     }))()`);
     assert.equal(allSymbolMode.symbol, "ALL");
     assert.equal(allSymbolMode.selectValue, "ALL");
     assert.ok(allSymbolMode.hitZones > 0);
+    assert.equal(allSymbolMode.storyHitZones, initial.expectedStories);
     assert.ok(allSymbolMode.canvasWidth > 0 && allSymbolMode.canvasHeight > 0);
     await session.evaluate(`(() => {
       const select = document.querySelector('#symbol-select');
@@ -285,6 +300,81 @@ async function runBrowserSmoke() {
     assert.match(visibleSignalText, /Evidence window:/);
     assert.match(visibleSignalText, /candles/);
     assert.match(visibleSignalText, /Avg Change/);
+
+    const visibleStoryText = await session.evaluate(
+      `document.querySelector('.story-section')?.innerText ?? ''`,
+    );
+    assert.match(visibleStoryText, /Market Story/);
+    assert.match(visibleStoryText, /Story window:/);
+    assert.match(visibleStoryText, /Audit Events:/);
+    assert.match(visibleStoryText, /Swing Change/);
+
+    const storyChartPoint = await session.evaluate(`(() => {
+      const storyIdsWithAudit = new Set(
+        publicItems
+          .filter((item) =>
+            item.item_type === 'market_story' &&
+            item.story_source_type === 'audit_only_sequence' &&
+            item.chart.included_audit_event_ids.length >= 2
+          )
+          .map((item) => item.id)
+      );
+      const storyZones = state.hitZones.filter((hit) =>
+        hit.kind === 'story' && storyIdsWithAudit.has(hit.id)
+      );
+      for (const storyZone of storyZones) {
+        const y = storyZone.y + storyZone.h - 8;
+        for (let i = 1; i <= 16; i += 1) {
+          const x = storyZone.x + (storyZone.w * i) / 17;
+          const blocker = state.hitZones.find((hit) =>
+            hit.id !== storyZone.id &&
+            (hit.kind === 'signal' || hit.kind === 'marker') &&
+            x >= hit.x &&
+            x <= hit.x + hit.w &&
+            y >= hit.y &&
+            y <= hit.y + hit.h
+          );
+          if (!blocker) {
+            return { id: storyZone.id, x, y };
+          }
+        }
+      }
+      const fallback = storyZones[0];
+      return fallback
+        ? { id: fallback.id, x: fallback.x + fallback.w / 2, y: fallback.y + fallback.h - 8 }
+        : null;
+    })()`);
+    assert.ok(storyChartPoint, "expected a Market Story chart hit zone");
+    await session.evaluate(`(() => {
+      const canvas = document.querySelector('#chart');
+      const rect = canvas.getBoundingClientRect();
+      canvas.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        clientX: rect.left + ${storyChartPoint.x},
+        clientY: rect.top + ${storyChartPoint.y},
+      }));
+    })()`);
+    const storySelectedFromChart = await session.evaluate(`(() => ({
+      type: state.selectedType,
+      id: state.selectedId,
+      selectedStory: Boolean(document.querySelector('.story-section.is-selected.selected-story')),
+      storyAuditZones: state.hitZones.filter((hit) => hit.kind === 'story_audit').length,
+      expectedAuditZones: publicById.get(${JSON.stringify(storyChartPoint.id)}).chart.included_audit_event_ids.length,
+      label: document.querySelector('#selection-label').textContent
+    }))()`);
+    assert.equal(storySelectedFromChart.type, "market_story");
+    assert.equal(storySelectedFromChart.id, storyChartPoint.id);
+    assert.equal(storySelectedFromChart.selectedStory, true);
+    assert.equal(
+      storySelectedFromChart.storyAuditZones,
+      storySelectedFromChart.expectedAuditZones,
+    );
+    assert.match(storySelectedFromChart.label, /Selected market story:/);
+    await session.evaluate(
+      `document.querySelector('.story-section.is-selected').click()`,
+    );
+    assert.equal(await session.evaluate(`state.selectedType`), null);
 
     await session.evaluate(`document.querySelector('.section-toggle').click()`);
     assert.equal(
@@ -448,6 +538,7 @@ async function runBrowserSmoke() {
       mode: state.mode,
       selectedType: state.selectedType,
       dailySections: document.querySelectorAll('.daily-section').length,
+      storySections: document.querySelectorAll('.story-section').length,
       signalSections: document.querySelectorAll('.signal-section').length,
       auditSections: document.querySelectorAll('.audit-section').length,
       combinedHeader: document.querySelector('.combined-audit-header')?.innerText ?? '',
@@ -458,6 +549,7 @@ async function runBrowserSmoke() {
     assert.equal(bothMode.mode, "both");
     assert.equal(bothMode.selectedType, null);
     assert.equal(bothMode.dailySections, 31);
+    assert.equal(bothMode.storySections, initial.expectedStories);
     assert.equal(bothMode.signalSections, initial.expectedSignals);
     assert.equal(bothMode.auditSections, initial.expectedAudit);
     assert.match(bothMode.combinedHeader, /Audit events/i);
@@ -503,13 +595,37 @@ async function runBrowserSmoke() {
     const auditMode = await session.evaluate(`(() => ({
       mode: state.mode,
       selectedType: state.selectedType,
-      auditSections: document.querySelectorAll('.audit-section').length
+      auditSections: document.querySelectorAll('.audit-section').length,
+      auditStorySections: document.querySelectorAll('.audit-story-group .story-section').length,
+      auditStoryHeader: document.querySelector('.audit-story-group .combined-audit-header')?.innerText ?? ''
     }))()`);
-    assert.deepEqual(auditMode, {
-      mode: "audit",
-      selectedType: null,
-      auditSections: initial.expectedAudit,
-    });
+    assert.equal(auditMode.mode, "audit");
+    assert.equal(auditMode.selectedType, null);
+    assert.equal(auditMode.auditSections, initial.expectedAudit);
+    assert.equal(auditMode.auditStorySections, initial.expectedAuditStories);
+    assert.match(auditMode.auditStoryHeader, /Audit-linked Market Stories/i);
+
+    await session.evaluate(
+      `document.querySelector('.audit-story-group .story-section').click()`,
+    );
+    const auditStorySelection = await session.evaluate(`(() => ({
+      selectedType: state.selectedType,
+      selectedStory: Boolean(document.querySelector('.audit-story-group .story-section.is-selected.selected-story')),
+      storyAuditZones: state.hitZones.filter((hit) => hit.kind === 'story_audit').length,
+      selectedStoryAuditCount: publicById.get(state.selectedId)?.chart.included_audit_event_ids.length ?? 0,
+      label: document.querySelector('#selection-label').textContent
+    }))()`);
+    assert.equal(auditStorySelection.selectedType, "market_story");
+    assert.equal(auditStorySelection.selectedStory, true);
+    assert.equal(
+      auditStorySelection.storyAuditZones,
+      auditStorySelection.selectedStoryAuditCount,
+    );
+    assert.match(auditStorySelection.label, /Selected market story:/);
+    await session.evaluate(
+      `document.querySelector('.audit-story-group .story-section.is-selected').click()`,
+    );
+    assert.equal(await session.evaluate(`state.selectedType`), null);
 
     await session.evaluate(`document.querySelector('.audit-section').click()`);
     assert.equal(await session.evaluate(`state.selectedType`), "audit_event");
@@ -575,8 +691,13 @@ async function runBrowserSmoke() {
             "both_mode_public_and_audit_cards",
             "both_mode_audit_card_toggle",
             "mode_switch_clear",
+            "audit_mode_market_stories_visible",
+            "audit_mode_market_story_toggle",
             "audit_card_toggle",
             "audit_chart_toggle",
+            "market_stories_merged_in_day_posts",
+            "market_story_chart_window_visible_and_selectable",
+            "market_story_included_audit_windows_visible",
           ],
         },
         null,

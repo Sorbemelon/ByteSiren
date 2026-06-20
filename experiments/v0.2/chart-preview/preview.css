@@ -238,6 +238,15 @@ button.is-active {
   flex-direction: column;
 }
 
+.audit-story-group {
+  border-color: rgba(245, 158, 11, 0.32);
+}
+
+.audit-story-group .combined-audit-header {
+  background: rgba(245, 158, 11, 0.07);
+  border-bottom-color: rgba(245, 158, 11, 0.24);
+}
+
 .day-post-header {
   display: flex;
   justify-content: space-between;
@@ -283,6 +292,12 @@ button.is-active {
   border-bottom: 0;
 }
 
+.story-section {
+  background:
+    linear-gradient(90deg, rgba(167, 139, 250, 0.1), transparent 42%),
+    var(--panel-2);
+}
+
 .section-card.is-selected {
   border-color: rgba(245, 158, 11, 0.75);
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.22);
@@ -300,6 +315,13 @@ button.is-active {
   box-shadow:
     inset 3px 0 0 rgba(96, 165, 250, 0.85),
     0 0 0 1px rgba(96, 165, 250, 0.24);
+}
+
+.section-card.selected-story {
+  background: rgba(167, 139, 250, 0.08);
+  box-shadow:
+    inset 3px 0 0 rgba(167, 139, 250, 0.85),
+    0 0 0 1px rgba(167, 139, 250, 0.24);
 }
 
 .section-card.selected-audit {
@@ -364,6 +386,16 @@ button.is-active {
   border-color: rgba(244, 63, 94, 0.38);
 }
 
+.story-chip {
+  color: #c4b5fd;
+  border-color: rgba(167, 139, 250, 0.38);
+}
+
+.audit-chip {
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.38);
+}
+
 .card-expanded {
   margin-top: 9px;
   padding-top: 9px;
@@ -407,6 +439,15 @@ button.is-active {
   font-size: 0.74rem;
   margin-top: 6px;
   line-height: 1.4;
+}
+
+.compact-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.compact-list li {
+  margin: 3px 0;
 }
 
 .empty {

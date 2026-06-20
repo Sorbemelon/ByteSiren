@@ -15,6 +15,10 @@ export function selectionTargetForItem(item, options = {}) {
     return { selected_type: "signal_event", selected_id: item.id };
   }
 
+  if (item.item_type === "market_story") {
+    return { selected_type: "market_story", selected_id: item.id };
+  }
+
   if (auditIds.has(item.id) || options.mode === "audit") {
     return { selected_type: "audit_event", selected_id: item.id };
   }
@@ -111,6 +115,16 @@ export function highlightsForSelection({
       dayWindowIds: [],
       signalWindowIds: [selection.selected_id],
       auditWindowIds: [],
+    };
+  }
+
+  if (selection.selected_type === "market_story" && selection.selected_id) {
+    const story = publicItems.find((item) => item.id === selection.selected_id);
+
+    return {
+      dayWindowIds: [],
+      signalWindowIds: story?.chart?.included_signal_event_ids ?? [],
+      auditWindowIds: story?.chart?.included_audit_event_ids ?? [],
     };
   }
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T19:53:15.048Z",
+  "generated_at": "2026-06-20T00:34:40.357Z",
   "item_count": 31,
   "items": [
     {
@@ -196,7 +196,7 @@
           "low": 648.31
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "risk off day; 24h change -2.9%; notable range 3.5%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -212,7 +212,10 @@
           "BTCUSDT",
           "BNBUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_a838e493_20260522t1830",
+          "vnext_c_ae635df8_20260522t2315"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -289,8 +292,7 @@
           "BNBUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_bd7eadf3_20260523t0745",
-          "vnext_b_fdc31c9f_20260523t2030"
+          "vnext_c_60319648_20260523t2030"
         ],
         "no_trading_advice": true
       },
@@ -349,7 +351,7 @@
           "low": 649.68
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "mixed day; 24h change -0.5%; notable range 2.8%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -363,7 +365,9 @@
           "SOLUSDT",
           "XRPUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_d38f7b57_20260524t2115"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -495,7 +499,7 @@
           "low": 653.45
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "risk off day; 24h change -1.6%; notable range 3.1%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -511,7 +515,10 @@
           "XRPUSDT",
           "BNBUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_c29a0892_20260526t0030",
+          "vnext_c_cca96e5f_20260526t1015"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -571,7 +578,7 @@
           "low": 646.57
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "risk off day; 24h change -1.6%; notable range 3%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -587,7 +594,9 @@
           "SOLUSDT",
           "BNBUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_b525c422_20260527t2130"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -664,7 +673,7 @@
           "SOLUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_a43ac588_20260528t0315"
+          "vnext_c_1d469c0e_20260528t0315"
         ],
         "no_trading_advice": true
       },
@@ -742,7 +751,7 @@
           "SOLUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_dac278c4_20260529t1500"
+          "vnext_c_fc005a7c_20260529t1415"
         ],
         "no_trading_advice": true
       },
@@ -1040,8 +1049,8 @@
           "BNBUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_2559ab4c_20260602t1415",
-          "vnext_b_d21993f9_20260602t2245"
+          "vnext_c_1357e2a2_20260602t1415",
+          "vnext_c_ad551489_20260602t2245"
         ],
         "no_trading_advice": true
       },
@@ -1178,7 +1187,7 @@
           "low": 61383.56
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "volatile day; 24h change -2.6%; notable range 6%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -1194,7 +1203,10 @@
           "ETHUSDT",
           "BTCUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_dc56b382_20260604t0015",
+          "vnext_c_6c394e07_20260604t0300"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -1254,7 +1266,7 @@
           "low": 59130.91
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "volatile day; 24h change -6.1%; notable range 9.9%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -1270,7 +1282,9 @@
           "BNBUSDT",
           "BTCUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_c54de378_20260605t0715"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -1423,7 +1437,7 @@
           "BTCUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_2fa494ec_20260607t2200"
+          "vnext_c_228a8778_20260607t0100"
         ],
         "no_trading_advice": true
       },
@@ -1484,7 +1498,7 @@
           "low": 1645
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "mixed day; 24h change 0%; notable range 3.9%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -1500,7 +1514,9 @@
           "BTCUSDT",
           "ETHUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_33798218_20260608t0100"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -1560,7 +1576,7 @@
           "low": 583.84
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "volatile day; 24h change -2.6%; notable range 4.7%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -1576,7 +1592,9 @@
           "BTCUSDT",
           "BNBUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_3870ebb2_20260609t1415"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -1636,7 +1654,7 @@
           "low": 60755
         }
       ],
-      "has_publishable_signal_events": true,
+      "has_publishable_signal_events": false,
       "summary_hint": "volatile day; 24h change -1.2%; notable range 4.1%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -1652,10 +1670,7 @@
           "ETHUSDT",
           "BTCUSDT"
         ],
-        "publishable_signal_event_ids": [
-          "vnext_b_1b8c81d3_20260610t1230",
-          "vnext_b_da58fd31_20260610t1330"
-        ],
+        "publishable_signal_event_ids": [],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -1715,7 +1730,7 @@
           "low": 1621.6
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "volatile day; 24h change +3.4%; notable range 4.7%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -1731,7 +1746,9 @@
           "BNBUSDT",
           "ETHUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_56cdb3f3_20260611t1715"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -1960,7 +1977,7 @@
           "BNBUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_51361797_20260614t2115"
+          "vnext_c_a45cf681_20260614t2115"
         ],
         "no_trading_advice": true
       },
@@ -2021,7 +2038,7 @@
           "low": 612.66
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "volatile day; 24h change +3.8%; notable range 6.3%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -2037,7 +2054,9 @@
           "BTCUSDT",
           "BNBUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_16999967_20260615t1300"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -2097,7 +2116,7 @@
           "low": 1758
         }
       ],
-      "has_publishable_signal_events": false,
+      "has_publishable_signal_events": true,
       "summary_hint": "mixed day; 24h change -1%; notable range 3.7%.",
       "claude_payload": {
         "item_type": "daily_overview",
@@ -2113,7 +2132,9 @@
           "SOLUSDT",
           "ETHUSDT"
         ],
-        "publishable_signal_event_ids": [],
+        "publishable_signal_event_ids": [
+          "vnext_c_fcff80b4_20260616t1300"
+        ],
         "no_trading_advice": true
       },
       "source_query_hints": [
@@ -2190,9 +2211,7 @@
           "BNBUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_4ab7f2a1_20260617t1800",
-          "vnext_b_28a60d1b_20260617t1830",
-          "vnext_b_666c4278_20260617t1915"
+          "vnext_c_e71b58af_20260617t1800"
         ],
         "no_trading_advice": true
       },
@@ -2270,7 +2289,7 @@
           "ETHUSDT"
         ],
         "publishable_signal_event_ids": [
-          "vnext_b_3f586e87_20260618t1530"
+          "vnext_c_1188cecc_20260618t1515"
         ],
         "no_trading_advice": true
       },

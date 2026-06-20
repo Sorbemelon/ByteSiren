@@ -9,6 +9,7 @@ import {
   writeJson,
 } from "./shared.mjs";
 import { DAILY_OVERVIEWS_PATH } from "./generate-daily-overviews.mjs";
+import { DAY_STORIES_JSON_PATH } from "./generate-day-stories.mjs";
 import { VNEXT_C_EVENTS_PATH } from "./run-vnext-c.mjs";
 
 export const FEED_CONTRACT_V02_PATH = `${OUTPUTS_DIR}/feed_contract_v02.json`;
@@ -44,6 +45,14 @@ const DAILY_OVERVIEW_INSTRUCTIONS = [
   "Summarize the day's crypto market context using relevant public sources.",
   "Do not classify the Daily Overview itself with Focused Cause or Likely Cause.",
   "Use separate Daily Overview labels unless referring to a specific included signal event.",
+  "Do not provide trading advice, forecasts, price targets, or recommendations.",
+  "Return JSON only.",
+];
+
+const DAY_STORY_INSTRUCTIONS = [
+  "Summarize the multi-swing chart context only.",
+  "Do not infer a news cause from chart context alone.",
+  "Use Market Story labels separately from Signal Event and Daily Overview labels.",
   "Do not provide trading advice, forecasts, price targets, or recommendations.",
   "Return JSON only.",
 ];
@@ -232,6 +241,50 @@ export function signalClaudePayload(event) {
       note: "Retrospective only; not used for detection or publishing.",
     },
     instructions: SIGNAL_CLASSIFICATION_INSTRUCTIONS,
+  };
+}
+
+export function dayStoryClaudePayload(story) {
+  return {
+    event_mode: "market_story",
+    story_id: story.id,
+    anchor_date_utc: story.anchor_date_utc,
+    story_window: {
+      start: story.story_start,
+      end: story.story_end,
+      duration_min: story.duration_min,
+      crosses_utc_day: story.crosses_utc_day,
+    },
+    direction: story.direction,
+    story_context_label: story.story_context_label,
+    story_type: story.story_type,
+    primary_story_family: story.primary_story_family ?? null,
+    member_dominant_story_family:
+      story.member_dominant_story_family ?? story.primary_story_family ?? null,
+    story_context_scores: story.story_context_scores ?? {},
+    story_window_context: story.story_window_context ?? null,
+    story_label_decision_reasons: story.story_label_decision_reasons ?? [],
+    minimum_story_range: story.minimum_story_range ?? null,
+    two_sided_swing: story.two_sided_swing ?? null,
+    story_source_type: story.story_source_type ?? "signal_sequence",
+    story_source_label: story.story_source_label ?? "Signal story",
+    signal_event_count: story.signal_event_count,
+    audit_event_count: story.audit_event_count ?? 0,
+    total_event_count: story.total_event_count ?? story.signal_event_count,
+    included_signal_event_ids: story.included_signal_event_ids,
+    included_audit_event_ids: story.included_audit_event_ids ?? [],
+    supporting_audit_event_ids: story.supporting_audit_event_ids,
+    gap_model_version: story.gap_model_version ?? story.story_layer_version,
+    eligibility_reason: story.eligibility_reason ?? null,
+    adaptive_gap_links: story.adaptive_gap_links ?? [],
+    max_event_gap_minutes: story.max_event_gap_minutes ?? 0,
+    adaptive_gap_summary: story.adaptive_gap_summary ?? null,
+    swing_change_label: "Swing Change",
+    total_swing_change_pct: story.total_swing_change_pct,
+    net_signal_change_pct: story.net_signal_change_pct,
+    audit_swing_change_pct: story.audit_swing_change_pct ?? 0,
+    summary_hint: story.summary_hint,
+    instructions: DAY_STORY_INSTRUCTIONS,
   };
 }
 
@@ -436,10 +489,127 @@ function dailyOverviewItem(overview, daySignalEvents) {
   };
 }
 
+function storyItem(story) {
+  const cardId = `card_${story.id}`;
+
+  return {
+    item_type: "market_story",
+    id: story.id,
+    date_utc: story.anchor_date_utc,
+    display_time: displayTime(story.story_start),
+    display_window: story.story_display_window,
+    story_window_label: "Story window",
+    story_window_display: story.story_display_window,
+    direction: story.direction,
+    direction_label: directionLabel(story.direction),
+    story_context_label: story.story_context_label,
+    story_type: story.story_type,
+    primary_story_family: story.primary_story_family ?? null,
+    member_dominant_story_family:
+      story.member_dominant_story_family ?? story.primary_story_family ?? null,
+    story_context_scores: story.story_context_scores ?? {},
+    story_context_counts: story.story_context_counts ?? {},
+    story_window_context: story.story_window_context ?? null,
+    story_label_decision_reasons: story.story_label_decision_reasons ?? [],
+    two_sided_swing: story.two_sided_swing ?? null,
+    story_source_type: story.story_source_type ?? "signal_sequence",
+    story_source_label: story.story_source_label ?? "Signal story",
+    gap_model_version: story.gap_model_version ?? story.story_layer_version,
+    eligibility_reason: story.eligibility_reason ?? null,
+    minimum_story_range: story.minimum_story_range ?? null,
+    adaptive_gap_links: story.adaptive_gap_links ?? [],
+    max_event_gap_minutes: story.max_event_gap_minutes ?? 0,
+    adaptive_gap_summary: story.adaptive_gap_summary ?? null,
+    signal_event_count: story.signal_event_count,
+    audit_event_count: story.audit_event_count ?? 0,
+    total_event_count: story.total_event_count ?? story.signal_event_count,
+    included_signal_event_ids: story.included_signal_event_ids,
+    included_audit_event_ids: story.included_audit_event_ids ?? [],
+    supporting_audit_event_ids: story.supporting_audit_event_ids,
+    all_story_event_ids: story.all_story_event_ids ?? [
+      ...story.included_signal_event_ids,
+      ...(story.included_audit_event_ids ?? []),
+    ],
+    crosses_utc_day: story.crosses_utc_day,
+    duration_min: story.duration_min,
+    swing_change_label: "Swing Change",
+    total_swing_change_pct: roundNumber(story.total_swing_change_pct, 4),
+    net_signal_change_pct: roundNumber(story.net_signal_change_pct, 4),
+    audit_swing_change_pct: roundNumber(story.audit_swing_change_pct ?? 0, 4),
+    median_signal_change_pct: roundNumber(story.median_signal_change_pct, 4),
+    strongest_signal_event_id: story.strongest_signal_event_id,
+    dominant_chart_context_label: story.dominant_chart_context_label,
+    event_range_contexts: story.event_range_contexts ?? [],
+    summary_hint: story.summary_hint,
+    public_context_status: "placeholder_pending_market_story",
+    sources: [],
+    story_window: {
+      start: story.story_start,
+      end: story.story_end,
+      duration_min: story.duration_min,
+      crosses_utc_day: story.crosses_utc_day,
+      display: story.story_display_window,
+    },
+    chart: {
+      chart_highlight_type: "story_window",
+      highlight_start: story.story_start,
+      highlight_end: story.story_end,
+      included_signal_event_ids: story.included_signal_event_ids,
+      included_audit_event_ids: story.included_audit_event_ids ?? [],
+      supporting_audit_event_ids: story.supporting_audit_event_ids,
+      feed_card_id: cardId,
+      anchor_date_utc: story.anchor_date_utc,
+      selection_toggle: "select_again_to_clear",
+      background_click_clears_selection: true,
+    },
+    expanded: {
+      section_control: {
+        collapsed_label: "Show more",
+        expanded_label: "Hide",
+      },
+      story_details: {
+        label: "Market Story",
+        story_window_label: "Story window",
+        story_window_display: story.story_display_window,
+        story_context_label: story.story_context_label,
+        story_source_type: story.story_source_type ?? "signal_sequence",
+        story_source_label: story.story_source_label ?? "Signal story",
+        gap_model_version: story.gap_model_version ?? story.story_layer_version,
+        eligibility_reason: story.eligibility_reason ?? null,
+        primary_story_family: story.primary_story_family ?? null,
+        member_dominant_story_family:
+          story.member_dominant_story_family ??
+          story.primary_story_family ??
+          null,
+        story_context_scores: story.story_context_scores ?? {},
+        story_context_counts: story.story_context_counts ?? {},
+        story_window_context: story.story_window_context ?? null,
+        story_label_decision_reasons:
+          story.story_label_decision_reasons ?? [],
+        minimum_story_range: story.minimum_story_range ?? null,
+        two_sided_swing: story.two_sided_swing ?? null,
+        adaptive_gap_links: story.adaptive_gap_links ?? [],
+        max_event_gap_minutes: story.max_event_gap_minutes ?? 0,
+        adaptive_gap_summary: story.adaptive_gap_summary ?? null,
+        signal_event_count: story.signal_event_count,
+        audit_event_count: story.audit_event_count ?? 0,
+        total_event_count: story.total_event_count ?? story.signal_event_count,
+        included_signal_events: story.included_signal_events ?? [],
+        included_audit_events: story.included_audit_events ?? [],
+        supporting_audit_events: story.supporting_audit_events ?? [],
+        summary_hint: story.summary_hint,
+        note: "Market Stories summarize related Signal Events and audit-only detections. They use an adaptive chart-context gap, can cross UTC day boundaries, and are placed in the day where the first trigger starts.",
+      },
+      sources_placeholder: [],
+    },
+    claude_payload: dayStoryClaudePayload(story),
+  };
+}
+
 function itemSortTime(item) {
-  return item.item_type === "daily_overview"
-    ? item.chart.highlight_end
-    : item.evidence_window.end;
+  if (item.item_type === "daily_overview") return item.chart.highlight_end;
+  if (item.item_type === "market_story") return item.story_window.end;
+  return item.evidence_window.end;
 }
 
 function latestSignalForDay(dayEvents) {
@@ -460,9 +630,25 @@ function dayPostControlLabel(hiddenCount, action) {
   return `+${hiddenCount} events · ${action} post`;
 }
 
+function sortDayItems(items) {
+  return [...items].sort((a, b) => {
+    const order = {
+      daily_overview: 0,
+      market_story: 1,
+      signal_event: 2,
+    };
+    const aOrder = order[a.item_type] ?? 10;
+    const bOrder = order[b.item_type] ?? 10;
+
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return itemSortTime(a).localeCompare(itemSortTime(b));
+  });
+}
+
 export function buildFeedContract({
   dailyOverviews,
   signalEvents,
+  dayStories = [],
   now = new Date(),
   detectorVersion = "vnext_c",
 }) {
@@ -477,13 +663,22 @@ export function buildFeedContract({
       const dayEvents = publicSignals.filter(
         (event) => event.window_start.slice(0, 10) === overview.date_utc,
       );
+      const storyItems = dayStories
+        .filter((story) => story.anchor_date_utc === overview.date_utc)
+        .sort((a, b) => a.story_start.localeCompare(b.story_start))
+        .map(storyItem);
       const dailyItem = dailyOverviewItem(overview, dayEvents);
       const signalItems = dayEvents.map(signalItem);
-      const items = [dailyItem, ...signalItems];
+      const items = sortDayItems([dailyItem, ...storyItems, ...signalItems]);
       const isCurrentUtcDay = overview.date_utc === currentUtcDay;
+      const latestItem = [...items].sort((a, b) =>
+        itemSortTime(b).localeCompare(itemSortTime(a)),
+      )[0];
       const latestSignal = latestSignalForDay(dayEvents);
       const defaultCollapsedItemId =
-        isCurrentUtcDay && latestSignal ? latestSignal.event_id : dailyItem.id;
+        isCurrentUtcDay && (latestItem || latestSignal)
+          ? (latestItem?.id ?? latestSignal.event_id)
+          : dailyItem.id;
       const hiddenCount = Math.max(0, items.length - 1);
       const hasExtraItems = hiddenCount > 0;
       const expandedControlLabel = dayPostControlLabel(hiddenCount, "Collapse");
@@ -497,7 +692,7 @@ export function buildFeedContract({
         item_count: items.length,
         hidden_item_count_when_collapsed: hiddenCount,
         has_extra_items: hasExtraItems,
-        latest_item_id: defaultCollapsedItemId,
+        latest_item_id: latestItem?.id ?? defaultCollapsedItemId,
         default_collapsed_item_id: defaultCollapsedItemId,
         expanded_control_label: expandedControlLabel,
         collapsed_control_label: collapsedControlLabel,
@@ -507,11 +702,7 @@ export function buildFeedContract({
         },
         visible_item_ids_when_collapsed: [defaultCollapsedItemId],
         visible_item_ids_when_expanded: items.map((item) => item.id),
-        items: items.sort((a, b) => {
-          if (a.item_type === "daily_overview") return -1;
-          if (b.item_type === "daily_overview") return 1;
-          return itemSortTime(a).localeCompare(itemSortTime(b));
-        }),
+        items,
       };
     });
 
@@ -540,6 +731,7 @@ export function buildFeedContract({
     preview_diagnostics: {
       detector_version: detectorVersion,
       public_signal_count: publicSignals.length,
+      market_story_count: dayStories.length,
       audit_event_count: auditOnly.length,
       chart_context_enabled: signalEvents.some((event) =>
         Number.isFinite(event.chart_context_score),
@@ -554,12 +746,19 @@ export async function runFeedContract(
 ) {
   const dailyOverviews =
     (await readJson(options.dailyOverviewPath)).items ?? [];
+  let dayStories = [];
+  try {
+    dayStories = (await readJson(options.dayStoriesPath)).items ?? [];
+  } catch {
+    dayStories = [];
+  }
   const signalPayload = await readJson(options.signalEventsPath);
   const signalEvents = signalPayload.events ?? [];
   const detectorVersion = signalPayload.detector ?? "vnext_c";
   const contract = buildFeedContract({
     dailyOverviews,
     signalEvents,
+    dayStories,
     now,
     detectorVersion,
   });
@@ -575,6 +774,7 @@ export async function runFeedContract(
 export function parseArgs(argv = process.argv.slice(2)) {
   return {
     dailyOverviewPath: readOption(argv, "--daily") ?? DAILY_OVERVIEWS_PATH,
+    dayStoriesPath: readOption(argv, "--stories") ?? DAY_STORIES_JSON_PATH,
     signalEventsPath: readOption(argv, "--events") ?? VNEXT_C_EVENTS_PATH,
     outputPath: readOption(argv, "--output") ?? FEED_CONTRACT_V02_PATH,
   };

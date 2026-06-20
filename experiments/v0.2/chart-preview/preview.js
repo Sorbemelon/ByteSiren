@@ -244,6 +244,9 @@ function previewCounts() {
   const dailyCount = publicItems.filter(
     (item) => item.item_type === "daily_overview",
   ).length;
+  const storyCount = publicItems.filter(
+    (item) => item.item_type === "market_story",
+  ).length;
   const signalCount = publicItems.filter(
     (item) => item.item_type === "signal_event",
   ).length;
@@ -251,6 +254,7 @@ function previewCounts() {
   return {
     days: publicDayPosts.length,
     daily: dailyCount,
+    stories: storyCount,
     signals: signalCount,
     audit: auditItems.length,
   };
@@ -265,7 +269,7 @@ function updateDiagnostics() {
     ? "chart context enabled"
     : "chart context disabled";
   feedDiagnostics.classList.remove("is-error");
-  feedDiagnostics.textContent = `Preview data loaded: detector ${detectorVersion} · ${counts.days} days · ${counts.daily} daily overviews · ${counts.signals} signal events · ${counts.audit} audit events · ${chartContext}`;
+  feedDiagnostics.textContent = `Preview data loaded: detector ${detectorVersion} · ${counts.days} days · ${counts.daily} daily overviews · ${counts.stories} market stories · ${counts.signals} signal events · ${counts.audit} audit events · ${chartContext}`;
 }
 
 function syncModeButtons() {
@@ -331,6 +335,16 @@ function drawRectOverlay(plot, startIso, endIso, color, alpha, id, kind) {
   state.hitZones.push({ id, kind, x, y: plot.top, w, h: plot.height });
 }
 
+function overlayBounds(plot, startIso, endIso) {
+  const start = Date.parse(startIso);
+  const end = Date.parse(endIso);
+  const left = plot.xForTime(Math.min(start, end));
+  const right = plot.xForTime(Math.max(start, end));
+  const x = Math.max(plot.left, Math.min(left, right));
+  const w = Math.max(4, Math.min(plot.right, Math.max(left, right)) - x);
+  return { x, w };
+}
+
 function drawMarker(plot, item, color) {
   const time = Date.parse(
     item.chart.peak_marker_time || item.chart.highlight_start,
@@ -363,9 +377,75 @@ function drawAuditOverlay(plot, item, isSelected = false) {
   drawMarker(plot, { id: item.id, chart: item.chart }, "#f59e0b");
 }
 
+function addStoryHitZone(plot, item) {
+  const { x, w } = overlayBounds(
+    plot,
+    item.chart.highlight_start,
+    item.chart.highlight_end,
+  );
+  const h = Math.min(28, plot.height);
+  state.hitZones.push({
+    id: item.id,
+    kind: "story",
+    x,
+    y: plot.bottom - h,
+    w,
+    h,
+  });
+}
+
+function drawStoryOverlay(plot, item, isSelected = false) {
+  const { x, w } = overlayBounds(
+    plot,
+    item.chart.highlight_start,
+    item.chart.highlight_end,
+  );
+  const alpha = isSelected ? 0.16 : 0.055;
+  ctx.fillStyle = `rgba(167, 139, 250, ${alpha})`;
+  ctx.fillRect(x, plot.top, w, plot.height);
+  ctx.strokeStyle = `rgba(167, 139, 250, ${isSelected ? 0.62 : 0.36})`;
+  ctx.strokeRect(x, plot.top, w, plot.height);
+  ctx.fillStyle = `rgba(167, 139, 250, ${isSelected ? 0.48 : 0.3})`;
+  ctx.fillRect(x, plot.bottom - 6, w, 4);
+}
+
+function drawStoryAuditOverlay(plot, item, storyId) {
+  const { x, w } = overlayBounds(
+    plot,
+    item.chart.highlight_start,
+    item.chart.highlight_end,
+  );
+  ctx.fillStyle = "rgba(245, 158, 11, 0.12)";
+  ctx.fillRect(x, plot.top, w, plot.height);
+  ctx.strokeStyle = "rgba(245, 158, 11, 0.42)";
+  ctx.strokeRect(x, plot.top, w, plot.height);
+  ctx.fillStyle = "#f59e0b";
+  ctx.beginPath();
+  ctx.arc(x + w / 2, plot.top + 30, 4, 0, Math.PI * 2);
+  ctx.fill();
+  state.hitZones.push({
+    id: storyId,
+    kind: "story_audit",
+    x,
+    y: plot.top,
+    w,
+    h: plot.height,
+  });
+}
+
 function signalItemsForDay(dateUtc) {
   return publicItems.filter(
     (item) => item.item_type === "signal_event" && item.date_utc === dateUtc,
+  );
+}
+
+function publicStoryItems() {
+  return publicItems.filter((item) => item.item_type === "market_story");
+}
+
+function auditLinkedStoryItems() {
+  return publicStoryItems().filter(
+    (item) => item.chart.included_audit_event_ids?.length > 0,
   );
 }
 
@@ -373,8 +453,38 @@ function publicSignalItems() {
   return publicItems.filter((item) => item.item_type === "signal_event");
 }
 
+function includedSignalItems(ids) {
+  const wanted = new Set(ids ?? []);
+  return publicSignalItems().filter((item) => wanted.has(item.id));
+}
+
+function includedAuditItems(ids) {
+  const wanted = new Set(ids ?? []);
+  return auditItems.filter((item) => wanted.has(item.id));
+}
+
 function drawActiveOverlays(plot) {
   if (state.mode === "audit") {
+    const selectedStory =
+      state.selectedType === "market_story"
+        ? publicById.get(state.selectedId)
+        : null;
+    if (selectedStory) {
+      drawStoryOverlay(plot, selectedStory, true);
+      for (const item of includedAuditItems(
+        selectedStory.chart.included_audit_event_ids,
+      )) {
+        drawStoryAuditOverlay(plot, item, selectedStory.id);
+      }
+      addStoryHitZone(plot, selectedStory);
+      return;
+    }
+
+    const auditStories = !state.selectedType ? auditLinkedStoryItems() : [];
+    for (const item of auditStories) {
+      drawStoryOverlay(plot, item, false);
+    }
+
     const selected =
       state.selectedType === "audit_event"
         ? auditById.get(state.selectedId)
@@ -383,6 +493,9 @@ function drawActiveOverlays(plot) {
 
     for (const item of events) {
       drawAuditOverlay(plot, item, item.id === state.selectedId);
+    }
+    for (const item of auditStories) {
+      addStoryHitZone(plot, item);
     }
     return;
   }
@@ -399,6 +512,7 @@ function drawActiveOverlays(plot) {
 
   const selected =
     state.selectedType === "daily_overview" ||
+    state.selectedType === "market_story" ||
     state.selectedType === "signal_event"
       ? publicById.get(state.selectedId)
       : null;
@@ -429,6 +543,40 @@ function drawActiveOverlays(plot) {
     return;
   }
 
+  if (state.selectedType === "market_story" && selected) {
+    drawStoryOverlay(plot, selected, true);
+
+    for (const item of includedAuditItems(
+      selected.chart.included_audit_event_ids,
+    )) {
+      drawStoryAuditOverlay(plot, item, selected.id);
+    }
+
+    for (const item of includedSignalItems(
+      selected.chart.included_signal_event_ids,
+    )) {
+      drawRectOverlay(
+        plot,
+        item.chart.highlight_start,
+        item.chart.highlight_end,
+        "rgb(245, 158, 11)",
+        0.18,
+        item.id,
+        "signal",
+      );
+      drawMarker(plot, item, colorForDirection(item.direction));
+    }
+    addStoryHitZone(plot, selected);
+    return;
+  }
+
+  const defaultStoryWindows = !state.selectedType ? publicStoryItems() : [];
+  if (!state.selectedType) {
+    for (const item of defaultStoryWindows) {
+      drawStoryOverlay(plot, item, false);
+    }
+  }
+
   const events =
     state.selectedType === "signal_event" && selected
       ? [selected]
@@ -456,6 +604,10 @@ function drawActiveOverlays(plot) {
     for (const item of auditItems) {
       drawAuditOverlay(plot, item, false);
     }
+  }
+
+  for (const item of defaultStoryWindows) {
+    addStoryHitZone(plot, item);
   }
 }
 
@@ -704,6 +856,7 @@ function clearSelection() {
 function selectionTypeForItem(item) {
   if (!item) return null;
   if (auditById.has(item.id)) return "audit_event";
+  if (item.item_type === "market_story") return "market_story";
   return item.item_type === "daily_overview"
     ? "daily_overview"
     : "signal_event";
@@ -721,6 +874,8 @@ function updateSelectionLabel(item, selectedType) {
 
   if (selectedType === "daily_overview") {
     selectionLabel.textContent = `Selected: Daily Overview ${item.date_utc}`;
+  } else if (selectedType === "market_story") {
+    selectionLabel.textContent = `Selected market story: ${item.id}`;
   } else if (selectedType === "audit_event") {
     selectionLabel.textContent = `Selected audit: ${item.id}`;
   } else {
@@ -763,6 +918,7 @@ function selectedClass(item, type) {
   const selected = item.id === state.selectedId && state.selectedType === type;
   if (!selected) return "";
   if (type === "daily_overview") return "is-selected selected-daily";
+  if (type === "market_story") return "is-selected selected-story";
   if (type === "audit_event") return "is-selected selected-audit";
   return "is-selected selected-signal";
 }
@@ -871,6 +1027,75 @@ function renderDailySection(item) {
     </article>`;
 }
 
+function renderStorySection(item) {
+  const selected = selectedClass(item, "market_story");
+  const expanded = state.expandedSections.has(item.id);
+  const details = item.expanded.story_details;
+  const contextLabel = item.story_context_label ?? "Market Story";
+  const signalLines = (details.included_signal_events ?? [])
+    .map(
+      (event) =>
+        `<li>${escapeHtml(event.window_start.slice(0, 16).replace("T", " "))} · ${escapeHtml(displayDirection(event.direction))} · Avg Change ${pct(event.avg_change_pct)}</li>`,
+    )
+    .join("");
+  const auditLines = (details.included_audit_events ?? [])
+    .map(
+      (event) =>
+        `<li>${escapeHtml(event.window_start.slice(0, 16).replace("T", " "))} · ${escapeHtml(displayDirection(event.direction))} · Avg Change ${pct(event.avg_change_pct)} · ${escapeHtml(event.suppress_reason ?? "audit-only")}</li>`,
+    )
+    .join("");
+  const windowContext = details.story_window_context ?? item.story_window_context;
+  const recoveryRatio =
+    windowContext?.median_recovery_ratio === null ||
+    windowContext?.median_recovery_ratio === undefined
+      ? "n/a"
+      : `${Number(windowContext.median_recovery_ratio).toFixed(2)}x`;
+  const labelReasons = (
+    details.story_label_decision_reasons ??
+    item.story_label_decision_reasons ??
+    []
+  ).join(", ");
+
+  return `
+    <article class="section-card story-section ${selected}" data-id="${item.id}">
+      <div class="card-header">
+        <div>
+          <p class="card-title">Market Story</p>
+          <div class="card-meta">Story window: ${escapeHtml(item.story_window_display)}</div>
+        </div>
+        <span class="chip story-chip">${escapeHtml(contextLabel)}</span>
+      </div>
+      <div class="chips">
+        <span class="chip">${escapeHtml(item.direction_label)}</span>
+        <span class="chip story-chip">${escapeHtml(item.story_source_label ?? "Signal story")}</span>
+        <span class="chip">Signal Events: ${item.signal_event_count}</span>
+        <span class="chip audit-chip">Audit Events: ${item.audit_event_count ?? 0}</span>
+        <span class="chip">Swing Change ${pct(item.total_swing_change_pct)}</span>
+        <span class="chip">${escapeHtml(item.adaptive_gap_summary ?? "Adaptive gap: n/a")}</span>
+        <span class="chip">${item.crosses_utc_day ? "Crosses UTC day" : "Same UTC day"}</span>
+      </div>
+      <div class="card-body">${escapeHtml(item.summary_hint)}</div>
+      ${
+        expanded
+          ? `<div class="card-expanded">
+              <div class="card-meta">Included Signal Events</div>
+              <ul class="compact-list">${signalLines}</ul>
+              <div class="card-meta">Included Audit Events</div>
+              <ul class="compact-list">${auditLines || "<li>none</li>"}</ul>
+              <div class="card-meta">Story-window context: ${escapeHtml(windowContext?.story_window_context_version ?? "n/a")}</div>
+              <div class="card-meta">Median recovery ratio: ${escapeHtml(recoveryRatio)} · Median net change ${pct(windowContext?.median_net_change_pct ?? 0)} · Median range ${pct(windowContext?.median_range_pct ?? 0)}</div>
+              <div class="card-meta">Label decision: ${escapeHtml(labelReasons || "n/a")}</div>
+              <div class="card-meta">${escapeHtml(details.adaptive_gap_summary ?? item.adaptive_gap_summary ?? "Adaptive gap: n/a")}</div>
+              <div class="card-meta">Eligibility: ${escapeHtml((details.eligibility_reason ?? item.eligibility_reason ?? "n/a").replace(/_/g, " "))}</div>
+              <div class="card-meta">Nearby audit-only context: ${(details.supporting_audit_events ?? []).length}</div>
+              <div class="card-meta">${escapeHtml(details.note)}</div>
+            </div>`
+          : ""
+      }
+      ${sectionControl(item)}
+    </article>`;
+}
+
 function renderSignalSection(item) {
   const selected = selectedClass(item, "signal_event");
   const expanded = state.expandedSections.has(item.id);
@@ -909,9 +1134,9 @@ function renderSignalSection(item) {
 }
 
 function renderPublicSection(item) {
-  return item.item_type === "daily_overview"
-    ? renderDailySection(item)
-    : renderSignalSection(item);
+  if (item.item_type === "daily_overview") return renderDailySection(item);
+  if (item.item_type === "market_story") return renderStorySection(item);
+  return renderSignalSection(item);
 }
 
 function renderDayPost(post) {
@@ -981,6 +1206,24 @@ function renderAuditFeed() {
     : '<div class="empty">No audit events.</div>';
 }
 
+function renderAuditStoryGroup() {
+  const stories = auditLinkedStoryItems();
+  if (!stories.length) return "";
+
+  return `
+    <section class="combined-audit-group audit-story-group" aria-label="Audit-linked Market Stories">
+      <div class="combined-audit-header">
+        <div>
+          <h2 class="combined-title">Audit-linked Market Stories</h2>
+          <div class="combined-meta">${stories.length} story${stories.length === 1 ? "" : "ies"} built from audit context</div>
+        </div>
+      </div>
+      <div class="combined-audit-list">
+        ${stories.map(renderStorySection).join("")}
+      </div>
+    </section>`;
+}
+
 function renderCombinedAuditGroup() {
   return `
     <section class="combined-audit-group" aria-label="Audit events in combined view">
@@ -998,7 +1241,7 @@ function renderCombinedAuditGroup() {
 
 function renderFeed() {
   if (state.mode === "audit") {
-    feedEl.innerHTML = renderAuditFeed();
+    feedEl.innerHTML = `${renderAuditStoryGroup()}${renderAuditFeed()}`;
   } else if (state.mode === "both") {
     const publicHtml = publicDayPosts.length
       ? publicDayPosts.map(renderDayPost).join("")

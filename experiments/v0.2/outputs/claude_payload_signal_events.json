@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T19:53:15.383Z",
+  "generated_at": "2026-06-20T00:34:50.958Z",
   "item_count": 23,
   "items": [
     {
@@ -919,6 +919,237 @@
     },
     {
       "event_mode": "signal_event",
+      "event_id": "vnext_c_c29a0892_20260526t0030",
+      "date_utc": "2026-05-26",
+      "evidence_window": {
+        "start": "2026-05-26T00:30:00.000Z",
+        "end": "2026-05-26T01:44:59.998Z",
+        "duration_min": 75,
+        "evidence_bar_count": 5,
+        "display": "00:30-01:45 UTC - 75 min - 5 candles"
+      },
+      "evidence_bar_count": 5,
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -0.7439,
+      "avg_change_method": "median",
+      "event_direction": "down",
+      "evidence_window_stats": {
+        "window_change_median": -0.7439,
+        "window_change_mean": -0.7082,
+        "window_change_abs_max": 0.8263,
+        "peak_15m_abs_max": 0.4818,
+        "relative_volume_median": 2.1124
+      },
+      "signal_strength": "High",
+      "signal_strength_score": 100,
+      "event_range_context": "broad_broke_low",
+      "chart_context_label": "Range break",
+      "chart_context_score": 100,
+      "event_story_type": "range_break_down",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.2443,
+        "prior_4h_move_pct_median": -0.2925,
+        "post_window_move_pct_median": 0.1387,
+        "post_window_reversal_flag": false,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "continuation",
+      "volatility_context": "expansion_after_compression",
+      "volatility_state": "compressed_to_expanding",
+      "history_support_type": "range_break",
+      "history_support_score": 1,
+      "source_likelihood": 0.6616,
+      "source_likelihood_band": "high",
+      "source_likelihood_reasons": [
+        "broad_participation",
+        "history_range_break",
+        "volume_confirmation",
+        "overnight_thin_liquidity"
+      ],
+      "publish_gate": {
+        "decision": "public",
+        "reasons": [
+          "broad_confirmed_break",
+          "confirmed_break_ge_min",
+          "trend_aligned",
+          "strong_confirmation"
+        ]
+      },
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_continuation",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [],
+      "source_route_hint": [
+        "broad_market",
+        "possible_liquidation_context"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -0.5887,
+          "peak_15m_pct": -0.3242,
+          "volume_x": 1.895,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 77905.52,
+          "prev_24h_low": 76914.25,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -0.4404,
+          "range_break_strength": 1.7618,
+          "distance_to_range_high_pct": 1.6168,
+          "distance_to_range_low_pct": 0.3238,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -0.7439,
+          "peak_15m_pct": -0.4818,
+          "volume_x": 2.0659,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 2141.98,
+          "prev_24h_low": 2092.26,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -0.3551,
+          "range_break_strength": 1.4205,
+          "distance_to_range_high_pct": 2.4464,
+          "distance_to_range_low_pct": 0.0684,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": true
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -0.7586,
+          "peak_15m_pct": -0.2279,
+          "volume_x": 3.1316,
+          "range_position": "near_low",
+          "range_position_label": "Near low",
+          "prev_24h_high": 673.07,
+          "prev_24h_low": 655.76,
+          "range_break_direction": "none",
+          "range_break_type": "none",
+          "range_break_confirmed": false,
+          "range_break_pct": 0,
+          "range_break_strength": 0,
+          "distance_to_range_high_pct": 2.4928,
+          "distance_to_range_low_pct": -0.1431,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -0.8263,
+          "peak_15m_pct": -0.3896,
+          "volume_x": 2.1124,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 86.52,
+          "prev_24h_low": 84.66,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -0.9568,
+          "range_break_strength": 3.8271,
+          "distance_to_range_high_pct": 2.9877,
+          "distance_to_range_low_pct": 0.7737,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -0.6235,
+          "peak_15m_pct": -0.3637,
+          "volume_x": 2.1974,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.3657,
+          "prev_24h_low": 1.3435,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -0.6178,
+          "range_break_strength": 2.4712,
+          "distance_to_range_high_pct": 2.0016,
+          "distance_to_range_low_pct": 0.3436,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "ETHUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "ETHUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": false,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 22320
+      },
+      "macro_delta_min": 22320,
+      "retrospective_post_window": {
+        "post_window_move_pct_median": 0.1387,
+        "post_window_reversal_flag": false,
+        "note": "Retrospective only; not used for detection or publishing."
+      },
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Treat chart context as descriptive market structure, not proof of cause.",
+        "Range Position is descriptive market structure, not advice.",
+        "Use chart context to decide how hard to search and what route to try.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
       "event_id": "vnext_c_cca96e5f_20260526t1015",
       "date_utc": "2026-05-26",
       "evidence_window": {
@@ -1145,29 +1376,29 @@
     },
     {
       "event_mode": "signal_event",
-      "event_id": "vnext_c_6be351f0_20260527t2130",
+      "event_id": "vnext_c_b525c422_20260527t2130",
       "date_utc": "2026-05-27",
       "evidence_window": {
         "start": "2026-05-27T21:30:00.000Z",
-        "end": "2026-05-27T21:59:59.998Z",
-        "duration_min": 30,
-        "evidence_bar_count": 2,
-        "display": "21:30-22:00 UTC - 30 min - 2 candles"
+        "end": "2026-05-27T23:29:59.998Z",
+        "duration_min": 120,
+        "evidence_bar_count": 8,
+        "display": "21:30-23:30 UTC - 120 min - 8 candles"
       },
-      "evidence_bar_count": 2,
+      "evidence_bar_count": 8,
       "direction": "observed_down",
       "signals_count": 5,
       "n_tracked": 5,
       "avg_change_label": "Avg Change",
-      "avg_change_pct": -0.9707,
+      "avg_change_pct": -1.3661,
       "avg_change_method": "median",
       "event_direction": "down",
       "evidence_window_stats": {
-        "window_change_median": -0.9707,
-        "window_change_mean": -1.1028,
-        "window_change_abs_max": 1.7171,
+        "window_change_median": -1.3661,
+        "window_change_mean": -1.4248,
+        "window_change_abs_max": 1.836,
         "peak_15m_abs_max": 1.1394,
-        "relative_volume_median": 3.551
+        "relative_volume_median": 2.3614
       },
       "signal_strength": "High",
       "signal_strength_score": 100,
@@ -1184,7 +1415,7 @@
       "momentum_context": {
         "prior_1h_move_pct_median": -0.202,
         "prior_4h_move_pct_median": 0.2563,
-        "post_window_move_pct_median": 0.1786,
+        "post_window_move_pct_median": 0.23,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
       },
@@ -1193,9 +1424,10 @@
       "volatility_state": "expanding",
       "history_support_type": "range_break",
       "history_support_score": 1,
-      "source_likelihood": 0.7456,
+      "source_likelihood": 0.8049,
       "source_likelihood_band": "high",
       "source_likelihood_reasons": [
+        "large_move",
         "broad_participation",
         "history_range_break",
         "volume_confirmation"
@@ -1222,9 +1454,9 @@
       "per_symbol_window_evidence": [
         {
           "symbol": "BTCUSDT",
-          "window_change_pct": -0.8349,
+          "window_change_pct": -1.0691,
           "peak_15m_pct": -0.6285,
-          "volume_x": 1.5003,
+          "volume_x": 1.2859,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 76174.15,
@@ -1232,10 +1464,10 @@
           "range_break_direction": "down",
           "range_break_type": "broke_low",
           "range_break_confirmed": true,
-          "range_break_pct": -0.4309,
-          "range_break_strength": 1.7234,
-          "distance_to_range_high_pct": 2.2842,
-          "distance_to_range_low_pct": 0.2557,
+          "range_break_pct": -0.5618,
+          "range_break_strength": 2.2472,
+          "distance_to_range_high_pct": 2.5264,
+          "distance_to_range_low_pct": 0.493,
           "highlights": {
             "lead_mover": false,
             "strongest_peak_15m": false
@@ -1243,9 +1475,9 @@
         },
         {
           "symbol": "ETHUSDT",
-          "window_change_pct": -1.7171,
+          "window_change_pct": -1.7998,
           "peak_15m_pct": -1.1394,
-          "volume_x": 4.0621,
+          "volume_x": 3.0287,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 2097.4,
@@ -1255,18 +1487,18 @@
           "range_break_confirmed": true,
           "range_break_pct": -1.3366,
           "range_break_strength": 5.3462,
-          "distance_to_range_high_pct": 3.7783,
-          "distance_to_range_low_pct": 1.1019,
+          "distance_to_range_high_pct": 3.8656,
+          "distance_to_range_low_pct": 1.187,
           "highlights": {
-            "lead_mover": true,
+            "lead_mover": false,
             "strongest_peak_15m": true
           }
         },
         {
           "symbol": "BNBUSDT",
-          "window_change_pct": -0.8407,
+          "window_change_pct": -1.0532,
           "peak_15m_pct": -0.7887,
-          "volume_x": 3.551,
+          "volume_x": 1.2842,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 659.9,
@@ -1274,10 +1506,10 @@
           "range_break_direction": "down",
           "range_break_type": "broke_low",
           "range_break_confirmed": true,
-          "range_break_pct": -0.503,
-          "range_break_strength": 2.0119,
-          "distance_to_range_high_pct": 1.7265,
-          "distance_to_range_low_pct": 0.222,
+          "range_break_pct": -0.5491,
+          "range_break_strength": 2.1964,
+          "distance_to_range_high_pct": 1.945,
+          "distance_to_range_low_pct": 0.4372,
           "highlights": {
             "lead_mover": false,
             "strongest_peak_15m": false
@@ -1285,9 +1517,9 @@
         },
         {
           "symbol": "SOLUSDT",
-          "window_change_pct": -1.1504,
+          "window_change_pct": -1.3661,
           "peak_15m_pct": -0.8508,
-          "volume_x": 3.943,
+          "volume_x": 2.3614,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 84.84,
@@ -1297,8 +1529,8 @@
           "range_break_confirmed": true,
           "range_break_pct": -0.9172,
           "range_break_strength": 3.6688,
-          "distance_to_range_high_pct": 2.8488,
-          "distance_to_range_low_pct": 0.4485,
+          "distance_to_range_high_pct": 3.0737,
+          "distance_to_range_low_pct": 0.6682,
           "highlights": {
             "lead_mover": false,
             "strongest_peak_15m": false
@@ -1306,9 +1538,9 @@
         },
         {
           "symbol": "XRPUSDT",
-          "window_change_pct": -0.9707,
+          "window_change_pct": -1.836,
           "peak_15m_pct": -0.8427,
-          "volume_x": 2.7249,
+          "volume_x": 2.3687,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 1.3437,
@@ -1316,22 +1548,22 @@
           "range_break_direction": "down",
           "range_break_type": "broke_low",
           "range_break_confirmed": true,
-          "range_break_pct": -0.463,
-          "range_break_strength": 1.852,
-          "distance_to_range_high_pct": 2.0971,
-          "distance_to_range_low_pct": 0.1064,
+          "range_break_pct": -1.0778,
+          "range_break_strength": 4.3112,
+          "distance_to_range_high_pct": 2.9971,
+          "distance_to_range_low_pct": 0.9888,
           "highlights": {
-            "lead_mover": false,
+            "lead_mover": true,
             "strongest_peak_15m": false
           }
         }
       ],
       "table_highlights": {
-        "lead_mover_symbol": "ETHUSDT",
+        "lead_mover_symbol": "XRPUSDT",
         "strongest_peak_symbol": "ETHUSDT",
         "highlight_cells": [
           {
-            "symbol": "ETHUSDT",
+            "symbol": "XRPUSDT",
             "column": "symbol",
             "reason": "lead_mover"
           },
@@ -1342,7 +1574,7 @@
           }
         ]
       },
-      "show_peak_details": true,
+      "show_peak_details": false,
       "macro_aligned": false,
       "nearest_macro_event": {
         "id": "us_cpi_2026_06_10",
@@ -1354,7 +1586,7 @@
       },
       "macro_delta_min": 19620,
       "retrospective_post_window": {
-        "post_window_move_pct_median": 0.1786,
+        "post_window_move_pct_median": 0.23,
         "post_window_reversal_flag": false,
         "note": "Retrospective only; not used for detection or publishing."
       },
@@ -1372,29 +1604,29 @@
     },
     {
       "event_mode": "signal_event",
-      "event_id": "vnext_c_ccfd0579_20260528t0315",
+      "event_id": "vnext_c_1d469c0e_20260528t0315",
       "date_utc": "2026-05-28",
       "evidence_window": {
         "start": "2026-05-28T03:15:00.000Z",
-        "end": "2026-05-28T04:29:59.998Z",
-        "duration_min": 75,
-        "evidence_bar_count": 5,
-        "display": "03:15-04:30 UTC - 75 min - 5 candles"
+        "end": "2026-05-28T05:29:59.998Z",
+        "duration_min": 135,
+        "evidence_bar_count": 9,
+        "display": "03:15-05:30 UTC - 135 min - 9 candles"
       },
-      "evidence_bar_count": 5,
+      "evidence_bar_count": 9,
       "direction": "observed_down",
       "signals_count": 5,
       "n_tracked": 5,
       "avg_change_label": "Avg Change",
-      "avg_change_pct": -1.6669,
+      "avg_change_pct": -1.6897,
       "avg_change_method": "median",
       "event_direction": "down",
       "evidence_window_stats": {
-        "window_change_median": -1.6669,
-        "window_change_mean": -1.7271,
-        "window_change_abs_max": 2.0822,
+        "window_change_median": -1.6897,
+        "window_change_mean": -1.7341,
+        "window_change_abs_max": 1.8888,
         "peak_15m_abs_max": 1.2592,
-        "relative_volume_median": 6.0176
+        "relative_volume_median": 4.0216
       },
       "signal_strength": "High",
       "signal_strength_score": 100,
@@ -1411,7 +1643,7 @@
       "momentum_context": {
         "prior_1h_move_pct_median": -0.1868,
         "prior_4h_move_pct_median": -0.2664,
-        "post_window_move_pct_median": 0.2432,
+        "post_window_move_pct_median": 0.2353,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
       },
@@ -1420,7 +1652,7 @@
       "volatility_state": "compressed_to_expanding",
       "history_support_type": "range_break",
       "history_support_score": 1,
-      "source_likelihood": 0.8,
+      "source_likelihood": 0.8035,
       "source_likelihood_band": "high",
       "source_likelihood_reasons": [
         "large_move",
@@ -1454,9 +1686,9 @@
       "per_symbol_window_evidence": [
         {
           "symbol": "BTCUSDT",
-          "window_change_pct": -1.6272,
+          "window_change_pct": -1.6897,
           "peak_15m_pct": -0.6272,
-          "volume_x": 6.0176,
+          "volume_x": 4.0216,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 76174.15,
@@ -1466,8 +1698,8 @@
           "range_break_confirmed": true,
           "range_break_pct": -1.8869,
           "range_break_strength": 7.5476,
-          "distance_to_range_high_pct": 4.3419,
-          "distance_to_range_low_pct": 1.5385,
+          "distance_to_range_high_pct": 4.4082,
+          "distance_to_range_low_pct": 1.6031,
           "highlights": {
             "lead_mover": false,
             "strongest_peak_15m": false
@@ -1475,9 +1707,9 @@
         },
         {
           "symbol": "ETHUSDT",
-          "window_change_pct": -1.6669,
+          "window_change_pct": -1.8888,
           "peak_15m_pct": -1.2592,
-          "volume_x": 7.6307,
+          "volume_x": 4.536,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 2097.4,
@@ -1487,18 +1719,18 @@
           "range_break_confirmed": true,
           "range_break_pct": -2.1573,
           "range_break_strength": 8.6293,
-          "distance_to_range_high_pct": 5.9084,
-          "distance_to_range_low_pct": 1.5138,
+          "distance_to_range_high_pct": 6.148,
+          "distance_to_range_low_pct": 1.7435,
           "highlights": {
-            "lead_mover": false,
+            "lead_mover": true,
             "strongest_peak_15m": true
           }
         },
         {
           "symbol": "BNBUSDT",
-          "window_change_pct": -1.2828,
+          "window_change_pct": -1.6633,
           "peak_15m_pct": -0.4005,
-          "volume_x": 6.0537,
+          "volume_x": 3.8931,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 659.9,
@@ -1506,10 +1738,10 @@
           "range_break_direction": "down",
           "range_break_type": "broke_low",
           "range_break_confirmed": true,
-          "range_break_pct": -1.6299,
-          "range_break_strength": 6.5196,
-          "distance_to_range_high_pct": 3.8134,
-          "distance_to_range_low_pct": 1.2491,
+          "range_break_pct": -1.6485,
+          "range_break_strength": 6.5942,
+          "distance_to_range_high_pct": 4.215,
+          "distance_to_range_low_pct": 1.6408,
           "highlights": {
             "lead_mover": false,
             "strongest_peak_15m": false
@@ -1517,9 +1749,9 @@
         },
         {
           "symbol": "SOLUSDT",
-          "window_change_pct": -1.9766,
+          "window_change_pct": -1.7692,
           "peak_15m_pct": -0.6955,
-          "volume_x": 4.3745,
+          "volume_x": 2.7849,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 84.84,
@@ -1529,8 +1761,8 @@
           "range_break_confirmed": true,
           "range_break_pct": -2.2005,
           "range_break_strength": 8.802,
-          "distance_to_range_high_pct": 5.6012,
-          "distance_to_range_low_pct": 1.8173,
+          "distance_to_range_high_pct": 5.3782,
+          "distance_to_range_low_pct": 1.6023,
           "highlights": {
             "lead_mover": false,
             "strongest_peak_15m": false
@@ -1538,9 +1770,9 @@
         },
         {
           "symbol": "XRPUSDT",
-          "window_change_pct": -2.0822,
+          "window_change_pct": -1.6596,
           "peak_15m_pct": -0.922,
-          "volume_x": 5.5343,
+          "volume_x": 4.1554,
           "range_position": "broke_low",
           "range_position_label": "Broke low",
           "prev_24h_high": 1.3437,
@@ -1550,20 +1782,20 @@
           "range_break_confirmed": true,
           "range_break_pct": -2.3268,
           "range_break_strength": 9.3073,
-          "distance_to_range_high_pct": 5.4379,
-          "distance_to_range_low_pct": 1.844,
+          "distance_to_range_high_pct": 4.9848,
+          "distance_to_range_low_pct": 1.4064,
           "highlights": {
-            "lead_mover": true,
+            "lead_mover": false,
             "strongest_peak_15m": false
           }
         }
       ],
       "table_highlights": {
-        "lead_mover_symbol": "XRPUSDT",
+        "lead_mover_symbol": "ETHUSDT",
         "strongest_peak_symbol": "ETHUSDT",
         "highlight_cells": [
           {
-            "symbol": "XRPUSDT",
+            "symbol": "ETHUSDT",
             "column": "symbol",
             "reason": "lead_mover"
           },
@@ -1586,7 +1818,7 @@
       },
       "macro_delta_min": 19275,
       "retrospective_post_window": {
-        "post_window_move_pct_median": 0.2432,
+        "post_window_move_pct_median": 0.2353,
         "post_window_reversal_flag": false,
         "note": "Retrospective only; not used for detection or publishing."
       },
@@ -1813,6 +2045,237 @@
       "retrospective_post_window": {
         "post_window_move_pct_median": 1.6669,
         "post_window_reversal_flag": true,
+        "note": "Retrospective only; not used for detection or publishing."
+      },
+      "instructions": [
+        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
+        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
+        "Do not force a cause when sources are weak or missing.",
+        "Treat chart context as descriptive market structure, not proof of cause.",
+        "Range Position is descriptive market structure, not advice.",
+        "Use chart context to decide how hard to search and what route to try.",
+        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
+        "Do not provide trading advice, forecasts, price targets, or recommendations.",
+        "Return JSON only."
+      ]
+    },
+    {
+      "event_mode": "signal_event",
+      "event_id": "vnext_c_1357e2a2_20260602t1415",
+      "date_utc": "2026-06-02",
+      "evidence_window": {
+        "start": "2026-06-02T14:15:00.000Z",
+        "end": "2026-06-02T15:29:59.998Z",
+        "duration_min": 75,
+        "evidence_bar_count": 5,
+        "display": "14:15-15:30 UTC - 75 min - 5 candles"
+      },
+      "evidence_bar_count": 5,
+      "direction": "observed_down",
+      "signals_count": 5,
+      "n_tracked": 5,
+      "avg_change_label": "Avg Change",
+      "avg_change_pct": -2.5189,
+      "avg_change_method": "median",
+      "event_direction": "down",
+      "evidence_window_stats": {
+        "window_change_median": -2.5189,
+        "window_change_mean": -2.27,
+        "window_change_abs_max": 2.9737,
+        "peak_15m_abs_max": 2.0342,
+        "relative_volume_median": 4.7213
+      },
+      "signal_strength": "High",
+      "signal_strength_score": 100,
+      "event_range_context": "broad_broke_low",
+      "chart_context_label": "Range break",
+      "chart_context_score": 100,
+      "event_story_type": "range_break_down",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.5812,
+        "prior_4h_move_pct_median": -0.5875,
+        "post_window_move_pct_median": -0.216,
+        "post_window_reversal_flag": false,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "continuation",
+      "volatility_context": "expansion_after_compression",
+      "volatility_state": "compressed_to_expanding",
+      "history_support_type": "range_break",
+      "history_support_score": 1,
+      "source_likelihood": 0.9,
+      "source_likelihood_band": "high",
+      "source_likelihood_reasons": [
+        "large_move",
+        "broad_participation",
+        "history_range_break",
+        "volume_confirmation"
+      ],
+      "publish_gate": {
+        "decision": "public",
+        "reasons": [
+          "broad_confirmed_break",
+          "confirmed_break_ge_min",
+          "trend_aligned",
+          "move_ge_min"
+        ]
+      },
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_continuation",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": [],
+      "source_route_hint": [
+        "broad_market",
+        "possible_liquidation_context"
+      ],
+      "per_symbol_window_evidence": [
+        {
+          "symbol": "BTCUSDT",
+          "window_change_pct": -1.6534,
+          "peak_15m_pct": -1.0202,
+          "volume_x": 3.4088,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 71800.73,
+          "prev_24h_low": 68307.8,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -1.3691,
+          "range_break_strength": 5.4763,
+          "distance_to_range_high_pct": 6.4503,
+          "distance_to_range_low_pct": 1.2718,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "window_change_pct": -2.8025,
+          "peak_15m_pct": -1.5819,
+          "volume_x": 5.4008,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 2009.2,
+          "prev_24h_low": 1958.79,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -2.6424,
+          "range_break_strength": 10.5698,
+          "distance_to_range_high_pct": 5.0425,
+          "distance_to_range_low_pct": 2.407,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "window_change_pct": -1.4016,
+          "peak_15m_pct": -1.0039,
+          "volume_x": 3.2363,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 701.73,
+          "prev_24h_low": 671.72,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -0.7875,
+          "range_break_strength": 3.1501,
+          "distance_to_range_high_pct": 5.2258,
+          "distance_to_range_low_pct": 0.7258,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "SOLUSDT",
+          "window_change_pct": -2.9737,
+          "peak_15m_pct": -1.8173,
+          "volume_x": 4.7213,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 81.65,
+          "prev_24h_low": 78.25,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -2.5431,
+          "range_break_strength": 10.1725,
+          "distance_to_range_high_pct": 6.9417,
+          "distance_to_range_low_pct": 2.4885,
+          "highlights": {
+            "lead_mover": true,
+            "strongest_peak_15m": false
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "window_change_pct": -2.5189,
+          "peak_15m_pct": -2.0342,
+          "volume_x": 5.7842,
+          "range_position": "broke_low",
+          "range_position_label": "Broke low",
+          "prev_24h_high": 1.3053,
+          "prev_24h_low": 1.2509,
+          "range_break_direction": "down",
+          "range_break_type": "broke_low",
+          "range_break_confirmed": true,
+          "range_break_pct": -2.1345,
+          "range_break_strength": 8.5379,
+          "distance_to_range_high_pct": 6.3988,
+          "distance_to_range_low_pct": 1.9645,
+          "highlights": {
+            "lead_mover": false,
+            "strongest_peak_15m": true
+          }
+        }
+      ],
+      "table_highlights": {
+        "lead_mover_symbol": "SOLUSDT",
+        "strongest_peak_symbol": "XRPUSDT",
+        "highlight_cells": [
+          {
+            "symbol": "SOLUSDT",
+            "column": "symbol",
+            "reason": "lead_mover"
+          },
+          {
+            "symbol": "XRPUSDT",
+            "column": "peak_15m",
+            "reason": "strongest_peak_15m"
+          }
+        ]
+      },
+      "show_peak_details": false,
+      "macro_aligned": false,
+      "nearest_macro_event": {
+        "id": "us_cpi_2026_06_10",
+        "type": "CPI",
+        "title": "US CPI release",
+        "scheduled_at": "2026-06-10T12:30:00.000Z",
+        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
+        "delta_min": 11415
+      },
+      "macro_delta_min": 11415,
+      "retrospective_post_window": {
+        "post_window_move_pct_median": -0.216,
+        "post_window_reversal_flag": false,
         "note": "Retrospective only; not used for detection or publishing."
       },
       "instructions": [
@@ -2290,29 +2753,29 @@
     },
     {
       "event_mode": "signal_event",
-      "event_id": "vnext_c_ddbc80a1_20260604t0215",
+      "event_id": "vnext_c_6c394e07_20260604t0300",
       "date_utc": "2026-06-04",
       "evidence_window": {
-        "start": "2026-06-04T02:15:00.000Z",
+        "start": "2026-06-04T03:00:00.000Z",
         "end": "2026-06-04T03:44:59.998Z",
-        "duration_min": 90,
-        "evidence_bar_count": 6,
-        "display": "02:15-03:45 UTC - 90 min - 6 candles"
+        "duration_min": 45,
+        "evidence_bar_count": 3,
+        "display": "03:00-03:45 UTC - 45 min - 3 candles"
       },
-      "evidence_bar_count": 6,
+      "evidence_bar_count": 3,
       "direction": "observed_up",
       "signals_count": 5,
       "n_tracked": 5,
       "avg_change_label": "Avg Change",
-      "avg_change_pct": 3.6127,
+      "avg_change_pct": 2.1407,
       "avg_change_method": "median",
       "event_direction": "up",
       "evidence_window_stats": {
-        "window_change_median": 3.6127,
-        "window_change_mean": 3.7681,
-        "window_change_abs_max": 4.8645,
+        "window_change_median": 2.1407,
+        "window_change_mean": 2.1242,
+        "window_change_abs_max": 2.3641,
         "peak_15m_abs_max": 1.6251,
-        "relative_volume_median": 2.1553
+        "relative_volume_median": 1.9315
       },
       "signal_strength": "High",
       "signal_strength_score": 100,
@@ -2324,11 +2787,11 @@
         "trend_context": "trend_down",
         "trend_alignment": "trend_reversal_attempt",
         "trend_direction_majority": "down",
-        "trend_strength_median": "strong"
+        "trend_strength_median": "very_strong"
       },
       "momentum_context": {
-        "prior_1h_move_pct_median": -1.165,
-        "prior_4h_move_pct_median": -4.5648,
+        "prior_1h_move_pct_median": 1.3721,
+        "prior_4h_move_pct_median": -2.4638,
         "post_window_move_pct_median": 0.2317,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
@@ -2367,9 +2830,9 @@
       "per_symbol_window_evidence": [
         {
           "symbol": "BTCUSDT",
-          "window_change_pct": 3.1843,
+          "window_change_pct": 1.8301,
           "peak_15m_pct": 1.1525,
-          "volume_x": 2.5644,
+          "volume_x": 2.0545,
           "range_position": "inside_range",
           "range_position_label": "Inside range",
           "prev_24h_high": 67516,
@@ -2388,9 +2851,9 @@
         },
         {
           "symbol": "ETHUSDT",
-          "window_change_pct": 3.6127,
+          "window_change_pct": 2.3641,
           "peak_15m_pct": 1.5118,
-          "volume_x": 1.6338,
+          "volume_x": 1.5475,
           "range_position": "inside_range",
           "range_position_label": "Inside range",
           "prev_24h_high": 1893.07,
@@ -2403,25 +2866,25 @@
           "distance_to_range_high_pct": 4.671,
           "distance_to_range_low_pct": -5.0487,
           "highlights": {
-            "lead_mover": false,
+            "lead_mover": true,
             "strongest_peak_15m": false
           }
         },
         {
           "symbol": "BNBUSDT",
-          "window_change_pct": 3.4177,
-          "peak_15m_pct": 1.142,
-          "volume_x": 1.7587,
+          "window_change_pct": 2.0179,
+          "peak_15m_pct": 1.1282,
+          "volume_x": 1.5693,
           "range_position": "inside_range",
           "range_position_label": "Inside range",
-          "prev_24h_high": 648.31,
+          "prev_24h_high": 646.78,
           "prev_24h_low": 590.46,
           "range_break_direction": "none",
           "range_break_type": "none",
           "range_break_confirmed": false,
           "range_break_pct": 0,
           "range_break_strength": 0,
-          "distance_to_range_high_pct": 4.5122,
+          "distance_to_range_high_pct": 4.2655,
           "distance_to_range_low_pct": -4.8136,
           "highlights": {
             "lead_mover": false,
@@ -2430,9 +2893,9 @@
         },
         {
           "symbol": "SOLUSDT",
-          "window_change_pct": 4.8645,
-          "peak_15m_pct": 1.5678,
-          "volume_x": 2.1553,
+          "window_change_pct": 2.1407,
+          "peak_15m_pct": 1.2987,
+          "volume_x": 2.1631,
           "range_position": "inside_range",
           "range_position_label": "Inside range",
           "prev_24h_high": 75.71,
@@ -2445,15 +2908,15 @@
           "distance_to_range_high_pct": 5.7845,
           "distance_to_range_low_pct": -6.6648,
           "highlights": {
-            "lead_mover": true,
+            "lead_mover": false,
             "strongest_peak_15m": false
           }
         },
         {
           "symbol": "XRPUSDT",
-          "window_change_pct": 3.7613,
+          "window_change_pct": 2.2683,
           "peak_15m_pct": 1.6251,
-          "volume_x": 2.2971,
+          "volume_x": 1.9315,
           "range_position": "inside_range",
           "range_position_label": "Inside range",
           "prev_24h_high": 1.2491,
@@ -2472,11 +2935,11 @@
         }
       ],
       "table_highlights": {
-        "lead_mover_symbol": "SOLUSDT",
+        "lead_mover_symbol": "ETHUSDT",
         "strongest_peak_symbol": "XRPUSDT",
         "highlight_cells": [
           {
-            "symbol": "SOLUSDT",
+            "symbol": "ETHUSDT",
             "column": "symbol",
             "reason": "lead_mover"
           },
@@ -3656,259 +4119,29 @@
     },
     {
       "event_mode": "signal_event",
-      "event_id": "vnext_c_2b93a760_20260612t1445",
-      "date_utc": "2026-06-12",
-      "evidence_window": {
-        "start": "2026-06-12T14:45:00.000Z",
-        "end": "2026-06-12T15:14:59.998Z",
-        "duration_min": 30,
-        "evidence_bar_count": 2,
-        "display": "14:45-15:15 UTC - 30 min - 2 candles"
-      },
-      "evidence_bar_count": 2,
-      "direction": "observed_up",
-      "signals_count": 5,
-      "n_tracked": 5,
-      "avg_change_label": "Avg Change",
-      "avg_change_pct": 1.3659,
-      "avg_change_method": "median",
-      "event_direction": "up",
-      "evidence_window_stats": {
-        "window_change_median": 1.3659,
-        "window_change_mean": 1.508,
-        "window_change_abs_max": 2.3207,
-        "peak_15m_abs_max": 1.2364,
-        "relative_volume_median": 4.2922
-      },
-      "signal_strength": "High",
-      "signal_strength_score": 100,
-      "event_range_context": "broad_broke_high",
-      "chart_context_label": "Range break",
-      "chart_context_score": 100,
-      "event_story_type": "range_break_up",
-      "trend_context": {
-        "trend_context": "trend_mixed",
-        "trend_alignment": "no_clear_trend",
-        "trend_direction_majority": "mixed",
-        "trend_strength_median": "strong"
-      },
-      "momentum_context": {
-        "prior_1h_move_pct_median": 0.6775,
-        "prior_4h_move_pct_median": -0.3099,
-        "post_window_move_pct_median": -1.0982,
-        "post_window_reversal_flag": true,
-        "retrospective_post_window_only": true
-      },
-      "momentum_type": "impulse",
-      "volatility_context": "expansion_after_compression",
-      "volatility_state": "compressed_to_expanding",
-      "history_support_type": "range_break",
-      "history_support_score": 1,
-      "source_likelihood": 0.8049,
-      "source_likelihood_band": "high",
-      "source_likelihood_reasons": [
-        "large_move",
-        "broad_participation",
-        "history_range_break",
-        "volume_confirmation"
-      ],
-      "publish_gate": {
-        "decision": "public",
-        "reasons": [
-          "broad_confirmed_break",
-          "confirmed_break_ge_min",
-          "adx_median_ge_25",
-          "move_ge_min"
-        ]
-      },
-      "chart_context_reasons": [
-        "broad_range_break",
-        "momentum_impulse",
-        "volatility_expansion_after_compression",
-        "strong_direction_consistency",
-        "volume_confirmation"
-      ],
-      "chart_context_warnings": [],
-      "source_route_hint": [
-        "broad_market",
-        "possible_liquidation_context"
-      ],
-      "per_symbol_window_evidence": [
-        {
-          "symbol": "BTCUSDT",
-          "window_change_pct": 1.3659,
-          "peak_15m_pct": 0.7801,
-          "volume_x": 3.43,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 63953.84,
-          "prev_24h_low": 62348,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 0.6664,
-          "range_break_strength": 2.6654,
-          "distance_to_range_high_pct": -0.6496,
-          "distance_to_range_low_pct": -3.1442,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        },
-        {
-          "symbol": "ETHUSDT",
-          "window_change_pct": 1.2745,
-          "peak_15m_pct": 1.0073,
-          "volume_x": 4.3787,
-          "range_position": "near_high",
-          "range_position_label": "Near high",
-          "prev_24h_high": 1693.59,
-          "prev_24h_low": 1632.71,
-          "range_break_direction": "none",
-          "range_break_type": "none",
-          "range_break_confirmed": false,
-          "range_break_pct": 0,
-          "range_break_strength": 0,
-          "distance_to_range_high_pct": 0.2065,
-          "distance_to_range_low_pct": -3.3957,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        },
-        {
-          "symbol": "BNBUSDT",
-          "window_change_pct": 0.9454,
-          "peak_15m_pct": 0.5447,
-          "volume_x": 3.0465,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 610.19,
-          "prev_24h_low": 596.03,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 0.5244,
-          "range_break_strength": 2.0977,
-          "distance_to_range_high_pct": -0.4357,
-          "distance_to_range_low_pct": -2.7461,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        },
-        {
-          "symbol": "SOLUSDT",
-          "window_change_pct": 2.3207,
-          "peak_15m_pct": 1.2364,
-          "volume_x": 7.8462,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 67.55,
-          "prev_24h_low": 65,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 1.8209,
-          "range_break_strength": 7.2835,
-          "distance_to_range_high_pct": -1.7883,
-          "distance_to_range_low_pct": -5.4958,
-          "highlights": {
-            "lead_mover": true,
-            "strongest_peak_15m": true
-          }
-        },
-        {
-          "symbol": "XRPUSDT",
-          "window_change_pct": 1.6337,
-          "peak_15m_pct": 0.8959,
-          "volume_x": 4.2922,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 1.1519,
-          "prev_24h_low": 1.1042,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 0.4514,
-          "range_break_strength": 1.8057,
-          "distance_to_range_high_pct": -0.4494,
-          "distance_to_range_low_pct": -4.5718,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        }
-      ],
-      "table_highlights": {
-        "lead_mover_symbol": "SOLUSDT",
-        "strongest_peak_symbol": "SOLUSDT",
-        "highlight_cells": [
-          {
-            "symbol": "SOLUSDT",
-            "column": "symbol",
-            "reason": "lead_mover"
-          },
-          {
-            "symbol": "SOLUSDT",
-            "column": "peak_15m",
-            "reason": "strongest_peak_15m"
-          }
-        ]
-      },
-      "show_peak_details": true,
-      "macro_aligned": false,
-      "nearest_macro_event": {
-        "id": "us_cpi_2026_06_10",
-        "type": "CPI",
-        "title": "US CPI release",
-        "scheduled_at": "2026-06-10T12:30:00.000Z",
-        "source_query_hint": "US CPI June 10 2026 crypto market reaction",
-        "delta_min": 3015
-      },
-      "macro_delta_min": 3015,
-      "retrospective_post_window": {
-        "post_window_move_pct_median": -1.0982,
-        "post_window_reversal_flag": true,
-        "note": "Retrospective only; not used for detection or publishing."
-      },
-      "instructions": [
-        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
-        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
-        "Do not force a cause when sources are weak or missing.",
-        "Treat chart context as descriptive market structure, not proof of cause.",
-        "Range Position is descriptive market structure, not advice.",
-        "Use chart context to decide how hard to search and what route to try.",
-        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
-        "Do not provide trading advice, forecasts, price targets, or recommendations.",
-        "Return JSON only."
-      ]
-    },
-    {
-      "event_mode": "signal_event",
-      "event_id": "vnext_c_22ab4df7_20260614t2115",
+      "event_id": "vnext_c_a45cf681_20260614t2115",
       "date_utc": "2026-06-14",
       "evidence_window": {
         "start": "2026-06-14T21:15:00.000Z",
-        "end": "2026-06-14T21:44:59.998Z",
-        "duration_min": 30,
-        "evidence_bar_count": 2,
-        "display": "21:15-21:45 UTC - 30 min - 2 candles"
+        "end": "2026-06-15T00:14:59.998Z",
+        "duration_min": 180,
+        "evidence_bar_count": 12,
+        "display": "21:15-00:15 UTC - 180 min - 12 candles"
       },
-      "evidence_bar_count": 2,
+      "evidence_bar_count": 12,
       "direction": "observed_up",
       "signals_count": 5,
       "n_tracked": 5,
       "avg_change_label": "Avg Change",
-      "avg_change_pct": 2.3676,
+      "avg_change_pct": 3.5295,
       "avg_change_method": "median",
       "event_direction": "up",
       "evidence_window_stats": {
-        "window_change_median": 2.3676,
-        "window_change_mean": 2.3177,
-        "window_change_abs_max": 3.249,
+        "window_change_median": 3.5295,
+        "window_change_mean": 3.5702,
+        "window_change_abs_max": 5.3808,
         "peak_15m_abs_max": 1.8377,
-        "relative_volume_median": 14.7966
+        "relative_volume_median": 4.7242
       },
       "signal_strength": "High",
       "signal_strength_score": 100,
@@ -3925,8 +4158,8 @@
       "momentum_context": {
         "prior_1h_move_pct_median": 0.3942,
         "prior_4h_move_pct_median": 0.3255,
-        "post_window_move_pct_median": -0.0854,
-        "post_window_reversal_flag": false,
+        "post_window_move_pct_median": -0.5302,
+        "post_window_reversal_flag": true,
         "retrospective_post_window_only": true
       },
       "momentum_type": "impulse",
@@ -3965,9 +4198,9 @@
       "per_symbol_window_evidence": [
         {
           "symbol": "BTCUSDT",
-          "window_change_pct": 1.8207,
+          "window_change_pct": 2.7837,
           "peak_15m_pct": 1.0474,
-          "volume_x": 15.9101,
+          "volume_x": 4.7242,
           "range_position": "broke_high",
           "range_position_label": "Broke high",
           "prev_24h_high": 64762.77,
@@ -3975,239 +4208,9 @@
           "range_break_direction": "up",
           "range_break_type": "broke_high",
           "range_break_confirmed": true,
-          "range_break_pct": 1.0422,
-          "range_break_strength": 4.1689,
-          "distance_to_range_high_pct": -0.7781,
-          "distance_to_range_low_pct": -2.4388,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        },
-        {
-          "symbol": "ETHUSDT",
-          "window_change_pct": 2.6284,
-          "peak_15m_pct": 1.7047,
-          "volume_x": 18.6404,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 1697.28,
-          "prev_24h_low": 1654.9,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 1.6291,
-          "range_break_strength": 6.5163,
-          "distance_to_range_high_pct": -1.1163,
-          "distance_to_range_low_pct": -3.5853,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        },
-        {
-          "symbol": "BNBUSDT",
-          "window_change_pct": 1.5229,
-          "peak_15m_pct": 1.0345,
-          "volume_x": 5.3776,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 613.03,
-          "prev_24h_low": 602.79,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 0.4828,
-          "range_break_strength": 1.9314,
-          "distance_to_range_high_pct": -0.3722,
-          "distance_to_range_low_pct": -2.0363,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        },
-        {
-          "symbol": "SOLUSDT",
-          "window_change_pct": 3.249,
-          "peak_15m_pct": 1.8377,
-          "volume_x": 14.7966,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 69.59,
-          "prev_24h_low": 66.94,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 1.1352,
-          "range_break_strength": 4.5409,
-          "distance_to_range_high_pct": -0.9113,
-          "distance_to_range_low_pct": -4.6846,
-          "highlights": {
-            "lead_mover": true,
-            "strongest_peak_15m": true
-          }
-        },
-        {
-          "symbol": "XRPUSDT",
-          "window_change_pct": 2.3676,
-          "peak_15m_pct": 1.4293,
-          "volume_x": 14.1861,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 1.1568,
-          "prev_24h_low": 1.1268,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 1.1843,
-          "range_break_strength": 4.7372,
-          "distance_to_range_high_pct": -0.908,
-          "distance_to_range_low_pct": -3.4778,
-          "highlights": {
-            "lead_mover": false,
-            "strongest_peak_15m": false
-          }
-        }
-      ],
-      "table_highlights": {
-        "lead_mover_symbol": "SOLUSDT",
-        "strongest_peak_symbol": "SOLUSDT",
-        "highlight_cells": [
-          {
-            "symbol": "SOLUSDT",
-            "column": "symbol",
-            "reason": "lead_mover"
-          },
-          {
-            "symbol": "SOLUSDT",
-            "column": "peak_15m",
-            "reason": "strongest_peak_15m"
-          }
-        ]
-      },
-      "show_peak_details": true,
-      "macro_aligned": false,
-      "nearest_macro_event": {
-        "id": "fomc_decision_2026_06_17",
-        "type": "FOMC decision",
-        "title": "FOMC decision",
-        "scheduled_at": "2026-06-17T18:00:00.000Z",
-        "source_query_hint": "FOMC decision June 17 2026 Bitcoin crypto reaction",
-        "delta_min": 4125
-      },
-      "macro_delta_min": 4125,
-      "retrospective_post_window": {
-        "post_window_move_pct_median": -0.0854,
-        "post_window_reversal_flag": false,
-        "note": "Retrospective only; not used for detection or publishing."
-      },
-      "instructions": [
-        "Classify the signal event as Focused Cause, Likely Cause, Market Backdrop, No Clear Cause, or Claude Limited.",
-        "Use source tags: Focused catalyst source, Likely cause source, Backdrop source, Price check source.",
-        "Do not force a cause when sources are weak or missing.",
-        "Treat chart context as descriptive market structure, not proof of cause.",
-        "Range Position is descriptive market structure, not advice.",
-        "Use chart context to decide how hard to search and what route to try.",
-        "Do not over-focus on one 15-minute candle unless the event is macro-aligned or a sharp impulse.",
-        "Do not provide trading advice, forecasts, price targets, or recommendations.",
-        "Return JSON only."
-      ]
-    },
-    {
-      "event_mode": "signal_event",
-      "event_id": "vnext_c_6e7738b4_20260614t2230",
-      "date_utc": "2026-06-14",
-      "evidence_window": {
-        "start": "2026-06-14T22:30:00.000Z",
-        "end": "2026-06-15T00:14:59.998Z",
-        "duration_min": 105,
-        "evidence_bar_count": 7,
-        "display": "22:30-00:15 UTC - 105 min - 7 candles"
-      },
-      "evidence_bar_count": 7,
-      "direction": "observed_up",
-      "signals_count": 5,
-      "n_tracked": 5,
-      "avg_change_label": "Avg Change",
-      "avg_change_pct": 1.03,
-      "avg_change_method": "median",
-      "event_direction": "up",
-      "evidence_window_stats": {
-        "window_change_median": 1.03,
-        "window_change_mean": 1.1981,
-        "window_change_abs_max": 2.1374,
-        "peak_15m_abs_max": 0.8061,
-        "relative_volume_median": 3.509
-      },
-      "signal_strength": "High",
-      "signal_strength_score": 100,
-      "event_range_context": "broad_broke_high",
-      "chart_context_label": "Range break",
-      "chart_context_score": 100,
-      "event_story_type": "range_break_up",
-      "trend_context": {
-        "trend_context": "trend_up",
-        "trend_alignment": "aligned_with_trend",
-        "trend_direction_majority": "up",
-        "trend_strength_median": "very_strong"
-      },
-      "momentum_context": {
-        "prior_1h_move_pct_median": -0.0712,
-        "prior_4h_move_pct_median": 3.4322,
-        "post_window_move_pct_median": -0.5302,
-        "post_window_reversal_flag": true,
-        "retrospective_post_window_only": true
-      },
-      "momentum_type": "continuation",
-      "volatility_context": "high_volatility_continuation",
-      "volatility_state": "expanding",
-      "history_support_type": "range_break",
-      "history_support_score": 0.9,
-      "source_likelihood": 0.6195,
-      "source_likelihood_band": "high",
-      "source_likelihood_reasons": [
-        "large_move",
-        "broad_participation",
-        "history_range_break",
-        "volume_confirmation",
-        "weekend_thin_liquidity"
-      ],
-      "publish_gate": {
-        "decision": "public",
-        "reasons": [
-          "broad_confirmed_break",
-          "confirmed_break_ge_min",
-          "trend_aligned",
-          "move_ge_min"
-        ]
-      },
-      "chart_context_reasons": [
-        "broad_range_break",
-        "trend_aligned",
-        "momentum_continuation",
-        "strong_direction_consistency",
-        "volume_confirmation"
-      ],
-      "chart_context_warnings": [],
-      "source_route_hint": [
-        "broad_market"
-      ],
-      "per_symbol_window_evidence": [
-        {
-          "symbol": "BTCUSDT",
-          "window_change_pct": 1.03,
-          "peak_15m_pct": 0.3882,
-          "volume_x": 2.7595,
-          "range_position": "broke_high",
-          "range_position_label": "Broke high",
-          "prev_24h_high": 65666,
-          "prev_24h_low": 63678.83,
-          "range_break_direction": "up",
-          "range_break_type": "broke_high",
-          "range_break_confirmed": true,
-          "range_break_pct": 0.3914,
-          "range_break_strength": 1.5655,
-          "distance_to_range_high_pct": -0.3369,
+          "range_break_pct": 1.7915,
+          "range_break_strength": 7.166,
+          "distance_to_range_high_pct": -1.7078,
           "distance_to_range_low_pct": -3.3529,
           "highlights": {
             "lead_mover": false,
@@ -4216,19 +4219,19 @@
         },
         {
           "symbol": "ETHUSDT",
-          "window_change_pct": 0.6013,
-          "peak_15m_pct": 0.3548,
-          "volume_x": 4.38,
-          "range_position": "near_high",
-          "range_position_label": "Near high",
-          "prev_24h_high": 1732.28,
+          "window_change_pct": 3.5295,
+          "peak_15m_pct": 1.7047,
+          "volume_x": 7.8519,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 1697.28,
           "prev_24h_low": 1654.9,
-          "range_break_direction": "none",
-          "range_break_type": "none",
-          "range_break_confirmed": false,
-          "range_break_pct": 0,
-          "range_break_strength": 0,
-          "distance_to_range_high_pct": 0.0445,
+          "range_break_direction": "up",
+          "range_break_type": "broke_high",
+          "range_break_confirmed": true,
+          "range_break_pct": 2.1069,
+          "range_break_strength": 8.4276,
+          "distance_to_range_high_pct": -1.9769,
           "distance_to_range_low_pct": -4.4245,
           "highlights": {
             "lead_mover": false,
@@ -4237,19 +4240,19 @@
         },
         {
           "symbol": "BNBUSDT",
-          "window_change_pct": 0.8569,
-          "peak_15m_pct": 0.2308,
-          "volume_x": 2.3168,
-          "range_position": "near_high",
-          "range_position_label": "Near high",
-          "prev_24h_high": 617.24,
+          "window_change_pct": 1.9568,
+          "peak_15m_pct": 1.0345,
+          "volume_x": 3.9802,
+          "range_position": "broke_high",
+          "range_position_label": "Broke high",
+          "prev_24h_high": 613.03,
           "prev_24h_low": 602.79,
-          "range_break_direction": "none",
-          "range_break_type": "none",
-          "range_break_confirmed": false,
-          "range_break_pct": 0,
-          "range_break_strength": 0,
-          "distance_to_range_high_pct": -0.1149,
+          "range_break_direction": "up",
+          "range_break_type": "broke_high",
+          "range_break_confirmed": true,
+          "range_break_pct": 0.8238,
+          "range_break_strength": 3.2951,
+          "distance_to_range_high_pct": -0.7962,
           "distance_to_range_low_pct": -2.4533,
           "highlights": {
             "lead_mover": false,
@@ -4258,19 +4261,19 @@
         },
         {
           "symbol": "SOLUSDT",
-          "window_change_pct": 2.1374,
-          "peak_15m_pct": 0.8061,
-          "volume_x": 3.509,
+          "window_change_pct": 5.3808,
+          "peak_15m_pct": 1.8377,
+          "volume_x": 4.2134,
           "range_position": "broke_high",
           "range_position_label": "Broke high",
-          "prev_24h_high": 70.55,
+          "prev_24h_high": 69.59,
           "prev_24h_low": 66.94,
           "range_break_direction": "up",
           "range_break_type": "broke_high",
           "range_break_confirmed": true,
-          "range_break_pct": 1.6726,
-          "range_break_strength": 6.6903,
-          "distance_to_range_high_pct": -1.5765,
+          "range_break_pct": 3.0752,
+          "range_break_strength": 12.3006,
+          "distance_to_range_high_pct": -2.9157,
           "distance_to_range_low_pct": -6.6127,
           "highlights": {
             "lead_mover": true,
@@ -4279,19 +4282,19 @@
         },
         {
           "symbol": "XRPUSDT",
-          "window_change_pct": 1.3648,
-          "peak_15m_pct": 0.5169,
-          "volume_x": 4.4294,
+          "window_change_pct": 4.2003,
+          "peak_15m_pct": 1.4293,
+          "volume_x": 6.4505,
           "range_position": "broke_high",
           "range_position_label": "Broke high",
-          "prev_24h_high": 1.176,
+          "prev_24h_high": 1.1568,
           "prev_24h_low": 1.1268,
           "range_break_direction": "up",
           "range_break_type": "broke_high",
           "range_break_confirmed": true,
-          "range_break_pct": 1.0884,
-          "range_break_strength": 4.3537,
-          "distance_to_range_high_pct": -1.0351,
+          "range_break_pct": 2.7663,
+          "range_break_strength": 11.065,
+          "distance_to_range_high_pct": -2.6508,
           "distance_to_range_low_pct": -5.1755,
           "highlights": {
             "lead_mover": false,
@@ -4323,9 +4326,9 @@
         "title": "FOMC decision",
         "scheduled_at": "2026-06-17T18:00:00.000Z",
         "source_query_hint": "FOMC decision June 17 2026 Bitcoin crypto reaction",
-        "delta_min": 3975
+        "delta_min": 4125
       },
-      "macro_delta_min": 3975,
+      "macro_delta_min": 4125,
       "retrospective_post_window": {
         "post_window_move_pct_median": -0.5302,
         "post_window_reversal_flag": true,

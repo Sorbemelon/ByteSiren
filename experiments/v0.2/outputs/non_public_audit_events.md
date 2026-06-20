@@ -1,6 +1,6 @@
 # Non-Public Audit Events
 
-Count: 17
+Count: 18
 
 ## 2026-05-21 13:30 UTC - observed_down
 - ID: vnext_c_2119aa1c_20260521t1330
@@ -119,19 +119,6 @@ Count: 17
 - Nearby public event: None within 240 minutes
 - Reviewer notes: 
 
-## 2026-06-02 14:15 UTC - observed_down
-- ID: vnext_c_9994ddde_20260602t1415
-- Evidence window: 14:15-14:30 UTC - 15 min - 1 candle
-- Avg Change: -1.5819%
-- Signals: 5 of 5
-- Suppress reason: one_bar_unconfirmed_window
-- Chart context: Range break (100)
-- Story type: range_break_down
-- Why suppressed: Single-candle move was not emitted as a public event because the detector now requires a confirmed multi-bar window.
-- Chart: event_window, 2026-06-02T14:15:00.000Z to 2026-06-02T14:29:59.998Z
-- Nearby public event: None within 240 minutes
-- Reviewer notes: 
-
 ## 2026-06-03 16:15 UTC - observed_down
 - ID: vnext_c_c4f71745_20260603t1615
 - Evidence window: 16:15-17:15 UTC - 60 min - 4 candles
@@ -171,16 +158,42 @@ Count: 17
 - Nearby public event: None within 240 minutes
 - Reviewer notes: 
 
-## 2026-06-10 13:30 UTC - observed_up
-- ID: vnext_c_0309d682_20260610t1330
-- Evidence window: 13:30-13:45 UTC - 15 min - 1 candle
-- Avg Change: +1.5451%
+## 2026-06-10 00:30 UTC - observed_down
+- ID: vnext_c_e201390e_20260610t0030
+- Evidence window: 00:30-02:45 UTC - 135 min - 9 candles
+- Avg Change: -1.0904%
 - Signals: 5 of 5
-- Suppress reason: one_bar_unconfirmed_window
-- Chart context: Strong chart context (86)
+- Suppress reason: no_strong_context_path
+- Chart context: Momentum continuation (86.97)
+- Story type: momentum_continuation_down
+- Why suppressed: Detected window passed anomaly checks but did not satisfy a confirmed range break, compression-expansion break, or strong continuation path.
+- Chart: event_window, 2026-06-10T00:30:00.000Z to 2026-06-10T02:44:59.998Z
+- Nearby public event: None within 240 minutes
+- Reviewer notes: 
+
+## 2026-06-10 12:30 UTC - observed_up
+- ID: vnext_c_460a2114_20260610t1230
+- Evidence window: 12:30-13:45 UTC - 75 min - 5 candles
+- Avg Change: +2.5329%
+- Signals: 5 of 5
+- Suppress reason: no_prior_history_support
+- Chart context: Macro-aligned context (100)
 - Story type: inside_range_impulse_up
-- Why suppressed: Single-candle move was not emitted as a public event because the detector now requires a confirmed multi-bar window.
-- Chart: event_window, 2026-06-10T13:30:00.000Z to 2026-06-10T13:44:59.998Z
+- Why suppressed: Retained in detector output but not selected for public preview.
+- Chart: event_window, 2026-06-10T12:30:00.000Z to 2026-06-10T13:44:59.998Z
+- Nearby public event: None within 240 minutes
+- Reviewer notes: 
+
+## 2026-06-12 14:45 UTC - observed_up
+- ID: vnext_c_8090723c_20260612t1445
+- Evidence window: 14:45-16:15 UTC - 90 min - 6 candles
+- Avg Change: +0.623%
+- Signals: 2 of 5
+- Suppress reason: weak_breadth
+- Chart context: Range break (100)
+- Story type: range_break_up
+- Why suppressed: Fewer than 60% of tracked symbols aligned with the main event direction.
+- Chart: event_window, 2026-06-12T14:45:00.000Z to 2026-06-12T16:14:59.998Z
 - Nearby public event: None within 240 minutes
 - Reviewer notes: 
 
@@ -198,15 +211,15 @@ Count: 17
 - Reviewer notes: 
 
 ## 2026-06-15 01:30 UTC - observed_up
-- ID: vnext_c_a723bffc_20260615t0130
-- Evidence window: 01:30-02:15 UTC - 45 min - 3 candles
-- Avg Change: +0.5188%
+- ID: vnext_c_2198e7e8_20260615t0130
+- Evidence window: 01:30-03:45 UTC - 135 min - 9 candles
+- Avg Change: +0.7768%
 - Signals: 5 of 5
 - Suppress reason: no_prior_history_support
-- Chart context: Moderate chart context (67.94)
+- Chart context: Strong chart context (72.11)
 - Story type: inside_range_impulse_up
 - Why suppressed: Retained in detector output but not selected for public preview.
-- Chart: event_window, 2026-06-15T01:30:00.000Z to 2026-06-15T02:14:59.998Z
+- Chart: event_window, 2026-06-15T01:30:00.000Z to 2026-06-15T03:44:59.998Z
 - Nearby public event: None within 240 minutes
 - Reviewer notes: 
 

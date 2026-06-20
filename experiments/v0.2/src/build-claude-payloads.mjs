@@ -9,19 +9,27 @@ import {
   writeText,
 } from "./shared.mjs";
 import { DAILY_OVERVIEWS_PATH } from "./generate-daily-overviews.mjs";
+import { DAY_STORIES_JSON_PATH } from "./generate-day-stories.mjs";
 import { VNEXT_C_EVENTS_PATH } from "./run-vnext-c.mjs";
 import {
+  dayStoryClaudePayload,
   dailyClaudePayload,
   signalClaudePayload,
 } from "./build-feed-contract.mjs";
 
 export const CLAUDE_SIGNAL_PAYLOADS_PATH = `${OUTPUTS_DIR}/claude_payload_signal_events.json`;
 export const CLAUDE_DAILY_PAYLOADS_PATH = `${OUTPUTS_DIR}/claude_payload_daily_overviews.json`;
+export const CLAUDE_MARKET_STORY_PAYLOADS_PATH = `${OUTPUTS_DIR}/claude_payload_market_stories.json`;
 export const CLAUDE_PAYLOAD_DESIGN_PATH = `${OUTPUTS_DIR}/claude_payload_design.md`;
 
-export function buildClaudePayloads({ dailyOverviews, signalEvents }) {
+export function buildClaudePayloads({
+  dailyOverviews,
+  signalEvents,
+  dayStories = [],
+}) {
   const publicSignals = signalEvents.filter((event) => event.publish_candidate);
   const signalPayloads = publicSignals.map(signalClaudePayload);
+  const dayStoryPayloads = dayStories.map(dayStoryClaudePayload);
   const dailyPayloads = dailyOverviews.map((overview) => {
     const dayEvents = publicSignals.filter(
       (event) => event.window_start.slice(0, 10) === overview.date_utc,
@@ -31,11 +39,12 @@ export function buildClaudePayloads({ dailyOverviews, signalEvents }) {
 
   return {
     signalPayloads,
+    dayStoryPayloads,
     dailyPayloads,
   };
 }
 
-function designMarkdown({ signalPayloads, dailyPayloads }) {
+function designMarkdown({ signalPayloads, dayStoryPayloads, dailyPayloads }) {
   return [
     "# v0.2 Claude Payload Design",
     "",
@@ -62,6 +71,25 @@ function designMarkdown({ signalPayloads, dailyPayloads }) {
     "- Claude must not force a cause, provide trading advice, or return non-JSON prose.",
     "",
     `Current local payload count: ${signalPayloads.length}`,
+    "",
+    "## Market Story Payload",
+    "",
+    "- Mode: `market_story`.",
+    "- Includes the story window, anchor UTC day, included Signal Event IDs, included audit-event IDs, supporting audit-event IDs, direction, Swing Change, and story context label.",
+    "- Uses one selected story_context_label for the Market Story; structural scores remain diagnostics, not extra public labels.",
+    "- Includes story_window_context and story_label_decision_reasons so Claude can see how the full candle path influenced the single Market Story label.",
+    "- Includes adaptive gap metadata so Claude can see whether the story was bridged by chart context rather than a fixed clock rule.",
+    "- Includes primary_story_family, story_context_scores, two_sided_swing, and minimum_story_range so Claude can see the headline direction, structural family, and why the wrapper is broader than a single Signal Event.",
+    "- Market Stories are multi-swing context wrappers and can cross UTC day boundaries.",
+    "- Market Stories may be signal-only, mixed signal/audit, or audit-only when strong audit detections form the full sequence.",
+    "- Audit-only Market Stories require strong chart context and no full market reset across the adaptive bridge.",
+    "- A one Signal Event plus one audit-event sequence can qualify when chart context is strong.",
+    "- Audit-only detections can be story members without becoming standalone public Signal Events.",
+    "- Market Stories appear on the UTC day where the first trigger starts.",
+    "- Claude should summarize the chart-context sequence only and should not infer a news cause from chart context alone.",
+    "- Claude must not provide trading advice or return non-JSON prose.",
+    "",
+    `Current local payload count: ${dayStoryPayloads.length}`,
     "",
     "## Daily Overview Payload",
     "",
@@ -97,8 +125,18 @@ function designMarkdown({ signalPayloads, dailyPayloads }) {
 export async function runClaudePayloads(options, { logger = console } = {}) {
   const dailyOverviews =
     (await readJson(options.dailyOverviewPath)).items ?? [];
+  let dayStories = [];
+  try {
+    dayStories = (await readJson(options.dayStoriesPath)).items ?? [];
+  } catch {
+    dayStories = [];
+  }
   const signalEvents = (await readJson(options.signalEventsPath)).events ?? [];
-  const payloads = buildClaudePayloads({ dailyOverviews, signalEvents });
+  const payloads = buildClaudePayloads({
+    dailyOverviews,
+    signalEvents,
+    dayStories,
+  });
 
   await writeJson(options.signalOutputPath, {
     generated_at: new Date().toISOString(),
@@ -110,9 +148,14 @@ export async function runClaudePayloads(options, { logger = console } = {}) {
     item_count: payloads.dailyPayloads.length,
     items: payloads.dailyPayloads,
   });
+  await writeJson(options.dayStoryOutputPath, {
+    generated_at: new Date().toISOString(),
+    item_count: payloads.dayStoryPayloads.length,
+    items: payloads.dayStoryPayloads,
+  });
   await writeText(options.designOutputPath, designMarkdown(payloads));
   logger.log(
-    `Claude payloads complete: ${payloads.signalPayloads.length} signal, ${payloads.dailyPayloads.length} daily.`,
+    `Claude payloads complete: ${payloads.signalPayloads.length} signal, ${payloads.dayStoryPayloads.length} market story, ${payloads.dailyPayloads.length} daily.`,
   );
 
   return payloads;
@@ -121,11 +164,14 @@ export async function runClaudePayloads(options, { logger = console } = {}) {
 export function parseArgs(argv = process.argv.slice(2)) {
   return {
     dailyOverviewPath: readOption(argv, "--daily") ?? DAILY_OVERVIEWS_PATH,
+    dayStoriesPath: readOption(argv, "--stories") ?? DAY_STORIES_JSON_PATH,
     signalEventsPath: readOption(argv, "--events") ?? VNEXT_C_EVENTS_PATH,
     signalOutputPath:
       readOption(argv, "--signal-output") ?? CLAUDE_SIGNAL_PAYLOADS_PATH,
     dailyOutputPath:
       readOption(argv, "--daily-output") ?? CLAUDE_DAILY_PAYLOADS_PATH,
+    dayStoryOutputPath:
+      readOption(argv, "--story-output") ?? CLAUDE_MARKET_STORY_PAYLOADS_PATH,
     designOutputPath:
       readOption(argv, "--design-output") ?? CLAUDE_PAYLOAD_DESIGN_PATH,
   };

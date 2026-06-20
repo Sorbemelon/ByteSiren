@@ -13,6 +13,7 @@ The harness is intentionally outside the Worker and web app runtime paths. It do
 - `src/detector-vnext-a/` contains the isolated experimental detector and tests.
 - `src/detector-vnext-b/` contains the local calibration detector with publish gates.
 - `src/generate-daily-overviews.mjs` creates one Daily Overview item per UTC day.
+- `src/generate-day-stories.mjs` creates multi-swing Market Story context items anchored to the day they start.
 - `src/build-feed-preview.mjs` creates a UTC day-post feed-preview data model.
 - `src/build-feed-contract.mjs` creates a local proposal for a future grouped `GET /api/intelligence/feed` response.
 - `src/build-non-public-audit.mjs` creates the local audit view for non-public detected events.
@@ -35,7 +36,9 @@ node experiments/v0.2/src/fetch-candles.mjs --api-base-url https://example-worke
 node experiments/v0.2/src/run-baseline-v01.mjs
 node experiments/v0.2/src/run-vnext-a.mjs
 node experiments/v0.2/src/run-vnext-b.mjs
+node experiments/v0.2/src/run-vnext-c.mjs
 node experiments/v0.2/src/generate-daily-overviews.mjs
+node experiments/v0.2/src/generate-day-stories.mjs
 node experiments/v0.2/src/build-feed-contract.mjs
 node experiments/v0.2/src/build-feed-preview.mjs
 node experiments/v0.2/src/build-non-public-audit.mjs
@@ -44,6 +47,7 @@ node experiments/v0.2/src/build-chart-preview.mjs
 node experiments/v0.2/src/smoke-chart-preview.mjs
 node experiments/v0.2/src/compare-detectors.mjs
 node experiments/v0.2/src/compare-vnext-ab.mjs
+node experiments/v0.2/src/compare-vnext-bc.mjs
 node --test experiments/v0.2/src/detector-vnext-b/detector.test.mjs
 node --test experiments/v0.2/src/feed-preview-v02.test.mjs
 ```
@@ -77,7 +81,9 @@ Run from the repo root:
 
 ```bash
 node experiments/v0.2/src/run-vnext-b.mjs
+node experiments/v0.2/src/run-vnext-c.mjs
 node experiments/v0.2/src/generate-daily-overviews.mjs
+node experiments/v0.2/src/generate-day-stories.mjs
 node experiments/v0.2/src/build-feed-contract.mjs
 node experiments/v0.2/src/build-feed-preview.mjs
 node experiments/v0.2/src/build-non-public-audit.mjs
@@ -110,8 +116,9 @@ Expected visible result:
 
 - 31 day posts
 - 31 Daily Overviews
-- 14 public Signal Events
-- 11 audit-only events
+- current vNext-C public Signal Events
+- current vNext-C Market Stories
+- current vNext-C audit-only events
 - Chart with event-window and day-window highlights
 
 Troubleshooting:
@@ -124,6 +131,8 @@ Troubleshooting:
 
 - Public preview uses one parent post per UTC day.
 - Daily Overview appears first inside each day post, followed by public Signal Events.
+- vNext-C Signal Events are capped as compact evidence windows (12 bars / 3 hours max); longer related moves should appear as Market Stories instead of one stretched Signal Event.
+- Market Story sections can appear between Daily Overview and Signal Events when nearby Signal Events and/or audit-only detections form a broader multi-swing context. The story layer uses an adaptive chart-context gap plus a minimum story duration and Swing Change floor, can qualify one public Signal Event plus one audit event when chart context is strong, allows audit-only sequences only when chart context is strong and no full market reset is detected, can cross UTC days, and appears on the day where its first trigger starts.
 - Global controls are `Expand days` and `Collapse days`.
 - Day-post controls use `+N events · Expand post` and `+N events · Collapse post`.
 - Section-level details use `Show more` and `Hide`.
@@ -131,5 +140,6 @@ Troubleshooting:
 - Daily Overview metric label is `24h Change`.
 - Per-symbol evidence table uses `Window Change`, `Peak 15m`, `Volume ×`, and `Range Position`.
 - Peak 15m and Lead mover remain supporting diagnostics, shown through table highlights instead of headline metrics.
+- Market Story sections use `Story window` and `Swing Change` labels and do not replace the underlying Signal Event sections.
 
 Root package scripts intentionally do not reference this folder. Run experiment commands manually from this README.

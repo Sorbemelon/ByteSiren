@@ -1,6 +1,6 @@
 # vNext-C Audit Events
 
-Count: 17
+Count: 18
 
 ## 2026-05-21T13:30:00.000Z observed_down
 - ID: vnext_c_2119aa1c_20260521t1330
@@ -128,20 +128,6 @@ Count: 17
 - Volatility: high_volatility_continuation
 - Suppress reason: no_strong_context_path
 
-## 2026-06-02T14:15:00.000Z observed_down
-- ID: vnext_c_9994ddde_20260602t1415
-- Evidence window: 2026-06-02T14:15:00.000Z to 2026-06-02T14:29:59.998Z (15 min)
-- Avg Change: -1.6%
-- Signals: 5 of 5
-- Event strength: High
-- Chart context: Range break (100)
-- Story type: range_break_down
-- Range context: broad_broke_low
-- Trend context: trend_down
-- Momentum: continuation
-- Volatility: expansion_after_compression
-- Suppress reason: one_bar_unconfirmed_window
-
 ## 2026-06-03T16:15:00.000Z observed_down
 - ID: vnext_c_c4f71745_20260603t1615
 - Evidence window: 2026-06-03T16:15:00.000Z to 2026-06-03T17:14:59.998Z (60 min)
@@ -184,19 +170,47 @@ Count: 17
 - Volatility: high_volatility_continuation
 - Suppress reason: one_bar_unconfirmed_window
 
-## 2026-06-10T13:30:00.000Z observed_up
-- ID: vnext_c_0309d682_20260610t1330
-- Evidence window: 2026-06-10T13:30:00.000Z to 2026-06-10T13:44:59.998Z (15 min)
-- Avg Change: +1.5%
+## 2026-06-10T00:30:00.000Z observed_down
+- ID: vnext_c_e201390e_20260610t0030
+- Evidence window: 2026-06-10T00:30:00.000Z to 2026-06-10T02:44:59.998Z (135 min)
+- Avg Change: -1.1%
 - Signals: 5 of 5
 - Event strength: High
-- Chart context: Strong chart context (86)
+- Chart context: Momentum continuation (86.97)
+- Story type: momentum_continuation_down
+- Range context: weak_range_context
+- Trend context: trend_down
+- Momentum: continuation
+- Volatility: ordinary_volatility
+- Suppress reason: no_strong_context_path
+
+## 2026-06-10T12:30:00.000Z observed_up
+- ID: vnext_c_460a2114_20260610t1230
+- Evidence window: 2026-06-10T12:30:00.000Z to 2026-06-10T13:44:59.998Z (75 min)
+- Avg Change: +2.5%
+- Signals: 5 of 5
+- Event strength: High
+- Chart context: Macro-aligned context (100)
 - Story type: inside_range_impulse_up
 - Range context: mostly_inside_range
-- Trend context: trend_flat
+- Trend context: trend_down
 - Momentum: impulse
 - Volatility: high_volatility_continuation
-- Suppress reason: one_bar_unconfirmed_window
+- Suppress reason: no_prior_history_support
+
+## 2026-06-12T14:45:00.000Z observed_up
+- ID: vnext_c_8090723c_20260612t1445
+- Evidence window: 2026-06-12T14:45:00.000Z to 2026-06-12T16:14:59.998Z (90 min)
+- Avg Change: +0.6%
+- Signals: 2 of 5
+- Event strength: High
+- Chart context: Range break (100)
+- Story type: range_break_up
+- Range context: broad_broke_high
+- Trend context: trend_mixed
+- Momentum: no_clear_momentum
+- Volatility: expansion_after_compression
+- Suppress reason: weak_breadth
 
 ## 2026-06-13T21:30:00.000Z observed_up
 - ID: vnext_c_a1f7b080_20260613t2130
@@ -213,16 +227,16 @@ Count: 17
 - Suppress reason: one_bar_unconfirmed_window
 
 ## 2026-06-15T01:30:00.000Z observed_up
-- ID: vnext_c_a723bffc_20260615t0130
-- Evidence window: 2026-06-15T01:30:00.000Z to 2026-06-15T02:14:59.998Z (45 min)
-- Avg Change: +0.5%
+- ID: vnext_c_2198e7e8_20260615t0130
+- Evidence window: 2026-06-15T01:30:00.000Z to 2026-06-15T03:44:59.998Z (135 min)
+- Avg Change: +0.8%
 - Signals: 5 of 5
 - Event strength: High
-- Chart context: Moderate chart context (67.94)
+- Chart context: Strong chart context (72.11)
 - Story type: inside_range_impulse_up
 - Range context: weak_range_context
 - Trend context: trend_mixed
-- Momentum: no_clear_momentum
+- Momentum: impulse
 - Volatility: high_volatility_continuation
 - Suppress reason: no_prior_history_support
 

@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-06-19T19:52:51.106Z",
+  "generated_at": "2026-06-20T00:34:34.737Z",
   "detector": "vnext_c",
   "publish_gate_version": "vnext_c_r5_history_gate",
-  "detected_event_count": 40,
+  "detected_event_count": 41,
   "publish_candidate_count": 23,
-  "audit_event_count": 17,
+  "audit_event_count": 18,
   "decisions": [
     {
       "event_id": "vnext_c_2119aa1c_20260521t1330",
@@ -468,6 +468,67 @@
       "chart_context_warnings": []
     },
     {
+      "event_id": "vnext_c_c29a0892_20260526t0030",
+      "date_time": "2026-05-26T00:30:00.000Z",
+      "evidence_window": {
+        "start": "2026-05-26T00:30:00.000Z",
+        "end": "2026-05-26T01:44:59.998Z",
+        "duration_min": 75
+      },
+      "direction": "observed_down",
+      "avg_change_pct": -0.7439,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "flash_event": false,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Range break",
+      "event_story_type": "range_break_down",
+      "event_range_context": "broad_broke_low",
+      "history_support_type": "range_break",
+      "history_support_score": 1,
+      "source_likelihood": 0.6616,
+      "source_likelihood_band": "high",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "very_strong"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": -0.2443,
+        "prior_4h_move_pct_median": -0.2925,
+        "post_window_move_pct_median": 0.1387,
+        "post_window_reversal_flag": false,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "continuation",
+      "volatility_context": "expansion_after_compression",
+      "volatility_state": "compressed_to_expanding",
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
+      "publish_gate": {
+        "decision": "public",
+        "reasons": [
+          "broad_confirmed_break",
+          "confirmed_break_ge_min",
+          "trend_aligned",
+          "strong_confirmation"
+        ]
+      },
+      "chart_context_reasons": [
+        "broad_range_break",
+        "trend_aligned",
+        "momentum_continuation",
+        "volatility_expansion_after_compression",
+        "strong_direction_consistency",
+        "volume_confirmation"
+      ],
+      "chart_context_warnings": []
+    },
+    {
       "event_id": "vnext_c_cca96e5f_20260526t1015",
       "date_time": "2026-05-26T10:15:00.000Z",
       "evidence_window": {
@@ -636,15 +697,15 @@
       "chart_context_warnings": []
     },
     {
-      "event_id": "vnext_c_6be351f0_20260527t2130",
+      "event_id": "vnext_c_b525c422_20260527t2130",
       "date_time": "2026-05-27T21:30:00.000Z",
       "evidence_window": {
         "start": "2026-05-27T21:30:00.000Z",
-        "end": "2026-05-27T21:59:59.998Z",
-        "duration_min": 30
+        "end": "2026-05-27T23:29:59.998Z",
+        "duration_min": 120
       },
       "direction": "observed_down",
-      "avg_change_pct": -0.9707,
+      "avg_change_pct": -1.3661,
       "signals_count": 5,
       "n_tracked": 5,
       "flash_event": false,
@@ -656,7 +717,7 @@
       "event_range_context": "broad_broke_low",
       "history_support_type": "range_break",
       "history_support_score": 1,
-      "source_likelihood": 0.7456,
+      "source_likelihood": 0.8049,
       "source_likelihood_band": "high",
       "trend_context": {
         "trend_context": "trend_mixed",
@@ -667,7 +728,7 @@
       "momentum_context": {
         "prior_1h_move_pct_median": -0.202,
         "prior_4h_move_pct_median": 0.2563,
-        "post_window_move_pct_median": 0.1786,
+        "post_window_move_pct_median": 0.23,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
       },
@@ -695,15 +756,15 @@
       "chart_context_warnings": []
     },
     {
-      "event_id": "vnext_c_ccfd0579_20260528t0315",
+      "event_id": "vnext_c_1d469c0e_20260528t0315",
       "date_time": "2026-05-28T03:15:00.000Z",
       "evidence_window": {
         "start": "2026-05-28T03:15:00.000Z",
-        "end": "2026-05-28T04:29:59.998Z",
-        "duration_min": 75
+        "end": "2026-05-28T05:29:59.998Z",
+        "duration_min": 135
       },
       "direction": "observed_down",
-      "avg_change_pct": -1.6669,
+      "avg_change_pct": -1.6897,
       "signals_count": 5,
       "n_tracked": 5,
       "flash_event": false,
@@ -715,7 +776,7 @@
       "event_range_context": "broad_broke_low",
       "history_support_type": "range_break",
       "history_support_score": 1,
-      "source_likelihood": 0.8,
+      "source_likelihood": 0.8035,
       "source_likelihood_band": "high",
       "trend_context": {
         "trend_context": "trend_down",
@@ -726,7 +787,7 @@
       "momentum_context": {
         "prior_1h_move_pct_median": -0.1868,
         "prior_4h_move_pct_median": -0.2664,
-        "post_window_move_pct_median": 0.2432,
+        "post_window_move_pct_median": 0.2353,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
       },
@@ -980,18 +1041,18 @@
       ]
     },
     {
-      "event_id": "vnext_c_9994ddde_20260602t1415",
+      "event_id": "vnext_c_1357e2a2_20260602t1415",
       "date_time": "2026-06-02T14:15:00.000Z",
       "evidence_window": {
         "start": "2026-06-02T14:15:00.000Z",
-        "end": "2026-06-02T14:29:59.998Z",
-        "duration_min": 15
+        "end": "2026-06-02T15:29:59.998Z",
+        "duration_min": 75
       },
       "direction": "observed_down",
-      "avg_change_pct": -1.5819,
+      "avg_change_pct": -2.5189,
       "signals_count": 5,
       "n_tracked": 5,
-      "flash_event": true,
+      "flash_event": false,
       "event_strength": "High",
       "signal_strength_score": 100,
       "chart_context_score": 100,
@@ -1000,7 +1061,7 @@
       "event_range_context": "broad_broke_low",
       "history_support_type": "range_break",
       "history_support_score": 1,
-      "source_likelihood": 0.8373,
+      "source_likelihood": 0.9,
       "source_likelihood_band": "high",
       "trend_context": {
         "trend_context": "trend_down",
@@ -1011,20 +1072,23 @@
       "momentum_context": {
         "prior_1h_move_pct_median": -0.5812,
         "prior_4h_move_pct_median": -0.5875,
-        "post_window_move_pct_median": 0.233,
+        "post_window_move_pct_median": -0.216,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
       },
       "momentum_type": "continuation",
       "volatility_context": "expansion_after_compression",
       "volatility_state": "compressed_to_expanding",
-      "publish_candidate": false,
-      "publish_reason": null,
-      "suppress_reason": "one_bar_unconfirmed_window",
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
       "publish_gate": {
-        "decision": "audit",
+        "decision": "public",
         "reasons": [
-          "one_bar_unconfirmed_window"
+          "broad_confirmed_break",
+          "confirmed_break_ge_min",
+          "trend_aligned",
+          "move_ge_min"
         ]
       },
       "chart_context_reasons": [
@@ -1215,15 +1279,15 @@
       "chart_context_warnings": []
     },
     {
-      "event_id": "vnext_c_ddbc80a1_20260604t0215",
-      "date_time": "2026-06-04T02:15:00.000Z",
+      "event_id": "vnext_c_6c394e07_20260604t0300",
+      "date_time": "2026-06-04T03:00:00.000Z",
       "evidence_window": {
-        "start": "2026-06-04T02:15:00.000Z",
+        "start": "2026-06-04T03:00:00.000Z",
         "end": "2026-06-04T03:44:59.998Z",
-        "duration_min": 90
+        "duration_min": 45
       },
       "direction": "observed_up",
-      "avg_change_pct": 3.6127,
+      "avg_change_pct": 2.1407,
       "signals_count": 5,
       "n_tracked": 5,
       "flash_event": false,
@@ -1241,11 +1305,11 @@
         "trend_context": "trend_down",
         "trend_alignment": "trend_reversal_attempt",
         "trend_direction_majority": "down",
-        "trend_strength_median": "strong"
+        "trend_strength_median": "very_strong"
       },
       "momentum_context": {
-        "prior_1h_move_pct_median": -1.165,
-        "prior_4h_move_pct_median": -4.5648,
+        "prior_1h_move_pct_median": 1.3721,
+        "prior_4h_move_pct_median": -2.4638,
         "post_window_move_pct_median": 0.2317,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
@@ -1615,37 +1679,94 @@
       "chart_context_warnings": []
     },
     {
-      "event_id": "vnext_c_0309d682_20260610t1330",
-      "date_time": "2026-06-10T13:30:00.000Z",
+      "event_id": "vnext_c_e201390e_20260610t0030",
+      "date_time": "2026-06-10T00:30:00.000Z",
       "evidence_window": {
-        "start": "2026-06-10T13:30:00.000Z",
-        "end": "2026-06-10T13:44:59.998Z",
-        "duration_min": 15
+        "start": "2026-06-10T00:30:00.000Z",
+        "end": "2026-06-10T02:44:59.998Z",
+        "duration_min": 135
       },
-      "direction": "observed_up",
-      "avg_change_pct": 1.5451,
+      "direction": "observed_down",
+      "avg_change_pct": -1.0904,
       "signals_count": 5,
       "n_tracked": 5,
-      "flash_event": true,
+      "flash_event": false,
       "event_strength": "High",
       "signal_strength_score": 100,
-      "chart_context_score": 86,
-      "chart_context_label": "Strong chart context",
+      "chart_context_score": 86.97,
+      "chart_context_label": "Momentum continuation",
+      "event_story_type": "momentum_continuation_down",
+      "event_range_context": "weak_range_context",
+      "history_support_type": "trend_continuation",
+      "history_support_score": 0.7,
+      "source_likelihood": 0.5686,
+      "source_likelihood_band": "medium",
+      "trend_context": {
+        "trend_context": "trend_down",
+        "trend_alignment": "aligned_with_trend",
+        "trend_direction_majority": "down",
+        "trend_strength_median": "building"
+      },
+      "momentum_context": {
+        "prior_1h_move_pct_median": 0.2531,
+        "prior_4h_move_pct_median": -0.6123,
+        "post_window_move_pct_median": 0.0967,
+        "post_window_reversal_flag": false,
+        "retrospective_post_window_only": true
+      },
+      "momentum_type": "continuation",
+      "volatility_context": "ordinary_volatility",
+      "volatility_state": "compressed",
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "publish_gate": {
+        "decision": "audit",
+        "reasons": [
+          "no_strong_context_path"
+        ]
+      },
+      "chart_context_reasons": [
+        "trend_aligned",
+        "momentum_continuation",
+        "strong_direction_consistency"
+      ],
+      "chart_context_warnings": [
+        "weak_volume_confirmation"
+      ]
+    },
+    {
+      "event_id": "vnext_c_460a2114_20260610t1230",
+      "date_time": "2026-06-10T12:30:00.000Z",
+      "evidence_window": {
+        "start": "2026-06-10T12:30:00.000Z",
+        "end": "2026-06-10T13:44:59.998Z",
+        "duration_min": 75
+      },
+      "direction": "observed_up",
+      "avg_change_pct": 2.5329,
+      "signals_count": 5,
+      "n_tracked": 5,
+      "flash_event": false,
+      "event_strength": "High",
+      "signal_strength_score": 100,
+      "chart_context_score": 100,
+      "chart_context_label": "Macro-aligned context",
       "event_story_type": "inside_range_impulse_up",
       "event_range_context": "mostly_inside_range",
       "history_support_type": "none",
       "history_support_score": 0,
-      "source_likelihood": 0.6818,
+      "source_likelihood": 0.9,
       "source_likelihood_band": "high",
       "trend_context": {
-        "trend_context": "trend_flat",
-        "trend_alignment": "no_clear_trend",
-        "trend_direction_majority": "mixed",
+        "trend_context": "trend_down",
+        "trend_alignment": "trend_reversal_attempt",
+        "trend_direction_majority": "down",
         "trend_strength_median": "very_strong"
       },
       "momentum_context": {
-        "prior_1h_move_pct_median": -0.0729,
-        "prior_4h_move_pct_median": 0.9932,
+        "prior_1h_move_pct_median": 0.3228,
+        "prior_4h_move_pct_median": 0.0995,
         "post_window_move_pct_median": -0.7491,
         "post_window_reversal_flag": true,
         "retrospective_post_window_only": true
@@ -1655,14 +1776,15 @@
       "volatility_state": "expanding",
       "publish_candidate": false,
       "publish_reason": null,
-      "suppress_reason": "one_bar_unconfirmed_window",
+      "suppress_reason": "no_prior_history_support",
       "publish_gate": {
         "decision": "audit",
         "reasons": [
-          "one_bar_unconfirmed_window"
+          "no_prior_history_support"
         ]
       },
       "chart_context_reasons": [
+        "relief_or_reversal_context",
         "momentum_impulse",
         "strong_direction_consistency",
         "volume_confirmation"
@@ -1728,16 +1850,16 @@
       "chart_context_warnings": []
     },
     {
-      "event_id": "vnext_c_2b93a760_20260612t1445",
+      "event_id": "vnext_c_8090723c_20260612t1445",
       "date_time": "2026-06-12T14:45:00.000Z",
       "evidence_window": {
         "start": "2026-06-12T14:45:00.000Z",
-        "end": "2026-06-12T15:14:59.998Z",
-        "duration_min": 30
+        "end": "2026-06-12T16:14:59.998Z",
+        "duration_min": 90
       },
       "direction": "observed_up",
-      "avg_change_pct": 1.3659,
-      "signals_count": 5,
+      "avg_change_pct": 0.623,
+      "signals_count": 2,
       "n_tracked": 5,
       "flash_event": false,
       "event_strength": "High",
@@ -1748,8 +1870,8 @@
       "event_range_context": "broad_broke_high",
       "history_support_type": "range_break",
       "history_support_score": 1,
-      "source_likelihood": 0.8049,
-      "source_likelihood_band": "high",
+      "source_likelihood": 0.5434,
+      "source_likelihood_band": "medium",
       "trend_context": {
         "trend_context": "trend_mixed",
         "trend_alignment": "no_clear_trend",
@@ -1759,30 +1881,25 @@
       "momentum_context": {
         "prior_1h_move_pct_median": 0.6775,
         "prior_4h_move_pct_median": -0.3099,
-        "post_window_move_pct_median": -1.0982,
-        "post_window_reversal_flag": true,
+        "post_window_move_pct_median": -0.0256,
+        "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
       },
-      "momentum_type": "impulse",
+      "momentum_type": "no_clear_momentum",
       "volatility_context": "expansion_after_compression",
       "volatility_state": "compressed_to_expanding",
-      "publish_candidate": true,
-      "publish_reason": "broad_confirmed_break",
-      "suppress_reason": null,
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "weak_breadth",
       "publish_gate": {
-        "decision": "public",
+        "decision": "audit",
         "reasons": [
-          "broad_confirmed_break",
-          "confirmed_break_ge_min",
-          "adx_median_ge_25",
-          "move_ge_min"
+          "weak_breadth"
         ]
       },
       "chart_context_reasons": [
         "broad_range_break",
-        "momentum_impulse",
         "volatility_expansion_after_compression",
-        "strong_direction_consistency",
         "volume_confirmation"
       ],
       "chart_context_warnings": []
@@ -1846,15 +1963,15 @@
       "chart_context_warnings": []
     },
     {
-      "event_id": "vnext_c_22ab4df7_20260614t2115",
+      "event_id": "vnext_c_a45cf681_20260614t2115",
       "date_time": "2026-06-14T21:15:00.000Z",
       "evidence_window": {
         "start": "2026-06-14T21:15:00.000Z",
-        "end": "2026-06-14T21:44:59.998Z",
-        "duration_min": 30
+        "end": "2026-06-15T00:14:59.998Z",
+        "duration_min": 180
       },
       "direction": "observed_up",
-      "avg_change_pct": 2.3676,
+      "avg_change_pct": 3.5295,
       "signals_count": 5,
       "n_tracked": 5,
       "flash_event": false,
@@ -1877,8 +1994,8 @@
       "momentum_context": {
         "prior_1h_move_pct_median": 0.3942,
         "prior_4h_move_pct_median": 0.3255,
-        "post_window_move_pct_median": -0.0854,
-        "post_window_reversal_flag": false,
+        "post_window_move_pct_median": -0.5302,
+        "post_window_reversal_flag": true,
         "retrospective_post_window_only": true
       },
       "momentum_type": "impulse",
@@ -1905,87 +2022,27 @@
       "chart_context_warnings": []
     },
     {
-      "event_id": "vnext_c_6e7738b4_20260614t2230",
-      "date_time": "2026-06-14T22:30:00.000Z",
-      "evidence_window": {
-        "start": "2026-06-14T22:30:00.000Z",
-        "end": "2026-06-15T00:14:59.998Z",
-        "duration_min": 105
-      },
-      "direction": "observed_up",
-      "avg_change_pct": 1.03,
-      "signals_count": 5,
-      "n_tracked": 5,
-      "flash_event": false,
-      "event_strength": "High",
-      "signal_strength_score": 100,
-      "chart_context_score": 100,
-      "chart_context_label": "Range break",
-      "event_story_type": "range_break_up",
-      "event_range_context": "broad_broke_high",
-      "history_support_type": "range_break",
-      "history_support_score": 0.9,
-      "source_likelihood": 0.6195,
-      "source_likelihood_band": "high",
-      "trend_context": {
-        "trend_context": "trend_up",
-        "trend_alignment": "aligned_with_trend",
-        "trend_direction_majority": "up",
-        "trend_strength_median": "very_strong"
-      },
-      "momentum_context": {
-        "prior_1h_move_pct_median": -0.0712,
-        "prior_4h_move_pct_median": 3.4322,
-        "post_window_move_pct_median": -0.5302,
-        "post_window_reversal_flag": true,
-        "retrospective_post_window_only": true
-      },
-      "momentum_type": "continuation",
-      "volatility_context": "high_volatility_continuation",
-      "volatility_state": "expanding",
-      "publish_candidate": true,
-      "publish_reason": "broad_confirmed_break",
-      "suppress_reason": null,
-      "publish_gate": {
-        "decision": "public",
-        "reasons": [
-          "broad_confirmed_break",
-          "confirmed_break_ge_min",
-          "trend_aligned",
-          "move_ge_min"
-        ]
-      },
-      "chart_context_reasons": [
-        "broad_range_break",
-        "trend_aligned",
-        "momentum_continuation",
-        "strong_direction_consistency",
-        "volume_confirmation"
-      ],
-      "chart_context_warnings": []
-    },
-    {
-      "event_id": "vnext_c_a723bffc_20260615t0130",
+      "event_id": "vnext_c_2198e7e8_20260615t0130",
       "date_time": "2026-06-15T01:30:00.000Z",
       "evidence_window": {
         "start": "2026-06-15T01:30:00.000Z",
-        "end": "2026-06-15T02:14:59.998Z",
-        "duration_min": 45
+        "end": "2026-06-15T03:44:59.998Z",
+        "duration_min": 135
       },
       "direction": "observed_up",
-      "avg_change_pct": 0.5188,
+      "avg_change_pct": 0.7768,
       "signals_count": 5,
       "n_tracked": 5,
       "flash_event": false,
       "event_strength": "High",
       "signal_strength_score": 100,
-      "chart_context_score": 67.94,
-      "chart_context_label": "Moderate chart context",
+      "chart_context_score": 72.11,
+      "chart_context_label": "Strong chart context",
       "event_story_type": "inside_range_impulse_up",
       "event_range_context": "weak_range_context",
       "history_support_type": "none",
       "history_support_score": 0,
-      "source_likelihood": 0.4778,
+      "source_likelihood": 0.5165,
       "source_likelihood_band": "medium",
       "trend_context": {
         "trend_context": "trend_mixed",
@@ -1996,11 +2053,11 @@
       "momentum_context": {
         "prior_1h_move_pct_median": -0.2707,
         "prior_4h_move_pct_median": 0.1982,
-        "post_window_move_pct_median": -0.1286,
+        "post_window_move_pct_median": -0.2531,
         "post_window_reversal_flag": false,
         "retrospective_post_window_only": true
       },
-      "momentum_type": "no_clear_momentum",
+      "momentum_type": "impulse",
       "volatility_context": "high_volatility_continuation",
       "volatility_state": "expanding",
       "publish_candidate": false,
@@ -2013,6 +2070,7 @@
         ]
       },
       "chart_context_reasons": [
+        "momentum_impulse",
         "strong_direction_consistency",
         "volume_confirmation"
       ],

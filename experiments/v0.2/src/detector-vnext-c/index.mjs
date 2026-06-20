@@ -16,11 +16,13 @@ export const DEFAULT_VNEXT_C_OPTIONS = {
   robustLookbackBars: 96,
   triggerStrengthZ: 3.5,
   sustainStrengthZ: 1.5,
-  debounceBars: 2,
-  maxEventBars: 8,
+  // Signal Events stay compact evidence windows; longer multi-swing movement
+  // belongs in the Market Story layer rather than one vague signal.
+  debounceBars: 3,
+  maxEventBars: 12,
   minDetectedBars: 2,
   minPublicBars: 2,
-  maxPublicBars: 8,
+  maxPublicBars: 12,
   minValidSymbols: 3,
   highStrengthMin: 88,
   microRetraceBars: 1,
@@ -69,6 +71,10 @@ export const DEFAULT_VNEXT_C_OPTIONS = {
 };
 
 const EPSILON = 1e-9;
+
+function withinOptionalBarCap(barCount, cap) {
+  return !Number.isFinite(cap) || barCount <= cap;
+}
 
 function sha(input) {
   return createHash("sha1").update(input).digest("hex").slice(0, 8);
@@ -537,8 +543,10 @@ export function detectVNextCWindows({ candlesBySymbol, options = {} }) {
     }
 
     const sameDirection = state.direction === active.direction;
-    const withinCap =
-      cursor - active.startCursor + 1 <= mergedOptions.maxEventBars;
+    const withinCap = withinOptionalBarCap(
+      cursor - active.startCursor + 1,
+      mergedOptions.maxEventBars,
+    );
     const sustained = sameDirection && state.sustain && withinCap;
 
     if (sustained) {
@@ -592,7 +600,7 @@ function mergeAdjacentWindows(windows, options) {
       current.direction === previous.direction &&
       gapBars >= 0 &&
       gapBars <= options.mergeGapBars &&
-      combinedBars <= options.maxEventBars
+      withinOptionalBarCap(combinedBars, options.maxEventBars)
     ) {
       const keepPreviousPeak = previous.peak_strength >= current.peak_strength;
       merged[merged.length - 1] = {
@@ -1933,7 +1941,7 @@ function publishDecisionC({ event, previousPublished, options }) {
   if (evidenceBarCount < options.minPublicBars) {
     return suppress("one_bar_unconfirmed_window");
   }
-  if (evidenceBarCount > options.maxPublicBars) {
+  if (!withinOptionalBarCap(evidenceBarCount, options.maxPublicBars)) {
     return suppress("long_vague_window");
   }
   if (validSymbolCount < options.minValidSymbols) {
