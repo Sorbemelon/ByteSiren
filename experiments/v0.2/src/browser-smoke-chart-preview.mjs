@@ -314,8 +314,8 @@ async function runBrowserSmoke() {
         publicItems
           .filter((item) =>
             item.item_type === 'market_story' &&
-            item.story_source_type === 'audit_only_sequence' &&
-            item.chart.included_audit_event_ids.length >= 2
+            item.chart.included_audit_event_ids.length >= 2 &&
+            item.story_bridge_count > 0
           )
           .map((item) => item.id)
       );

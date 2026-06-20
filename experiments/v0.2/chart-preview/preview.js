@@ -1069,6 +1069,7 @@ function renderStorySection(item) {
         <span class="chip audit-chip">Audit Events: ${item.audit_event_count ?? 0}</span>
         <span class="chip">Swing Change ${pct(item.total_swing_change_pct)}</span>
         <span class="chip">${escapeHtml(item.adaptive_gap_summary ?? "Adaptive gap: n/a")}</span>
+        <span class="chip">${escapeHtml(item.story_bridge_summary ?? "Story bridge: none")}</span>
         <span class="chip">${item.crosses_utc_day ? "Crosses UTC day" : "Same UTC day"}</span>
       </div>
       <div class="card-body">${escapeHtml(item.summary_hint)}</div>
@@ -1083,6 +1084,7 @@ function renderStorySection(item) {
               <div class="card-meta">Median recovery ratio: ${escapeHtml(recoveryRatio)} · Median net change ${pct(windowContext?.median_net_change_pct ?? 0)} · Median range ${pct(windowContext?.median_range_pct ?? 0)}</div>
               <div class="card-meta">Label decision: ${escapeHtml(labelReasons || "n/a")}</div>
               <div class="card-meta">${escapeHtml(details.adaptive_gap_summary ?? item.adaptive_gap_summary ?? "Adaptive gap: n/a")}</div>
+              <div class="card-meta">${escapeHtml(details.story_bridge_summary ?? item.story_bridge_summary ?? "Story bridge: none")}</div>
               <div class="card-meta">Eligibility: ${escapeHtml((details.eligibility_reason ?? item.eligibility_reason ?? "n/a").replace(/_/g, " "))}</div>
               <div class="card-meta">Nearby audit-only context: ${supportingAuditCount}</div>
               <div class="card-meta">Deterministic only · no Claude payload or source status</div>

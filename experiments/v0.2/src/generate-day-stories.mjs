@@ -31,6 +31,8 @@ const DEFAULT_OPTIONS = {
   strongAuditSequenceGapBonusMinutes: 360,
   strongAuditSequenceMaxGapMinutes: 960,
   strongAuditCounterSwingGapMinutes: 240,
+  storyContinuationBridgeMaxGapMinutes: 960,
+  storyContinuationBridgeMinAverageScore: 75,
   sharedStoryFamilyGapBonusMinutes: 120,
   sharedRangeContextGapBonusMinutes: 60,
   publicAuditBridgeGapBonusMinutes: 60,
@@ -1073,6 +1075,139 @@ function storyEligibility(events, options) {
   };
 }
 
+function storyWindowContextSupportsBridge(windowContext, options) {
+  if (!windowContext?.available) return false;
+
+  return (
+    (windowContext.reversal_sequence_score ?? 0) >=
+      options.storyWindowReversalScore ||
+    (windowContext.range_break_sequence_score ?? 0) >=
+      options.storyWindowRangeBreakScore ||
+    (windowContext.momentum_sequence_score ?? 0) >=
+      options.storyWindowMomentumScore ||
+    (windowContext.volatility_expansion_sequence_score ?? 0) >=
+      options.storyWindowVolatilityScore ||
+    (windowContext.inside_range_impulse_sequence_score ?? 0) >=
+      options.storyWindowInsideRangeScore
+  );
+}
+
+function clusterIsStrongStoryContext(events, options) {
+  if (events.length === 0) return false;
+  if (clusterChartScore(events) < options.storyContinuationBridgeMinAverageScore) {
+    return false;
+  }
+  if (!events.some((event) => isStrongChartContext(event, options))) {
+    return false;
+  }
+
+  return hasMomentumRangeReliefContext(events);
+}
+
+function clusterStoryWindow(events) {
+  return {
+    start: events[0].window_start,
+    end: events.reduce(
+      (latest, event) =>
+        event.window_end.localeCompare(latest) > 0
+          ? event.window_end
+          : latest,
+      events[0].window_end,
+    ),
+  };
+}
+
+function storyContinuationBridgeDecision(
+  previousCluster,
+  nextCluster,
+  options,
+  candlesBySymbol,
+) {
+  const previousEvents = previousCluster.events;
+  const nextEvents = nextCluster.events;
+  const previous = previousEvents.at(-1);
+  const next = nextEvents[0];
+  const gapMinutes = Math.max(
+    0,
+    Math.round(minutesBetween(previous.window_end, next.window_start)),
+  );
+  const previousEligible = isEligibleStoryCluster(previousEvents, options);
+  const nextEligible = isEligibleStoryCluster(nextEvents, options);
+  const boundaryOpposite = previous.direction !== next.direction;
+  const previousStrong = clusterIsStrongStoryContext(previousEvents, options);
+  const nextStrong = clusterIsStrongStoryContext(nextEvents, options);
+  const coherentStoryStructure = hasCoherentStoryStructure(
+    previous,
+    next,
+    gapMinutes,
+    options,
+  );
+  const fullMarketReset = crossesFullMarketReset(
+    previous,
+    next,
+    gapMinutes,
+    options,
+  );
+  const combinedEvents = [...previousEvents, ...nextEvents];
+  const combinedEligible = storyEligibility(combinedEvents, options).eligible;
+  const combinedWindow = clusterStoryWindow(combinedEvents);
+  const combinedWindowContext = storyWindowPathContext(
+    combinedEvents,
+    combinedWindow.start,
+    combinedWindow.end,
+    candlesBySymbol,
+  );
+  const storyWindowSupported = storyWindowContextSupportsBridge(
+    combinedWindowContext,
+    options,
+  );
+  const reasons = ["story_to_story_opposite_direction_continuation"];
+
+  if (previousEligible) reasons.push("previous_cluster_is_market_story");
+  if (nextEligible) reasons.push("next_cluster_is_market_story");
+  if (boundaryOpposite) reasons.push("opposite_direction_continuation");
+  if (previousStrong && nextStrong) reasons.push("strong_chart_context_sides");
+  if (coherentStoryStructure) reasons.push("coherent_story_structure");
+  if (!fullMarketReset) reasons.push("no_full_market_reset");
+  if (combinedEligible) reasons.push("combined_story_eligible");
+  if (storyWindowSupported) reasons.push("combined_story_window_supported");
+
+  return {
+    previous_event_id: previous.event_id,
+    next_event_id: next.event_id,
+    gap_minutes: gapMinutes,
+    allowed_gap_minutes: options.storyContinuationBridgeMaxGapMinutes,
+    bridge_allowed:
+      (previousEligible || nextEligible) &&
+      boundaryOpposite &&
+      previousStrong &&
+      nextStrong &&
+      coherentStoryStructure &&
+      !fullMarketReset &&
+      combinedEligible &&
+      storyWindowSupported &&
+      gapMinutes <= options.storyContinuationBridgeMaxGapMinutes,
+    bridge_reasons: reasons,
+    bridge_type: "story_to_story_opposite_direction_continuation",
+    previous_cluster_event_ids: previousEvents.map((event) => event.event_id),
+    next_cluster_event_ids: nextEvents.map((event) => event.event_id),
+    previous_cluster_eligible: previousEligible,
+    next_cluster_eligible: nextEligible,
+    previous_cluster_average_score: roundNumber(
+      clusterChartScore(previousEvents),
+      4,
+    ),
+    next_cluster_average_score: roundNumber(clusterChartScore(nextEvents), 4),
+    boundary_opposite_direction: boundaryOpposite,
+    strong_chart_context_sides: previousStrong && nextStrong,
+    strong_audit_sequence_bridge: false,
+    coherent_story_structure: coherentStoryStructure,
+    full_market_reset_detected: fullMarketReset,
+    combined_story_eligible: combinedEligible,
+    combined_story_window_supported: storyWindowSupported,
+  };
+}
+
 function adaptiveGapDecision(previous, next, clusterEvents, options) {
   const gapMinutes = Math.max(
     0,
@@ -1213,11 +1348,60 @@ function isEligibleStoryCluster(events, options) {
   return storyEligibility(events, options).eligible;
 }
 
+function normalizeCluster(cluster) {
+  return {
+    events: cluster.events,
+    adaptiveGapLinks: cluster.adaptiveGapLinks ?? [],
+    storyBridgeLinks: cluster.storyBridgeLinks ?? [],
+  };
+}
+
+function mergeStoryContinuationClusters(clusters, options, candlesBySymbol) {
+  if (clusters.length <= 1) return clusters.map(normalizeCluster);
+
+  const merged = [];
+  let current = normalizeCluster(clusters[0]);
+
+  for (const rawNext of clusters.slice(1)) {
+    const next = normalizeCluster(rawNext);
+    const bridgeDecision = storyContinuationBridgeDecision(
+      current,
+      next,
+      options,
+      candlesBySymbol,
+    );
+
+    if (bridgeDecision.bridge_allowed) {
+      current = {
+        events: [...current.events, ...next.events],
+        adaptiveGapLinks: [
+          ...current.adaptiveGapLinks,
+          bridgeDecision,
+          ...next.adaptiveGapLinks,
+        ],
+        storyBridgeLinks: [
+          ...current.storyBridgeLinks,
+          bridgeDecision,
+          ...next.storyBridgeLinks,
+        ],
+      };
+      continue;
+    }
+
+    merged.push(current);
+    current = next;
+  }
+
+  merged.push(current);
+  return merged;
+}
+
 function storyFromCluster(
   cluster,
   allAuditEvents,
   options,
   adaptiveGapLinks = [],
+  storyBridgeLinks = [],
   candlesBySymbol = {},
 ) {
   const storyStart = cluster[0].window_start;
@@ -1315,6 +1499,12 @@ function storyFromCluster(
     eligibility_detail: eligibility,
     minimum_story_range: eligibility.minimum_story_range,
     adaptive_gap_links: adaptiveGapLinks,
+    story_bridge_links: storyBridgeLinks,
+    story_bridge_count: storyBridgeLinks.length,
+    story_bridge_summary:
+      storyBridgeLinks.length > 0
+        ? `Story continuation bridges: ${storyBridgeLinks.length}`
+        : "Story continuation bridges: none",
     max_event_gap_minutes: maxEventGapMinutes,
     adaptive_gap_summary:
       adaptiveGapLinks.length > 0
@@ -1401,23 +1591,28 @@ export function buildDayStories(signalEvents, options = {}, context = {}) {
       continue;
     }
 
-    if (isEligibleStoryCluster(cluster.events, resolvedOptions)) {
-      clusters.push(cluster);
-    }
+    clusters.push(cluster);
     cluster = { events: [event], adaptiveGapLinks: [] };
   }
 
-  if (isEligibleStoryCluster(cluster.events, resolvedOptions)) {
+  if (cluster.events.length > 0) {
     clusters.push(cluster);
   }
 
-  const stories = clusters
+  const storyClusters = mergeStoryContinuationClusters(
+    clusters,
+    resolvedOptions,
+    candlesBySymbol,
+  ).filter((items) => isEligibleStoryCluster(items.events, resolvedOptions));
+
+  const stories = storyClusters
     .map((items) =>
       storyFromCluster(
         items.events,
         auditEvents,
         resolvedOptions,
         items.adaptiveGapLinks,
+        items.storyBridgeLinks,
         candlesBySymbol,
       ),
     )
@@ -1452,6 +1647,7 @@ function markdown(payload) {
     lines.push(`- Story source: ${story.story_source_label}`);
     lines.push(`- Signal Events: ${story.signal_event_count}`);
     lines.push(`- Included audit-only events: ${story.audit_event_count}`);
+    lines.push(`- Story continuation bridges: ${story.story_bridge_count}`);
     lines.push(
       `- Swing Change: ${story.total_swing_change_pct >= 0 ? "+" : ""}${story.total_swing_change_pct}% total absolute story-event change`,
     );

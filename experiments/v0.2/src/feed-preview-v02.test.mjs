@@ -117,6 +117,7 @@ test("market stories are anchored to the start-trigger UTC day", async () => {
     storiesPayload.options.gapModelVersion,
     DAY_STORY_GAP_MODEL_VERSION,
   );
+  assert.equal(storiesPayload.options.storyContinuationBridgeMaxGapMinutes, 960);
   assert.ok(storiesPayload.options.baseGapMinutes < storiesPayload.options.maxGapMinutes);
   assert.equal(preview.public_preview.market_story_count, storiesPayload.count);
   assert.equal(storySections.length, storiesPayload.count);
@@ -164,17 +165,49 @@ test("market stories are anchored to the start-trigger UTC day", async () => {
   assert.ok(
     stories.some(
       (story) =>
-        story.story_source_type === "audit_only_sequence" &&
-        story.included_signal_event_ids.length === 0 &&
-        story.included_audit_event_ids.length >= 2,
+        story.story_bridge_count > 0 &&
+        story.story_bridge_links.some(
+          (link) =>
+            link.bridge_type ===
+              "story_to_story_opposite_direction_continuation" &&
+            link.gap_minutes > storiesPayload.options.oppositeDirectionStrongCapMinutes,
+        ),
     ),
-    "at least one Market Story should be allowed from audit-only detections",
+    "at least one Market Story should use the story continuation bridge",
   );
-  const juneAuditStory = stories.find(
+  const mayBridgeStory = stories.find(
     (story) =>
-      story.story_source_type === "audit_only_sequence" &&
-      story.included_signal_event_ids.length === 0 &&
-      story.included_audit_event_ids.length === 3 &&
+      story.included_signal_event_ids.includes(
+        "vnext_c_60319648_20260523t2030",
+      ) &&
+      story.included_audit_event_ids.includes(
+        "vnext_c_58f50f6d_20260523t0745",
+      ),
+  );
+  assert.ok(
+    mayBridgeStory,
+    "May 22-23 Market Story should absorb the 20:30 UTC opposite range-break Signal Event",
+  );
+  assert.equal(mayBridgeStory.story_bridge_count, 1);
+  assert.ok(
+    mayBridgeStory.story_bridge_links.some(
+      (link) =>
+        link.previous_event_id === "vnext_c_58f50f6d_20260523t0745" &&
+        link.next_event_id === "vnext_c_60319648_20260523t2030" &&
+        link.gap_minutes === 750 &&
+        link.allowed_gap_minutes === 960 &&
+        link.bridge_allowed,
+    ),
+  );
+
+  const juneBridgeStory = stories.find(
+    (story) =>
+      story.included_signal_event_ids.includes(
+        "vnext_c_1357e2a2_20260602t1415",
+      ) &&
+      story.included_signal_event_ids.includes(
+        "vnext_c_ad551489_20260602t2245",
+      ) &&
       [
         "vnext_c_fae265e5_20260601t0100",
         "vnext_c_0118579a_20260601t1515",
@@ -184,49 +217,36 @@ test("market stories are anchored to the start-trigger UTC day", async () => {
       ),
   );
   assert.ok(
-    juneAuditStory,
-    "strong audit-only sequence should bridge the three June 1-2 audit events",
+    juneBridgeStory,
+    "strong June 1-2 audit-only sequence should be preserved inside the merged Market Story",
   );
   assert.equal(
-    juneAuditStory.eligibility_reason,
-    "strong_audit_context_sequence",
+    juneBridgeStory.story_source_type,
+    "mixed_signal_audit_sequence",
   );
   assert.equal(
-    juneAuditStory.story_context_label,
-    "Reversal sequence",
+    juneBridgeStory.story_bridge_count,
+    1,
   );
   assert.equal(
-    juneAuditStory.story_type,
-    "multi_swing_relief_reversal_two_sided",
-  );
-  assert.equal(juneAuditStory.primary_story_family, "relief_reversal");
-  assert.equal(
-    juneAuditStory.member_dominant_story_family,
-    "relief_reversal",
-  );
-  assert.equal(
-    juneAuditStory.story_window_context.story_window_context_version,
+    juneBridgeStory.story_window_context.story_window_context_version,
     "story_window_path_v2",
   );
-  assert.equal(
-    juneAuditStory.story_window_context.reversal_sequence_score >= 55,
-    true,
-  );
-  assert.equal(
-    juneAuditStory.story_label_decision_reasons.includes(
-      "story_window_reversal_score",
-    ),
-    true,
-  );
-  assert.equal(juneAuditStory.story_context_scores.range_break, 0);
-  assert.equal(juneAuditStory.two_sided_swing.eligible, true);
-  assert.equal("story_context_labels" in juneAuditStory, false);
-  assert.equal("story_context_secondary_labels" in juneAuditStory, false);
-  assert.ok(juneAuditStory.max_event_gap_minutes > 720);
   assert.ok(
-    juneAuditStory.adaptive_gap_links.every(
+    juneBridgeStory.story_bridge_links.some(
       (link) =>
-        link.strong_audit_sequence_bridge &&
+        link.previous_event_id === "vnext_c_7e978f69_20260602t0215" &&
+        link.next_event_id === "vnext_c_1357e2a2_20260602t1415" &&
+        link.gap_minutes === 675 &&
+        link.allowed_gap_minutes === 960 &&
+        link.bridge_allowed,
+    ),
+  );
+  assert.ok(
+    juneBridgeStory.story_bridge_links.every(
+      (link) =>
+        link.bridge_type ===
+          "story_to_story_opposite_direction_continuation" &&
         link.coherent_story_structure &&
         !link.full_market_reset_detected,
     ),
@@ -272,6 +292,9 @@ test("market stories are anchored to the start-trigger UTC day", async () => {
       assert.equal(story.two_sided_swing?.eligible, true);
     }
     assert.ok(Array.isArray(story.adaptive_gap_links));
+    assert.ok(Array.isArray(story.story_bridge_links));
+    assert.equal(typeof story.story_bridge_count, "number");
+    assert.equal(typeof story.story_bridge_summary, "string");
     assert.equal(typeof story.adaptive_gap_summary, "string");
     assert.equal(typeof story.max_event_gap_minutes, "number");
     for (const link of story.adaptive_gap_links) {

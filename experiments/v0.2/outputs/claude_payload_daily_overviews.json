@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-20T07:05:45.625Z",
+  "generated_at": "2026-06-20T07:39:11.134Z",
   "item_count": 31,
   "items": [
     {
@@ -249,14 +249,14 @@
         "vnext_c_ae635df8_20260522t2315"
       ],
       "market_story_ids_for_day": [
-        "story_9d70123b_20260522t1830"
+        "story_8f47389e_20260522t1830"
       ],
       "audit_event_count_for_day": 0,
       "daily_chart_context_summary": {
         "signal_event_count": 2,
         "market_story_count": 1,
         "market_story_labels": [
-          "Range break sequence"
+          "Reversal sequence"
         ],
         "signal_chart_context_labels": [
           "Range break",
@@ -1388,14 +1388,14 @@
       ],
       "signal_event_ids_for_day": [],
       "market_story_ids_for_day": [
-        "story_67cb42fd_20260601t0100"
+        "story_d8ca1cbd_20260601t0100"
       ],
       "audit_event_count_for_day": 2,
       "daily_chart_context_summary": {
         "signal_event_count": 0,
         "market_story_count": 1,
         "market_story_labels": [
-          "Reversal sequence"
+          "Range break sequence"
         ],
         "signal_chart_context_labels": []
       },
@@ -1491,16 +1491,12 @@
         "vnext_c_1357e2a2_20260602t1415",
         "vnext_c_ad551489_20260602t2245"
       ],
-      "market_story_ids_for_day": [
-        "story_ce2cfafb_20260602t1415"
-      ],
+      "market_story_ids_for_day": [],
       "audit_event_count_for_day": 1,
       "daily_chart_context_summary": {
         "signal_event_count": 2,
-        "market_story_count": 1,
-        "market_story_labels": [
-          "Range break sequence"
-        ],
+        "market_story_count": 0,
+        "market_story_labels": [],
         "signal_chart_context_labels": [
           "Range break"
         ]

@@ -101,6 +101,7 @@ function sectionPreview(item) {
         }`,
         swing_change: `${item.swing_change_label}: ${signPct(item.total_swing_change_pct)}`,
         adaptive_gap: item.adaptive_gap_summary ?? "Adaptive gap: n/a",
+        story_bridge: item.story_bridge_summary ?? "Story bridge: none",
         eligibility: item.eligibility_reason
           ? `Eligibility: ${item.eligibility_reason.replace(/_/g, " ")}`
           : "Eligibility: n/a",
@@ -293,7 +294,7 @@ function markdownSectionLine(section) {
   }
 
   if (section.item_type === "market_story") {
-    return `${section.collapsed_preview.story_window}; ${section.collapsed_preview.context}; ${section.collapsed_preview.source}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.audit_events}; ${section.collapsed_preview.label_decision}; ${section.collapsed_preview.swing_change}; ${section.collapsed_preview.adaptive_gap}; ${section.collapsed_preview.crosses_utc_day}; ${section.collapsed_preview.summary_hint}`;
+    return `${section.collapsed_preview.story_window}; ${section.collapsed_preview.context}; ${section.collapsed_preview.source}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.audit_events}; ${section.collapsed_preview.label_decision}; ${section.collapsed_preview.swing_change}; ${section.collapsed_preview.adaptive_gap}; ${section.collapsed_preview.story_bridge}; ${section.collapsed_preview.crosses_utc_day}; ${section.collapsed_preview.summary_hint}`;
   }
 
   return `${section.collapsed_preview.evidence_window}; ${section.collapsed_preview.direction}; ${section.collapsed_preview.signals}; ${section.collapsed_preview.avg_change}; ${section.collapsed_preview.range_context}; ${section.collapsed_preview.chart_context}; ${section.collapsed_preview.impact}`;

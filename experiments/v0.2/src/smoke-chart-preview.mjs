@@ -476,19 +476,27 @@ async function runSmoke() {
   assert.ok(
     stories.some(
       (item) =>
-        item.story_source_type === "audit_only_sequence" &&
-        item.included_signal_event_ids.length === 0 &&
-        item.included_audit_event_ids.length >= 2,
+        item.story_bridge_count > 0 &&
+        item.story_bridge_links.some(
+          (link) =>
+            link.bridge_type ===
+              "story_to_story_opposite_direction_continuation" &&
+            link.gap_minutes > 600,
+        ),
     ),
-    "at least one Market Story should be generated from audit-only detections",
+    "at least one Market Story should use the story continuation bridge",
   );
   assert.ok(
     stories.some(
       (item) =>
-        item.story_source_type === "audit_only_sequence" &&
-        item.included_signal_event_ids.length === 0 &&
-        item.included_audit_event_ids.length === 3 &&
-        item.eligibility_reason === "strong_audit_context_sequence" &&
+        item.story_source_type === "mixed_signal_audit_sequence" &&
+        item.included_signal_event_ids.includes(
+          "vnext_c_1357e2a2_20260602t1415",
+        ) &&
+        item.included_signal_event_ids.includes(
+          "vnext_c_ad551489_20260602t2245",
+        ) &&
+        item.story_bridge_count === 1 &&
         item.max_event_gap_minutes > 720 &&
         item.expanded.story_details.included_audit_event_ids.includes(
           "vnext_c_fae265e5_20260601t0100",
@@ -500,7 +508,7 @@ async function runSmoke() {
           "vnext_c_7e978f69_20260602t0215",
         ),
     ),
-    "the strong June 1-2 audit-only sequence should become one Market Story",
+    "the strong June 1-2 audit-only sequence should bridge into the June 2 public Market Story",
   );
   assert.ok(
     stories.every(
@@ -517,6 +525,9 @@ async function runSmoke() {
         item.story_context_scores &&
         item.eligibility_reason &&
         Array.isArray(item.adaptive_gap_links) &&
+        Array.isArray(item.story_bridge_links) &&
+        typeof item.story_bridge_count === "number" &&
+        typeof item.story_bridge_summary === "string" &&
         typeof item.adaptive_gap_summary === "string" &&
         item.adaptive_gap_links.every(
           (link) =>

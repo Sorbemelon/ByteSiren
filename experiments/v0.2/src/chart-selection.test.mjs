@@ -101,7 +101,7 @@ test("daily overview highlight is hidden by default", async () => {
 test("market story selection includes signal and audit windows", async () => {
   const { publicItems, stories } = await loadFixture();
   const story = stories.find(
-    (item) => item.story_source_type === "audit_only_sequence",
+    (item) => item.chart.included_audit_event_ids.length > 0,
   );
   const target = selectionTargetForItem(story);
   const selected = toggleSelection(EMPTY_SELECTION, target);
@@ -112,7 +112,6 @@ test("market story selection includes signal and audit windows", async () => {
   });
 
   assert.equal(selected.selected_type, "market_story");
-  assert.deepEqual(highlights.signalWindowIds, []);
   assert.deepEqual(highlights.signalWindowIds, story.chart.included_signal_event_ids);
   assert.deepEqual(highlights.auditWindowIds, story.chart.included_audit_event_ids);
   assert.deepEqual(toggleSelection(selected, target), EMPTY_SELECTION);

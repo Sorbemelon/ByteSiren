@@ -2,7 +2,7 @@
 
 Detector version: vnext_c
 Chart context enabled: true
-Market Stories: 9
+Market Stories: 8
 Days expanded: true
 Global control: Collapse days
 Global controls: Expand days, Collapse days
@@ -52,7 +52,7 @@ Post: 3 items; collapsed item daily_2026-06-14
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: +2.6%; volatile day; 24h change +2.6%; notable range 4.4%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-06-14 21:15 UTC-2026-06-15 13:30 UTC; Range break sequence; Signal + audit story; Signal Events: 2; Audit Events: 2; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +6.2%; Adaptive gap: max 450 min between story events; Crosses UTC day; 2 Signal Events and 2 audit-only events from 2026-06-14 21:15 UTC; story-window path and member signals share range-break chart context.
+- Market Story: Story window: 2026-06-14 21:15 UTC-2026-06-15 13:30 UTC; Range break sequence; Signal + audit story; Signal Events: 2; Audit Events: 2; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +6.2%; Adaptive gap: max 450 min between story events; Story continuation bridges: none; Crosses UTC day; 2 Signal Events and 2 audit-only events from 2026-06-14 21:15 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 21:15-00:15 UTC - 180 min - 12 candles; Observed Up; Signals: 5 of 5; Avg Change: +3.5%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
@@ -85,7 +85,7 @@ Post: 3 items; collapsed item daily_2026-06-09
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: -2.6%; volatile day; 24h change -2.6%; notable range 4.7%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-06-09 14:15 UTC-2026-06-10 02:45 UTC; Range break sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +2.2%; Adaptive gap: max 540 min between story events; Crosses UTC day; 1 Signal Events and 1 audit-only events from 2026-06-09 14:15 UTC; story-window path and member signals share range-break chart context.
+- Market Story: Story window: 2026-06-09 14:15 UTC-2026-06-10 02:45 UTC; Range break sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +2.2%; Adaptive gap: max 540 min between story events; Story continuation bridges: none; Crosses UTC day; 1 Signal Events and 1 audit-only events from 2026-06-09 14:15 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 14:15-15:30 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -1.1%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
@@ -116,7 +116,7 @@ Post: 3 items; collapsed item daily_2026-06-05
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: -6.1%; volatile day; 24h change -6.1%; notable range 9.9%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-06-05 07:15 UTC-14:00 UTC; Reversal sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief, member_dominant_family_agrees; Swing Change: +4.6%; Adaptive gap: max 360 min between story events; Same UTC day; 1 Signal Events and 1 audit-only events from 2026-06-05 07:15 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
+- Market Story: Story window: 2026-06-05 07:15 UTC-14:00 UTC; Reversal sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief, member_dominant_family_agrees; Swing Change: +4.6%; Adaptive gap: max 360 min between story events; Story continuation bridges: none; Same UTC day; 1 Signal Events and 1 audit-only events from 2026-06-05 07:15 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 07:15-07:45 UTC - 30 min - 2 candles; Observed Up; Signals: 5 of 5; Avg Change: +2.8%; Range Position: Inside range; Chart context: Relief / reversal; Impact: High
   Section control: Show more / Hide
@@ -136,15 +136,13 @@ Post: 2 items; collapsed item daily_2026-06-03
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: -3.5%; volatile day; 24h change -3.5%; notable range 5.9%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-06-03 16:15 UTC-2026-06-04 03:45 UTC; Reversal sequence; Signal + audit story; Signal Events: 2; Audit Events: 1; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief; Swing Change: +6.2%; Adaptive gap: max 420 min between story events; Crosses UTC day; 2 Signal Events and 1 audit-only events from 2026-06-03 16:15 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
+- Market Story: Story window: 2026-06-03 16:15 UTC-2026-06-04 03:45 UTC; Reversal sequence; Signal + audit story; Signal Events: 2; Audit Events: 1; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief; Swing Change: +6.2%; Adaptive gap: max 420 min between story events; Story continuation bridges: none; Crosses UTC day; 2 Signal Events and 1 audit-only events from 2026-06-03 16:15 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
   Section control: Show more / Hide
 
 ### Jun 2, 2026 UTC
-Post: 4 items; collapsed item daily_2026-06-02
+Post: 3 items; collapsed item daily_2026-06-02
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: -6.6%; volatile day; 24h change -6.6%; notable range 8.4%.
-  Section control: Show more / Hide
-- Market Story: Story window: 2026-06-02 14:15 UTC-23:30 UTC; Range break sequence; Signal story; Signal Events: 2; Audit Events: 0; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +3.7%; Adaptive gap: max 435 min between story events; Same UTC day; 2 Signal Events and 0 audit-only events from 2026-06-02 14:15 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 14:15-15:30 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -2.5%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
@@ -156,7 +154,7 @@ Post: 2 items; collapsed item daily_2026-06-01
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: -2.5%; volatile day; 24h change -2.5%; notable range 5%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-06-01 01:00 UTC-2026-06-02 03:00 UTC; Reversal sequence; Audit-only story; Signal Events: 0; Audit Events: 3; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief, member_dominant_family_agrees; Swing Change: +2.7%; Adaptive gap: max 795 min between story events; Crosses UTC day; 0 Signal Events and 3 audit-only events from 2026-06-01 01:00 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
+- Market Story: Story window: 2026-06-01 01:00 UTC-2026-06-02 23:30 UTC; Range break sequence; Signal + audit story; Signal Events: 2; Audit Events: 3; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +6.4%; Adaptive gap: max 795 min between story events; Story continuation bridges: 1; Crosses UTC day; 2 Signal Events and 3 audit-only events from 2026-06-01 01:00 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
 
 ### May 31, 2026 UTC
@@ -190,7 +188,7 @@ Post: 3 items; collapsed item daily_2026-05-27
 Control: Collapse post
 - Daily Overview: Market tone: risk off; 24h Change: -1.6%; risk off day; 24h change -1.6%; notable range 3%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-05-27 17:00 UTC-2026-05-28 05:30 UTC; Range break sequence; Signal + audit story; Signal Events: 2; Audit Events: 1; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +3.7%; Adaptive gap: max 255 min between story events; Crosses UTC day; 2 Signal Events and 1 audit-only events from 2026-05-27 17:00 UTC; story-window path and member signals share range-break chart context.
+- Market Story: Story window: 2026-05-27 17:00 UTC-2026-05-28 05:30 UTC; Range break sequence; Signal + audit story; Signal Events: 2; Audit Events: 1; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +3.7%; Adaptive gap: max 255 min between story events; Story continuation bridges: none; Crosses UTC day; 2 Signal Events and 1 audit-only events from 2026-05-27 17:00 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 21:30-23:30 UTC - 120 min - 8 candles; Observed Down; Signals: 5 of 5; Avg Change: -1.4%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
@@ -200,7 +198,7 @@ Post: 4 items; collapsed item daily_2026-05-26
 Control: Collapse post
 - Daily Overview: Market tone: risk off; 24h Change: -1.6%; risk off day; 24h change -1.6%; notable range 3.1%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-05-26 10:15 UTC-16:15 UTC; Reversal sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief, member_dominant_family_agrees; Swing Change: +3.1%; Adaptive gap: max 225 min between story events; Same UTC day; 1 Signal Events and 1 audit-only events from 2026-05-26 10:15 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
+- Market Story: Story window: 2026-05-26 10:15 UTC-16:15 UTC; Reversal sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief, member_dominant_family_agrees; Swing Change: +3.1%; Adaptive gap: max 225 min between story events; Story continuation bridges: none; Same UTC day; 1 Signal Events and 1 audit-only events from 2026-05-26 10:15 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 00:30-01:45 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -0.7%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
@@ -233,7 +231,7 @@ Post: 4 items; collapsed item daily_2026-05-22
 Control: Collapse post
 - Daily Overview: Market tone: risk off; 24h Change: -2.9%; risk off day; 24h change -2.9%; notable range 3.5%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-05-22 18:30 UTC-2026-05-23 08:00 UTC; Range break sequence; Signal + audit story; Signal Events: 2; Audit Events: 1; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +3.5%; Adaptive gap: max 420 min between story events; Crosses UTC day; 2 Signal Events and 1 audit-only events from 2026-05-22 18:30 UTC; story-window path and member signals share range-break chart context.
+- Market Story: Story window: 2026-05-22 18:30 UTC-2026-05-23 21:00 UTC; Reversal sequence; Signal + audit story; Signal Events: 3; Audit Events: 1; Label decision: story_window_reversal_score, member_events_bridge_prior_stress_to_relief; Swing Change: +5.5%; Adaptive gap: max 750 min between story events; Story continuation bridges: 1; Crosses UTC day; 3 Signal Events and 1 audit-only events from 2026-05-22 18:30 UTC; story-window path shows a prior move followed by a meaningful opposite leg.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 18:30-19:45 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -1.3%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
@@ -350,8 +348,8 @@ Control: +1 events · Expand post
   Section control: Show more / Hide
 
 ### Jun 2, 2026 UTC
-Post: 4 items; collapsed item daily_2026-06-02
-Control: +3 events · Expand post
+Post: 3 items; collapsed item daily_2026-06-02
+Control: +2 events · Expand post
 - Daily Overview: Market tone: volatile; 24h Change: -6.6%; volatile day; 24h change -6.6%; notable range 8.4%.
   Section control: Show more / Hide
 
