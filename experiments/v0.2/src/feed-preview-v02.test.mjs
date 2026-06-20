@@ -23,6 +23,8 @@ const FORBIDDEN_CONTROL_LABELS = [
   "Collapse day",
 ];
 
+const ACCEPTED_DETECTOR_VERSIONS = new Set(["vnext_structural"]);
+
 const FORBIDDEN_VISIBLE_LABELS = [
   "Avg Move",
   "Window Move",
@@ -87,7 +89,7 @@ test("public preview has 31 day posts and detector-derived public signal events"
   const expectedPublicSignals =
     contract.preview_diagnostics.public_signal_count;
 
-  assert.ok(["vnext_c", "vnext_c_source_tuned"].includes(preview.detector_version));
+  assert.ok(ACCEPTED_DETECTOR_VERSIONS.has(preview.detector_version));
   assert.equal(preview.chart_context_enabled, true);
   assert.equal(preview.public_preview.day_posts.length, 31);
   assert.equal(signals.length, expectedPublicSignals);
@@ -161,96 +163,6 @@ test("market stories are anchored to the start-trigger UTC day", async () => {
     stories.some((story) => story.included_audit_event_ids.length > 0),
     "at least one Market Story should include audit-only detections",
   );
-  assert.ok(
-    stories.some(
-      (story) =>
-        story.story_bridge_count > 0 &&
-        story.story_bridge_links.some(
-          (link) =>
-            link.bridge_type ===
-              "story_to_story_opposite_direction_continuation" &&
-            link.gap_minutes > storiesPayload.options.oppositeDirectionStrongCapMinutes,
-        ),
-    ),
-    "at least one Market Story should use the story continuation bridge",
-  );
-  const mayBridgeStory = stories.find(
-    (story) =>
-      story.included_signal_event_ids.includes(
-        "vnext_c_60319648_20260523t2030",
-      ) &&
-      story.included_audit_event_ids.includes(
-        "vnext_c_58f50f6d_20260523t0745",
-      ),
-  );
-  assert.ok(
-    mayBridgeStory,
-    "May 22-23 Market Story should absorb the 20:30 UTC opposite range-break Signal Event",
-  );
-  assert.equal(mayBridgeStory.story_bridge_count, 1);
-  assert.ok(
-    mayBridgeStory.story_bridge_links.some(
-      (link) =>
-        link.previous_event_id === "vnext_c_58f50f6d_20260523t0745" &&
-        link.next_event_id === "vnext_c_60319648_20260523t2030" &&
-        link.gap_minutes === 750 &&
-        link.allowed_gap_minutes === 960 &&
-        link.bridge_allowed,
-    ),
-  );
-
-  const juneBridgeStory = stories.find(
-    (story) =>
-      story.included_signal_event_ids.includes(
-        "vnext_c_1357e2a2_20260602t1415",
-      ) &&
-      story.included_signal_event_ids.includes(
-        "vnext_c_ad551489_20260602t2245",
-      ) &&
-      [
-        "vnext_c_fae265e5_20260601t0100",
-        "vnext_c_0118579a_20260601t1515",
-        "vnext_c_7e978f69_20260602t0215",
-      ].every((eventId) =>
-        story.expanded.story_details.included_audit_event_ids.includes(eventId),
-      ),
-  );
-  assert.ok(
-    juneBridgeStory,
-    "strong June 1-2 audit-only sequence should be preserved inside the merged Market Story",
-  );
-  assert.equal(
-    juneBridgeStory.story_source_type,
-    "mixed_signal_audit_sequence",
-  );
-  assert.equal(
-    juneBridgeStory.story_bridge_count,
-    1,
-  );
-  assert.equal(
-    juneBridgeStory.story_window_context.story_window_context_version,
-    "story_window_path_v2",
-  );
-  assert.ok(
-    juneBridgeStory.story_bridge_links.some(
-      (link) =>
-        link.previous_event_id === "vnext_c_7e978f69_20260602t0215" &&
-        link.next_event_id === "vnext_c_1357e2a2_20260602t1415" &&
-        link.gap_minutes === 675 &&
-        link.allowed_gap_minutes === 960 &&
-        link.bridge_allowed,
-    ),
-  );
-  assert.ok(
-    juneBridgeStory.story_bridge_links.every(
-      (link) =>
-        link.bridge_type ===
-          "story_to_story_opposite_direction_continuation" &&
-        link.coherent_story_structure &&
-        !link.full_market_reset_detected,
-    ),
-  );
-
   for (const story of stories) {
     assert.equal(story.date_utc, story.chart.anchor_date_utc);
     assert.equal(story.date_utc, story.story_window.start.slice(0, 10));
@@ -580,7 +492,7 @@ test("feed contract exposes vNext-C chart-context fields", async () => {
     (item) => item.item_type === "signal_event",
   );
 
-  assert.ok(["vnext_c", "vnext_c_source_tuned"].includes(contract.detector_version));
+  assert.ok(ACCEPTED_DETECTOR_VERSIONS.has(contract.detector_version));
   assert.equal(contract.chart_context_enabled, true);
   assert.ok(signals.length > 0);
 

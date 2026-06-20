@@ -42,7 +42,7 @@ const DEFAULT_OPTIONS = {
   oppositeDirectionStrongCapMinutes: 600,
   weakAuditGapCapMinutes: 180,
   supportingAuditPaddingMinutes: 120,
-  // Off by default (base/pattern_tuned unchanged); the structural run enables
+  // Off by default for base runs; the structural run enables
   // them to let strong continuations/reversals bridge a slightly wider gap.
   sameDirStrongContinuationMaxGapMinutes: null,
   oppositeStrongBridgeIgnoreFamily: false,

@@ -67,28 +67,7 @@ export const DEFAULT_VNEXT_C_OPTIONS = {
   chartContextWeakScore: 40,
   chartContextModerateScore: 55,
   chartContextStrongScore: 72,
-  // Multibar strong-context continuation path (off in base vnext_c; enabled in
-  // the pattern-tuned variant). Tightened to the independently-validated broad-
-  // reaction set: broad breadth + confirmed aligned excursion, source-free.
-  enableMultibarContinuation: false,
-  minMultibarContinuationScore: 85,
-  minMultibarContinuationBreadth: 0.8,
-  minMultibarContinuationExcursionPct: 0.6,
-  // Detection-stage refinement (off in base). Retains otherwise-dropped one-bar
-  // windows that match the source-validated immediate broad-shock signature:
-  // full cross-symbol breadth plus a strong aligned move. Source-free (OHLCV).
-  enableBroadShockDetection: false,
-  broadShockMinBreadth: 5,
-  broadShockMinAlignedPct: 0.8,
   publishGateVersion: "vnext_c_r5_history_gate",
-};
-
-// Side-by-side variant preset: only the deltas over DEFAULT. Merged in the
-// runner via `--variant pattern_tuned` so base vnext_c stays untouched.
-export const VNEXT_C_PATTERN_TUNED_OPTIONS = {
-  enableMultibarContinuation: true,
-  enableBroadShockDetection: true,
-  publishGateVersion: "vnext_c_pattern_tuned_r1",
 };
 
 const EPSILON = 1e-9;
@@ -2060,29 +2039,6 @@ function publishDecisionC({ event, previousPublished, options }) {
     return publish("macro_aligned_confirmed_window", ["volume_confirmation"]);
   }
 
-  // Multibar strong-context continuation (variant-gated). Source-free: a broad,
-  // multi-bar momentum/relief/range-break window whose chart context is strong
-  // and whose aligned excursion confirms the move. Tightened to broad breadth
-  // (not merely non-weak) so narrow single-name moves stay audit.
-  const alignedExcursion =
-    event.evidence_window_stats?.max_aligned_excursion_pct ?? 0;
-  const continuationStory = /^(momentum_continuation|relief_reversal|range_break)/.test(
-    event.event_story_type ?? "",
-  );
-  if (
-    options.enableMultibarContinuation &&
-    evidenceBarCount >= options.minPublicBars &&
-    event.chart_context_score >= options.minMultibarContinuationScore &&
-    continuationStory &&
-    breadthRatio >= options.minMultibarContinuationBreadth &&
-    alignedExcursion >= options.minMultibarContinuationExcursionPct
-  ) {
-    return publish("multibar_strong_context_continuation", [
-      "broad_breadth",
-      "aligned_excursion_confirmed",
-    ]);
-  }
-
   return suppress("no_strong_context_path");
 }
 
@@ -2224,34 +2180,6 @@ export function detectVNextCEvents({
     });
   const candidateEvents = emittedWindows.map(toCandidate);
 
-  // Detection-stage refinement: retain otherwise-dropped one-bar windows that
-  // match the source-validated immediate broad-shock signature (full breadth +
-  // strong aligned move). Source-free; these stay audit at the gate (one-bar).
-  let broadShockEventCount = 0;
-  if (mergedOptions.enableBroadShockDetection) {
-    const droppedOneBar = flaggedWindows.filter(
-      (window) =>
-        !keepWindow(window) &&
-        window.end_cursor - window.start_cursor + 1 === 1,
-    );
-    for (const window of droppedOneBar) {
-      const candidate = toCandidate(window);
-      if (
-        (candidate.breadth_count ?? 0) >= mergedOptions.broadShockMinBreadth &&
-        Math.abs(candidate.window_move_pct ?? 0) >=
-          mergedOptions.broadShockMinAlignedPct
-      ) {
-        candidate.broad_shock_event = true;
-        candidate.diagnostics = {
-          ...candidate.diagnostics,
-          broad_shock_event: true,
-        };
-        candidateEvents.push(candidate);
-        broadShockEventCount += 1;
-      }
-    }
-  }
-
   const events = enrichVNextCEvents(candidateEvents, {
     candlesBySymbol,
     options: mergedOptions,
@@ -2271,7 +2199,6 @@ export function detectVNextCEvents({
         mergedWindows.length - emittedWindows.length,
       flash_event_count: emittedWindows.filter((window) => window.flash_event)
         .length,
-      broad_shock_event_count: broadShockEventCount,
       bar_state_count: detected.states.length,
     },
     options: mergedOptions,

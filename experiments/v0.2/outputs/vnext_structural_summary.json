@@ -1,7 +1,7 @@
 {
   "experiment_version": "v0.2R5",
   "detector": "vnext_structural",
-  "generated_at": "2026-06-20T22:01:09.201Z",
+  "generated_at": "2026-06-20T22:31:20.591Z",
   "input_snapshot": "experiments/v0.2/data/candles_30d.json",
   "fetched_at": "2026-06-19T08:08:07.660Z",
   "macro_calendar_items": 3,

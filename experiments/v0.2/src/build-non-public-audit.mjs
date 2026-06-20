@@ -208,7 +208,7 @@ function markdown(payload) {
           : "None within 240 minutes"
       }`,
     );
-    lines.push("- Reviewer notes: ");
+    lines.push("- Reviewer notes:");
     lines.push("");
   }
 

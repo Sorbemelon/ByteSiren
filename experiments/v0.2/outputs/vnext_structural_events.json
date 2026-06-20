@@ -1,7 +1,7 @@
 {
   "detector": "vnext_structural",
   "experiment_version": "v0.2A",
-  "generated_at": "2026-06-20T22:01:09.201Z",
+  "generated_at": "2026-06-20T22:31:20.591Z",
   "options": {
     "macroThresholdBars": 1,
     "barMinutes": 15,
@@ -53,13 +53,6 @@
     "chartContextWeakScore": 40,
     "chartContextModerateScore": 55,
     "chartContextStrongScore": 72,
-    "enableMultibarContinuation": false,
-    "minMultibarContinuationScore": 85,
-    "minMultibarContinuationBreadth": 0.8,
-    "minMultibarContinuationExcursionPct": 0.6,
-    "enableBroadShockDetection": false,
-    "broadShockMinBreadth": 5,
-    "broadShockMinAlignedPct": 0.8,
     "publishGateVersion": "vnext_structural_r1",
     "probeBars": 3,
     "structuralMinBars": 2,

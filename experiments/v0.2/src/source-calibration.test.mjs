@@ -10,10 +10,10 @@ async function readJson(filePath) {
   return JSON.parse(await readFile(filePath, "utf8"));
 }
 
-test("source-calibrated gate uses <=6h keep/conditional sources and post-source response", async () => {
+test("source-calibration analysis can run against accepted structural defaults", async () => {
   const outputDir = await mkdtemp(path.join(tmpdir(), "bytesiren-source-cal-"));
   const options = {
-    eventsPath: "experiments/v0.2/outputs/vnext_c_events.json",
+    eventsPath: "experiments/v0.2/outputs/vnext_structural_events.json",
     sourceAuditPath: "experiments/v0.2/outputs/catalyst_source_audit.json",
     candlesPath: "experiments/v0.2/data/candles_30d.json",
     maxLeadMin: 360,
@@ -34,40 +34,32 @@ test("source-calibrated gate uses <=6h keep/conditional sources and post-source 
   const rowsById = new Map(gate.decisions.map((row) => [row.event_id, row]));
 
   assert.equal(summary.source_lead_window_min, 360);
-  assert.equal(summary.previous_public_signal_count, 23);
-  assert.equal(summary.publish_candidate_count, 24);
+  assert.equal(summary.previous_public_signal_count, 25);
+  assert.equal(summary.publish_candidate_count, 26);
   assert.equal(summary.promoted_from_audit_count, 1);
+  assert.equal(summary.demoted_from_public_count, 0);
+  assert.equal(summary.matched_event_count, 7);
   assert.deepEqual(summary.promoted_event_ids, [
-    "vnext_c_e639b7ad_20260607t2200",
+    "vnext_c_4bd82831_20260602t0815",
   ]);
 
-  const promoted = rowsById.get("vnext_c_e639b7ad_20260607t2200");
+  const promoted = rowsById.get("vnext_c_4bd82831_20260602t0815");
   assert.equal(promoted.publish_candidate, true);
   assert.equal(
     promoted.publish_reason,
-    "source_calibrated_one_bar_range_break_review",
+    "source_calibrated_multibar_chart_response",
   );
   assert.ok(promoted.source_calibration.best_aligned_response_pct >= 0.35);
 
-  const weakResponseAudit = rowsById.get("vnext_c_0118579a_20260601t1515");
-  assert.equal(weakResponseAudit.publish_candidate, false);
-  assert.equal(
-    weakResponseAudit.source_tuned_reason,
-    "source_match_but_gate_requirements_not_met",
+  const structuralPublic = rowsById.get(
+    "vnext_structural_merged_20260601060000_down",
   );
-  assert.ok(
-    weakResponseAudit.source_calibration.best_aligned_response_pct < 0.35,
-  );
-
-  const modestOneBarAudit = rowsById.get("vnext_c_a1f7b080_20260613t2130");
-  assert.equal(modestOneBarAudit.publish_candidate, false);
-  assert.equal(
-    modestOneBarAudit.source_tuned_reason,
-    "source_match_but_one_bar_or_modest_response_kept_audit",
-  );
+  assert.equal(structuralPublic.publish_candidate, true);
+  assert.equal(structuralPublic.source_tuned_reason, "already_public_under_vnext_c");
+  assert.ok(structuralPublic.source_calibration.best_aligned_response_pct >= 0.35);
 
   assert.equal(response.max_lead_min, 360);
-  assert.ok(response.events.length >= 5);
+  assert.equal(response.events.length, summary.matched_event_count);
   assert.ok(
     response.events.every((event) =>
       event.source_calibration.source_responses.every(

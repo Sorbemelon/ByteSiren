@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
-// Side-by-side chart-preview builder for the vnext_structural detector. Runs the
-// whole feed pipeline in a `structural` namespace (variant-named outputs + a
-// chart-preview/data-structural bundle + index.structural.html), recomputing the
-// catalyst timing + source markers against the structural detected set. Base,
-// pattern_tuned, and the Market Story logic are untouched.
+// Default chart-preview builder for the accepted vnext_structural detector.
+// Runs the feed pipeline into the default output names and chart-preview/data
+// bundle so index.html always opens the accepted experiment version.
 
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,6 +35,7 @@ import {
 } from "./build-non-public-audit.mjs";
 import { runCatalystSignalTiming } from "./audit-catalyst-signal-timing.mjs";
 import { runCatalystSourceAudit } from "./audit-catalyst-sources.mjs";
+import { runAuditSourceRecheck } from "./recheck-audit-sources.mjs";
 import {
   runChartPreviewBuild,
   parseArgs as chartArgs,
@@ -47,51 +46,53 @@ const out = (name) => path.join(OUTPUTS_DIR, name);
 
 const PATHS = {
   events: VNEXT_STRUCTURAL_EVENTS_PATH,
-  daily: out("daily_overviews.structural.json"),
-  stories: out("day_stories.structural.json"),
-  storiesMd: out("day_stories.structural.md"),
-  contract: out("feed_contract_v02.structural.json"),
-  preview: out("grouped_feed_preview.structural.json"),
-  previewMd: out("grouped_feed_preview.structural.md"),
-  audit: out("non_public_audit_events.structural.json"),
-  auditMd: out("non_public_audit_events.structural.md"),
-  timing: out("catalyst_signal_timing_audit.structural.json"),
-  timingMd: out("catalyst_signal_timing_audit.structural.md"),
-  source: out("catalyst_source_audit.structural.json"),
-  sourceMd: out("catalyst_source_audit.structural.md"),
+  daily: out("daily_overviews.json"),
+  stories: out("day_stories.json"),
+  storiesMd: out("day_stories.md"),
+  contract: out("feed_contract_v02.json"),
+  preview: out("grouped_feed_preview.json"),
+  previewMd: out("grouped_feed_preview.md"),
+  audit: out("non_public_audit_events.json"),
+  auditMd: out("non_public_audit_events.md"),
+  timing: out("catalyst_signal_timing_audit.json"),
+  timingMd: out("catalyst_signal_timing_audit.md"),
+  source: out("catalyst_source_audit.json"),
+  sourceMd: out("catalyst_source_audit.md"),
+  auditSourceRecheck: out("audit_evidence_source_recheck.json"),
+  auditSourceRecheckMd: out("audit_evidence_source_recheck.md"),
 };
 
-const VARIANT_DATA_DIRNAME = "data-structural";
-const VARIANT_DATA_DIR = path.join(CHART_PREVIEW_DIR, VARIANT_DATA_DIRNAME);
-const VARIANT_HTML_PATH = path.join(CHART_PREVIEW_DIR, "index.structural.html");
+const PREVIEW_DATA_DIRNAME = "data";
+const PREVIEW_DATA_DIR = path.join(CHART_PREVIEW_DIR, PREVIEW_DATA_DIRNAME);
+const PREVIEW_HTML_PATH = path.join(CHART_PREVIEW_DIR, "index.html");
 
-async function writeVariantHtml(logger) {
+async function writeDefaultHtml(logger) {
   const baseHtml = await readFile(
     path.join(CHART_PREVIEW_DIR, "index.html"),
     "utf8",
   );
-  const variantHtml = baseHtml
+  const previewHtml = baseHtml
     .replace(
       "<title>ByteSiren v0.2 Local Feed Preview</title>",
-      "<title>ByteSiren v0.2 — structural pattern detector preview</title>",
+      "<title>ByteSiren v0.2 structural detector preview</title>",
     )
     .replace(
       '<p class="eyebrow">Local-only v0.2D preview</p>',
-      '<p class="eyebrow">Local-only v0.2D preview — vnext_structural (compact catalyst-likely chart patterns)</p>',
+      '<p class="eyebrow">Local-only v0.2 preview - vnext_structural (compact catalyst-likely chart patterns)</p>',
     )
     .replace(
       "./data/preview-data.generated.js",
-      `./${VARIANT_DATA_DIRNAME}/preview-data.generated.js`,
+      `./${PREVIEW_DATA_DIRNAME}/preview-data.generated.js`,
     );
-  await writeFile(VARIANT_HTML_PATH, variantHtml, "utf8");
-  logger.log(`Structural preview HTML written: ${VARIANT_HTML_PATH}`);
+  await writeFile(PREVIEW_HTML_PATH, previewHtml, "utf8");
+  logger.log(`Structural preview HTML written: ${PREVIEW_HTML_PATH}`);
 }
 
 export async function buildStructuralPreview({ logger = console } = {}) {
   // 1. Structural detector run.
   await runStructural(structuralArgs([]), { logger });
 
-  // 2-6. Feed pipeline on the structural events, into the structural namespace.
+  // 2-6. Feed pipeline on the structural events, into the default namespace.
   await runDailyOverviews(
     {
       ...dailyArgs([]),
@@ -150,7 +151,7 @@ export async function buildStructuralPreview({ logger = console } = {}) {
     { logger },
   );
 
-  // 7-8. Recompute catalyst timing + source markers against the structural set.
+  // 7-9. Recompute catalyst timing, source markers, and audit source recheck.
   await runCatalystSignalTiming(
     {
       feedContractPath: PATHS.contract,
@@ -168,8 +169,18 @@ export async function buildStructuralPreview({ logger = console } = {}) {
     },
     { logger },
   );
+  await runAuditSourceRecheck(
+    {
+      eventsPath: PATHS.events,
+      sourceAuditPath: PATHS.source,
+      candlesPath: CANDLES_SNAPSHOT_PATH,
+      jsonOutputPath: PATHS.auditSourceRecheck,
+      markdownOutputPath: PATHS.auditSourceRecheckMd,
+    },
+    { logger },
+  );
 
-  // 9. Build the structural chart-preview bundle.
+  // 10. Build the structural chart-preview bundle.
   await runChartPreviewBuild(
     {
       ...chartArgs([]),
@@ -177,16 +188,16 @@ export async function buildStructuralPreview({ logger = console } = {}) {
       groupedPreviewPath: PATHS.preview,
       auditEventsPath: PATHS.audit,
       catalystSourceAuditPath: PATHS.source,
-      outDir: VARIANT_DATA_DIR,
+      outDir: PREVIEW_DATA_DIR,
     },
     { logger },
   );
 
-  // 10. Variant HTML entry (shares preview.js/preview.css).
-  await writeVariantHtml(logger);
+  // 11. Default HTML entry (shares preview.js/preview.css).
+  await writeDefaultHtml(logger);
 
   logger.log(
-    `Structural preview ready: open ${VARIANT_HTML_PATH} (data in ${VARIANT_DATA_DIR}).`,
+    `Structural preview ready: open ${PREVIEW_HTML_PATH} (data in ${PREVIEW_DATA_DIR}).`,
   );
 }
 

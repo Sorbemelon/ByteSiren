@@ -1,254 +1,372 @@
 # Audit Evidence Closest Catalyst Source Recheck
 
-Generated: 2026-06-20T13:18:49.430Z
-Audit events checked: 18
-Accepted source lead window: <= 360 minutes
+Generated: 2026-06-20T22:31:30.674Z
+Audit events checked: 31
+Accepted source lead window: <= undefined minutes
 
 This local report rechecks every current audit-only Signal Event against its closest mapped catalyst source and any accepted keep/conditional source before or inside the event window. It adds max aligned excursion so short reactions are not missed by close-to-close response only.
 
 ## Assessment Counts
 
-- conditional_public_review_candidate_one_bar_range_break: 2
-- no_accepted_source_within_6h: 15
-- public_review_candidate_multibar_source_backed: 1
+- no_accepted_source_within_6h: 31
 
 ## Public Review Candidates
 
-### 2026-06-01T15:15:00.000Z to 2026-06-01T15:59:59.998Z
-- ID: vnext_c_0118579a_20260601t1515
-- Direction: observed_down
-- Avg Change: -0.48%
-- Evidence bars: 3
-- Chart context: Momentum continuation (89.05)
-- Suppress reason: no_strong_context_path
-- Assessment: public_review_candidate_multibar_source_backed
-- Best source: 2026-06-01T14:53:00.000Z; source_before_signal; lead 22m; keep; high; Binance Launches U.S. Stocks Trading and Previews bStocks Tokenized Securities
-- Response: event +0.48%, max excursion to event end +0.48%, max 6h excursion +0.53%
-
-### 2026-06-07T22:00:00.000Z to 2026-06-07T22:14:59.998Z
-- ID: vnext_c_e639b7ad_20260607t2200
-- Direction: observed_up
-- Avg Change: +2.93%
-- Evidence bars: 1
-- Chart context: Range break (100)
-- Suppress reason: one_bar_unconfirmed_window
-- Assessment: conditional_public_review_candidate_one_bar_range_break
-- Best source: 2026-06-07T17:00:00.000Z; source_before_signal; lead 300m; conditional_keep; high; Crypto Market Update: Bankman-Fried Seeks Pardon from Trump
-- Response: event +2.93%, max excursion to event end +2.09%, max 6h excursion +2.09%
-
-### 2026-06-13T21:30:00.000Z to 2026-06-13T21:44:59.998Z
-- ID: vnext_c_a1f7b080_20260613t2130
-- Direction: observed_up
-- Avg Change: +0.7%
-- Evidence bars: 1
-- Chart context: Range break (100)
-- Suppress reason: one_bar_unconfirmed_window
-- Assessment: conditional_public_review_candidate_one_bar_range_break
-- Best source: 2026-06-13T17:20:18.000Z; source_before_signal; lead 250m; keep; high; Blackrock's IBIT Leads $86 Million Bitcoin ETF Inflow as Ethereum Funds Extend Outflow Streak
-- Response: event +0.7%, max excursion to event end +0.6%, max 6h excursion +0.6%
-
+- None
 ## All Audit Events
 
-### 2026-05-21T13:30 observed_down
-- ID: vnext_c_2119aa1c_20260521t1330
-- Evidence window: 2026-05-21T13:30:00.000Z to 2026-05-21T13:44:59.998Z
-- Avg Change: -0.71%
-- Bars: 1
-- Chart context: Range break (100)
-- Suppress reason: one_bar_unconfirmed_window
-- Closest mapped source: 2026-05-20T21:00:00.000Z; source_before_signal; lead 990m; conditional_keep; high; Weekly Market Outlook: Nvidia Earnings & FOMC Minutes
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-05-21T17:00 observed_up
-- ID: vnext_c_390c63ce_20260521t1700
-- Evidence window: 2026-05-21T17:00:00.000Z to 2026-05-21T17:29:59.998Z
-- Avg Change: +1.29%
-- Bars: 2
-- Chart context: Strong chart context (81.57)
-- Suppress reason: no_prior_history_support
-- Closest mapped source: None
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-05-23T07:45 observed_down
-- ID: vnext_c_58f50f6d_20260523t0745
-- Evidence window: 2026-05-23T07:45:00.000Z to 2026-05-23T07:59:59.998Z
-- Avg Change: -1.42%
-- Bars: 1
-- Chart context: Range break (100)
-- Suppress reason: one_bar_unconfirmed_window
-- Closest mapped source: None
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-05-25T02:00 observed_up
-- ID: vnext_c_202f8c1f_20260525t0200
-- Evidence window: 2026-05-25T02:00:00.000Z to 2026-05-25T02:14:59.998Z
-- Avg Change: +0.6%
-- Bars: 1
-- Chart context: Strong chart context (73.97)
-- Suppress reason: one_bar_unconfirmed_window
-- Closest mapped source: 2026-05-25T07:44:34.000Z; source_after_signal; lead 330m; demote_for_signal_cause; high; US spot Bitcoin ETFs slide on six-day outflows, 2026 inflows
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-05-26T14:30 observed_down
-- ID: vnext_c_1955bb1e_20260526t1430
-- Evidence window: 2026-05-26T14:30:00.000Z to 2026-05-26T16:14:59.998Z
-- Avg Change: -2.06%
-- Bars: 7
-- Chart context: Relief / reversal (92)
-- Suppress reason: no_prior_history_support
-- Closest mapped source: None
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-- Best accepted response: event +2.06%, max-to-end +0.2%, max-6h +0.06%
-
-### 2026-05-27T17:00 observed_down
-- ID: vnext_c_7bdd9b1f_20260527t1700
-- Evidence window: 2026-05-27T17:00:00.000Z to 2026-05-27T17:14:59.998Z
-- Avg Change: -0.64%
-- Bars: 1
-- Chart context: Strong chart context (73.4)
-- Suppress reason: one_bar_unconfirmed_window
-- Closest mapped source: 2026-05-27T14:03:59.919Z; source_before_signal; lead 176m; manual_review; high; DTCC taps Stellar (XLM) for tokenized securities network in latest Wall Street blockchain push
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-06-01T01:00 observed_down
-- ID: vnext_c_fae265e5_20260601t0100
-- Evidence window: 2026-06-01T01:00:00.000Z to 2026-06-01T01:59:59.998Z
-- Avg Change: -1.2%
-- Bars: 4
-- Chart context: Strong chart context (77.65)
-- Suppress reason: no_prior_history_support
-- Closest mapped source: 2026-06-01T02:19:00.769Z; source_after_signal; lead 19m; conditional_keep; medium; Crypto Daily Market Report – June 1, 2026
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-06-01T15:15 observed_down
-- ID: vnext_c_0118579a_20260601t1515
-- Evidence window: 2026-06-01T15:15:00.000Z to 2026-06-01T15:59:59.998Z
-- Avg Change: -0.48%
-- Bars: 3
-- Chart context: Momentum continuation (89.05)
-- Suppress reason: no_strong_context_path
-- Closest mapped source: 2026-06-01T14:53:00.000Z; source_before_signal; lead 22m; keep; high; Binance Launches U.S. Stocks Trading and Previews bStocks Tokenized Securities
-- Accepted sources within 6h: 3
-- Assessment: public_review_candidate_multibar_source_backed
-- Best accepted response: event +0.48%, max-to-end +0.48%, max-6h +0.53%
-
-### 2026-06-02T02:15 observed_up
-- ID: vnext_c_7e978f69_20260602t0215
-- Evidence window: 2026-06-02T02:15:00.000Z to 2026-06-02T02:59:59.998Z
-- Avg Change: +1.03%
-- Bars: 3
-- Chart context: Relief / reversal (91)
-- Suppress reason: no_strong_context_path
-- Closest mapped source: 2026-06-02T05:09:39.411Z; source_after_signal; lead 130m; keep; medium; Bitcoin and ethereum prices today, Friday, June 5, 2026: Prices continue their descent — 5 reasons why
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-- Best accepted response: event +1.03%, max-to-end +1.9%, max-6h +1.84%
-
-### 2026-06-03T16:15 observed_down
-- ID: vnext_c_c4f71745_20260603t1615
-- Evidence window: 2026-06-03T16:15:00.000Z to 2026-06-03T17:14:59.998Z
-- Avg Change: -0.59%
-- Bars: 4
-- Chart context: Momentum continuation (79.97)
-- Suppress reason: no_strong_context_path
-- Closest mapped source: None
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-06-05T13:45 observed_down
-- ID: vnext_c_4d17fb96_20260605t1345
-- Evidence window: 2026-06-05T13:45:00.000Z to 2026-06-05T13:59:59.998Z
-- Avg Change: -1.8%
-- Bars: 1
-- Chart context: Moderate chart context (71.8)
-- Suppress reason: one_bar_unconfirmed_window
-- Closest mapped source: None
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-06-07T22:00 observed_up
-- ID: vnext_c_e639b7ad_20260607t2200
-- Evidence window: 2026-06-07T22:00:00.000Z to 2026-06-07T22:14:59.998Z
-- Avg Change: +2.93%
-- Bars: 1
-- Chart context: Range break (100)
-- Suppress reason: one_bar_unconfirmed_window
-- Closest mapped source: 2026-06-07T17:00:00.000Z; source_before_signal; lead 300m; conditional_keep; high; Crypto Market Update: Bankman-Fried Seeks Pardon from Trump
-- Accepted sources within 6h: 3
-- Assessment: conditional_public_review_candidate_one_bar_range_break
-- Best accepted response: event +2.93%, max-to-end +2.09%, max-6h +2.09%
-
-### 2026-06-10T00:30 observed_down
-- ID: vnext_c_e201390e_20260610t0030
-- Evidence window: 2026-06-10T00:30:00.000Z to 2026-06-10T02:44:59.998Z
-- Avg Change: -1.09%
-- Bars: 9
-- Chart context: Momentum continuation (86.97)
-- Suppress reason: no_strong_context_path
-- Closest mapped source: 2026-06-10T02:26:31.975Z; inside_evidence_window; lead 0m; demote_for_signal_cause; high; Crypto Daily Market Report – June 10, 2026
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-
-### 2026-06-10T12:30 observed_up
-- ID: vnext_c_460a2114_20260610t1230
-- Evidence window: 2026-06-10T12:30:00.000Z to 2026-06-10T13:44:59.998Z
-- Avg Change: +2.53%
+### 2026-05-23T17:30 observed_up
+- ID: vnext_c_f385914a_20260523t1730
+- Evidence window: 2026-05-23T17:30:00.000Z to 2026-05-23T18:44:59.998Z
+- Avg Change: +0.68%
 - Bars: 5
-- Chart context: Macro-aligned context (100)
-- Suppress reason: no_prior_history_support
-- Closest mapped source: 2026-06-10T13:32:01.000Z; inside_evidence_window; lead 0m; demote_for_signal_cause; high; US launches new strikes on targets in Iran, Bitcoin drops 2% as crypto liquidations near $1B
+- Chart context: Momentum continuation (87.34)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
 - Accepted sources within 6h: 0
 - Assessment: no_accepted_source_within_6h
 
-### 2026-06-12T14:45 observed_up
-- ID: vnext_c_8090723c_20260612t1445
-- Evidence window: 2026-06-12T14:45:00.000Z to 2026-06-12T16:14:59.998Z
-- Avg Change: +0.62%
+### 2026-05-25T22:15 observed_down
+- ID: vnext_c_bce54e2e_20260525t2215
+- Evidence window: 2026-05-25T22:15:00.000Z to 2026-05-25T22:59:59.998Z
+- Avg Change: -0.44%
+- Bars: 3
+- Chart context: Momentum continuation (75.4)
+- Suppress reason: weak_avg_change
+- Closest mapped source: 2026-05-26T02:13:40.637Z; source_after_signal; lead 194m; conditional_keep; medium; Crypto Daily Market Report – May 26, 2026
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.44%, max-to-end +0.96%, max-6h +0.78%
+
+### 2026-05-26T18:30 observed_down
+- ID: vnext_c_565e63ea_20260526t1830
+- Evidence window: 2026-05-26T18:30:00.000Z to 2026-05-26T19:14:59.998Z
+- Avg Change: -0.47%
+- Bars: 3
+- Chart context: Momentum continuation (91.61)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.47%, max-to-end +1.8%, max-6h +1.67%
+
+### 2026-05-27T13:15 observed_down
+- ID: vnext_c_dd52927f_20260527t1315
+- Evidence window: 2026-05-27T13:15:00.000Z to 2026-05-27T14:14:59.998Z
+- Avg Change: -0.58%
+- Bars: 4
+- Chart context: Range break (97.67)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-05-27T14:03:59.919Z; inside_evidence_window; lead 0m; manual_review; high; DTCC taps Stellar (XLM) for tokenized securities network in latest Wall Street blockchain push
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-05-27T22:45 observed_down
+- ID: vnext_c_547f9874_20260527t2245
+- Evidence window: 2026-05-27T22:45:00.000Z to 2026-05-27T23:29:59.998Z
+- Avg Change: -0.46%
+- Bars: 3
+- Chart context: Momentum continuation (91.56)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-05-28T00:45 observed_down
+- ID: vnext_c_dce7aea4_20260528t0045
+- Evidence window: 2026-05-28T00:45:00.000Z to 2026-05-28T01:29:59.998Z
+- Avg Change: -0.52%
+- Bars: 3
+- Chart context: Momentum continuation (90.17)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-05-28T04:45 observed_down
+- ID: vnext_c_4c998856_20260528t0445
+- Evidence window: 2026-05-28T04:45:00.000Z to 2026-05-28T05:29:59.998Z
+- Avg Change: -0.34%
+- Bars: 3
+- Chart context: Momentum continuation (82.35)
+- Suppress reason: weak_avg_change
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.34%, max-to-end +0.34%, max-6h +0.37%
+
+### 2026-05-31T16:00 observed_down
+- ID: vnext_c_1697782a_20260531t1600
+- Evidence window: 2026-05-31T16:00:00.000Z to 2026-05-31T16:59:59.998Z
+- Avg Change: -0.42%
+- Bars: 4
+- Chart context: Range break (100)
+- Suppress reason: weak_avg_change
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.42%, max-to-end +1.06%, max-6h +1.07%
+
+### 2026-06-01T02:00 observed_up
+- ID: vnext_c_1d67cb8b_20260601t0200
+- Evidence window: 2026-06-01T02:00:00.000Z to 2026-06-01T02:44:59.998Z
+- Avg Change: +0.89%
+- Bars: 3
+- Chart context: Relief / reversal (95.62)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-06-01T02:19:00.769Z; inside_evidence_window; lead 0m; conditional_keep; medium; Crypto Daily Market Report – June 1, 2026
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.89%, max-to-end +0%, max-6h +0.12%
+
+### 2026-06-01T08:30 observed_up
+- ID: vnext_c_032d6d6d_20260601t0830
+- Evidence window: 2026-06-01T08:30:00.000Z to 2026-06-01T09:14:59.998Z
+- Avg Change: +0.52%
+- Bars: 3
+- Chart context: Relief / reversal (93.23)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.52%, max-to-end +0.12%, max-6h +0.12%
+
+### 2026-06-01T16:00 observed_up
+- ID: vnext_c_90998fbf_20260601t1600
+- Evidence window: 2026-06-01T16:00:00.000Z to 2026-06-01T16:44:59.998Z
+- Avg Change: +0.45%
+- Bars: 3
+- Chart context: Relief / reversal (70.23)
+- Suppress reason: weak_avg_change
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.45%, max-to-end +0.01%, max-6h +0.01%
+
+### 2026-06-02T08:15 observed_down
+- ID: vnext_c_4bd82831_20260602t0815
+- Evidence window: 2026-06-02T08:15:00.000Z to 2026-06-02T09:44:59.998Z
+- Avg Change: -0.68%
 - Bars: 6
-- Chart context: Range break (100)
-- Suppress reason: weak_breadth
+- Chart context: Momentum continuation (81.5)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-06-02T05:09:39.411Z; source_before_signal; lead 185m; keep; medium; Bitcoin and ethereum prices today, Friday, June 5, 2026: Prices continue their descent — 5 reasons why
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.68%, max-to-end +1.15%, max-6h +1.15%
+
+### 2026-06-02T16:15 observed_down
+- ID: vnext_c_36c9756f_20260602t1615
+- Evidence window: 2026-06-02T16:15:00.000Z to 2026-06-02T17:14:59.998Z
+- Avg Change: -0.62%
+- Bars: 4
+- Chart context: Momentum continuation (98.32)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.62%, max-to-end +4.16%, max-6h +1.15%
+
+### 2026-06-03T18:45 observed_down
+- ID: vnext_c_1ab459fd_20260603t1845
+- Evidence window: 2026-06-03T18:45:00.000Z to 2026-06-03T19:44:59.998Z
+- Avg Change: -0.52%
+- Bars: 4
+- Chart context: Momentum continuation (84.95)
+- Suppress reason: no_strong_context_path
 - Closest mapped source: None
 - Accepted sources within 6h: 0
 - Assessment: no_accepted_source_within_6h
 
-### 2026-06-13T21:30 observed_up
-- ID: vnext_c_a1f7b080_20260613t2130
-- Evidence window: 2026-06-13T21:30:00.000Z to 2026-06-13T21:44:59.998Z
-- Avg Change: +0.7%
-- Bars: 1
-- Chart context: Range break (100)
-- Suppress reason: one_bar_unconfirmed_window
-- Closest mapped source: 2026-06-13T17:20:18.000Z; source_before_signal; lead 250m; keep; high; Blackrock's IBIT Leads $86 Million Bitcoin ETF Inflow as Ethereum Funds Extend Outflow Streak
-- Accepted sources within 6h: 2
-- Assessment: conditional_public_review_candidate_one_bar_range_break
-- Best accepted response: event +0.7%, max-to-end +0.6%, max-6h +0.6%
-
-### 2026-06-15T01:30 observed_up
-- ID: vnext_c_2198e7e8_20260615t0130
-- Evidence window: 2026-06-15T01:30:00.000Z to 2026-06-15T03:44:59.998Z
-- Avg Change: +0.78%
-- Bars: 9
-- Chart context: Strong chart context (72.11)
-- Suppress reason: no_prior_history_support
-- Closest mapped source: 2026-06-15T02:09:02.999Z; inside_evidence_window; lead 0m; demote_for_signal_cause; medium; Crypto Daily Market Report – June 15, 2026
-- Accepted sources within 6h: 0
-- Assessment: no_accepted_source_within_6h
-- Best accepted response: event +0.78%, max-to-end +1.06%, max-6h +1.09%
-
-### 2026-06-15T11:15 observed_up
-- ID: vnext_c_1ec200ef_20260615t1115
-- Evidence window: 2026-06-15T11:15:00.000Z to 2026-06-15T11:29:59.998Z
-- Avg Change: +0.87%
-- Bars: 1
-- Chart context: Range break (100)
-- Suppress reason: one_bar_unconfirmed_window
+### 2026-06-05T02:45 observed_down
+- ID: vnext_c_22b10d6c_20260605t0245
+- Evidence window: 2026-06-05T02:45:00.000Z to 2026-06-05T03:29:59.998Z
+- Avg Change: -0.38%
+- Bars: 3
+- Chart context: Range break (91.15)
+- Suppress reason: weak_avg_change
 - Closest mapped source: None
 - Accepted sources within 6h: 0
 - Assessment: no_accepted_source_within_6h
+
+### 2026-06-06T02:45 observed_down
+- ID: vnext_c_7c25f9b8_20260606t0245
+- Evidence window: 2026-06-06T02:45:00.000Z to 2026-06-06T03:44:59.998Z
+- Avg Change: -0.81%
+- Bars: 4
+- Chart context: Momentum continuation (86.9)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-06T11:45 observed_down
+- ID: vnext_c_74855bf2_20260606t1145
+- Evidence window: 2026-06-06T11:45:00.000Z to 2026-06-06T12:29:59.998Z
+- Avg Change: -0.36%
+- Bars: 3
+- Chart context: Momentum continuation (67.87)
+- Suppress reason: weak_avg_change
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-07T02:30 observed_up
+- ID: vnext_c_b577baf8_20260607t0230
+- Evidence window: 2026-06-07T02:30:00.000Z to 2026-06-07T03:29:59.998Z
+- Avg Change: +0.67%
+- Bars: 4
+- Chart context: Range break (100)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-08T01:15 observed_up
+- ID: vnext_c_8f941de1_20260608t0115
+- Evidence window: 2026-06-08T01:15:00.000Z to 2026-06-08T02:14:59.998Z
+- Avg Change: +0.5%
+- Bars: 4
+- Chart context: Momentum continuation (85.92)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-06-08T06:30:41.000Z; source_after_signal; lead 256m; demote_for_signal_cause; medium; This Week in Crypto Law (May 30, 2026)
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.5%, max-to-end +2.3%, max-6h +2.09%
+
+### 2026-06-08T12:00 observed_up
+- ID: vnext_c_30bb7a4f_20260608t1200
+- Evidence window: 2026-06-08T12:00:00.000Z to 2026-06-08T13:14:59.998Z
+- Avg Change: +0.48%
+- Bars: 5
+- Chart context: Momentum continuation (88.42)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-06-08T12:06:09.000Z; inside_evidence_window; lead 0m; demote_for_signal_cause; high; Saylor's Strategy Resumes Bitcoin Accumulation Spree After Last Week's Sale
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-09T16:15 observed_up
+- ID: vnext_c_04464716_20260609t1615
+- Evidence window: 2026-06-09T16:15:00.000Z to 2026-06-09T17:14:59.998Z
+- Avg Change: +0.84%
+- Bars: 4
+- Chart context: Relief / reversal (99.97)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.84%, max-to-end +0.67%, max-6h +1.77%
+
+### 2026-06-10T00:00 observed_down
+- ID: vnext_c_46700f43_20260610t0000
+- Evidence window: 2026-06-10T00:00:00.000Z to 2026-06-10T00:44:59.998Z
+- Avg Change: -0.49%
+- Bars: 3
+- Chart context: Momentum continuation (84.77)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.49%, max-to-end +0.22%, max-6h +0.22%
+
+### 2026-06-10T01:00 observed_down
+- ID: vnext_c_63c89a71_20260610t0100
+- Evidence window: 2026-06-10T01:00:00.000Z to 2026-06-10T01:44:59.998Z
+- Avg Change: -0.46%
+- Bars: 3
+- Chart context: Momentum continuation (83.56)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-06-10T02:26:31.975Z; source_after_signal; lead 42m; demote_for_signal_cause; high; Crypto Daily Market Report – June 10, 2026
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.46%, max-to-end +0.22%, max-6h +0.22%
+
+### 2026-06-10T04:00 observed_down
+- ID: vnext_c_ac0def6e_20260610t0400
+- Evidence window: 2026-06-10T04:00:00.000Z to 2026-06-10T04:44:59.998Z
+- Avg Change: -0.5%
+- Bars: 3
+- Chart context: Momentum continuation (79.81)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-10T08:30 observed_down
+- ID: vnext_c_2b76f1f4_20260610t0830
+- Evidence window: 2026-06-10T08:30:00.000Z to 2026-06-10T09:59:59.998Z
+- Avg Change: -0.34%
+- Bars: 6
+- Chart context: Range break (70.31)
+- Suppress reason: weak_avg_change
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-10T21:45 observed_down
+- ID: vnext_c_af498f2d_20260610t2145
+- Evidence window: 2026-06-10T21:45:00.000Z to 2026-06-10T22:29:59.998Z
+- Avg Change: -0.7%
+- Bars: 3
+- Chart context: Momentum continuation (81.15)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-06-11T00:18:59.000Z; source_after_signal; lead 109m; demote_for_signal_cause; medium; Iran closes Strait of Hormuz and launches missile attacks as US-Iran conflict reshapes crypto markets
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.7%, max-to-end +2.49%, max-6h +1.67%
+
+### 2026-06-11T03:00 observed_up
+- ID: vnext_c_714205fe_20260611t0300
+- Evidence window: 2026-06-11T03:00:00.000Z to 2026-06-11T04:29:59.998Z
+- Avg Change: +0.63%
+- Bars: 6
+- Chart context: Momentum continuation (88.11)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: 2026-06-11T08:08:08.000Z; source_after_signal; lead 218m; keep; high; US and Iran negotiations remain on track despite overnight strikes, but crypto markets are feeling the heat
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-11T20:30 observed_up
+- ID: vnext_c_dca9338e_20260611t2030
+- Evidence window: 2026-06-11T20:30:00.000Z to 2026-06-11T21:14:59.998Z
+- Avg Change: +0.66%
+- Bars: 3
+- Chart context: Momentum continuation (87.52)
+- Suppress reason: no_strong_context_path
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-13T14:45 observed_up
+- ID: vnext_c_0b55a44a_20260613t1445
+- Evidence window: 2026-06-13T14:45:00.000Z to 2026-06-13T15:29:59.998Z
+- Avg Change: +0.38%
+- Bars: 3
+- Chart context: Momentum continuation (63.8)
+- Suppress reason: weak_avg_change
+- Closest mapped source: 2026-06-13T11:19:41.000Z; source_before_signal; lead 205m; demote_for_signal_cause; high; Iran and US agree on peace deal framework as crypto markets react to geopolitical shift
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-13T15:30 observed_down
+- ID: vnext_c_e3a842ef_20260613t1530
+- Evidence window: 2026-06-13T15:30:00.000Z to 2026-06-13T16:14:59.998Z
+- Avg Change: -0.35%
+- Bars: 3
+- Chart context: Weak chart context (39.56)
+- Suppress reason: weak_avg_change
+- Closest mapped source: 2026-06-13T17:20:18.000Z; source_after_signal; lead 65m; keep; high; Blackrock's IBIT Leads $86 Million Bitcoin ETF Inflow as Ethereum Funds Extend Outflow Streak
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+
+### 2026-06-17T21:00 observed_down
+- ID: vnext_c_6113168a_20260617t2100
+- Evidence window: 2026-06-17T21:00:00.000Z to 2026-06-17T22:44:59.998Z
+- Avg Change: -0.45%
+- Bars: 7
+- Chart context: Momentum continuation (71.47)
+- Suppress reason: weak_avg_change
+- Closest mapped source: None
+- Accepted sources within 6h: 0
+- Assessment: no_accepted_source_within_6h
+- Best accepted response: event +0.45%, max-to-end +1.83%, max-6h +1.83%

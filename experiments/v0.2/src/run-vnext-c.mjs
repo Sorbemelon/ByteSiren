@@ -14,7 +14,6 @@ import {
   writeText,
 } from "./shared.mjs";
 import {
-  VNEXT_C_PATTERN_TUNED_OPTIONS,
   detectVNextCEvents,
   summarizeVNextC,
 } from "./detector-vnext-c/index.mjs";
@@ -173,28 +172,24 @@ export async function runVNextC(
 }
 
 export function parseArgs(argv = process.argv.slice(2)) {
-  const variant = readOption(argv, "--variant") ?? "base";
-  const tuned = variant === "pattern_tuned";
-  const prefix = tuned ? "vnext_c_pattern_tuned" : "vnext_c";
   return {
-    variant,
-    detectorName: tuned ? "vnext_c_pattern_tuned" : "vnext_c",
-    detectorOptions: tuned ? VNEXT_C_PATTERN_TUNED_OPTIONS : {},
+    detectorName: "vnext_c",
+    detectorOptions: {},
     inputPath: readOption(argv, "--input"),
     macroCalendarPath:
       readOption(argv, "--macro-calendar") ?? MACRO_CALENDAR_PATH,
     eventsOutputPath:
-      readOption(argv, "--events-output") ?? `${OUTPUTS_DIR}/${prefix}_events.json`,
+      readOption(argv, "--events-output") ?? VNEXT_C_EVENTS_PATH,
     summaryOutputPath:
-      readOption(argv, "--summary-output") ?? `${OUTPUTS_DIR}/${prefix}_summary.json`,
+      readOption(argv, "--summary-output") ?? VNEXT_C_SUMMARY_PATH,
     publicMarkdownPath:
       readOption(argv, "--public-md-output") ??
-      `${OUTPUTS_DIR}/${prefix}_public_candidates.md`,
+      VNEXT_C_PUBLIC_MD_PATH,
     auditMarkdownPath:
       readOption(argv, "--audit-md-output") ??
-      `${OUTPUTS_DIR}/${prefix}_audit_events.md`,
+      VNEXT_C_AUDIT_MD_PATH,
     gateOutputPath:
-      readOption(argv, "--gate-output") ?? `${OUTPUTS_DIR}/${prefix}_gate_decisions.json`,
+      readOption(argv, "--gate-output") ?? VNEXT_C_GATE_JSON_PATH,
   };
 }
 

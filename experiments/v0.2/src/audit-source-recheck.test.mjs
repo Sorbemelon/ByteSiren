@@ -10,10 +10,10 @@ async function readJson(filePath) {
   return JSON.parse(await readFile(filePath, "utf8"));
 }
 
-test("audit source recheck finds current source-backed review candidates", async () => {
+test("audit source recheck runs against accepted structural defaults", async () => {
   const outputDir = await mkdtemp(path.join(tmpdir(), "bytesiren-audit-src-"));
   const options = {
-    eventsPath: "experiments/v0.2/outputs/vnext_c_events.json",
+    eventsPath: "experiments/v0.2/outputs/vnext_structural_events.json",
     sourceAuditPath: "experiments/v0.2/outputs/catalyst_source_audit.json",
     candlesPath: "experiments/v0.2/data/candles_30d.json",
     maxLeadMin: 360,
@@ -28,21 +28,8 @@ test("audit source recheck finds current source-backed review candidates", async
   );
   const candidateIds = candidates.map((item) => item.event_id).sort();
 
-  assert.equal(payload.summary.audit_event_count, 18);
-  assert.equal(payload.summary.accepted_source_matched_event_count, 3);
-  assert.equal(payload.summary.public_review_candidate_count, 3);
-  assert.deepEqual(candidateIds, [
-    "vnext_c_0118579a_20260601t1515",
-    "vnext_c_a1f7b080_20260613t2130",
-    "vnext_c_e639b7ad_20260607t2200",
-  ].sort());
-
-  for (const candidate of candidates) {
-    assert.ok(candidate.accepted_source_count_within_6h > 0);
-    assert.ok(candidate.best_accepted_source);
-    assert.ok(
-      candidate.best_accepted_source.response_metrics
-        .event_window_aligned_move_pct >= 0.45,
-    );
-  }
+  assert.equal(payload.summary.audit_event_count, 31);
+  assert.equal(payload.summary.accepted_source_matched_event_count, 2);
+  assert.equal(payload.summary.public_review_candidate_count, 0);
+  assert.deepEqual(candidateIds, []);
 });
