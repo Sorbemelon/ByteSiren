@@ -42,6 +42,10 @@ const DEFAULT_OPTIONS = {
   oppositeDirectionStrongCapMinutes: 600,
   weakAuditGapCapMinutes: 180,
   supportingAuditPaddingMinutes: 120,
+  // Off by default (base/pattern_tuned unchanged); the structural run enables
+  // them to let strong continuations/reversals bridge a slightly wider gap.
+  sameDirStrongContinuationMaxGapMinutes: null,
+  oppositeStrongBridgeIgnoreFamily: false,
   minPublicSignals: 2,
   minAuditEvents: 2,
   minStoryDurationMinutes: 240,
@@ -1256,6 +1260,22 @@ function adaptiveGapDecision(previous, next, clusterEvents, options) {
     reasons.push("strong_chart_context_pair");
   }
 
+  if (
+    sameDirection &&
+    bothStrong &&
+    options.sameDirStrongContinuationMaxGapMinutes
+  ) {
+    allowedGapMinutes = Math.max(
+      allowedGapMinutes,
+      options.sameDirStrongContinuationMaxGapMinutes,
+    );
+    maxGapMinutes = Math.max(
+      maxGapMinutes,
+      options.sameDirStrongContinuationMaxGapMinutes,
+    );
+    reasons.push("same_direction_strong_continuation");
+  }
+
   if (previousFamily === nextFamily && previousFamily !== "mixed_context") {
     allowedGapMinutes += options.sharedStoryFamilyGapBonusMinutes;
     reasons.push(`shared_${previousFamily}`);
@@ -1301,13 +1321,20 @@ function adaptiveGapDecision(previous, next, clusterEvents, options) {
         options.oppositeDirectionStrongCapMinutes,
       );
       reasons.push("relief_or_reversal_bridge");
-    } else if (bothStrong && previousFamily === nextFamily) {
+    } else if (
+      bothStrong &&
+      (previousFamily === nextFamily || options.oppositeStrongBridgeIgnoreFamily)
+    ) {
       allowedGapMinutes += options.oppositeDirectionStrongGapBonusMinutes;
       oppositeDirectionCap = Math.max(
         oppositeDirectionCap,
         options.oppositeDirectionStrongCapMinutes,
       );
-      reasons.push("strong_two_sided_chart_context");
+      reasons.push(
+        previousFamily === nextFamily
+          ? "strong_two_sided_chart_context"
+          : "strong_two_sided_cross_family",
+      );
     }
 
     allowedGapMinutes = Math.min(allowedGapMinutes, oppositeDirectionCap);

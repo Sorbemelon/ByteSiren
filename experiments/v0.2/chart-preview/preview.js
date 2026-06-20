@@ -232,6 +232,17 @@ function displayDirection(direction) {
   return "Observed Up";
 }
 
+// A flipped signal (merged-wide or compact lifecycle) carries only the NET
+// direction; surface the reversal explicitly while keeping the net headline.
+function signalDirectionLabel(item) {
+  if (item.direction_changed) {
+    return item.direction === "observed_down"
+      ? "Reversed · net Down"
+      : "Reversed · net Up";
+  }
+  return displayDirection(item.direction);
+}
+
 function marketTone(value) {
   return String(value || "").replace(/_/g, " ");
 }
@@ -1701,7 +1712,7 @@ function renderSignalSection(item) {
   const selected = selectedClass(item, "signal_event");
   const expanded = state.expandedSections.has(item.id);
   const windowSummary = evidenceWindowSummary(item);
-  const summary = `Evidence window: ${escapeHtml(windowSummary)} - ${escapeHtml(displayDirection(item.direction))} - Signals ${item.signals_count} of ${item.n_tracked}`;
+  const summary = `Evidence window: ${escapeHtml(windowSummary)} - ${escapeHtml(signalDirectionLabel(item))} - Signals ${item.signals_count} of ${item.n_tracked}`;
 
   return `
     <article class="section-card signal-section ${selected}" data-id="${item.id}">
@@ -1710,7 +1721,7 @@ function renderSignalSection(item) {
           <p class="card-title">Signal Event</p>
           <div class="card-meta">Evidence window: ${escapeHtml(windowSummary)}</div>
         </div>
-        <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(displayDirection(item.direction))}</span>
+        <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(signalDirectionLabel(item))}</span>
       </div>
       <div class="chips">
         <span class="chip">${escapeHtml(candleCountLabel(item.evidence_bar_count ?? item.evidence_window?.evidence_bar_count))}</span>
@@ -1777,7 +1788,7 @@ function renderAuditCard(item) {
           <p class="card-title">Non-public Event</p>
           <div class="card-meta">Evidence window: ${escapeHtml(windowSummary)}</div>
         </div>
-        <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(displayDirection(item.direction))}</span>
+        <span class="chip ${item.direction === "observed_down" ? "down" : "up"}">${escapeHtml(signalDirectionLabel(item))}</span>
       </div>
       <div class="chips">
         <span class="chip">${escapeHtml(candleCountLabel(item.evidence_bar_count ?? item.evidence_window?.evidence_bar_count))}</span>

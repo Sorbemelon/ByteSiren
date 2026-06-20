@@ -130,6 +130,7 @@ function auditEvent(event, publicEvents) {
     evidence_bar_count: bars,
     evidence_candle_count_label: candleCountLabel(bars),
     direction: event.direction,
+    direction_changed: event.direction_changed ?? false,
     avg_change_pct: roundNumber(event.window_move_pct, 4),
     avg_change_label: "Avg Change",
     signals_count: event.signals_count,

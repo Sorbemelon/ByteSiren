@@ -67,7 +67,28 @@ export const DEFAULT_VNEXT_C_OPTIONS = {
   chartContextWeakScore: 40,
   chartContextModerateScore: 55,
   chartContextStrongScore: 72,
+  // Multibar strong-context continuation path (off in base vnext_c; enabled in
+  // the pattern-tuned variant). Tightened to the independently-validated broad-
+  // reaction set: broad breadth + confirmed aligned excursion, source-free.
+  enableMultibarContinuation: false,
+  minMultibarContinuationScore: 85,
+  minMultibarContinuationBreadth: 0.8,
+  minMultibarContinuationExcursionPct: 0.6,
+  // Detection-stage refinement (off in base). Retains otherwise-dropped one-bar
+  // windows that match the source-validated immediate broad-shock signature:
+  // full cross-symbol breadth plus a strong aligned move. Source-free (OHLCV).
+  enableBroadShockDetection: false,
+  broadShockMinBreadth: 5,
+  broadShockMinAlignedPct: 0.8,
   publishGateVersion: "vnext_c_r5_history_gate",
+};
+
+// Side-by-side variant preset: only the deltas over DEFAULT. Merged in the
+// runner via `--variant pattern_tuned` so base vnext_c stays untouched.
+export const VNEXT_C_PATTERN_TUNED_OPTIONS = {
+  enableMultibarContinuation: true,
+  enableBroadShockDetection: true,
+  publishGateVersion: "vnext_c_pattern_tuned_r1",
 };
 
 const EPSILON = 1e-9;
@@ -223,7 +244,7 @@ function adxSeries(candles, period = 14) {
   return dx.map((_, index) => simpleAverageAt(dx, index, period));
 }
 
-function computeIndicators(candles, options) {
+export function computeIndicators(candles, options) {
   const closes = candles.map((candle) => Number(candle.close));
 
   return {
@@ -359,7 +380,7 @@ function eventWindowEndIso(candle) {
   return new Date(end).toISOString();
 }
 
-function indexCandlesByTime(candlesBySymbol) {
+export function indexCandlesByTime(candlesBySymbol) {
   return Object.fromEntries(
     SYMBOLS.map((symbol) => [
       symbol,
@@ -373,7 +394,7 @@ function indexCandlesByTime(candlesBySymbol) {
   );
 }
 
-function commonTimes(candlesBySymbol, indicesBySymbol) {
+export function commonTimes(candlesBySymbol, indicesBySymbol) {
   const baseSymbol =
     SYMBOLS.find((symbol) => (candlesBySymbol[symbol] ?? []).length > 0) ??
     SYMBOLS[0];
@@ -1559,6 +1580,14 @@ function symbolWindowEvidence({
     direction === "observed_down"
       ? Math.min(...peakReturns)
       : Math.max(...peakReturns);
+  // Cumulative max aligned excursion: best directional close vs the pre-window
+  // baseline, anywhere inside the window. Captures reactions that spike then
+  // settle (muted by close-to-close). Source-free, no look-ahead past the window.
+  let maxAlignedExcursion = 0;
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const cumulative = sign * pctChange(startPrice, Number(candles[index].close));
+    if (cumulative > maxAlignedExcursion) maxAlignedExcursion = cumulative;
+  }
   const volumeX = relativeVolumeForWindow(candles, startIndex, endIndex);
   const eventRanges = [];
   const priorRanges = [];
@@ -1593,6 +1622,7 @@ function symbolWindowEvidence({
     window_move_pct: roundNumber(windowChangePct, 4),
     window_change_pct: roundNumber(windowChangePct, 4),
     peak_15m_move_pct: roundNumber(peak15m, 4),
+    max_aligned_excursion_pct: roundNumber(maxAlignedExcursion, 4),
     max_volume_ratio: roundNumber(volumeX, 4),
     max_range_ratio: roundNumber(rangeX, 4),
     volume_confirmed: volumeX >= options.minVolumeXPublic,
@@ -1601,7 +1631,7 @@ function symbolWindowEvidence({
   };
 }
 
-function windowToCandidateEvent({
+export function windowToCandidateEvent({
   window,
   times,
   indicesBySymbol,
@@ -1711,6 +1741,10 @@ function windowToCandidateEvent({
       window_change_mean: roundNumber(eventMoveMean, 4),
       window_change_abs_max: roundNumber(maxAbsMove, 4),
       peak_15m_abs_max: roundNumber(peak15mAbsMax, 4),
+      max_aligned_excursion_pct: roundNumber(
+        median(participated.map((item) => item.max_aligned_excursion_pct)) ?? 0,
+        4,
+      ),
       relative_volume_median: roundNumber(relativeVolumeMedian, 4),
     },
     event_strength_label: eventStrengthLabel(strength),
@@ -2026,6 +2060,29 @@ function publishDecisionC({ event, previousPublished, options }) {
     return publish("macro_aligned_confirmed_window", ["volume_confirmation"]);
   }
 
+  // Multibar strong-context continuation (variant-gated). Source-free: a broad,
+  // multi-bar momentum/relief/range-break window whose chart context is strong
+  // and whose aligned excursion confirms the move. Tightened to broad breadth
+  // (not merely non-weak) so narrow single-name moves stay audit.
+  const alignedExcursion =
+    event.evidence_window_stats?.max_aligned_excursion_pct ?? 0;
+  const continuationStory = /^(momentum_continuation|relief_reversal|range_break)/.test(
+    event.event_story_type ?? "",
+  );
+  if (
+    options.enableMultibarContinuation &&
+    evidenceBarCount >= options.minPublicBars &&
+    event.chart_context_score >= options.minMultibarContinuationScore &&
+    continuationStory &&
+    breadthRatio >= options.minMultibarContinuationBreadth &&
+    alignedExcursion >= options.minMultibarContinuationExcursionPct
+  ) {
+    return publish("multibar_strong_context_continuation", [
+      "broad_breadth",
+      "aligned_excursion_confirmed",
+    ]);
+  }
+
   return suppress("no_strong_context_path");
 }
 
@@ -2139,24 +2196,24 @@ export function detectVNextCEvents({
     options: mergedOptions,
   });
   const mergedWindows = mergeAdjacentWindows(detected.windows, mergedOptions);
-  const emittedWindows = mergedWindows
-    .map((window) => {
-      const bars = window.end_cursor - window.start_cursor + 1;
-      // Flash-keep is deliberately rare: a sub-min window is only rescued when
-      // the bar's MEDIAN robust z (avg_return_z) is exceptional (>= flashKeepAvgZ,
-      // well above the 3.5 trigger), i.e. a genuine market-wide one-bar spike.
-      const isExtremeFlash =
-        (window.peak_avg_z ?? 0) >= mergedOptions.flashKeepAvgZ;
-      return {
-        ...window,
-        flash_event: bars < mergedOptions.minDetectedBars && isExtremeFlash,
-      };
-    })
-    .filter((window) => {
-      const bars = window.end_cursor - window.start_cursor + 1;
-      return bars >= mergedOptions.minDetectedBars || window.flash_event;
-    });
-  const candidateEvents = emittedWindows.map((window) =>
+  const flaggedWindows = mergedWindows.map((window) => {
+    const bars = window.end_cursor - window.start_cursor + 1;
+    // Flash-keep is deliberately rare: a sub-min window is only rescued when
+    // the bar's MEDIAN robust z (avg_return_z) is exceptional (>= flashKeepAvgZ,
+    // well above the 3.5 trigger), i.e. a genuine market-wide one-bar spike.
+    const isExtremeFlash =
+      (window.peak_avg_z ?? 0) >= mergedOptions.flashKeepAvgZ;
+    return {
+      ...window,
+      flash_event: bars < mergedOptions.minDetectedBars && isExtremeFlash,
+    };
+  });
+  const keepWindow = (window) => {
+    const bars = window.end_cursor - window.start_cursor + 1;
+    return bars >= mergedOptions.minDetectedBars || window.flash_event;
+  };
+  const emittedWindows = flaggedWindows.filter(keepWindow);
+  const toCandidate = (window) =>
     windowToCandidateEvent({
       window,
       times: detected.times,
@@ -2164,8 +2221,37 @@ export function detectVNextCEvents({
       candlesBySymbol,
       macroCalendar,
       options: mergedOptions,
-    }),
-  );
+    });
+  const candidateEvents = emittedWindows.map(toCandidate);
+
+  // Detection-stage refinement: retain otherwise-dropped one-bar windows that
+  // match the source-validated immediate broad-shock signature (full breadth +
+  // strong aligned move). Source-free; these stay audit at the gate (one-bar).
+  let broadShockEventCount = 0;
+  if (mergedOptions.enableBroadShockDetection) {
+    const droppedOneBar = flaggedWindows.filter(
+      (window) =>
+        !keepWindow(window) &&
+        window.end_cursor - window.start_cursor + 1 === 1,
+    );
+    for (const window of droppedOneBar) {
+      const candidate = toCandidate(window);
+      if (
+        (candidate.breadth_count ?? 0) >= mergedOptions.broadShockMinBreadth &&
+        Math.abs(candidate.window_move_pct ?? 0) >=
+          mergedOptions.broadShockMinAlignedPct
+      ) {
+        candidate.broad_shock_event = true;
+        candidate.diagnostics = {
+          ...candidate.diagnostics,
+          broad_shock_event: true,
+        };
+        candidateEvents.push(candidate);
+        broadShockEventCount += 1;
+      }
+    }
+  }
+
   const events = enrichVNextCEvents(candidateEvents, {
     candlesBySymbol,
     options: mergedOptions,
@@ -2185,13 +2271,14 @@ export function detectVNextCEvents({
         mergedWindows.length - emittedWindows.length,
       flash_event_count: emittedWindows.filter((window) => window.flash_event)
         .length,
+      broad_shock_event_count: broadShockEventCount,
       bar_state_count: detected.states.length,
     },
     options: mergedOptions,
   };
 }
 
-export function summarizeVNextC(events) {
+export function summarizeVNextC(events, options = DEFAULT_VNEXT_C_OPTIONS) {
   const suppressedByReason = {};
 
   for (const event of events.filter((item) => !item.publish_candidate)) {
@@ -2224,6 +2311,7 @@ export function summarizeVNextC(events) {
       acc[event.event_story_type] = (acc[event.event_story_type] ?? 0) + 1;
       return acc;
     }, {}),
-    publish_gate_version: DEFAULT_VNEXT_C_OPTIONS.publishGateVersion,
+    publish_gate_version:
+      options.publishGateVersion ?? DEFAULT_VNEXT_C_OPTIONS.publishGateVersion,
   };
 }

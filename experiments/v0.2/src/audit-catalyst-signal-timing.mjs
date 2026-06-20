@@ -557,12 +557,19 @@ function buildMarkdown(audit) {
   ].join("\n");
 }
 
-async function main() {
+export async function runCatalystSignalTiming(options = {}, { logger = console } = {}) {
+  const feedContractPath = options.feedContractPath ?? FEED_CONTRACT_PATH;
+  const auditEventsPath = options.auditEventsPath ?? AUDIT_EVENTS_PATH;
+  const catalystsPath = options.catalystsPath ?? CATALYSTS_PATH;
+  const refinementsPath = options.refinementsPath ?? REFINEMENTS_PATH;
+  const jsonOutputPath = options.jsonOutputPath ?? AUDIT_JSON_PATH;
+  const mdOutputPath = options.mdOutputPath ?? AUDIT_MD_PATH;
+
   const [feedContract, auditEvents, catalystsData, refinements] = await Promise.all([
-    readJson(FEED_CONTRACT_PATH),
-    readJson(AUDIT_EVENTS_PATH),
-    readJson(CATALYSTS_PATH),
-    readJson(REFINEMENTS_PATH),
+    readJson(feedContractPath),
+    readJson(auditEventsPath),
+    readJson(catalystsPath),
+    readJson(refinementsPath),
   ]);
 
   const publicSignals = flattenFeedItems(feedContract)
@@ -594,10 +601,10 @@ async function main() {
   const audit = {
     generated_at: new Date().toISOString(),
     inputs: {
-      feed_contract: FEED_CONTRACT_PATH,
-      audit_events: AUDIT_EVENTS_PATH,
-      independent_catalysts: CATALYSTS_PATH,
-      catalyst_time_refinements: REFINEMENTS_PATH,
+      feed_contract: feedContractPath,
+      audit_events: auditEventsPath,
+      independent_catalysts: catalystsPath,
+      catalyst_time_refinements: refinementsPath,
     },
     no_claude_used: true,
     lead_windows_min: LEAD_WINDOWS_MIN,
@@ -619,29 +626,46 @@ async function main() {
     },
   };
 
-  await mkdir(OUTPUTS_DIR, { recursive: true });
-  await writeJson(AUDIT_JSON_PATH, audit);
-  await writeText(AUDIT_MD_PATH, buildMarkdown(audit));
+  await mkdir(path.dirname(jsonOutputPath), { recursive: true });
+  await writeJson(jsonOutputPath, audit);
+  await writeText(mdOutputPath, buildMarkdown(audit));
 
   const publicSummary = audit.scopes.public_signals.summary;
   const high = publicSummary.by_support.high.decision_counts;
   const medium = publicSummary.by_support.medium.decision_counts;
-  console.log("Catalyst timing audit written:");
-  console.log(`- ${AUDIT_JSON_PATH}`);
-  console.log(`- ${AUDIT_MD_PATH}`);
-  console.log(
+  logger.log("Catalyst timing audit written:");
+  logger.log(`- ${jsonOutputPath}`);
+  logger.log(`- ${mdOutputPath}`);
+  logger.log(
     `Public scope exact high/medium sources: ${publicSummary.total_exact_high_medium}`,
   );
-  console.log(
+  logger.log(
     `High <=12h catalyst-like: ${(high.strong_timing_match ?? 0) + (high.reasonable_timing_match ?? 0)}`,
   );
-  console.log(
+  logger.log(
     `Medium <=12h catalyst-like: ${(medium.strong_timing_match ?? 0) + (medium.reasonable_timing_match ?? 0)}`,
   );
+
+  return audit;
+}
+
+export function parseArgs(argv = process.argv.slice(2)) {
+  const readOption = (name) => {
+    const index = argv.indexOf(name);
+    return index === -1 ? undefined : argv[index + 1];
+  };
+  return {
+    feedContractPath: readOption("--feed"),
+    auditEventsPath: readOption("--audit"),
+    catalystsPath: readOption("--catalysts"),
+    refinementsPath: readOption("--refinements"),
+    jsonOutputPath: readOption("--output"),
+    mdOutputPath: readOption("--md-output"),
+  };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
+  runCatalystSignalTiming(parseArgs()).catch((error) => {
     console.error(error);
     process.exitCode = 1;
   });

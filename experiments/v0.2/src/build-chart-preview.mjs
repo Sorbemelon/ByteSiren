@@ -57,7 +57,8 @@ function signalOrAuditUniqueSourceMarkerCount(sourceAudit) {
 }
 
 export async function runChartPreviewBuild(options, { logger = console } = {}) {
-  await mkdir(CHART_PREVIEW_DATA_DIR, { recursive: true });
+  const dataDir = options.outDir ?? CHART_PREVIEW_DATA_DIR;
+  await mkdir(dataDir, { recursive: true });
 
   const feedContract = await readJson(options.feedContractPath);
   const groupedPreview = await readJson(options.groupedPreviewPath);
@@ -101,36 +102,36 @@ export async function runChartPreviewBuild(options, { logger = console } = {}) {
   );
 
   await writeJson(
-    path.join(CHART_PREVIEW_DATA_DIR, "feed_contract_v02.json"),
+    path.join(dataDir, "feed_contract_v02.json"),
     feedContract,
   );
   await writeJson(
-    path.join(CHART_PREVIEW_DATA_DIR, "grouped_feed_preview.json"),
+    path.join(dataDir, "grouped_feed_preview.json"),
     groupedPreview,
   );
   await writeJson(
-    path.join(CHART_PREVIEW_DATA_DIR, "non_public_audit_events.json"),
+    path.join(dataDir, "non_public_audit_events.json"),
     auditEvents,
   );
   await writeJson(
-    path.join(CHART_PREVIEW_DATA_DIR, "independent_catalyst_events_30d.json"),
+    path.join(dataDir, "independent_catalyst_events_30d.json"),
     catalysts,
   );
   await writeJson(
-    path.join(CHART_PREVIEW_DATA_DIR, "catalyst_signal_alignment.json"),
+    path.join(dataDir, "catalyst_signal_alignment.json"),
     catalystAlignment,
   );
   await writeJson(
-    path.join(CHART_PREVIEW_DATA_DIR, "catalyst_time_refinements.json"),
+    path.join(dataDir, "catalyst_time_refinements.json"),
     catalystTimeRefinements,
   );
   await writeJson(
-    path.join(CHART_PREVIEW_DATA_DIR, "catalyst_source_audit.json"),
+    path.join(dataDir, "catalyst_source_audit.json"),
     catalystSourceAudit,
   );
   await copyFile(
     options.candlesPath,
-    path.join(CHART_PREVIEW_DATA_DIR, "candles_30d.json"),
+    path.join(dataDir, "candles_30d.json"),
   );
   const payload = {
     feedContract,
@@ -143,11 +144,11 @@ export async function runChartPreviewBuild(options, { logger = console } = {}) {
     candles,
   };
   await writeFile(
-    path.join(CHART_PREVIEW_DATA_DIR, "preview-data.js"),
+    path.join(dataDir, "preview-data.js"),
     jsData(payload),
   );
   await writeFile(
-    path.join(CHART_PREVIEW_DATA_DIR, "preview-data.generated.js"),
+    path.join(dataDir, "preview-data.generated.js"),
     jsData(payload),
   );
 
@@ -188,6 +189,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
     catalystSourceAuditPath:
       readOption(argv, "--catalyst-source-audit") ?? SOURCE_AUDIT_JSON_PATH,
     candlesPath: readOption(argv, "--candles") ?? CANDLES_SNAPSHOT_PATH,
+    outDir: readOption(argv, "--out-dir") ?? undefined,
   };
 }
 

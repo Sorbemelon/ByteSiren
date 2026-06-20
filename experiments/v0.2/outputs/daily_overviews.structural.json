@@ -1,0 +1,2380 @@
+{
+  "generated_at": "2026-06-20T22:01:18.080Z",
+  "item_count": 31,
+  "items": [
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-20",
+      "day_start": "2026-05-20T00:00:00.000Z",
+      "day_end": "2026-05-20T23:59:59.999Z",
+      "market_tone": "quiet",
+      "market_24h_move_pct": 0.3508,
+      "market_range_pct": 1.9111,
+      "notable_symbols": [
+        "SOLUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 1.5916,
+          "range_pct": 3.419,
+          "high": 87.09,
+          "low": 84.19
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 0.8869,
+          "range_pct": 1.6201,
+          "high": 651.77,
+          "low": 641.34
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 0.3508,
+          "range_pct": 1.2441,
+          "high": 77853.04,
+          "low": 76891.61
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.0385,
+          "range_pct": 1.6491,
+          "high": 2149,
+          "low": 2113.87
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -0.0219,
+          "range_pct": 1.6234,
+          "high": 1.3807,
+          "low": 1.3585
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "quiet day; 24h change +0.4%; notable range 1.9%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-20",
+        "market_tone": "quiet",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 0.3508,
+        "market_range_pct": 1.9111,
+        "notable_symbols": [
+          "SOLUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-20",
+        "bitcoin ethereum solana xrp market context 2026-05-20"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-21",
+      "day_start": "2026-05-21T00:00:00.000Z",
+      "day_end": "2026-05-21T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": 0.4901,
+      "market_range_pct": 2.4229,
+      "notable_symbols": [
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ETHUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 1.398,
+          "range_pct": 2.077,
+          "high": 659.82,
+          "low": 646.33
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 1.381,
+          "range_pct": 3.1101,
+          "high": 88,
+          "low": 85.32
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 0.4901,
+          "range_pct": 2.56,
+          "high": 1.3862,
+          "low": 1.3512
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 0.2029,
+          "range_pct": 2.4584,
+          "high": 2157.5,
+          "low": 2105.15
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 0.0816,
+          "range_pct": 1.9091,
+          "high": 78200,
+          "low": 76719.47
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "mixed day; 24h change +0.5%; notable range 2.4%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-21",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 0.4901,
+        "market_range_pct": 2.4229,
+        "notable_symbols": [
+          "BNBUSDT",
+          "SOLUSDT",
+          "XRPUSDT",
+          "ETHUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-21",
+        "bitcoin ethereum solana xrp market context 2026-05-21"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-22",
+      "day_start": "2026-05-22T00:00:00.000Z",
+      "day_end": "2026-05-22T23:59:59.999Z",
+      "market_tone": "risk_off",
+      "market_24h_move_pct": -2.8677,
+      "market_range_pct": 3.472,
+      "notable_symbols": [
+        "SOLUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -3.3772,
+          "range_pct": 4.4076,
+          "high": 87.85,
+          "low": 84
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -3.1831,
+          "range_pct": 3.9179,
+          "high": 2141.39,
+          "low": 2057.79
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -2.8677,
+          "range_pct": 3.3481,
+          "high": 1.376,
+          "low": 1.33
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -2.6747,
+          "range_pct": 3.2736,
+          "high": 77900,
+          "low": 75359.18
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -1.236,
+          "range_pct": 2.4128,
+          "high": 664.2,
+          "low": 648.31
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "risk off day; 24h change -2.9%; notable range 3.5%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-22",
+        "market_tone": "risk_off",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -2.8677,
+        "market_range_pct": 3.472,
+        "notable_symbols": [
+          "SOLUSDT",
+          "ETHUSDT",
+          "XRPUSDT",
+          "BTCUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_468ee54d_20260522t1800"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-22",
+        "bitcoin ethereum solana xrp market context 2026-05-22"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-23",
+      "day_start": "2026-05-23T00:00:00.000Z",
+      "day_end": "2026-05-23T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": 1.6051,
+      "market_range_pct": 5.6021,
+      "notable_symbols": [
+        "ETHUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 2.5084,
+          "range_pct": 6.8083,
+          "high": 2149.95,
+          "low": 2009.3
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 1.7758,
+          "range_pct": 5.5672,
+          "high": 1.3762,
+          "low": 1.3019
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 1.6051,
+          "range_pct": 4.1231,
+          "high": 77404.18,
+          "low": 74289.6
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 1.5995,
+          "range_pct": 7.109,
+          "high": 87.5,
+          "low": 81.5
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 0.8932,
+          "range_pct": 4.4031,
+          "high": 663.93,
+          "low": 635.29
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change +1.6%; notable range 5.6%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-23",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 1.6051,
+        "market_range_pct": 5.6021,
+        "notable_symbols": [
+          "ETHUSDT",
+          "XRPUSDT",
+          "BTCUSDT",
+          "SOLUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_cb03e1e6_20260523t0715",
+          "vnext_c_2921b838_20260523t2000"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-23",
+        "bitcoin ethereum solana xrp market context 2026-05-23"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-24",
+      "day_start": "2026-05-24T00:00:00.000Z",
+      "day_end": "2026-05-24T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": -0.5448,
+      "market_range_pct": 2.7557,
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.8424,
+          "range_pct": 3.2649,
+          "high": 2132.14,
+          "low": 2063
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -0.5714,
+          "range_pct": 3.8479,
+          "high": 87,
+          "low": 83.7
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -0.5448,
+          "range_pct": 2.8269,
+          "high": 1.371,
+          "low": 1.3326
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 0.4078,
+          "range_pct": 1.8699,
+          "high": 77543.15,
+          "low": 76108
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 0.0472,
+          "range_pct": 1.9687,
+          "high": 662.6,
+          "low": 649.68
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "mixed day; 24h change -0.5%; notable range 2.8%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-24",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.5448,
+        "market_range_pct": 2.7557,
+        "notable_symbols": [
+          "ETHUSDT",
+          "SOLUSDT",
+          "XRPUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-24",
+        "bitcoin ethereum solana xrp market context 2026-05-24"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-25",
+      "day_start": "2026-05-25T00:00:00.000Z",
+      "day_end": "2026-05-25T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": 0.3335,
+      "market_range_pct": 2.0113,
+      "notable_symbols": [
+        "BNBUSDT",
+        "ETHUSDT",
+        "SOLUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 1.0006,
+          "range_pct": 2.6364,
+          "high": 673.07,
+          "low": 655.76
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 0.6262,
+          "range_pct": 2.3678,
+          "high": 2141.98,
+          "low": 2092.26
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 0.3335,
+          "range_pct": 1.2863,
+          "high": 77905.52,
+          "low": 76914.25
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -0.2463,
+          "range_pct": 2.1227,
+          "high": 86.52,
+          "low": 84.71
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -0.0518,
+          "range_pct": 1.6432,
+          "high": 1.3657,
+          "low": 1.3435
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "mixed day; 24h change +0.3%; notable range 2%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-25",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 0.3335,
+        "market_range_pct": 2.0113,
+        "notable_symbols": [
+          "BNBUSDT",
+          "ETHUSDT",
+          "SOLUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-25",
+        "bitcoin ethereum solana xrp market context 2026-05-25"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-26",
+      "day_start": "2026-05-26T00:00:00.000Z",
+      "day_end": "2026-05-26T23:59:59.999Z",
+      "market_tone": "risk_off",
+      "market_24h_move_pct": -1.5754,
+      "market_range_pct": 3.137,
+      "notable_symbols": [
+        "ETHUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -1.8571,
+          "range_pct": 4.043,
+          "high": 2140.49,
+          "low": 2055.06
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -1.8003,
+          "range_pct": 3.1065,
+          "high": 78080,
+          "low": 75677.97
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -1.5754,
+          "range_pct": 3.5034,
+          "high": 86.13,
+          "low": 83.15
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -1.5626,
+          "range_pct": 2.8364,
+          "high": 1.3656,
+          "low": 1.3273
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -1.0133,
+          "range_pct": 2.1956,
+          "high": 668.01,
+          "low": 653.45
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "risk off day; 24h change -1.6%; notable range 3.1%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-26",
+        "market_tone": "risk_off",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -1.5754,
+        "market_range_pct": 3.137,
+        "notable_symbols": [
+          "ETHUSDT",
+          "BTCUSDT",
+          "SOLUSDT",
+          "XRPUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260526133000_down"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-26",
+        "bitcoin ethereum solana xrp market context 2026-05-26"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-27",
+      "day_start": "2026-05-27T00:00:00.000Z",
+      "day_end": "2026-05-27T23:59:59.999Z",
+      "market_tone": "risk_off",
+      "market_24h_move_pct": -1.6324,
+      "market_range_pct": 2.9619,
+      "notable_symbols": [
+        "ETHUSDT",
+        "BTCUSDT",
+        "XRPUSDT",
+        "SOLUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -2.3595,
+          "range_pct": 3.9252,
+          "high": 2097.4,
+          "low": 2016
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -1.9501,
+          "range_pct": 2.542,
+          "high": 76174.15,
+          "low": 74243.99
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -1.6324,
+          "range_pct": 3.0392,
+          "high": 1.3437,
+          "low": 1.3033
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -1.5407,
+          "range_pct": 3.2724,
+          "high": 84.84,
+          "low": 82.1
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -1.1563,
+          "range_pct": 2.0307,
+          "high": 659.9,
+          "low": 646.57
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "risk off day; 24h change -1.6%; notable range 3%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-27",
+        "market_tone": "risk_off",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -1.6324,
+        "market_range_pct": 2.9619,
+        "notable_symbols": [
+          "ETHUSDT",
+          "BTCUSDT",
+          "XRPUSDT",
+          "SOLUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260527210000_down"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-27",
+        "bitcoin ethereum solana xrp market context 2026-05-27"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-28",
+      "day_start": "2026-05-28T00:00:00.000Z",
+      "day_end": "2026-05-28T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": -0.7373,
+      "market_range_pct": 3.6272,
+      "notable_symbols": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "SOLUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -1.6322,
+          "range_pct": 3.2613,
+          "high": 649.38,
+          "low": 628.22
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -1.1173,
+          "range_pct": 2.6971,
+          "high": 74590.77,
+          "low": 72582.82
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.7373,
+          "range_pct": 3.1114,
+          "high": 2030,
+          "low": 1967
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 0.6118,
+          "range_pct": 5.4145,
+          "high": 1.3385,
+          "low": 1.2677
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -0.3882,
+          "range_pct": 3.6516,
+          "high": 83.01,
+          "low": 80
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "mixed day; 24h change -0.7%; notable range 3.6%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-28",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.7373,
+        "market_range_pct": 3.6272,
+        "notable_symbols": [
+          "BNBUSDT",
+          "BTCUSDT",
+          "ETHUSDT",
+          "XRPUSDT",
+          "SOLUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-28",
+        "bitcoin ethereum solana xrp market context 2026-05-28"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-29",
+      "day_start": "2026-05-29T00:00:00.000Z",
+      "day_end": "2026-05-29T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": 0.2314,
+      "market_range_pct": 2.9843,
+      "notable_symbols": [
+        "XRPUSDT",
+        "BNBUSDT",
+        "ETHUSDT",
+        "BTCUSDT",
+        "SOLUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 1.0946,
+          "range_pct": 2.9796,
+          "high": 1.3339,
+          "low": 1.2947
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 0.763,
+          "range_pct": 2.2155,
+          "high": 645,
+          "low": 630.86
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 0.2314,
+          "range_pct": 3.4883,
+          "high": 2046.59,
+          "low": 1976.48
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.2129,
+          "range_pct": 2.7189,
+          "high": 74514.1,
+          "low": 72512.49
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -0.0974,
+          "range_pct": 3.5192,
+          "high": 83.24,
+          "low": 80.35
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "mixed day; 24h change +0.2%; notable range 3%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-29",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 0.2314,
+        "market_range_pct": 2.9843,
+        "notable_symbols": [
+          "XRPUSDT",
+          "BNBUSDT",
+          "ETHUSDT",
+          "BTCUSDT",
+          "SOLUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260529134500_up"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-29",
+        "bitcoin ethereum solana xrp market context 2026-05-29"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-30",
+      "day_start": "2026-05-30T00:00:00.000Z",
+      "day_end": "2026-05-30T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": 0.812,
+      "market_range_pct": 4.1263,
+      "notable_symbols": [
+        "BNBUSDT",
+        "XRPUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 11.76,
+          "range_pct": 13.4254,
+          "high": 729,
+          "low": 642.66
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 0.8411,
+          "range_pct": 1.5968,
+          "high": 83.17,
+          "low": 81.86
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 0.812,
+          "range_pct": 2.8571,
+          "high": 1.3661,
+          "low": 1.3281
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 0.5766,
+          "range_pct": 1.2629,
+          "high": 74143.76,
+          "low": 73216
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 0.3921,
+          "range_pct": 1.4892,
+          "high": 2032,
+          "low": 2002
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "volatile day; 24h change +0.8%; notable range 4.1%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-30",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 0.812,
+        "market_range_pct": 4.1263,
+        "notable_symbols": [
+          "BNBUSDT",
+          "XRPUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-30",
+        "bitcoin ethereum solana xrp market context 2026-05-30"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-05-31",
+      "day_start": "2026-05-31T00:00:00.000Z",
+      "day_end": "2026-05-31T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": -0.5892,
+      "market_range_pct": 2.7778,
+      "notable_symbols": [
+        "BNBUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "SOLUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -1.1395,
+          "range_pct": 5.9465,
+          "high": 745.74,
+          "low": 703
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.7629,
+          "range_pct": 2.188,
+          "high": 2038,
+          "low": 1993.75
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -0.5892,
+          "range_pct": 2.0434,
+          "high": 1.3484,
+          "low": 1.321
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -0.3626,
+          "range_pct": 2.526,
+          "high": 83.42,
+          "low": 81.33
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.2842,
+          "range_pct": 1.1852,
+          "high": 74275.66,
+          "low": 73400
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "mixed day; 24h change -0.6%; notable range 2.8%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-05-31",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.5892,
+        "market_range_pct": 2.7778,
+        "notable_symbols": [
+          "BNBUSDT",
+          "ETHUSDT",
+          "XRPUSDT",
+          "SOLUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_aff7db05_20260531t1400"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-05-31",
+        "bitcoin ethereum solana xrp market context 2026-05-31"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-01",
+      "day_start": "2026-06-01T00:00:00.000Z",
+      "day_end": "2026-06-01T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -2.4545,
+      "market_range_pct": 5.034,
+      "notable_symbols": [
+        "BTCUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "ETHUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -3.075,
+          "range_pct": 4.6221,
+          "high": 74092,
+          "low": 70686.68
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -2.6857,
+          "range_pct": 4.6362,
+          "high": 1.3412,
+          "low": 1.2794
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -2.4545,
+          "range_pct": 7.811,
+          "high": 729.57,
+          "low": 674.07
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -1.419,
+          "range_pct": 4.8393,
+          "high": 83.1,
+          "low": 79.11
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.0144,
+          "range_pct": 3.2616,
+          "high": 2021.5,
+          "low": 1956.04
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -2.5%; notable range 5%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-01",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -2.4545,
+        "market_range_pct": 5.034,
+        "notable_symbols": [
+          "BTCUSDT",
+          "XRPUSDT",
+          "BNBUSDT",
+          "SOLUSDT",
+          "ETHUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260601060000_down"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-01",
+        "bitcoin ethereum solana xrp market context 2026-06-01"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-02",
+      "day_start": "2026-06-02T00:00:00.000Z",
+      "day_end": "2026-06-02T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -6.5911,
+      "market_range_pct": 8.3509,
+      "notable_symbols": [
+        "SOLUSDT",
+        "ETHUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -8.6737,
+          "range_pct": 10.5438,
+          "high": 81.3,
+          "low": 72.73
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -7.3199,
+          "range_pct": 8.3599,
+          "high": 2006.78,
+          "low": 1839.02
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -6.5911,
+          "range_pct": 7.8939,
+          "high": 1.2972,
+          "low": 1.1948
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -6.5091,
+          "range_pct": 7.3043,
+          "high": 71408.9,
+          "low": 66193
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -6.1189,
+          "range_pct": 7.6526,
+          "high": 695.51,
+          "low": 642.47
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -6.6%; notable range 8.4%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-02",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -6.5911,
+        "market_range_pct": 8.3509,
+        "notable_symbols": [
+          "SOLUSDT",
+          "ETHUSDT",
+          "XRPUSDT",
+          "BTCUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260602134500_down"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-02",
+        "bitcoin ethereum solana xrp market context 2026-06-02"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-03",
+      "day_start": "2026-06-03T00:00:00.000Z",
+      "day_end": "2026-06-03T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -3.5296,
+      "market_range_pct": 5.9386,
+      "notable_symbols": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "ETHUSDT",
+        "XRPUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -4.6212,
+          "range_pct": 6.347,
+          "high": 657.51,
+          "low": 616.21
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -3.9216,
+          "range_pct": 5.128,
+          "high": 67516,
+          "low": 64092.49
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -3.5296,
+          "range_pct": 6.4394,
+          "high": 75.71,
+          "low": 70.93
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -2.5158,
+          "range_pct": 6.6377,
+          "high": 1893.07,
+          "low": 1769.62
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -0.8747,
+          "range_pct": 5.1411,
+          "high": 1.2491,
+          "low": 1.1868
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -3.5%; notable range 5.9%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-03",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -3.5296,
+        "market_range_pct": 5.9386,
+        "notable_symbols": [
+          "BNBUSDT",
+          "BTCUSDT",
+          "SOLUSDT",
+          "ETHUSDT",
+          "XRPUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_3525f27c_20260603t1500"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-03",
+        "bitcoin ethereum solana xrp market context 2026-06-03"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-04",
+      "day_start": "2026-06-04T00:00:00.000Z",
+      "day_end": "2026-06-04T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -2.5941,
+      "market_range_pct": 6.0326,
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "ETHUSDT",
+        "BTCUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -3.8123,
+          "range_pct": 7.3872,
+          "high": 72.09,
+          "low": 66.8
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -2.6973,
+          "range_pct": 5.9357,
+          "high": 1.212,
+          "low": 1.1407
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -2.5941,
+          "range_pct": 5.8763,
+          "high": 624.57,
+          "low": 588.1
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -2.332,
+          "range_pct": 5.6932,
+          "high": 1820.5,
+          "low": 1717.28
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.4003,
+          "range_pct": 5.2707,
+          "high": 64764.32,
+          "low": 61383.56
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -2.6%; notable range 6%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-04",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -2.5941,
+        "market_range_pct": 6.0326,
+        "notable_symbols": [
+          "SOLUSDT",
+          "XRPUSDT",
+          "BNBUSDT",
+          "ETHUSDT",
+          "BTCUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260604000000_down"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-04",
+        "bitcoin ethereum solana xrp market context 2026-06-04"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-05",
+      "day_start": "2026-06-05T00:00:00.000Z",
+      "day_end": "2026-06-05T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -6.0666,
+      "market_range_pct": 9.8997,
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "BTCUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -10.5808,
+          "range_pct": 13.2598,
+          "high": 1774.99,
+          "low": 1540.19
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -7.594,
+          "range_pct": 11.0643,
+          "high": 69.1,
+          "low": 61.48
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -6.0666,
+          "range_pct": 9.0614,
+          "high": 1.1751,
+          "low": 1.0692
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -5.34,
+          "range_pct": 8.5261,
+          "high": 608,
+          "low": 556.46
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -4.429,
+          "range_pct": 7.5871,
+          "high": 63978,
+          "low": 59130.91
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -6.1%; notable range 9.9%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-05",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -6.0666,
+        "market_range_pct": 9.8997,
+        "notable_symbols": [
+          "ETHUSDT",
+          "SOLUSDT",
+          "XRPUSDT",
+          "BNBUSDT",
+          "BTCUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_0561ae5a_20260605t0515",
+          "vnext_structural_merged_20260605141500_down"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-05",
+        "bitcoin ethereum solana xrp market context 2026-06-05"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-06",
+      "day_start": "2026-06-06T00:00:00.000Z",
+      "day_end": "2026-06-06T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -0.4008,
+      "market_range_pct": 5.3948,
+      "notable_symbols": [
+        "SOLUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "XRPUSDT",
+        "BTCUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -2.2627,
+          "range_pct": 7.4324,
+          "high": 64.86,
+          "low": 60.13
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.8659,
+          "range_pct": 6.0339,
+          "high": 1601.22,
+          "low": 1505.68
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 0.4125,
+          "range_pct": 4.3256,
+          "high": 584.43,
+          "low": 559.68
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -0.4008,
+          "range_pct": 5.8572,
+          "high": 1.1144,
+          "low": 1.0501
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.2815,
+          "range_pct": 3.3249,
+          "high": 61530.05,
+          "low": 59500
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -0.4%; notable range 5.4%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-06",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.4008,
+        "market_range_pct": 5.3948,
+        "notable_symbols": [
+          "SOLUSDT",
+          "ETHUSDT",
+          "BNBUSDT",
+          "XRPUSDT",
+          "BTCUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_f34259a9_20260606t0430"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-06",
+        "bitcoin ethereum solana xrp market context 2026-06-06"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-07",
+      "day_start": "2026-06-07T00:00:00.000Z",
+      "day_end": "2026-06-07T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": 5.679,
+      "market_range_pct": 7.8825,
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BNBUSDT",
+        "BTCUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 7.6977,
+          "range_pct": 10.0549,
+          "high": 1721.93,
+          "low": 1564.1
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 6.896,
+          "range_pct": 9.5805,
+          "high": 67.92,
+          "low": 61.96
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 5.679,
+          "range_pct": 7.6177,
+          "high": 1.1719,
+          "low": 1.0886
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 5.2042,
+          "range_pct": 6.4295,
+          "high": 610.54,
+          "low": 573.6
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 4.0197,
+          "range_pct": 5.73,
+          "high": 64234.68,
+          "low": 60746
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change +5.7%; notable range 7.9%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-07",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 5.679,
+        "market_range_pct": 7.8825,
+        "notable_symbols": [
+          "ETHUSDT",
+          "SOLUSDT",
+          "XRPUSDT",
+          "BNBUSDT",
+          "BTCUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260607011500_up",
+          "vnext_structural_merged_20260607160000_up"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-07",
+        "bitcoin ethereum solana xrp market context 2026-06-07"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-08",
+      "day_start": "2026-06-08T00:00:00.000Z",
+      "day_end": "2026-06-08T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": -0.0006,
+      "market_range_pct": 3.9193,
+      "notable_symbols": [
+        "XRPUSDT",
+        "SOLUSDT",
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 1.099,
+          "range_pct": 4.7335,
+          "high": 1.1866,
+          "low": 1.1319
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 0.4812,
+          "range_pct": 4.797,
+          "high": 68.17,
+          "low": 64.98
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -0.4268,
+          "range_pct": 3.1252,
+          "high": 610.44,
+          "low": 591.55
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.3885,
+          "range_pct": 2.8295,
+          "high": 64200,
+          "low": 62408
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.0006,
+          "range_pct": 4.1112,
+          "high": 1714.5,
+          "low": 1645
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "mixed day; 24h change 0%; notable range 3.9%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-08",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.0006,
+        "market_range_pct": 3.9193,
+        "notable_symbols": [
+          "XRPUSDT",
+          "SOLUSDT",
+          "BNBUSDT",
+          "BTCUSDT",
+          "ETHUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-08",
+        "bitcoin ethereum solana xrp market context 2026-06-08"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-09",
+      "day_start": "2026-06-09T00:00:00.000Z",
+      "day_end": "2026-06-09T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -2.6363,
+      "market_range_pct": 4.7493,
+      "notable_symbols": [
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -3.0145,
+          "range_pct": 4.9016,
+          "high": 1696.88,
+          "low": 1614.02
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -2.7836,
+          "range_pct": 5.8815,
+          "high": 67.47,
+          "low": 63.54
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -2.6363,
+          "range_pct": 4.9816,
+          "high": 1.1769,
+          "low": 1.1187
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -2.1494,
+          "range_pct": 4.3528,
+          "high": 63526.01,
+          "low": 60780
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -1.399,
+          "range_pct": 3.6288,
+          "high": 605.68,
+          "low": 583.84
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -2.6%; notable range 4.7%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-09",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -2.6363,
+        "market_range_pct": 4.7493,
+        "notable_symbols": [
+          "ETHUSDT",
+          "SOLUSDT",
+          "XRPUSDT",
+          "BTCUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_3599de8d_20260609t1345"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-09",
+        "bitcoin ethereum solana xrp market context 2026-06-09"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-10",
+      "day_start": "2026-06-10T00:00:00.000Z",
+      "day_end": "2026-06-10T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -1.1644,
+      "market_range_pct": 4.0538,
+      "notable_symbols": [
+        "XRPUSDT",
+        "SOLUSDT",
+        "BNBUSDT",
+        "ETHUSDT",
+        "BTCUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -3.5689,
+          "range_pct": 4.6414,
+          "high": 1.1412,
+          "low": 1.0884
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -2.7397,
+          "range_pct": 5.2794,
+          "high": 65.77,
+          "low": 62.34
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -1.1644,
+          "range_pct": 3.0062,
+          "high": 598.52,
+          "low": 580.68
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -1.0936,
+          "range_pct": 3.9353,
+          "high": 1667.96,
+          "low": 1603.44
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.3548,
+          "range_pct": 3.4068,
+          "high": 62857.99,
+          "low": 60755
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -1.2%; notable range 4.1%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-10",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -1.1644,
+        "market_range_pct": 4.0538,
+        "notable_symbols": [
+          "XRPUSDT",
+          "SOLUSDT",
+          "BNBUSDT",
+          "ETHUSDT",
+          "BTCUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_83087d7b_20260610t1445"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-10",
+        "bitcoin ethereum solana xrp market context 2026-06-10"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-11",
+      "day_start": "2026-06-11T00:00:00.000Z",
+      "day_end": "2026-06-11T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": 3.4384,
+      "market_range_pct": 4.6995,
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT",
+        "ETHUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 5.9187,
+          "range_pct": 6.6941,
+          "high": 67.42,
+          "low": 63.19
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 4.1655,
+          "range_pct": 4.8765,
+          "high": 1.15,
+          "low": 1.0965
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 3.4384,
+          "range_pct": 3.9376,
+          "high": 63933.02,
+          "low": 61510.99
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 3.2821,
+          "range_pct": 3.5498,
+          "high": 607.33,
+          "low": 586.51
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 3.1981,
+          "range_pct": 4.4394,
+          "high": 1693.59,
+          "low": 1621.6
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change +3.4%; notable range 4.7%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-11",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 3.4384,
+        "market_range_pct": 4.6995,
+        "notable_symbols": [
+          "SOLUSDT",
+          "XRPUSDT",
+          "BTCUSDT",
+          "BNBUSDT",
+          "ETHUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_6ff9704b_20260611t1700"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-11",
+        "bitcoin ethereum solana xrp market context 2026-06-11"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-12",
+      "day_start": "2026-06-12T00:00:00.000Z",
+      "day_end": "2026-06-12T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": -0.3203,
+      "market_range_pct": 2.9234,
+      "notable_symbols": [
+        "XRPUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "BTCUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -0.8926,
+          "range_pct": 2.7654,
+          "high": 1.1577,
+          "low": 1.1261
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.4213,
+          "range_pct": 2.3293,
+          "high": 1691.07,
+          "low": 1652.09
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -0.3203,
+          "range_pct": 2.775,
+          "high": 613.39,
+          "low": 596.58
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -0.1644,
+          "range_pct": 4.2881,
+          "high": 68.82,
+          "low": 65.95
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.0723,
+          "range_pct": 2.4591,
+          "high": 64394.44,
+          "low": 62829.81
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "mixed day; 24h change -0.3%; notable range 2.9%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-12",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.3203,
+        "market_range_pct": 2.9234,
+        "notable_symbols": [
+          "XRPUSDT",
+          "ETHUSDT",
+          "BNBUSDT",
+          "SOLUSDT",
+          "BTCUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_4d0e8312_20260612t1430"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-12",
+        "bitcoin ethereum solana xrp market context 2026-06-12"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-13",
+      "day_start": "2026-06-13T00:00:00.000Z",
+      "day_end": "2026-06-13T23:59:59.999Z",
+      "market_tone": "risk_on",
+      "market_24h_move_pct": 1.381,
+      "market_range_pct": 2.7214,
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "BNBUSDT",
+        "ETHUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 3.1573,
+          "range_pct": 4.489,
+          "high": 69.59,
+          "low": 66.59
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 1.6071,
+          "range_pct": 2.7461,
+          "high": 1.161,
+          "low": 1.1299
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 1.381,
+          "range_pct": 2.114,
+          "high": 64762.77,
+          "low": 63418.66
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 0.9622,
+          "range_pct": 2.1529,
+          "high": 612.33,
+          "low": 599.33
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 0.8857,
+          "range_pct": 2.1051,
+          "high": 1697.28,
+          "low": 1662.2
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "risk on day; 24h change +1.4%; notable range 2.7%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-13",
+        "market_tone": "risk_on",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 1.381,
+        "market_range_pct": 2.7214,
+        "notable_symbols": [
+          "SOLUSDT",
+          "XRPUSDT",
+          "BTCUSDT",
+          "BNBUSDT",
+          "ETHUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-13",
+        "bitcoin ethereum solana xrp market context 2026-06-13"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-14",
+      "day_start": "2026-06-14T00:00:00.000Z",
+      "day_end": "2026-06-14T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": 2.6428,
+      "market_range_pct": 4.3749,
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "ETHUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 3.3943,
+          "range_pct": 6.3098,
+          "high": 71.29,
+          "low": 66.94
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 3.0764,
+          "range_pct": 5.3011,
+          "high": 1.1878,
+          "low": 1.1268
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 2.6428,
+          "range_pct": 4.6027,
+          "high": 1732.28,
+          "low": 1654.9
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 1.9989,
+          "range_pct": 3.2908,
+          "high": 65800,
+          "low": 63678.83
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 1.1695,
+          "range_pct": 2.3702,
+          "high": 617.24,
+          "low": 602.79
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change +2.6%; notable range 4.4%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-14",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 2.6428,
+        "market_range_pct": 4.3749,
+        "notable_symbols": [
+          "SOLUSDT",
+          "XRPUSDT",
+          "ETHUSDT",
+          "BTCUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260614140000_up"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-14",
+        "bitcoin ethereum solana xrp market context 2026-06-14"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-15",
+      "day_start": "2026-06-15T00:00:00.000Z",
+      "day_end": "2026-06-15T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": 3.7733,
+      "market_range_pct": 6.3415,
+      "notable_symbols": [
+        "XRPUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": 4.4013,
+          "range_pct": 9.7555,
+          "high": 1.2935,
+          "low": 1.1778
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": 4.0855,
+          "range_pct": 8.106,
+          "high": 1849.54,
+          "low": 1709.66
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": 3.7733,
+          "range_pct": 7.6168,
+          "high": 76.09,
+          "low": 70.66
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": 0.8857,
+          "range_pct": 2.9479,
+          "high": 67292.15,
+          "low": 65354
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": 0.1751,
+          "range_pct": 3.2815,
+          "high": 632.9,
+          "low": 612.66
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change +3.8%; notable range 6.3%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-15",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": 3.7733,
+        "market_range_pct": 6.3415,
+        "notable_symbols": [
+          "XRPUSDT",
+          "ETHUSDT",
+          "SOLUSDT",
+          "BTCUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_structural_merged_20260615103000_up"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-15",
+        "bitcoin ethereum solana xrp market context 2026-06-15"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-16",
+      "day_start": "2026-06-16T00:00:00.000Z",
+      "day_end": "2026-06-16T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": -0.9856,
+      "market_range_pct": 3.7176,
+      "notable_symbols": [
+        "BNBUSDT",
+        "XRPUSDT",
+        "BTCUSDT",
+        "SOLUSDT",
+        "ETHUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -2.0927,
+          "range_pct": 2.9407,
+          "high": 619.5,
+          "low": 601.33
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -1.6879,
+          "range_pct": 4.0947,
+          "high": 1.256,
+          "low": 1.2053
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.9856,
+          "range_pct": 2.4591,
+          "high": 66992,
+          "low": 65360.92
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -0.6352,
+          "range_pct": 4.5412,
+          "high": 75.65,
+          "low": 72.29
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.1754,
+          "range_pct": 4.5525,
+          "high": 1839.77,
+          "low": 1758
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "mixed day; 24h change -1%; notable range 3.7%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-16",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.9856,
+        "market_range_pct": 3.7176,
+        "notable_symbols": [
+          "BNBUSDT",
+          "XRPUSDT",
+          "BTCUSDT",
+          "SOLUSDT",
+          "ETHUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-16",
+        "bitcoin ethereum solana xrp market context 2026-06-16"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-17",
+      "day_start": "2026-06-17T00:00:00.000Z",
+      "day_end": "2026-06-17T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -2.0128,
+      "market_range_pct": 4.2752,
+      "notable_symbols": [
+        "XRPUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "BTCUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -2.5136,
+          "range_pct": 4.6657,
+          "high": 1.2283,
+          "low": 1.1715
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -2.3648,
+          "range_pct": 4.7334,
+          "high": 1810.21,
+          "low": 1725.34
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -2.0128,
+          "range_pct": 5.2496,
+          "high": 74.69,
+          "low": 70.83
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -1.7748,
+          "range_pct": 3.8525,
+          "high": 66445.93,
+          "low": 63915.77
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -0.5472,
+          "range_pct": 2.8747,
+          "high": 612.5,
+          "low": 595.11
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -2%; notable range 4.3%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-17",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -2.0128,
+        "market_range_pct": 4.2752,
+        "notable_symbols": [
+          "XRPUSDT",
+          "ETHUSDT",
+          "SOLUSDT",
+          "BTCUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_53c55b1e_20260617t1845"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-17",
+        "bitcoin ethereum solana xrp market context 2026-06-17"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-18",
+      "day_start": "2026-06-18T00:00:00.000Z",
+      "day_end": "2026-06-18T23:59:59.999Z",
+      "market_tone": "volatile",
+      "market_24h_move_pct": -3.2477,
+      "market_range_pct": 5.1046,
+      "notable_symbols": [
+        "BNBUSDT",
+        "XRPUSDT",
+        "SOLUSDT",
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -3.8479,
+          "range_pct": 5.2042,
+          "high": 604.31,
+          "low": 573
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -3.3957,
+          "range_pct": 5.0051,
+          "high": 1.1923,
+          "low": 1.1329
+        },
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -3.2477,
+          "range_pct": 6.1763,
+          "high": 72.68,
+          "low": 68.23
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -2.4049,
+          "range_pct": 3.928,
+          "high": 64806,
+          "low": 62272.07
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -2.2564,
+          "range_pct": 5.2096,
+          "high": 1762.99,
+          "low": 1671.79
+        }
+      ],
+      "has_publishable_signal_events": true,
+      "summary_hint": "volatile day; 24h change -3.2%; notable range 5.1%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-18",
+        "market_tone": "volatile",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -3.2477,
+        "market_range_pct": 5.1046,
+        "notable_symbols": [
+          "BNBUSDT",
+          "XRPUSDT",
+          "SOLUSDT",
+          "BTCUSDT",
+          "ETHUSDT"
+        ],
+        "publishable_signal_event_ids": [
+          "vnext_c_7d6fa651_20260618t0400",
+          "vnext_c_8d7abe72_20260618t1445"
+        ],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-18",
+        "bitcoin ethereum solana xrp market context 2026-06-18"
+      ]
+    },
+    {
+      "item_type": "daily_overview",
+      "date_utc": "2026-06-19",
+      "day_start": "2026-06-19T00:00:00.000Z",
+      "day_end": "2026-06-19T23:59:59.999Z",
+      "market_tone": "mixed",
+      "market_24h_move_pct": -0.9094,
+      "market_range_pct": 2.2517,
+      "notable_symbols": [
+        "SOLUSDT",
+        "XRPUSDT",
+        "ETHUSDT",
+        "BNBUSDT"
+      ],
+      "top_symbol_moves": [
+        {
+          "symbol": "SOLUSDT",
+          "move_pct": -1.9793,
+          "range_pct": 3.0264,
+          "high": 70.09,
+          "low": 67.98
+        },
+        {
+          "symbol": "XRPUSDT",
+          "move_pct": -1.8141,
+          "range_pct": 2.756,
+          "high": 1.153,
+          "low": 1.1214
+        },
+        {
+          "symbol": "ETHUSDT",
+          "move_pct": -0.9094,
+          "range_pct": 2.1717,
+          "high": 1719.51,
+          "low": 1682.35
+        },
+        {
+          "symbol": "BNBUSDT",
+          "move_pct": -0.7917,
+          "range_pct": 2.1556,
+          "high": 583.29,
+          "low": 570.82
+        },
+        {
+          "symbol": "BTCUSDT",
+          "move_pct": -0.5337,
+          "range_pct": 1.149,
+          "high": 63110.29,
+          "low": 62386.9
+        }
+      ],
+      "has_publishable_signal_events": false,
+      "summary_hint": "mixed day; 24h change -0.9%; notable range 2.3%.",
+      "claude_payload": {
+        "item_type": "daily_overview",
+        "date_utc": "2026-06-19",
+        "market_tone": "mixed",
+        "change_label": "24h Change",
+        "market_24h_move_pct": -0.9094,
+        "market_range_pct": 2.2517,
+        "notable_symbols": [
+          "SOLUSDT",
+          "XRPUSDT",
+          "ETHUSDT",
+          "BNBUSDT"
+        ],
+        "publishable_signal_event_ids": [],
+        "no_trading_advice": true
+      },
+      "source_query_hints": [
+        "crypto market overview 2026-06-19",
+        "bitcoin ethereum solana xrp market context 2026-06-19"
+      ]
+    }
+  ]
+}

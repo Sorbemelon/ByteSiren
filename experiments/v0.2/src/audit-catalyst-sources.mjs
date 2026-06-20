@@ -907,19 +907,23 @@ function buildMarkdown(audit) {
     .join("\n");
 }
 
-async function main() {
-  const argv = process.argv.slice(2);
-  const liveCheck = hasFlag(argv, "--live-check");
-  const force = hasFlag(argv, "--force");
-  const timeoutMs = integerOption(argv, "--timeout-ms", 15_000);
-  const concurrency = integerOption(argv, "--concurrency", 5);
-  const curlFallback = !hasFlag(argv, "--no-curl-fallback");
-  const powershellFallback = !hasFlag(argv, "--no-powershell-fallback");
+export async function runCatalystSourceAudit(options = {}, { logger = console } = {}) {
+  const liveCheck = options.liveCheck ?? false;
+  const force = options.force ?? false;
+  const timeoutMs = options.timeoutMs ?? 15_000;
+  const concurrency = options.concurrency ?? 5;
+  const curlFallback = options.curlFallback ?? true;
+  const powershellFallback = options.powershellFallback ?? true;
+  const catalystsPath = options.catalystsPath ?? CATALYSTS_PATH;
+  const refinementsPath = options.refinementsPath ?? REFINEMENTS_PATH;
+  const timingAuditPath = options.timingAuditPath ?? TIMING_AUDIT_PATH;
+  const jsonOutputPath = options.jsonOutputPath ?? SOURCE_AUDIT_JSON_PATH;
+  const mdOutputPath = options.mdOutputPath ?? SOURCE_AUDIT_MD_PATH;
 
   const [catalystsData, refinements, timingAudit] = await Promise.all([
-    readJson(CATALYSTS_PATH),
-    readJson(REFINEMENTS_PATH),
-    readJson(TIMING_AUDIT_PATH),
+    readJson(catalystsPath),
+    readJson(refinementsPath),
+    readJson(timingAuditPath),
   ]);
 
   const catalysts = catalystsData.items ?? [];
@@ -959,31 +963,53 @@ async function main() {
     generated_at: new Date().toISOString(),
     no_claude_used: true,
     inputs: {
-      catalysts_path: CATALYSTS_PATH,
-      refinements_path: REFINEMENTS_PATH,
-      timing_audit_path: TIMING_AUDIT_PATH,
+      catalysts_path: catalystsPath,
+      refinements_path: refinementsPath,
+      timing_audit_path: timingAuditPath,
       catalyst_count: catalysts.length,
     },
     summary: buildSummary(rows, liveCheck),
     rows,
   };
 
-  await writeJson(SOURCE_AUDIT_JSON_PATH, audit);
-  await writeText(SOURCE_AUDIT_MD_PATH, buildMarkdown(audit));
+  await writeJson(jsonOutputPath, audit);
+  await writeText(mdOutputPath, buildMarkdown(audit));
 
-  console.log("Catalyst source audit written:");
-  console.log(`- ${SOURCE_AUDIT_JSON_PATH}`);
-  console.log(`- ${SOURCE_AUDIT_MD_PATH}`);
-  console.log(
+  logger.log("Catalyst source audit written:");
+  logger.log(`- ${jsonOutputPath}`);
+  logger.log(`- ${mdOutputPath}`);
+  logger.log(
     `Sources: ${audit.summary.source_link_count} links, ${audit.summary.unique_source_url_count} unique URLs`,
   );
-  console.log(
+  logger.log(
     `Context decisions: ${JSON.stringify(audit.summary.by_context_decision)}`,
   );
+
+  return audit;
+}
+
+export function parseArgs(argv = process.argv.slice(2)) {
+  const readPath = (name) => {
+    const index = argv.indexOf(name);
+    return index === -1 ? undefined : argv[index + 1];
+  };
+  return {
+    liveCheck: hasFlag(argv, "--live-check"),
+    force: hasFlag(argv, "--force"),
+    timeoutMs: integerOption(argv, "--timeout-ms", 15_000),
+    concurrency: integerOption(argv, "--concurrency", 5),
+    curlFallback: !hasFlag(argv, "--no-curl-fallback"),
+    powershellFallback: !hasFlag(argv, "--no-powershell-fallback"),
+    catalystsPath: readPath("--catalysts"),
+    refinementsPath: readPath("--refinements"),
+    timingAuditPath: readPath("--timing"),
+    jsonOutputPath: readPath("--json-output"),
+    mdOutputPath: readPath("--md-output"),
+  };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
+  runCatalystSourceAudit(parseArgs()).catch((error) => {
     console.error(error);
     process.exitCode = 1;
   });
