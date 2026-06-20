@@ -18,7 +18,9 @@ The harness is intentionally outside the Worker and web app runtime paths. It do
 - `src/build-feed-contract.mjs` creates a local proposal for a future grouped `GET /api/intelligence/feed` response.
 - `src/build-non-public-audit.mjs` creates the local audit view for non-public detected events.
 - `src/build-claude-payloads.mjs` creates local Signal Event and Daily Overview Claude payload proposals.
+- `src/run-claude-validation.mjs` creates dry-run prompt previews and can optionally run controlled local Claude validation for Signal Events and Daily Overviews only.
 - Market Story is deterministic-only in this experiment; it has no Claude payload, Claude status, Claude source tags, or nested Signal Event cards.
+- `claude-validation/` contains local validation inputs, prompts, cache markers, and validation outputs.
 - `src/build-chart-preview.mjs` refreshes the local static chart-preview data bundle.
 - `src/smoke-chart-preview.mjs` verifies that the chart preview has loadable local data.
 - `src/compare-vnext-ab.mjs` compares vNext-A with vNext-B.
@@ -44,6 +46,7 @@ node experiments/v0.2/src/build-feed-contract.mjs
 node experiments/v0.2/src/build-feed-preview.mjs
 node experiments/v0.2/src/build-non-public-audit.mjs
 node experiments/v0.2/src/build-claude-payloads.mjs
+node experiments/v0.2/src/run-claude-validation.mjs --mode all --dry-run
 node experiments/v0.2/src/build-chart-preview.mjs
 node experiments/v0.2/src/smoke-chart-preview.mjs
 node experiments/v0.2/src/compare-detectors.mjs
@@ -52,6 +55,7 @@ node experiments/v0.2/src/compare-vnext-bc.mjs
 node --test experiments/v0.2/src/detector-vnext-b/detector.test.mjs
 node --test experiments/v0.2/src/feed-preview-v02.test.mjs
 node --test experiments/v0.2/src/claude-payload-v02.test.mjs
+node --test experiments/v0.2/src/claude-validation-v02.test.mjs
 ```
 
 `API_BASE_URL` may be used instead of `--api-base-url`. There is no default API base; pass one explicitly so the script cannot accidentally call an unintended service.
@@ -90,9 +94,27 @@ node experiments/v0.2/src/build-feed-contract.mjs
 node experiments/v0.2/src/build-feed-preview.mjs
 node experiments/v0.2/src/build-non-public-audit.mjs
 node experiments/v0.2/src/build-claude-payloads.mjs
+node experiments/v0.2/src/run-claude-validation.mjs --mode all --dry-run
 node experiments/v0.2/src/build-chart-preview.mjs
 node experiments/v0.2/src/smoke-chart-preview.mjs
 ```
+
+## Claude Validation
+
+Claude validation is local/offline by default and covers only Signal Event and Daily Overview payloads.
+
+```bash
+node experiments/v0.2/src/build-claude-payloads.mjs
+node experiments/v0.2/src/run-claude-validation.mjs --mode all --dry-run
+```
+
+Optional live sample validation requires `ANTHROPIC_API_KEY` in the environment:
+
+```bash
+node experiments/v0.2/src/run-claude-validation.mjs --mode all --live --limit 5 --resume
+```
+
+Market Story and audit-only events are not standalone Claude validation inputs. Market Story may appear inside a Daily Overview payload only as deterministic day context.
 
 ## Open Chart Preview
 

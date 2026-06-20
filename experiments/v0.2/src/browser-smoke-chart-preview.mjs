@@ -234,6 +234,20 @@ async function runBrowserSmoke() {
       storySections: document.querySelectorAll('.story-section').length,
       storyIndexItems: document.querySelectorAll('.story-index-item').length,
       storyHitZones: state.hitZones.filter((hit) => hit.kind === 'story').length,
+      catalystRows: document.querySelectorAll('.catalyst-row').length,
+      catalystHitZones: state.hitZones.filter((hit) => hit.kind === 'catalyst').length,
+      sourceMarkerHitZones: state.hitZones.filter((hit) => hit.kind === 'source_marker').length,
+      catalystToggle: document.querySelector('#catalyst-toggle')?.textContent.trim(),
+      catalystSourcePanel: document.querySelector('#catalyst-source-panel')?.innerText,
+      catalystSourceLinks: document.querySelectorAll('#catalyst-source-panel .source-link-list a').length,
+      catalystSourceButtons: document.querySelectorAll('#catalyst-source-panel [data-catalyst-source-link]').length,
+      sourceMarkerButtons: document.querySelectorAll('#catalyst-source-panel .source-candidate-button.is-source-marker').length,
+      sourceMarkerWithin6hButtons: document.querySelectorAll('#catalyst-source-panel .source-candidate-button.is-source-marker.is-within-6h').length,
+      sourceMarkerSixTo12hButtons: document.querySelectorAll('#catalyst-source-panel .source-candidate-button.is-source-marker.is-6-12h').length,
+      expectedCatalysts: window.catalystItems?.length,
+      expectedSourceMarkers: window.sourceMarkerItems?.length,
+      expectedSourceMarkersWithin6h: window.sourceMarkerItems?.filter((item) => item.within_6h).length,
+      expectedRefinedTimes: window.catalystTimeRefinements?.refined_count,
       signalSections: document.querySelectorAll('.signal-section').length,
       expectedStories: feedContract.preview_diagnostics.market_story_count,
       expectedAuditStories: publicItems.filter((item) =>
@@ -255,19 +269,88 @@ async function runBrowserSmoke() {
     assert.match(initial.diagnostics, /31 days/);
     assert.match(initial.diagnostics, /detector vnext_c/);
     assert.match(initial.diagnostics, /market stories/);
+    assert.match(initial.diagnostics, /accepted-source catalysts/);
+    assert.match(initial.diagnostics, /signal\/audit keep\/conditional unique source URLs/);
+    assert.match(initial.diagnostics, /within 6h in green/);
     assert.match(initial.diagnostics, /chart context enabled/);
     assert.equal(initial.dailySections, 31);
     assert.equal(initial.storySections, initial.expectedStories);
     assert.equal(initial.storyIndexItems, 0);
     assert.equal(initial.storyHitZones, initial.expectedStories);
+    assert.equal(initial.catalystRows, initial.expectedCatalysts);
+    assert.equal(initial.catalystHitZones, initial.expectedCatalysts);
+    assert.equal(initial.sourceMarkerHitZones, initial.expectedSourceMarkers);
+    assert.equal(initial.catalystToggle, "Catalysts");
+    assert.equal(initial.expectedCatalysts, 96);
+    assert.equal(initial.expectedSourceMarkers, 47);
+    assert.equal(initial.expectedSourceMarkersWithin6h, 31);
+    assert.equal(initial.expectedRefinedTimes, 81);
+    assert.match(initial.catalystSourcePanel, /Catalyst sources on chart/);
+    assert.match(initial.catalystSourcePanel, /47 signal\/audit keep\/conditional unique source URLs/);
+    assert.match(initial.catalystSourcePanel, /31 within 6h in green/);
+    assert.match(initial.catalystSourcePanel, /16 in 6-12h in orange/);
+    assert.match(initial.catalystSourcePanel, /8 use exact\/hour event timestamps/);
+    assert.match(initial.catalystSourcePanel, /81 use source timestamps/);
+    assert.match(initial.catalystSourcePanel, /click a diamond or row/);
+    assert.ok(initial.catalystSourceLinks > 0);
+    assert.equal(
+      initial.catalystSourceButtons,
+      initial.expectedCatalysts + initial.expectedSourceMarkers,
+    );
+    assert.equal(initial.sourceMarkerButtons, initial.expectedSourceMarkers);
+    assert.equal(
+      initial.sourceMarkerWithin6hButtons,
+      initial.expectedSourceMarkersWithin6h,
+    );
+    assert.equal(
+      initial.sourceMarkerSixTo12hButtons,
+      initial.expectedSourceMarkers - initial.expectedSourceMarkersWithin6h,
+    );
     assert.ok(initial.storySections > 0);
     assert.equal(initial.signalSections, initial.expectedSignals);
-    assert.equal(initial.detectorVersion, "vnext_c");
+    assert.ok(
+      ["vnext_c", "vnext_c_source_tuned"].includes(initial.detectorVersion),
+    );
     assert.equal(initial.chartContextEnabled, true);
     assert.equal(initial.dayToggle, "Collapse days");
     assert.equal(initial.selectedType, null);
     assert.equal(initial.symbolValue, "BTCUSDT");
     assert.ok(initial.canvasWidth > 0 && initial.canvasHeight > 0);
+
+    await session.evaluate(
+      `document.querySelector('#catalyst-source-panel .source-candidate-button.is-source-marker.is-within-6h').click()`,
+    );
+    const selectedSourceMarker = await session.evaluate(`(() => ({
+      type: state.selectedType,
+      selectedId: state.selectedId,
+      sourcePanel: document.querySelector('#catalyst-source-panel')?.innerText,
+      label: document.querySelector('#selection-label').textContent,
+      selectedWithin6h: window.sourceMarkerItems?.find((item) => item.id === state.selectedId)?.within_6h ?? null,
+      sourceMarkerHitZones: state.hitZones.filter((hit) => hit.kind === 'source_marker').length
+    }))()`);
+    assert.equal(selectedSourceMarker.type, "source_marker");
+    assert.match(selectedSourceMarker.selectedId, /^source:/);
+    assert.equal(selectedSourceMarker.selectedWithin6h, true);
+    assert.match(selectedSourceMarker.sourcePanel, /Green signal\/audit source URL/);
+    assert.match(selectedSourceMarker.label, /Selected source:/);
+    assert.equal(selectedSourceMarker.sourceMarkerHitZones, initial.expectedSourceMarkers);
+    await session.evaluate(`resetSelectionState(); render();`);
+
+    await session.evaluate(`document.querySelector('.catalyst-row').click()`);
+    const selectedCatalyst = await session.evaluate(`(() => ({
+      type: state.selectedType,
+      selectedRow: Boolean(document.querySelector('.catalyst-row.is-selected')),
+      sourceLinks: document.querySelectorAll('#catalyst-source-panel .source-link-list a').length,
+      sourcePanel: document.querySelector('#catalyst-source-panel')?.innerText,
+      label: document.querySelector('#selection-label').textContent
+    }))()`);
+    assert.equal(selectedCatalyst.type, "catalyst");
+    assert.equal(selectedCatalyst.selectedRow, true);
+    assert.ok(selectedCatalyst.sourceLinks > 0);
+    assert.match(selectedCatalyst.sourcePanel, /Nearest signal:|source support/);
+    assert.match(selectedCatalyst.label, /Selected catalyst:/);
+    await session.evaluate(`document.querySelector('.catalyst-row.is-selected').click()`);
+    assert.equal(await session.evaluate(`state.selectedType`), null);
 
     await session.evaluate(`(() => {
       const select = document.querySelector('#symbol-select');
@@ -685,6 +768,10 @@ async function runBrowserSmoke() {
           screenshot_path: screenshotPath,
           selection_checks: [
             "signal_card_toggle",
+            "catalyst_row_toggle",
+            "signal_audit_source_marker_toggle",
+            "catalyst_chart_points_visible",
+            "catalyst_source_links_visible",
             "chart_window_toggle",
             "daily_overview_toggle",
             "neutral_chart_clear",

@@ -1,0 +1,1233 @@
+{
+  "generated_at": "2026-06-20T12:24:39.214Z",
+  "detector": "vnext_c_source_tuned",
+  "source_detector": "vnext_c",
+  "max_lead_min": 360,
+  "no_claude_used": true,
+  "horizons_min": [
+    60,
+    180,
+    360,
+    720
+  ],
+  "events": [
+    {
+      "event_id": "vnext_c_cca96e5f_20260526t1015",
+      "window_start": "2026-05-26T10:15:00.000Z",
+      "window_end": "2026-05-26T10:44:59.998Z",
+      "direction": "observed_up",
+      "previous_publish_candidate": true,
+      "publish_candidate": true,
+      "publish_reason": "compression_expansion_break",
+      "suppress_reason": null,
+      "source_calibration": {
+        "max_lead_min": 360,
+        "matched_unique_url_count": 1,
+        "keep_unique_url_count": 0,
+        "conditional_keep_unique_url_count": 1,
+        "high_support_unique_url_count": 0,
+        "medium_support_unique_url_count": 1,
+        "strong_timing_unique_url_count": 1,
+        "reasonable_timing_unique_url_count": 1,
+        "source_calibration_score": 0.38,
+        "best_aligned_response_pct": 0.9826,
+        "best_aligned_response_horizon_min": 360,
+        "has_post_source_chart_response": true,
+        "evidence": [
+          {
+            "catalyst_event_id": "btc-etf-oi-decline-leverage-flush-may26",
+            "catalyst_headline": "BTC open interest falls to $54.69B (down 4.27% over 30 days) as leverage flushes from crypto market",
+            "catalyst_type": "market_structure",
+            "context_decision": "conditional_keep",
+            "context_quality": "market_mechanics_catalyst",
+            "context_reason": "market mechanics are relevant, but source format is recap/daily-report",
+            "source_support": "medium",
+            "confidence": "medium",
+            "expected_market_direction": "risk_off",
+            "broad_asset_coverage": "btc_eth_anchor",
+            "source": {
+              "title": "Latest Crypto News Update - May 26, 2026",
+              "publisher": "CoinStats AI",
+              "url": "https://coinstats.app/ai/a/crypto-news-update-26-May-2026",
+              "published_at": "2026-05-26",
+              "tag": "Primary catalyst source",
+              "why_relevant": "Reports BTC OI at $54.69B (-4.27% / 30d), ETH OI at $31.46B (-1.36%), ongoing long liquidations at 94.7%, and BTC ETF 30-day total of -$105.2M as of May 26"
+            },
+            "source_url_hash": "f20e402084ea512792668f4a",
+            "source_host": "coinstats.app",
+            "source_authority": "aggregator_or_secondary",
+            "event_timestamp": {
+              "timestamp_utc": "2026-05-26T07:04:56.182Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_published_json_ld",
+              "timestamp_reliability": "medium"
+            },
+            "timing_scope": "public_signal",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 190
+          }
+        ],
+        "source_responses": [
+          {
+            "source_url": "https://coinstats.app/ai/a/crypto-news-update-26-May-2026",
+            "source_title": "Latest Crypto News Update - May 26, 2026",
+            "source_time_utc": "2026-05-26T07:04:56.182Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 190,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.1227,
+                "aligned_move_pct": 0.1227,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.1227,
+                  "ETHUSDT": 0.0625,
+                  "BNBUSDT": 0.1661,
+                  "SOLUSDT": 0.2492,
+                  "XRPUSDT": -0.0745
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": 0.1259,
+                "aligned_move_pct": 0.1259,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.0174,
+                  "ETHUSDT": 0.1259,
+                  "BNBUSDT": 0.2041,
+                  "SOLUSDT": 0.439,
+                  "XRPUSDT": 0.0745
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 0.9826,
+                "aligned_move_pct": 0.9826,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.5042,
+                  "ETHUSDT": 1.2259,
+                  "BNBUSDT": 0.9826,
+                  "SOLUSDT": 1.1865,
+                  "XRPUSDT": 0.8562
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -1.0498,
+                "aligned_move_pct": -1.0498,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -1.0944,
+                  "ETHUSDT": -1.4256,
+                  "BNBUSDT": -0.1661,
+                  "SOLUSDT": -0.9374,
+                  "XRPUSDT": -1.0498
+                }
+              }
+            },
+            "best_aligned_horizon_min": 360,
+            "best_aligned_move_pct": 0.9826
+          }
+        ]
+      }
+    },
+    {
+      "event_id": "vnext_c_0118579a_20260601t1515",
+      "window_start": "2026-06-01T15:15:00.000Z",
+      "window_end": "2026-06-01T15:59:59.998Z",
+      "direction": "observed_down",
+      "previous_publish_candidate": false,
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "no_strong_context_path",
+      "source_calibration": {
+        "max_lead_min": 360,
+        "matched_unique_url_count": 3,
+        "keep_unique_url_count": 2,
+        "conditional_keep_unique_url_count": 1,
+        "high_support_unique_url_count": 3,
+        "medium_support_unique_url_count": 0,
+        "strong_timing_unique_url_count": 3,
+        "reasonable_timing_unique_url_count": 3,
+        "source_calibration_score": 0.82,
+        "best_aligned_response_pct": 0.2567,
+        "best_aligned_response_horizon_min": 60,
+        "has_post_source_chart_response": false,
+        "evidence": [
+          {
+            "catalyst_event_id": "binance-us-stocks-bstocks-launch-20260601",
+            "catalyst_headline": "Binance launches U.S. equities trading (7,000+ stocks/ETFs) and previews bStocks tokenized securities on BNB Chain",
+            "catalyst_type": "exchange_project",
+            "context_decision": "keep",
+            "context_quality": "market_mechanics_catalyst",
+            "context_reason": "source supports flows, leverage, liquidation, or market-structure pressure",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "tracked_single_or_pair",
+            "source": {
+              "title": "You Can Now Trade 8,000 US Stocks on Binance Using Your Stablecoins",
+              "publisher": "BeInCrypto",
+              "url": "https://beincrypto.com/binance-adds-8000-us-stocks-tradfi/",
+              "published_at": "2026-06-01",
+              "tag": "Supporting catalyst source",
+              "why_relevant": "Confirms brokerage structure (Nest Trading, Alpaca), BNB payment option, and tokenization plans via Ondo Finance"
+            },
+            "source_url_hash": "0d5c6639d952a57c9611f334",
+            "source_host": "beincrypto.com",
+            "source_authority": "specialist_or_unknown",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-01T14:53:00.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_published_json_ld",
+              "timestamp_reliability": "medium"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 22
+          },
+          {
+            "catalyst_event_id": "binance-us-stocks-bstocks-launch-20260601",
+            "catalyst_headline": "Binance launches U.S. equities trading (7,000+ stocks/ETFs) and previews bStocks tokenized securities on BNB Chain",
+            "catalyst_type": "exchange_project",
+            "context_decision": "conditional_keep",
+            "context_quality": "market_mechanics_catalyst",
+            "context_reason": "market mechanics are relevant, but source format is recap/daily-report",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "tracked_single_or_pair",
+            "source": {
+              "title": "Crypto Daily Market Report – June 1, 2026",
+              "publisher": "KuCoin",
+              "url": "https://www.kucoin.com/news/articles/crypto-daily-market-report-june-1-2026",
+              "published_at": "2026-06-01",
+              "tag": "Supporting catalyst source",
+              "why_relevant": "Documents BNB price rally above $720 and Binance Life 22% ATH surge tied directly to Binance product launch anticipation on June 1"
+            },
+            "source_url_hash": "b28e02a54ad94ef210ff139c",
+            "source_host": "kucoin.com",
+            "source_authority": "exchange_or_platform",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-01T14:53:00.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_published_json_ld",
+              "timestamp_reliability": "medium"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 22
+          },
+          {
+            "catalyst_event_id": "binance-us-stocks-bstocks-launch-20260601",
+            "catalyst_headline": "Binance launches U.S. equities trading (7,000+ stocks/ETFs) and previews bStocks tokenized securities on BNB Chain",
+            "catalyst_type": "exchange_project",
+            "context_decision": "keep",
+            "context_quality": "market_mechanics_catalyst",
+            "context_reason": "source supports flows, leverage, liquidation, or market-structure pressure",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "tracked_single_or_pair",
+            "source": {
+              "title": "Binance Launches U.S. Stocks Trading and Previews bStocks Tokenized Securities",
+              "publisher": "PR Newswire / Binance",
+              "url": "https://www.prnewswire.com/news-releases/binance-launches-us-stocks-trading-and-previews-bstocks-tokenized-securities-302787226.html",
+              "published_at": "2026-06-01",
+              "tag": "Primary catalyst source",
+              "why_relevant": "Official press release confirming June 1 launch of U.S. equities trading and bStocks preview, with co-CEO Yi He quote"
+            },
+            "source_url_hash": "c3f820aa782dd751691b9d2d",
+            "source_host": "prnewswire.com",
+            "source_authority": "official_or_primary",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-01T14:53:00.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_published_json_ld",
+              "timestamp_reliability": "medium"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 22
+          }
+        ],
+        "source_responses": [
+          {
+            "source_url": "https://beincrypto.com/binance-adds-8000-us-stocks-tradfi/",
+            "source_title": "You Can Now Trade 8,000 US Stocks on Binance Using Your Stablecoins",
+            "source_time_utc": "2026-06-01T14:53:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 22,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": -0.2567,
+                "aligned_move_pct": 0.2567,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.5402,
+                  "ETHUSDT": -0.0995,
+                  "BNBUSDT": -0.4788,
+                  "SOLUSDT": -0.2381,
+                  "XRPUSDT": -0.2567
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": 1.0257,
+                "aligned_move_pct": -1.0257,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.1819,
+                  "ETHUSDT": 1.0257,
+                  "BNBUSDT": 1.0061,
+                  "SOLUSDT": 1.4288,
+                  "XRPUSDT": 1.1824
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.6794,
+                "aligned_move_pct": -1.6794,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.0978,
+                  "ETHUSDT": 1.7844,
+                  "BNBUSDT": 2.1988,
+                  "SOLUSDT": 1.6794,
+                  "XRPUSDT": 1.058
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": 1.2408,
+                "aligned_move_pct": -1.2408,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.9361,
+                  "ETHUSDT": 1.353,
+                  "BNBUSDT": 1.5099,
+                  "SOLUSDT": 1.2408,
+                  "XRPUSDT": -0.0856
+                }
+              }
+            },
+            "best_aligned_horizon_min": 60,
+            "best_aligned_move_pct": 0.2567
+          },
+          {
+            "source_url": "https://www.kucoin.com/news/articles/crypto-daily-market-report-june-1-2026",
+            "source_title": "Crypto Daily Market Report – June 1, 2026",
+            "source_time_utc": "2026-06-01T14:53:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 22,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": -0.2567,
+                "aligned_move_pct": 0.2567,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.5402,
+                  "ETHUSDT": -0.0995,
+                  "BNBUSDT": -0.4788,
+                  "SOLUSDT": -0.2381,
+                  "XRPUSDT": -0.2567
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": 1.0257,
+                "aligned_move_pct": -1.0257,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.1819,
+                  "ETHUSDT": 1.0257,
+                  "BNBUSDT": 1.0061,
+                  "SOLUSDT": 1.4288,
+                  "XRPUSDT": 1.1824
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.6794,
+                "aligned_move_pct": -1.6794,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.0978,
+                  "ETHUSDT": 1.7844,
+                  "BNBUSDT": 2.1988,
+                  "SOLUSDT": 1.6794,
+                  "XRPUSDT": 1.058
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": 1.2408,
+                "aligned_move_pct": -1.2408,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.9361,
+                  "ETHUSDT": 1.353,
+                  "BNBUSDT": 1.5099,
+                  "SOLUSDT": 1.2408,
+                  "XRPUSDT": -0.0856
+                }
+              }
+            },
+            "best_aligned_horizon_min": 60,
+            "best_aligned_move_pct": 0.2567
+          },
+          {
+            "source_url": "https://www.prnewswire.com/news-releases/binance-launches-us-stocks-trading-and-previews-bstocks-tokenized-securities-302787226.html",
+            "source_title": "Binance Launches U.S. Stocks Trading and Previews bStocks Tokenized Securities",
+            "source_time_utc": "2026-06-01T14:53:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 22,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": -0.2567,
+                "aligned_move_pct": 0.2567,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.5402,
+                  "ETHUSDT": -0.0995,
+                  "BNBUSDT": -0.4788,
+                  "SOLUSDT": -0.2381,
+                  "XRPUSDT": -0.2567
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": 1.0257,
+                "aligned_move_pct": -1.0257,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.1819,
+                  "ETHUSDT": 1.0257,
+                  "BNBUSDT": 1.0061,
+                  "SOLUSDT": 1.4288,
+                  "XRPUSDT": 1.1824
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.6794,
+                "aligned_move_pct": -1.6794,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.0978,
+                  "ETHUSDT": 1.7844,
+                  "BNBUSDT": 2.1988,
+                  "SOLUSDT": 1.6794,
+                  "XRPUSDT": 1.058
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": 1.2408,
+                "aligned_move_pct": -1.2408,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.9361,
+                  "ETHUSDT": 1.353,
+                  "BNBUSDT": 1.5099,
+                  "SOLUSDT": 1.2408,
+                  "XRPUSDT": -0.0856
+                }
+              }
+            },
+            "best_aligned_horizon_min": 60,
+            "best_aligned_move_pct": 0.2567
+          }
+        ]
+      }
+    },
+    {
+      "event_id": "vnext_c_e639b7ad_20260607t2200",
+      "window_start": "2026-06-07T22:00:00.000Z",
+      "window_end": "2026-06-07T22:14:59.998Z",
+      "direction": "observed_up",
+      "previous_publish_candidate": false,
+      "publish_candidate": true,
+      "publish_reason": "source_calibrated_one_bar_range_break_review",
+      "suppress_reason": null,
+      "source_calibration": {
+        "max_lead_min": 360,
+        "matched_unique_url_count": 3,
+        "keep_unique_url_count": 2,
+        "conditional_keep_unique_url_count": 1,
+        "high_support_unique_url_count": 3,
+        "medium_support_unique_url_count": 0,
+        "strong_timing_unique_url_count": 3,
+        "reasonable_timing_unique_url_count": 3,
+        "source_calibration_score": 0.98,
+        "best_aligned_response_pct": 1.1644,
+        "best_aligned_response_horizon_min": 360,
+        "has_post_source_chart_response": true,
+        "evidence": [
+          {
+            "catalyst_event_id": "strategy-saylor-btc-resumption-hint-jun7",
+            "catalyst_headline": "Michael Saylor hints Strategy is resuming Bitcoin accumulation after first-ever sale shock",
+            "catalyst_type": "institutional",
+            "context_decision": "keep",
+            "context_quality": "direct_catalyst",
+            "context_reason": "source supports a discrete macro, geopolitical, regulatory, or security event",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "btc_eth_anchor",
+            "source": {
+              "title": "Saylor's Strategy Resumes Bitcoin Accumulation Spree After Last Week's Sale",
+              "publisher": "CryptoPotato",
+              "url": "https://cryptopotato.com/saylors-strategy-resumes-bitcoin-accumulation-spree-after-last-weeks-sale/",
+              "published_at": "2026-06-08",
+              "tag": "Supporting catalyst source",
+              "why_relevant": "Confirms Strategy officially purchased 1,550 BTC for just over $100 million at ~$65,332 avg, with Saylor hinting on Sunday (June 7) before making it official the following day."
+            },
+            "source_url_hash": "36334179587e8323866350a4",
+            "source_host": "cryptopotato.com",
+            "source_authority": "specialist_or_unknown",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-07T17:00:00.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_time_tag",
+              "timestamp_reliability": "medium"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 300
+          },
+          {
+            "catalyst_event_id": "strategy-saylor-btc-resumption-hint-jun7",
+            "catalyst_headline": "Michael Saylor hints Strategy is resuming Bitcoin accumulation after first-ever sale shock",
+            "catalyst_type": "institutional",
+            "context_decision": "conditional_keep",
+            "context_quality": "direct_catalyst",
+            "context_reason": "discrete event is relevant, but source format is recap/daily-report",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "btc_eth_anchor",
+            "source": {
+              "title": "Crypto Market Update: Bankman-Fried Seeks Pardon from Trump",
+              "publisher": "Investing News Network",
+              "url": "https://investingnews.com/cryptocurrency-market-recap/",
+              "published_at": "2026-06-08",
+              "tag": "Primary catalyst source",
+              "why_relevant": "Reports Saylor's June 7 social media hint about resuming accumulation and the resulting ~4% BTC rally on Sunday June 7, with direct context on the June 1 BTC sale that preceded it."
+            },
+            "source_url_hash": "47ae32c36e73dab8f86e1457",
+            "source_host": "investingnews.com",
+            "source_authority": "specialist_or_unknown",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-07T17:00:00.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_time_tag",
+              "timestamp_reliability": "medium"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 300
+          },
+          {
+            "catalyst_event_id": "strategy-saylor-btc-resumption-hint-jun7",
+            "catalyst_headline": "Michael Saylor hints Strategy is resuming Bitcoin accumulation after first-ever sale shock",
+            "catalyst_type": "institutional",
+            "context_decision": "keep",
+            "context_quality": "direct_catalyst",
+            "context_reason": "source supports a discrete macro, geopolitical, regulatory, or security event",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "btc_eth_anchor",
+            "source": {
+              "title": "Crypto: Trending News, Latest Updates, Analysis",
+              "publisher": "Bloomberg",
+              "url": "https://www.bloomberg.com/latest/crypto",
+              "published_at": "2026-06-07",
+              "tag": "Supporting catalyst source",
+              "why_relevant": "Bloomberg headline dated June 7 reads 'Strategy Resumes Buying Bitcoin After Rare Sale Roils Crypto,' confirming the institutional catalyst date."
+            },
+            "source_url_hash": "8f3e0c86e8bc7a803f33766f",
+            "source_host": "bloomberg.com",
+            "source_authority": "major_or_specialist_media",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-07T17:00:00.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_time_tag",
+              "timestamp_reliability": "medium"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 300
+          }
+        ],
+        "source_responses": [
+          {
+            "source_url": "https://cryptopotato.com/saylors-strategy-resumes-bitcoin-accumulation-spree-after-last-weeks-sale/",
+            "source_title": "Saylor's Strategy Resumes Bitcoin Accumulation Spree After Last Week's Sale",
+            "source_time_utc": "2026-06-07T17:00:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 300,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.0916,
+                "aligned_move_pct": 0.0916,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.0084,
+                  "ETHUSDT": -0.0257,
+                  "BNBUSDT": 0.2517,
+                  "SOLUSDT": 0.0916,
+                  "XRPUSDT": 0.4978
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": -1.1355,
+                "aligned_move_pct": -1.1355,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -1.1355,
+                  "ETHUSDT": -0.8739,
+                  "BNBUSDT": -0.8406,
+                  "SOLUSDT": -1.8173,
+                  "XRPUSDT": -1.3974
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.1644,
+                "aligned_move_pct": 1.1644,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 1.1644,
+                  "ETHUSDT": 2.7451,
+                  "BNBUSDT": 1.5605,
+                  "SOLUSDT": 0.9927,
+                  "XRPUSDT": 0.9782
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -0.443,
+                "aligned_move_pct": -0.443,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.4624,
+                  "ETHUSDT": 0.8464,
+                  "BNBUSDT": -0.443,
+                  "SOLUSDT": -0.4582,
+                  "XRPUSDT": -0.6725
+                }
+              }
+            },
+            "best_aligned_horizon_min": 360,
+            "best_aligned_move_pct": 1.1644
+          },
+          {
+            "source_url": "https://investingnews.com/cryptocurrency-market-recap/",
+            "source_title": "Crypto Market Update: Bankman-Fried Seeks Pardon from Trump",
+            "source_time_utc": "2026-06-07T17:00:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 300,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.0916,
+                "aligned_move_pct": 0.0916,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.0084,
+                  "ETHUSDT": -0.0257,
+                  "BNBUSDT": 0.2517,
+                  "SOLUSDT": 0.0916,
+                  "XRPUSDT": 0.4978
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": -1.1355,
+                "aligned_move_pct": -1.1355,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -1.1355,
+                  "ETHUSDT": -0.8739,
+                  "BNBUSDT": -0.8406,
+                  "SOLUSDT": -1.8173,
+                  "XRPUSDT": -1.3974
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.1644,
+                "aligned_move_pct": 1.1644,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 1.1644,
+                  "ETHUSDT": 2.7451,
+                  "BNBUSDT": 1.5605,
+                  "SOLUSDT": 0.9927,
+                  "XRPUSDT": 0.9782
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -0.443,
+                "aligned_move_pct": -0.443,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.4624,
+                  "ETHUSDT": 0.8464,
+                  "BNBUSDT": -0.443,
+                  "SOLUSDT": -0.4582,
+                  "XRPUSDT": -0.6725
+                }
+              }
+            },
+            "best_aligned_horizon_min": 360,
+            "best_aligned_move_pct": 1.1644
+          },
+          {
+            "source_url": "https://www.bloomberg.com/latest/crypto",
+            "source_title": "Crypto: Trending News, Latest Updates, Analysis",
+            "source_time_utc": "2026-06-07T17:00:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 300,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.0916,
+                "aligned_move_pct": 0.0916,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.0084,
+                  "ETHUSDT": -0.0257,
+                  "BNBUSDT": 0.2517,
+                  "SOLUSDT": 0.0916,
+                  "XRPUSDT": 0.4978
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": -1.1355,
+                "aligned_move_pct": -1.1355,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -1.1355,
+                  "ETHUSDT": -0.8739,
+                  "BNBUSDT": -0.8406,
+                  "SOLUSDT": -1.8173,
+                  "XRPUSDT": -1.3974
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.1644,
+                "aligned_move_pct": 1.1644,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 1.1644,
+                  "ETHUSDT": 2.7451,
+                  "BNBUSDT": 1.5605,
+                  "SOLUSDT": 0.9927,
+                  "XRPUSDT": 0.9782
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -0.443,
+                "aligned_move_pct": -0.443,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.4624,
+                  "ETHUSDT": 0.8464,
+                  "BNBUSDT": -0.443,
+                  "SOLUSDT": -0.4582,
+                  "XRPUSDT": -0.6725
+                }
+              }
+            },
+            "best_aligned_horizon_min": 360,
+            "best_aligned_move_pct": 1.1644
+          }
+        ]
+      }
+    },
+    {
+      "event_id": "vnext_c_a1f7b080_20260613t2130",
+      "window_start": "2026-06-13T21:30:00.000Z",
+      "window_end": "2026-06-13T21:44:59.998Z",
+      "direction": "observed_up",
+      "previous_publish_candidate": false,
+      "publish_candidate": false,
+      "publish_reason": null,
+      "suppress_reason": "one_bar_unconfirmed_window",
+      "source_calibration": {
+        "max_lead_min": 360,
+        "matched_unique_url_count": 2,
+        "keep_unique_url_count": 2,
+        "conditional_keep_unique_url_count": 0,
+        "high_support_unique_url_count": 2,
+        "medium_support_unique_url_count": 0,
+        "strong_timing_unique_url_count": 2,
+        "reasonable_timing_unique_url_count": 2,
+        "source_calibration_score": 0.78,
+        "best_aligned_response_pct": 0.2439,
+        "best_aligned_response_horizon_min": 360,
+        "has_post_source_chart_response": false,
+        "evidence": [
+          {
+            "catalyst_event_id": "etf-btc-inflow-reversal-jun12",
+            "catalyst_headline": "Spot Bitcoin ETFs record $85.85M net inflow on June 12, breaking outflow streak; ETH ETFs extend losses for 4th day",
+            "catalyst_type": "etf_flows",
+            "context_decision": "keep",
+            "context_quality": "market_mechanics_catalyst",
+            "context_reason": "source supports flows, leverage, liquidation, or market-structure pressure",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "btc_eth_anchor",
+            "source": {
+              "title": "Blackrock's IBIT Leads $86 Million Bitcoin ETF Inflow as Ethereum Funds Extend Outflow Streak",
+              "publisher": "Bitcoin.com News",
+              "url": "https://news.bitcoin.com/bitcoin-etf-inflows-ethereum-outflows-june-2026/",
+              "published_at": "2026-06-12",
+              "tag": "Primary catalyst source",
+              "why_relevant": "Directly reports the June 12 BTC ETF $85.85M inflow, IBIT leading at $57.7M, zero funds in outflow, and ETH ETFs losing $4.95M for a fourth straight day"
+            },
+            "source_url_hash": "bb0fe7bfd724d25d7b22b176",
+            "source_host": "news.bitcoin.com",
+            "source_authority": "specialist_or_unknown",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-13T17:20:18.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_published_json_ld",
+              "timestamp_reliability": "low"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 250
+          },
+          {
+            "catalyst_event_id": "etf-btc-inflow-reversal-jun12",
+            "catalyst_headline": "Spot Bitcoin ETFs record $85.85M net inflow on June 12, breaking outflow streak; ETH ETFs extend losses for 4th day",
+            "catalyst_type": "etf_flows",
+            "context_decision": "keep",
+            "context_quality": "market_mechanics_catalyst",
+            "context_reason": "source supports flows, leverage, liquidation, or market-structure pressure",
+            "source_support": "high",
+            "confidence": "high",
+            "expected_market_direction": "risk_on",
+            "broad_asset_coverage": "btc_eth_anchor",
+            "source": {
+              "title": "Crypto ETF Flows June 2026: Bitcoin Outflows, XRP and Solana Rotation",
+              "publisher": "SpotedCrypto",
+              "url": "https://www.spotedcrypto.com/crypto-etf-rotation-2026-bitcoin-outflows-xrp-solana/",
+              "published_at": "2026-06-12",
+              "tag": "Supporting catalyst source",
+              "why_relevant": "Confirms IBIT captured ~67% of June 12 daily total ($57.7M) and notes Solana ETFs accumulated $1.118B in cumulative net inflows by June 12"
+            },
+            "source_url_hash": "ee4db27db86180d080f0fc88",
+            "source_host": "spotedcrypto.com",
+            "source_authority": "aggregator_or_secondary",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-13T17:20:18.000Z",
+              "timestamp_basis": "source_published_time",
+              "time_granularity": "day",
+              "refined_time_kind": "source_published_json_ld",
+              "timestamp_reliability": "low"
+            },
+            "timing_scope": "audit_event",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 250
+          }
+        ],
+        "source_responses": [
+          {
+            "source_url": "https://news.bitcoin.com/bitcoin-etf-inflows-ethereum-outflows-june-2026/",
+            "source_title": "Blackrock's IBIT Leads $86 Million Bitcoin ETF Inflow as Ethereum Funds Extend Outflow Streak",
+            "source_time_utc": "2026-06-13T17:20:18.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 250,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.0148,
+                "aligned_move_pct": 0.0148,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.1374,
+                  "ETHUSDT": 0.1311,
+                  "BNBUSDT": 0.0148,
+                  "SOLUSDT": 0.0147,
+                  "XRPUSDT": -0.1394
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": -0.0811,
+                "aligned_move_pct": -0.0811,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.2115,
+                  "ETHUSDT": -0.0811,
+                  "BNBUSDT": 0.0625,
+                  "SOLUSDT": -0.1172,
+                  "XRPUSDT": -0.122
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 0.2439,
+                "aligned_move_pct": 0.2439,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.5393,
+                  "ETHUSDT": 0.1502,
+                  "BNBUSDT": 0.1398,
+                  "SOLUSDT": 1.0256,
+                  "XRPUSDT": 0.2439
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -0.044,
+                "aligned_move_pct": -0.044,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.3125,
+                  "ETHUSDT": -0.1162,
+                  "BNBUSDT": 0.1315,
+                  "SOLUSDT": -0.044,
+                  "XRPUSDT": -0.1307
+                }
+              }
+            },
+            "best_aligned_horizon_min": 360,
+            "best_aligned_move_pct": 0.2439
+          },
+          {
+            "source_url": "https://www.spotedcrypto.com/crypto-etf-rotation-2026-bitcoin-outflows-xrp-solana/",
+            "source_title": "Crypto ETF Flows June 2026: Bitcoin Outflows, XRP and Solana Rotation",
+            "source_time_utc": "2026-06-13T17:20:18.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 250,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.0148,
+                "aligned_move_pct": 0.0148,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.1374,
+                  "ETHUSDT": 0.1311,
+                  "BNBUSDT": 0.0148,
+                  "SOLUSDT": 0.0147,
+                  "XRPUSDT": -0.1394
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": -0.0811,
+                "aligned_move_pct": -0.0811,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.2115,
+                  "ETHUSDT": -0.0811,
+                  "BNBUSDT": 0.0625,
+                  "SOLUSDT": -0.1172,
+                  "XRPUSDT": -0.122
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 0.2439,
+                "aligned_move_pct": 0.2439,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.5393,
+                  "ETHUSDT": 0.1502,
+                  "BNBUSDT": 0.1398,
+                  "SOLUSDT": 1.0256,
+                  "XRPUSDT": 0.2439
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -0.044,
+                "aligned_move_pct": -0.044,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.3125,
+                  "ETHUSDT": -0.1162,
+                  "BNBUSDT": 0.1315,
+                  "SOLUSDT": -0.044,
+                  "XRPUSDT": -0.1307
+                }
+              }
+            },
+            "best_aligned_horizon_min": 360,
+            "best_aligned_move_pct": 0.2439
+          }
+        ]
+      }
+    },
+    {
+      "event_id": "vnext_c_e71b58af_20260617t1800",
+      "window_start": "2026-06-17T18:00:00.000Z",
+      "window_end": "2026-06-17T19:44:59.998Z",
+      "direction": "observed_down",
+      "previous_publish_candidate": true,
+      "publish_candidate": true,
+      "publish_reason": "broad_confirmed_break",
+      "suppress_reason": null,
+      "source_calibration": {
+        "max_lead_min": 360,
+        "matched_unique_url_count": 2,
+        "keep_unique_url_count": 1,
+        "conditional_keep_unique_url_count": 1,
+        "high_support_unique_url_count": 0,
+        "medium_support_unique_url_count": 2,
+        "strong_timing_unique_url_count": 2,
+        "reasonable_timing_unique_url_count": 2,
+        "source_calibration_score": 0.57,
+        "best_aligned_response_pct": 0.5001,
+        "best_aligned_response_horizon_min": 720,
+        "has_post_source_chart_response": true,
+        "evidence": [
+          {
+            "catalyst_event_id": "us-retail-sales-jun17",
+            "catalyst_headline": "US May Retail Sales MoM data released June 17 ahead of FOMC decision",
+            "catalyst_type": "macro",
+            "context_decision": "keep",
+            "context_quality": "direct_catalyst",
+            "context_reason": "source supports a discrete macro, geopolitical, regulatory, or security event",
+            "source_support": "medium",
+            "confidence": "medium",
+            "expected_market_direction": "mixed",
+            "broad_asset_coverage": "broad",
+            "source": {
+              "title": "The Fed speaks this afternoon. PCE follows in 8 days.",
+              "publisher": "Kraken Blog",
+              "url": "https://blog.kraken.com/economic-brief/june-17-2026",
+              "published_at": "2026-06-17",
+              "tag": "Supporting catalyst source",
+              "why_relevant": "Confirms US Retail Sales for May released June 17 at 8:30 a.m. ET, sequencing it as a pre-FOMC macro input"
+            },
+            "source_url_hash": "3fc8d9e0daee09170f39b70f",
+            "source_host": "blog.kraken.com",
+            "source_authority": "exchange_or_platform",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-17T12:30:00.000Z",
+              "timestamp_basis": "catalog_event_time",
+              "time_granularity": "exact",
+              "refined_time_kind": null,
+              "timestamp_reliability": "high"
+            },
+            "timing_scope": "public_signal",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 330
+          },
+          {
+            "catalyst_event_id": "us-retail-sales-jun17",
+            "catalyst_headline": "US May Retail Sales MoM data released June 17 ahead of FOMC decision",
+            "catalyst_type": "macro",
+            "context_decision": "conditional_keep",
+            "context_quality": "direct_catalyst",
+            "context_reason": "discrete event is relevant, but source format is recap/daily-report",
+            "source_support": "medium",
+            "confidence": "medium",
+            "expected_market_direction": "mixed",
+            "broad_asset_coverage": "broad",
+            "source": {
+              "title": "Crypto Daily Market Report June 16 2026",
+              "publisher": "KuCoin",
+              "url": "https://www.kucoin.com/news/articles/crypto-daily-market-report-june-16-2026",
+              "published_at": "2026-06-16",
+              "tag": "Primary catalyst source",
+              "why_relevant": "Specifically lists June 17 US May retail sales MoM as a scheduled macro event in the June 16–18 economic calendar"
+            },
+            "source_url_hash": "f2c19ece235d8541ef812e1c",
+            "source_host": "kucoin.com",
+            "source_authority": "exchange_or_platform",
+            "event_timestamp": {
+              "timestamp_utc": "2026-06-17T12:30:00.000Z",
+              "timestamp_basis": "catalog_event_time",
+              "time_granularity": "exact",
+              "refined_time_kind": null,
+              "timestamp_reliability": "high"
+            },
+            "timing_scope": "public_signal",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 330
+          }
+        ],
+        "source_responses": [
+          {
+            "source_url": "https://blog.kraken.com/economic-brief/june-17-2026",
+            "source_title": "The Fed speaks this afternoon. PCE follows in 8 days.",
+            "source_time_utc": "2026-06-17T12:30:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 330,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.6494,
+                "aligned_move_pct": -0.6494,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.5629,
+                  "ETHUSDT": 0.6494,
+                  "BNBUSDT": 0.5891,
+                  "SOLUSDT": 0.6512,
+                  "XRPUSDT": 0.7355
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": 0.8925,
+                "aligned_move_pct": -0.8925,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.8925,
+                  "ETHUSDT": 0.6881,
+                  "BNBUSDT": -0.5611,
+                  "SOLUSDT": 1.7459,
+                  "XRPUSDT": 0.9361
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.6883,
+                "aligned_move_pct": -1.6883,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 1.7288,
+                  "ETHUSDT": 1.6826,
+                  "BNBUSDT": 0.1728,
+                  "SOLUSDT": 2.9514,
+                  "XRPUSDT": 1.6883
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -0.5001,
+                "aligned_move_pct": 0.5001,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.5001,
+                  "ETHUSDT": -0.0063,
+                  "BNBUSDT": -0.8079,
+                  "SOLUSDT": 0.3325,
+                  "XRPUSDT": -0.585
+                }
+              }
+            },
+            "best_aligned_horizon_min": 720,
+            "best_aligned_move_pct": 0.5001
+          },
+          {
+            "source_url": "https://www.kucoin.com/news/articles/crypto-daily-market-report-june-16-2026",
+            "source_title": "Crypto Daily Market Report June 16 2026",
+            "source_time_utc": "2026-06-17T12:30:00.000Z",
+            "timing_decision": "strong_timing_match",
+            "relation": "source_before_signal",
+            "lead_min": 330,
+            "horizons": {
+              "60m": {
+                "horizon_min": 60,
+                "median_move_pct": 0.6494,
+                "aligned_move_pct": -0.6494,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.5629,
+                  "ETHUSDT": 0.6494,
+                  "BNBUSDT": 0.5891,
+                  "SOLUSDT": 0.6512,
+                  "XRPUSDT": 0.7355
+                }
+              },
+              "180m": {
+                "horizon_min": 180,
+                "median_move_pct": 0.8925,
+                "aligned_move_pct": -0.8925,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 0.8925,
+                  "ETHUSDT": 0.6881,
+                  "BNBUSDT": -0.5611,
+                  "SOLUSDT": 1.7459,
+                  "XRPUSDT": 0.9361
+                }
+              },
+              "360m": {
+                "horizon_min": 360,
+                "median_move_pct": 1.6883,
+                "aligned_move_pct": -1.6883,
+                "direction_aligned": false,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": 1.7288,
+                  "ETHUSDT": 1.6826,
+                  "BNBUSDT": 0.1728,
+                  "SOLUSDT": 2.9514,
+                  "XRPUSDT": 1.6883
+                }
+              },
+              "720m": {
+                "horizon_min": 720,
+                "median_move_pct": -0.5001,
+                "aligned_move_pct": 0.5001,
+                "direction_aligned": true,
+                "move_pct_by_symbol": {
+                  "BTCUSDT": -0.5001,
+                  "ETHUSDT": -0.0063,
+                  "BNBUSDT": -0.8079,
+                  "SOLUSDT": 0.3325,
+                  "XRPUSDT": -0.585
+                }
+              }
+            },
+            "best_aligned_horizon_min": 720,
+            "best_aligned_move_pct": 0.5001
+          }
+        ]
+      }
+    }
+  ]
+}

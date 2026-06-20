@@ -1,0 +1,280 @@
+# Catalyst Time Refinements
+
+Generated: 2026-06-20T10:51:41.783Z
+Input catalysts: 96
+Targets without exact time: 88
+Refined source timestamps: 81
+Same-day refined timestamps: 46
+Fetch failures: 0
+
+Note: refined times are accepted source page timestamps unless a future pass marks an explicit event-time basis. They help chart inspection, but do not prove the catalyst occurred at that exact minute.
+
+## Refined
+
+- btc-etf-outflows-week-may20 — 2026-05-18T09:50:07.000Z (source_published_json_ld, low)
+  - US spot Bitcoin ETF weekly net outflows exceed $1B; 10Y Treasury yield sensitivity confirmed
+  - https://crypto.news/bitcoin-braces-for-fed-minutes-and-nvidia-earnings-after-661m-wipeout/
+- crypto-liquidation-661m-may20 — 2026-05-20T02:13:48.558Z (source_published_embedded_json, medium)
+  - $661M in crypto positions liquidated in 24-hour window heading into May 20 week
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-20-2026
+- us-iran-geopolitical-risk-may20 — 2026-05-20T02:13:48.558Z (source_published_embedded_json, medium)
+  - Ongoing US-Iran tension and nuclear negotiation uncertainty weighs on global risk assets
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-20-2026
+- global-bond-yield-surge-may20 — 2026-05-20T02:13:48.558Z (source_published_embedded_json, medium)
+  - Global bond yields at multi-year highs amplify crypto risk-off pressure entering May 20
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-20-2026
+- nakamoto-reverse-split-may22 — 2026-05-20T14:13:49.638Z (source_published_json_ld, low)
+  - Bitcoin treasury firm Nakamoto (NAKA) executes 1-for-40 reverse stock split on May 22 amid 99% stock collapse
+  - https://www.coindesk.com/markets/2026/05/20/live-markets-crypto-prices-remain-flat-ahead-of-fomc-minutes-nvidia-earnings
+- btc-etf-outflow-streak-may23-25 — 2026-05-25T07:44:34.000Z (source_published_json_ld, low)
+  - Spot Bitcoin ETFs extend multi-week outflow streak; 2026 net inflows collapse to $536M
+  - https://en.cryptonomist.ch/2026/05/25/us-spot-bitcoin-etfs-outflows-2026/
+- blockchaincom-ipo-filing-may23 — 2026-06-01T06:30:34.000Z (source_published_json_ld, low)
+  - Blockchain.com confidentially files for U.S. IPO, signaling renewed confidence in regulatory environment
+  - https://news.bitcoin.com/this-week-in-crypto-law-may-23-2026/
+- ecb-stablecoin-warning-may23-week — 2026-06-01T06:30:34.000Z (source_published_json_ld, low)
+  - ECB warns against broader euro-denominated stablecoin adoption, citing bank stability risks
+  - https://news.bitcoin.com/this-week-in-crypto-law-may-23-2026/
+- cftc-gemini-penalty-withdrawal-may23-week — 2026-06-01T06:30:34.000Z (source_published_json_ld, low)
+  - CFTC moves to withdraw $5M penalty against Gemini, signaling continued U.S. regulatory unwinding
+  - https://news.bitcoin.com/this-week-in-crypto-law-may-23-2026/
+- btc-etf-outflow-liquidation-risk-off-may23-context — 2026-05-25T15:50:39.000Z (source_published_json_ld, low)
+  - Cascading leveraged long liquidations continue into May 23 window following May 18 $700M wipeout
+  - https://www.cryptotimes.io/2026/05/25/crypto-market-today-btc-eth-sol-xrp-bnb-flash-green-after-sell-off/
+- crypto-market-selloff-recovery-may25 — 2026-05-25T15:50:39.000Z (source_published_json_ld, medium)
+  - Broad crypto market posts first uniformly green session in over two weeks on May 25 as liquidations and shorts recede
+  - https://www.cryptotimes.io/2026/05/25/crypto-market-today-btc-eth-sol-xrp-bnb-flash-green-after-sell-off/
+- geo-us-iran-strikes-hormuz-may26-28 — 2026-05-26T11:20:16.602Z (source_published_json_ld, medium)
+  - U.S. military strikes Iranian air-defense and drone sites near Strait of Hormuz over three-day window (May 25–28)
+  - https://www.coindesk.com/daybook-us/2026/05/26/bitcoin-etfs-crushed-by-billions-in-outflows-as-treasuries-stifle-interest-rate-cut-hopes
+- etf-btc-weekly-outflow-record-may26 — 2026-05-26T11:20:16.602Z (source_published_json_ld, medium)
+  - Spot Bitcoin ETFs record $1.26B weekly outflow — largest of 2026 — as Treasury yields signal higher-for-longer rates
+  - https://www.coindesk.com/daybook-us/2026/05/26/bitcoin-etfs-crushed-by-billions-in-outflows-as-treasuries-stifle-interest-rate-cut-hopes
+- us-memorial-day-holiday-thin-liquidity-may26 — 2026-05-26T02:13:40.637Z (source_published_embedded_json, medium)
+  - U.S. Memorial Day holiday on May 26 closes equity markets, thinning crypto liquidity during geopolitical flare-up
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-26-2026
+- btc-etf-oi-decline-leverage-flush-may26 — 2026-05-26T07:04:56.182Z (source_published_json_ld, medium)
+  - BTC open interest falls to $54.69B (down 4.27% over 30 days) as leverage flushes from crypto market
+  - https://coinstats.app/ai/a/crypto-news-update-26-May-2026
+- treasury-ofac-iran-sanctions-may27 — 2026-05-28T04:25:42.733Z (source_published_json_ld, low)
+  - U.S. Treasury/OFAC designates IRGC-linked 'Persian Gulf Strait Authority' and sanctions Iran oil network on May 27
+  - https://www.coindesk.com/markets/2026/05/28/bitcoin-drops-below-usd73-000-as-us-strikes-on-iran-spark-usd1-billion-liquidations
+- boj-ueda-monetary-policy-conference-may27 — 2026-05-26T02:13:40.637Z (source_published_embedded_json, low)
+  - BOJ Governor Kazuo Ueda speaks at BOJ-hosted monetary policy conference on May 27
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-26-2026
+- dtcc-stellar-tokenization-announcement — 2026-05-27T14:03:59.919Z (source_published_json_ld, medium)
+  - DTCC selects Stellar as first public blockchain for tokenized-securities settlement platform; XLM surges ~14–30% into May 29
+  - https://www.coindesk.com/business/2026/05/27/dtcc-plans-to-bring-tokenized-assets-to-stellar-in-latest-wall-street-blockchain-push
+- etf-btc-single-day-outflow-may28 — 2026-05-29T06:54:52.426Z (source_published_json_ld, low)
+  - IBIT records second-largest-ever single-day outflow of $733M on May 28, coinciding with Iran strikes
+  - https://phemex.com/blogs/btc-price-today-may-29-2026-bitcoin-etf-outflows
+- macro-us-core-pce-q1-gdp-pending-may28 — 2026-05-26T11:20:16.602Z (source_published_json_ld, low)
+  - U.S. April Core PCE and revised Q1 GDP releases on May 28 awaited as key Fed-rate-path signals
+  - https://www.coindesk.com/daybook-us/2026/05/26/bitcoin-etfs-crushed-by-billions-in-outflows-as-treasuries-stifle-interest-rate-cut-hopes
+- eu-mica-enforcement-french-regulator-warning — 2026-06-08T06:30:41.000Z (source_published_json_ld, low)
+  - French regulator warns unlicensed crypto firms serving EU customers face prosecution under MiCA enforcement
+  - https://news.bitcoin.com/this-week-in-crypto-law-may-30-2026/
+- us-pce-gdp-macro-slowdown-may29 — 2026-05-29T02:30:47.940Z (source_published_embedded_json, medium)
+  - U.S. April PCE inflation hits near-3-year high; GDP revised down — crypto diverges from equity record highs
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-29-2026
+- us-iran-ceasefire-uncertainty-geopolitical — 2026-05-29T02:30:47.940Z (source_published_embedded_json, medium)
+  - U.S.–Iran ceasefire negotiations remain unresolved; oil volatility persists into late May
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-29-2026
+- vaneck-bnb-etf-launch-vbnb-may29 — 2026-05-29T02:30:47.940Z (source_published_embedded_json, medium)
+  - VanEck launches first U.S. spot BNB ETF (ticker: VBNB)
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-29-2026
+- btc-etf-weekly-outflow-streak-final-week-may — 2026-05-31T09:27:10.000Z (source_published_json_ld, low)
+  - U.S. spot Bitcoin ETFs record ~$1.4B in weekly outflows in final week of May; 10-day outflow streak noted
+  - https://www.banklesstimes.com/articles/2026/05/31/crypto-market-recap-trump-kills-u-s-cbdc-8b-seized-in-fbi-operation-paxos-becomes-first-blockchain-clearing-agency-and-more-may-24-30-2026/
+- clarity-act-bessent-treasury-advocacy-may29 — 2026-05-29T02:30:47.940Z (source_published_embedded_json, medium)
+  - Treasury Secretary Bessent publicly urges Congress to pass CLARITY Act; passage probability rebounds to 57%
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-29-2026
+- fbi-operation-blackout-8b-crypto-seizure — 2026-05-31T09:27:10.000Z (source_published_json_ld, low)
+  - FBI seizes ~127,000 BTC (~$8B) in largest U.S. crypto forfeiture ever via Operation Blackout
+  - https://www.banklesstimes.com/articles/2026/05/31/crypto-market-recap-trump-kills-u-s-cbdc-8b-seized-in-fbi-operation-paxos-becomes-first-blockchain-clearing-agency-and-more-may-24-30-2026/
+- grayscale-ghyp-staking-etf-final-filing-may29 — 2026-05-29T02:30:47.940Z (source_published_embedded_json, medium)
+  - Grayscale submits final S-1 registration for 'Grayscale Hyperliquid Staking ETF' (GHYP), adding staking component
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-may-29-2026
+- binance-us-stocks-bstocks-launch-20260601 — 2026-06-01T14:53:00.000Z (source_published_json_ld, medium)
+  - Binance launches U.S. equities trading (7,000+ stocks/ETFs) and previews bStocks tokenized securities on BNB Chain
+  - https://www.prnewswire.com/news-releases/binance-launches-us-stocks-trading-and-previews-bstocks-tokenized-securities-302787226.html
+- cftc-247-kalshi-btc-perps-20260601 — 2026-06-01T02:19:00.769Z (source_published_embedded_json, medium)
+  - CFTC releases 24/7 trading guidance and approves Kalshi to launch Bitcoin spot-referenced perpetual futures
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-1-2026
+- japan-fsa-stablecoin-regulation-20260601 — 2026-05-31T11:53:00.000Z (source_published_json_ld, low)
+  - Japan FSA begins regulating foreign trust-type stablecoins as electronic payment methods
+  - https://www.panewslab.com/en/articles/019e7de2-a48e-76bd-8cea-5e9a7fb97047
+- fomc-speaker-kashkari-harker-june2-macro — 2026-05-31T11:53:00.000Z (source_published_json_ld, low)
+  - Fed voters Kashkari (Minneapolis) and Harker (Cleveland) both speak on monetary policy on June 2, adding rate-path uncertainty
+  - https://www.panewslab.com/en/articles/019e7de2-a48e-76bd-8cea-5e9a7fb97047
+- btc-etf-outflow-streak-13day-peak-june13 — 2026-06-19T11:36:41.000Z (source_published_json_ld, low)
+  - U.S. spot Bitcoin ETF 13-day, ~$4.4B net outflow streak peaks through June 3 — longest redemption run since January 2024 launch
+  - https://www.spotedcrypto.com/bitcoin-etf-outflows-june-2026-ibit-recovery/
+- btc-strategy-sale-liquidation-cascade-june3 — 2026-06-04T01:56:40.000Z (source_published_json_ld, low)
+  - Bitcoin hits $65,710 intraday low on June 3 as Strategy BTC sale and $1.8B in forced liquidations compound ETF outflow pressure
+  - https://news.bitcoin.com/1-2b-liquidated-as-bitcoin-tests-62-5k-support-amid-sharp-crypto-selloff/
+- strategy-btc-sale-disclosure-jun01 — 2026-06-04T18:07:40.000Z (source_published_json_ld, medium)
+  - Strategy's First Net BTC Sale Since 2022 Continues to Weigh on Market Sentiment Through June 4–5
+  - https://www.cnbc.com/2026/06/04/bitcoin-is-weathering-its-ugliest-week-in-months-as-narrative-fades-and-liquidity-rotates.html
+- btc-etf-13day-outflow-streak — 2026-06-04T07:04:09.343Z (source_published_json_ld, medium)
+  - US Spot Bitcoin ETF 13-Day, $4.4B Outflow Streak Ends June 4–5 After Record Redemption Pressure
+  - https://coinstats.app/ai/a/crypto-news-update-04-June-2026
+- btc-eth-mass-liquidation-cascade — 2026-06-04T07:04:09.343Z (source_published_json_ld, medium)
+  - ~$1.75–1.84B in Crypto Liquidations in 24 Hours; BTC Open Interest Drops 22%
+  - https://coinstats.app/ai/a/crypto-news-update-04-June-2026
+- clarity-act-senate-calendar-placement — 2026-06-04T18:07:40.000Z (source_published_json_ld, medium)
+  - CLARITY Act Placed on Senate Legislative Calendar June 1, but Full Senate Passage Prospects Remain Uncertain
+  - https://www.cnbc.com/2026/06/04/bitcoin-is-weathering-its-ugliest-week-in-months-as-narrative-fades-and-liquidity-rotates.html
+- liquidity-rotation-spacex-ai-chips — 2026-06-04T18:07:40.000Z (source_published_json_ld, medium)
+  - Speculative Capital Rotates Out of Crypto Into SpaceX IPO and AI/Chip Trades
+  - https://www.cnbc.com/2026/06/04/bitcoin-is-weathering-its-ugliest-week-in-months-as-narrative-fades-and-liquidity-rotates.html
+- eth-etf-outflow-streak-june-window — 2026-06-04T07:04:09.343Z (source_published_json_ld, medium)
+  - Ethereum Spot ETFs Record $429.3M in 7-Day Outflows Heading Into June 4–6
+  - https://coinstats.app/ai/a/crypto-news-update-04-June-2026
+- toncoin-telegram-gram-rebrand-drop — 2026-06-04T07:04:09.343Z (source_published_json_ld, medium)
+  - Toncoin Falls 13.5% on June 4 After Post-Telegram 'Gram' Rebrand Announcement Profit-Taking
+  - https://coinstats.app/ai/a/crypto-news-update-04-June-2026
+- hezbollah-ceasefire-rejection-geopolitical — 2026-06-02T05:09:39.411Z (source_published_json_ld, low)
+  - Hezbollah Rejects Israel Ceasefire Offer; Middle East Tensions Cited as Crypto Headwind
+  - https://www.coindesk.com/markets/2026/06/02/bitcoin-slide-to-usd70-000-as-stocks-pause-and-strategy-s-btc-sale-weighs-on-crypto
+- iran-missile-israel-jun7 — 2026-06-09T02:26:28.000Z (source_published_json_ld, low)
+  - Iran fires 11 ballistic missiles at northern Israel, breaking April ceasefire
+  - https://www.valuethemarkets.com/cryptocurrency/news/israels-military-action-against-iran-and-its-impact-on-cryptocurrency-markets
+- strategy-saylor-btc-resumption-hint-jun7 — 2026-06-07T17:00:00.000Z (source_time_tag, medium)
+  - Michael Saylor hints Strategy is resuming Bitcoin accumulation after first-ever sale shock
+  - https://www.bloomberg.com/latest/crypto
+- strategy-first-btc-sale-market-shock-context — 2026-06-08T09:32:01.000Z (source_published_rss_feed, low)
+  - Strategy's June 1 BTC sale (32 BTC) continues to depress sentiment entering June 7 week
+  - https://blog.quidax.io/crypto-market-update-week-ending-june-7th-2026/
+- ai-capital-rotation-btc-headwind — 2026-06-08T09:32:01.000Z (source_published_rss_feed, low)
+  - Capital rotation from crypto to AI equities cited as structural headwind entering June 7 week
+  - https://blog.quidax.io/crypto-market-update-week-ending-june-7th-2026/
+- israel-retaliatory-strikes-iran-jun8 — 2026-06-09T15:37:31.000Z (source_published_json_ld, low)
+  - Israel launches retaliatory airstrikes on Iranian military and petrochemical targets; ceasefire collapses
+  - https://cryptobriefing.com/israel-halts-iran-attacks-crypto-liquidations/
+- geopolitical-liquidation-cascade-jun8 — 2026-06-08T09:32:01.000Z (source_published_rss_feed, medium)
+  - Over $1 billion in crypto liquidations triggered by Israel-Iran escalation on June 8
+  - https://blog.quidax.io/crypto-market-update-week-ending-june-7th-2026/
+- strategy-mstr-btc-official-purchase-jun8 — 2026-06-08T12:06:09.000Z (source_published_json_ld, medium)
+  - Strategy officially purchases 1,550 BTC for ~$100M, growing total holdings to 845,256 BTC
+  - https://cryptopotato.com/saylors-strategy-resumes-bitcoin-accumulation-spree-after-last-weeks-sale/
+- macro-usd-rate-pressure-june8 — 2026-06-19T20:05:00.000Z (source_published_json_ld, low)
+  - Stronger US dollar and elevated rate expectations suppress crypto risk appetite on June 8
+  - https://investingnews.com/cryptocurrency-market-recap/
+- geo-us-iran-strikes-jun10 — 2026-06-10T13:32:01.000Z (source_published_json_ld, medium)
+  - US Central Command launches new strikes on Iranian military targets on June 10, escalating conflict
+  - https://cryptobriefing.com/iran-strikes-us-bases-crypto-market-impact/
+- geo-us-iran-diplomacy-jun10 — 2026-06-11T08:08:08.000Z (source_published_json_ld, low)
+  - US-Iran indirect negotiations continue despite strikes; Qatar facilitates talks in Tehran on June 10
+  - https://cryptobriefing.com/us-iran-negotiations-crypto-market-impact/
+- geo-iran-btc-sanctions-nobitex — 2026-06-11T00:18:59.000Z (source_published_json_ld, low)
+  - US Treasury freezes ~$344M in crypto linked to Iran's Strait of Hormuz BTC toll-collection scheme; Nobitex sanctioned June 2
+  - https://cryptobriefing.com/iran-strait-hormuz-bitcoin-crypto-impact/
+- macro-spx-risk-appetite-jun10 — 2026-06-10T02:26:31.975Z (source_published_embedded_json, medium)
+  - S&P 500 drops 2.2% intraday on geopolitical shock; crypto weakens in tandem, reflecting fragile risk appetite
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-10-2026
+- etf-btc-record-weekly-outflow-earlyJun — 2026-06-14T11:22:47.000Z (source_published_json_ld, low)
+  - US spot Bitcoin ETFs record historic $3.4B weekly net outflow in early June — largest since January 2024 launch
+  - https://www.spotedcrypto.com/crypto-etf-rotation-2026-bitcoin-outflows-xrp-solana/
+- etf-sol-xrp-rotation-jun10-12 — 2026-06-14T11:22:47.000Z (source_published_json_ld, low)
+  - Intra-crypto ETF rotation: XRP and Solana ETFs absorb ~$226M combined as BTC and ETH funds bleed
+  - https://www.spotedcrypto.com/crypto-etf-rotation-2026-bitcoin-outflows-xrp-solana/
+- regulatory-clarity-act-senate-committee-may14 — 2026-06-19T11:36:41.000Z (source_published_json_ld, low)
+  - US Clarity Act Senate Banking Committee passage (May 14) remains active regulatory backdrop shaping crypto market structure sentiment through June 10–12
+  - https://www.spotedcrypto.com/bitcoin-etf-outflows-june-2026-ibit-recovery/
+- macro-us-ppi-jun11 — 2026-06-10T02:26:31.975Z (source_published_embedded_json, low)
+  - US May PPI and weekly jobless claims released June 11 — scheduled macro data event for risk sentiment
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-10-2026
+- exchange-bybit-spacex-ipo-express-jun11-12 — 2026-06-14T09:00:56.000Z (source_published_json_ld, low)
+  - Bybit/Binance tokenized SpaceX IPO subscription closes June 11; spot trading set for June 12 — but xStocks fails to deliver allocations
+  - https://gizmodo.com/crypto-platforms-sold-users-on-spacex-ipo-access-the-tokenized-stocks-never-arrived-2000771535
+- etf-btc-inflow-reversal-jun12 — 2026-06-13T17:20:18.000Z (source_published_json_ld, low)
+  - Spot Bitcoin ETFs record $85.85M net inflow on June 12, breaking outflow streak; ETH ETFs extend losses for 4th day
+  - https://news.bitcoin.com/bitcoin-etf-inflows-ethereum-outflows-june-2026/
+- geopo-us-iran-deal-announcement-jun13 — 2026-06-13T11:19:41.000Z (source_published_json_ld, medium)
+  - Trump announces imminent US-Iran peace deal; Strait of Hormuz reopening signalled
+  - https://cryptobriefing.com/iran-us-peace-deal-crypto-markets/
+- exchange-project-spacex-ipo-firstday-jun13 — 2026-06-17T08:25:52.000Z (source_published_json_ld, low)
+  - SpaceX (SPCX) begins first trading day on Nasdaq after record $75B IPO; crypto capital-rotation risk and BTC treasury transparency created
+  - https://crypto.news/spacex-bitcoin-treasury-ipo/
+- etf-flows-btc-ibit-recovery-streak-end-jun13 — 2026-06-13T17:20:18.000Z (source_published_json_ld, medium)
+  - US spot BTC ETFs record $85.85M net inflow on June 12-13, ending record $3.4B outflow streak; ETH ETFs extend outflow run
+  - https://news.bitcoin.com/bitcoin-etf-inflows-ethereum-outflows-june-2026/
+- etf-flows-sol-xrp-rotation-jun13 — 2026-06-14T11:22:47.000Z (source_published_json_ld, low)
+  - Solana ETFs reach $1.118B cumulative inflows within weeks of May 26 launch; XRP/SOL rotation absorbs ~$226M as BTC/ETH funds bleed
+  - https://www.spotedcrypto.com/crypto-etf-rotation-2026-bitcoin-outflows-xrp-solana/
+- geopo-us-iran-mou-signed-jun14 — 2026-06-14T22:06:25.114Z (source_published_json_ld, medium)
+  - Trump formally announces US-Iran peace deal; MOU confirmed; oil drops sharply, BTC surges above $65,600
+  - https://www.bloomberg.com/news/articles/2026-06-14/us-futures-climb-oil-falls-on-iran-peace-deal-markets-wrap
+- macro-oil-drop-inflation-fed-jun14-15 — 2026-06-14T22:06:25.114Z (source_published_json_ld, medium)
+  - Oil falls sharply on Hormuz reopening; Fed rate-hike expectations recede, easing macro headwind for crypto
+  - https://www.bloomberg.com/news/articles/2026-06-14/us-futures-climb-oil-falls-on-iran-peace-deal-markets-wrap
+- regulatory-sec-trowe-multisset-etf-jun15 — 2026-06-15T02:09:02.999Z (source_published_embedded_json, medium)
+  - SEC approves T. Rowe Price actively managed multi-asset crypto ETF covering up to 15 digital assets
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-15-2026
+- regulatory-cftc-perp-contracts-jun15 — 2026-06-15T02:09:02.999Z (source_published_embedded_json, medium)
+  - CFTC formally upgrades crypto quasi-perpetual futures to true perpetual contracts with compliance pathway
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-15-2026
+- us-iran-ceasefire-geopolitical — 2026-06-16T21:00:00.000Z (source_published_json_ld, medium)
+  - US–Iran ceasefire and Strait of Hormuz reopening framework lifts risk sentiment early in the window
+  - https://blockchainreporter.net/prediction-markets-have-already-decided-the-fomc-outcome-heres-how-crypto-could-react
+- blackrock-bita-xrp-etf-listing — 2026-06-16T02:32:57.918Z (source_published_embedded_json, medium)
+  - BlackRock BITA ETF listed June 16, fueling XRP ETF speculation and modest XRP rally
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-16-2026
+- boj-rate-hike-31yr-high — 2026-06-17T02:12:34.948Z (source_published_embedded_json, medium)
+  - Bank of Japan raises policy rate to 1.0%, highest in 31 years, ahead of FOMC
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-17-2026
+- btc-etf-outflow-fomc-jun17 — 2026-06-18T08:47:57.000Z (source_published_wordpress_rest, low)
+  - US spot Bitcoin ETF complex bleeds $82.16M net on June 17 post-FOMC; Fidelity FBTC sole notable inflow at $14M
+  - https://99bitcoins.com/news/bitcoin-btc/fidelity-fbtc-leads-bitcoin-etf-inflows-post-fomc/
+- mara-btc-purchase-circle-usdc-minting — 2026-06-17T02:12:34.948Z (source_published_embedded_json, medium)
+  - MARA adds 1,000 BTC; Circle mints $1B USDC on Solana with $3.5B weekly issuance
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-17-2026
+- microsoft-cryptobandits-malware-disclosure — 2026-06-17T19:44:38.000Z (source_inline_iso_time, medium)
+  - Microsoft discloses Trojan:Win32/CryptoBandits USB-spread crypto clipper malware active since February 2026
+  - https://www.coindesk.com/tech/2026/06/19/microsoft-found-malware-that-hijacks-crypto-wallets-and-spreads-through-usb-sticks
+- dubai-vara-aml-fatf-update — 2026-06-17T02:12:34.948Z (source_published_embedded_json, medium)
+  - Dubai VARA updates AML guidelines requiring crypto firms to integrate real-time FATF blacklist screening
+  - https://www.kucoin.com/news/articles/crypto-daily-market-report-june-17-2026
+- strc-sata-leverage-liquidation-jun18 — 2026-06-18T19:36:11.000Z (source_inline_iso_time, medium)
+  - Strategy STRC and Strive SATA digital credit products suffer leverage liquidation selloff on June 18
+  - https://www.coindesk.com/markets/2026/06/16/here-is-why-strategy-s-dividend-paying-crypto-stock-is-crashing-to-near-historic-lows
+- geo-iran-switzerland-signing-collapse-20260619 — 2026-06-19T10:13:35.000Z (source_published_json_ld, medium)
+  - Iran-Switzerland Peace Memorandum Signing Postponed Indefinitely After Israeli Lebanon Airstrikes
+  - https://blockchainreporter.net/crypto-market-today-june-19-2026-bitcoin-62328-iran-signing-collapses/
+- macro-fed-hawkish-dotplot-carry-20260619 — 2026-06-19T10:13:35.000Z (source_published_json_ld, medium)
+  - Fed June FOMC Hawkish Dot Plot Residual Pressure: 9 Officials Project 2026 Rate Hike
+  - https://blockchainreporter.net/crypto-market-today-june-19-2026-bitcoin-62328-iran-signing-collapses/
+- etf-franklin-templeton-bitcoin-drip-filing-20260619 — 2026-06-19T20:00:00.000Z (source_inline_iso_time, medium)
+  - Franklin Templeton Files SEC Registration for Two 'Bitcoin DRIP' ETFs That Reinvest Stock Dividends Into BTC
+  - https://robinhood.com/us/en/crypto/BTC/
+- regulatory-clarity-act-senate-floor-july4-target-20260619 — 2026-06-19T10:13:35.000Z (source_published_json_ld, medium)
+  - CLARITY Act Remains on Senate Floor Calendar; White House Targets July 4 Signing — XRP Commodity Classification Key Outcome
+  - https://blockchainreporter.net/crypto-market-today-june-19-2026-bitcoin-62328-iran-signing-collapses/
+- institutional-btc-lth-accumulation-125k-june-20260619 — 2026-06-19T10:13:35.000Z (source_published_json_ld, medium)
+  - Long-Term BTC Holders Absorb 125,000 BTC in June; Strategy Holds 846,842 BTC
+  - https://blockchainreporter.net/crypto-market-today-june-19-2026-bitcoin-62328-iran-signing-collapses/
+
+## Not Refined
+
+- clarity-act-senate-passage-risk-may23-week — timestamp_without_time_component
+  - No exact timestamp was found in accepted source metadata/time tags.
+  - https://cryptonews.com/news/regulation-news/
+- clarity-act-senate-calendar-20260601 — timestamp_without_time_component
+  - No exact timestamp was found in accepted source metadata/time tags.
+  - https://www.lw.com/en/us-crypto-policy-tracker/legislative-developments
+- sec-draft-strategic-plan-digital-assets-20260602 — timestamp_without_time_component
+  - No exact timestamp was found in accepted source metadata/time tags.
+  - https://www.lw.com/en/us-crypto-policy-tracker/regulatory-developments
+- blockchain-assoc-clarity-act-letter-20260602 — timestamp_without_time_component
+  - No exact timestamp was found in accepted source metadata/time tags.
+  - https://www.lw.com/en/us-crypto-policy-tracker/legislative-developments
+- btc-etf-historic-outflows-early-june — timestamp_without_time_component
+  - No exact timestamp was found in accepted source metadata/time tags.
+  - https://www.investing.com/analysis/bitcoins-34-billion-etf-bleed-looks-more-cyclical-than-structural-200681474
+- institutional-strategy-strc-record-low-20260619 — timestamp_without_time_component
+  - No exact timestamp was found in accepted source metadata/time tags.
+  - https://www.coinbase.com/price/bitcoin
+- exchange-upbit-nine-altcoin-listings-20260619 — timestamp_without_time_component
+  - No exact timestamp was found in accepted source metadata/time tags.
+  - https://www.coinbase.com/price/bitcoin

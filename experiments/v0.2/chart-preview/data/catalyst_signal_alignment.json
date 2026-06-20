@@ -1,0 +1,2701 @@
+{
+  "generated_at": "2026-06-20T09:32:02.742Z",
+  "catalyst_count": 96,
+  "signal_count": 23,
+  "catalyst_alignment": [
+    {
+      "catalyst_event_id": "btc-etf-outflows-week-may20",
+      "catalyst_date_utc": "2026-05-20",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US spot Bitcoin ETF weekly net outflows exceed $1B; 10Y Treasury yield sensitivity confirmed",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a838e493_20260522t1830",
+        "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-22T18:30:00.000Z",
+        "signal_end": "2026-05-22T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.2917,
+        "relation": "outside_24h",
+        "delta_min": 3270
+      }
+    },
+    {
+      "catalyst_event_id": "crypto-liquidation-661m-may20",
+      "catalyst_date_utc": "2026-05-20",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "$661M in crypto positions liquidated in 24-hour window heading into May 20 week",
+      "catalyst_type": "liquidation",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a838e493_20260522t1830",
+        "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-22T18:30:00.000Z",
+        "signal_end": "2026-05-22T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.2917,
+        "relation": "outside_24h",
+        "delta_min": 3270
+      }
+    },
+    {
+      "catalyst_event_id": "us-iran-geopolitical-risk-may20",
+      "catalyst_date_utc": "2026-05-20",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Ongoing US-Iran tension and nuclear negotiation uncertainty weighs on global risk assets",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a838e493_20260522t1830",
+        "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-22T18:30:00.000Z",
+        "signal_end": "2026-05-22T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.2917,
+        "relation": "outside_24h",
+        "delta_min": 3270
+      }
+    },
+    {
+      "catalyst_event_id": "global-bond-yield-surge-may20",
+      "catalyst_date_utc": "2026-05-20",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Global bond yields at multi-year highs amplify crypto risk-off pressure entering May 20",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a838e493_20260522t1830",
+        "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-22T18:30:00.000Z",
+        "signal_end": "2026-05-22T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.2917,
+        "relation": "outside_24h",
+        "delta_min": 3270
+      }
+    },
+    {
+      "catalyst_event_id": "fomc-minutes-may20",
+      "catalyst_date_utc": "2026-05-20",
+      "catalyst_time_utc": "2026-05-20T18:00:00.000Z",
+      "catalyst_headline": "FOMC April meeting minutes released; hawkish tone signals extended rate hold",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a838e493_20260522t1830",
+        "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-22T18:30:00.000Z",
+        "signal_end": "2026-05-22T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.2917,
+        "relation": "outside_24h",
+        "delta_min": 2910
+      }
+    },
+    {
+      "catalyst_event_id": "nvidia-earnings-may20",
+      "catalyst_date_utc": "2026-05-20",
+      "catalyst_time_utc": "2026-05-20T21:00:00.000Z",
+      "catalyst_headline": "Nvidia Q1 FY2027 earnings beat after close on May 20; AI capex sentiment driver for crypto risk",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a838e493_20260522t1830",
+        "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-22T18:30:00.000Z",
+        "signal_end": "2026-05-22T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.2917,
+        "relation": "outside_24h",
+        "delta_min": 2730
+      }
+    },
+    {
+      "catalyst_event_id": "nakamoto-reverse-split-may22",
+      "catalyst_date_utc": "2026-05-22",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Bitcoin treasury firm Nakamoto (NAKA) executes 1-for-40 reverse stock split on May 22 amid 99% stock collapse",
+      "catalyst_type": "institutional",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a838e493_20260522t1830",
+        "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-22T18:30:00.000Z",
+        "signal_end": "2026-05-22T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.2917,
+        "relation": "same_day",
+        "delta_min": 390
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-outflow-streak-may23-25",
+      "catalyst_date_utc": "2026-05-23",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Spot Bitcoin ETFs extend multi-week outflow streak; 2026 net inflows collapse to $536M",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_60319648_20260523t2030",
+        "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-23T20:30:00.000Z",
+        "signal_end": "2026-05-23T20:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9469,
+        "relation": "same_day",
+        "delta_min": 510
+      }
+    },
+    {
+      "catalyst_event_id": "blockchaincom-ipo-filing-may23",
+      "catalyst_date_utc": "2026-05-23",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Blockchain.com confidentially files for U.S. IPO, signaling renewed confidence in regulatory environment",
+      "catalyst_type": "exchange_project",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_60319648_20260523t2030",
+        "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-23T20:30:00.000Z",
+        "signal_end": "2026-05-23T20:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9469,
+        "relation": "same_day",
+        "delta_min": 510
+      }
+    },
+    {
+      "catalyst_event_id": "ecb-stablecoin-warning-may23-week",
+      "catalyst_date_utc": "2026-05-23",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "ECB warns against broader euro-denominated stablecoin adoption, citing bank stability risks",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_60319648_20260523t2030",
+        "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-23T20:30:00.000Z",
+        "signal_end": "2026-05-23T20:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9469,
+        "relation": "same_day",
+        "delta_min": 510
+      }
+    },
+    {
+      "catalyst_event_id": "cftc-gemini-penalty-withdrawal-may23-week",
+      "catalyst_date_utc": "2026-05-23",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "CFTC moves to withdraw $5M penalty against Gemini, signaling continued U.S. regulatory unwinding",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_60319648_20260523t2030",
+        "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-23T20:30:00.000Z",
+        "signal_end": "2026-05-23T20:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9469,
+        "relation": "same_day",
+        "delta_min": 510
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-outflow-liquidation-risk-off-may23-context",
+      "catalyst_date_utc": "2026-05-23",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Cascading leveraged long liquidations continue into May 23 window following May 18 $700M wipeout",
+      "catalyst_type": "liquidation",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_60319648_20260523t2030",
+        "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-23T20:30:00.000Z",
+        "signal_end": "2026-05-23T20:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9469,
+        "relation": "same_day",
+        "delta_min": 510
+      }
+    },
+    {
+      "catalyst_event_id": "clarity-act-senate-passage-risk-may23-week",
+      "catalyst_date_utc": "2026-05-23",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "CLARITY Act Senate floor vote momentum uncertain as Polymarket odds drop and macro overrides regulatory tailwinds",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_60319648_20260523t2030",
+        "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-23T20:30:00.000Z",
+        "signal_end": "2026-05-23T20:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9469,
+        "relation": "same_day",
+        "delta_min": 510
+      }
+    },
+    {
+      "catalyst_event_id": "crypto-market-selloff-recovery-may25",
+      "catalyst_date_utc": "2026-05-25",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Broad crypto market posts first uniformly green session in over two weeks on May 25 as liquidations and shorts recede",
+      "catalyst_type": "market_structure",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_c29a0892_20260526t0030",
+        "signal_window": "00:30-01:45 UTC - 75 min - 5 candles",
+        "signal_start": "2026-05-26T00:30:00.000Z",
+        "signal_end": "2026-05-26T01:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7439,
+        "relation": "same_day",
+        "delta_min": 750
+      }
+    },
+    {
+      "catalyst_event_id": "geo-us-iran-strikes-hormuz-may26-28",
+      "catalyst_date_utc": "2026-05-26",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S. military strikes Iranian air-defense and drone sites near Strait of Hormuz over three-day window (May 25–28)",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+        "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-26T10:15:00.000Z",
+        "signal_end": "2026-05-26T10:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.0788,
+        "relation": "near_0_3h",
+        "delta_min": 75
+      }
+    },
+    {
+      "catalyst_event_id": "etf-btc-weekly-outflow-record-may26",
+      "catalyst_date_utc": "2026-05-26",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Spot Bitcoin ETFs record $1.26B weekly outflow — largest of 2026 — as Treasury yields signal higher-for-longer rates",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+        "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-26T10:15:00.000Z",
+        "signal_end": "2026-05-26T10:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.0788,
+        "relation": "near_0_3h",
+        "delta_min": 75
+      }
+    },
+    {
+      "catalyst_event_id": "us-memorial-day-holiday-thin-liquidity-may26",
+      "catalyst_date_utc": "2026-05-26",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S. Memorial Day holiday on May 26 closes equity markets, thinning crypto liquidity during geopolitical flare-up",
+      "catalyst_type": "market_structure",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+        "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-26T10:15:00.000Z",
+        "signal_end": "2026-05-26T10:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.0788,
+        "relation": "near_0_3h",
+        "delta_min": 75
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-oi-decline-leverage-flush-may26",
+      "catalyst_date_utc": "2026-05-26",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "BTC open interest falls to $54.69B (down 4.27% over 30 days) as leverage flushes from crypto market",
+      "catalyst_type": "market_structure",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+        "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-26T10:15:00.000Z",
+        "signal_end": "2026-05-26T10:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.0788,
+        "relation": "near_0_3h",
+        "delta_min": 75
+      }
+    },
+    {
+      "catalyst_event_id": "treasury-ofac-iran-sanctions-may27",
+      "catalyst_date_utc": "2026-05-27",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S. Treasury/OFAC designates IRGC-linked 'Persian Gulf Strait Authority' and sanctions Iran oil network on May 27",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_b525c422_20260527t2130",
+        "signal_window": "21:30-23:30 UTC - 120 min - 8 candles",
+        "signal_start": "2026-05-27T21:30:00.000Z",
+        "signal_end": "2026-05-27T23:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.3661,
+        "relation": "same_day",
+        "delta_min": 570
+      }
+    },
+    {
+      "catalyst_event_id": "boj-ueda-monetary-policy-conference-may27",
+      "catalyst_date_utc": "2026-05-27",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "BOJ Governor Kazuo Ueda speaks at BOJ-hosted monetary policy conference on May 27",
+      "catalyst_type": "macro",
+      "source_support": "low",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_b525c422_20260527t2130",
+        "signal_window": "21:30-23:30 UTC - 120 min - 8 candles",
+        "signal_start": "2026-05-27T21:30:00.000Z",
+        "signal_end": "2026-05-27T23:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.3661,
+        "relation": "same_day",
+        "delta_min": 570
+      }
+    },
+    {
+      "catalyst_event_id": "dtcc-stellar-tokenization-announcement",
+      "catalyst_date_utc": "2026-05-27",
+      "catalyst_time_utc": "2026-05-27T14:03:00.000Z",
+      "catalyst_headline": "DTCC selects Stellar as first public blockchain for tokenized-securities settlement platform; XLM surges ~14–30% into May 29",
+      "catalyst_type": "institutional",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_b525c422_20260527t2130",
+        "signal_window": "21:30-23:30 UTC - 120 min - 8 candles",
+        "signal_start": "2026-05-27T21:30:00.000Z",
+        "signal_end": "2026-05-27T23:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.3661,
+        "relation": "same_day",
+        "delta_min": 447
+      }
+    },
+    {
+      "catalyst_event_id": "liquidation-btc-eth-1b-may28",
+      "catalyst_date_utc": "2026-05-28",
+      "catalyst_time_utc": "2026-05-28T04:25:00.000Z",
+      "catalyst_headline": "~$1B in leveraged crypto long positions liquidated as BTC drops below $73K on Iran strike news",
+      "catalyst_type": "liquidation",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+        "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+        "signal_start": "2026-05-28T03:15:00.000Z",
+        "signal_end": "2026-05-28T05:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.6897,
+        "relation": "overlap",
+        "delta_min": 0
+      }
+    },
+    {
+      "catalyst_event_id": "etf-btc-single-day-outflow-may28",
+      "catalyst_date_utc": "2026-05-28",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "IBIT records second-largest-ever single-day outflow of $733M on May 28, coinciding with Iran strikes",
+      "catalyst_type": "etf_flows",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+        "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+        "signal_start": "2026-05-28T03:15:00.000Z",
+        "signal_end": "2026-05-28T05:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.6897,
+        "relation": "same_day",
+        "delta_min": 390
+      }
+    },
+    {
+      "catalyst_event_id": "macro-us-core-pce-q1-gdp-pending-may28",
+      "catalyst_date_utc": "2026-05-28",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S. April Core PCE and revised Q1 GDP releases on May 28 awaited as key Fed-rate-path signals",
+      "catalyst_type": "macro",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+        "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+        "signal_start": "2026-05-28T03:15:00.000Z",
+        "signal_end": "2026-05-28T05:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.6897,
+        "relation": "same_day",
+        "delta_min": 390
+      }
+    },
+    {
+      "catalyst_event_id": "eu-mica-enforcement-french-regulator-warning",
+      "catalyst_date_utc": "2026-05-28",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "French regulator warns unlicensed crypto firms serving EU customers face prosecution under MiCA enforcement",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+        "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+        "signal_start": "2026-05-28T03:15:00.000Z",
+        "signal_end": "2026-05-28T05:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.6897,
+        "relation": "same_day",
+        "delta_min": 390
+      }
+    },
+    {
+      "catalyst_event_id": "us-pce-gdp-macro-slowdown-may29",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S. April PCE inflation hits near-3-year high; GDP revised down — crypto diverges from equity record highs",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "us-iran-ceasefire-uncertainty-geopolitical",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S.–Iran ceasefire negotiations remain unresolved; oil volatility persists into late May",
+      "catalyst_type": "geopolitical",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "vaneck-bnb-etf-launch-vbnb-may29",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "VanEck launches first U.S. spot BNB ETF (ticker: VBNB)",
+      "catalyst_type": "etf_flows",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-weekly-outflow-streak-final-week-may",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S. spot Bitcoin ETFs record ~$1.4B in weekly outflows in final week of May; 10-day outflow streak noted",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "clarity-act-bessent-treasury-advocacy-may29",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Treasury Secretary Bessent publicly urges Congress to pass CLARITY Act; passage probability rebounds to 57%",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "fbi-operation-blackout-8b-crypto-seizure",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "FBI seizes ~127,000 BTC (~$8B) in largest U.S. crypto forfeiture ever via Operation Blackout",
+      "catalyst_type": "security",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "grayscale-ghyp-staking-etf-final-filing-may29",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Grayscale submits final S-1 registration for 'Grayscale Hyperliquid Staking ETF' (GHYP), adding staking component",
+      "catalyst_type": "etf_flows",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "cftc-btcperp-kalshi-coinbase-may29",
+      "catalyst_date_utc": "2026-05-29",
+      "catalyst_time_utc": "2026-05-29T14:17:00.000Z",
+      "catalyst_headline": "CFTC approves first U.S.-regulated Bitcoin perpetual futures via Kalshi; issues Coinbase no-action relief",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+        "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-05-29T14:15:00.000Z",
+        "signal_end": "2026-05-29T14:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -0.7148,
+        "relation": "overlap",
+        "delta_min": 0
+      }
+    },
+    {
+      "catalyst_event_id": "clarity-act-senate-calendar-20260601",
+      "catalyst_date_utc": "2026-06-01",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "CLARITY Act placed on Senate Legislative Calendar (General Orders No. 423), formally eligible for full Senate floor vote",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-02T14:15:00.000Z",
+        "signal_end": "2026-06-02T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.5189,
+        "relation": "outside_24h",
+        "delta_min": 1575
+      }
+    },
+    {
+      "catalyst_event_id": "binance-us-stocks-bstocks-launch-20260601",
+      "catalyst_date_utc": "2026-06-01",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Binance launches U.S. equities trading (7,000+ stocks/ETFs) and previews bStocks tokenized securities on BNB Chain",
+      "catalyst_type": "exchange_project",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-02T14:15:00.000Z",
+        "signal_end": "2026-06-02T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.5189,
+        "relation": "outside_24h",
+        "delta_min": 1575
+      }
+    },
+    {
+      "catalyst_event_id": "cftc-247-kalshi-btc-perps-20260601",
+      "catalyst_date_utc": "2026-06-01",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "CFTC releases 24/7 trading guidance and approves Kalshi to launch Bitcoin spot-referenced perpetual futures",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-02T14:15:00.000Z",
+        "signal_end": "2026-06-02T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.5189,
+        "relation": "outside_24h",
+        "delta_min": 1575
+      }
+    },
+    {
+      "catalyst_event_id": "japan-fsa-stablecoin-regulation-20260601",
+      "catalyst_date_utc": "2026-06-01",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Japan FSA begins regulating foreign trust-type stablecoins as electronic payment methods",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-02T14:15:00.000Z",
+        "signal_end": "2026-06-02T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.5189,
+        "relation": "outside_24h",
+        "delta_min": 1575
+      }
+    },
+    {
+      "catalyst_event_id": "sec-draft-strategic-plan-digital-assets-20260602",
+      "catalyst_date_utc": "2026-06-02",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "SEC publishes Draft Strategic Plan FY2026–2030 designating digital assets and DLT as a priority area",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-02T14:15:00.000Z",
+        "signal_end": "2026-06-02T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.5189,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "blockchain-assoc-clarity-act-letter-20260602",
+      "catalyst_date_utc": "2026-06-02",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Blockchain Association and 160 former national security officials send letter supporting CLARITY Act to Senate",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-02T14:15:00.000Z",
+        "signal_end": "2026-06-02T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.5189,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "fomc-speaker-kashkari-harker-june2-macro",
+      "catalyst_date_utc": "2026-06-02",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Fed voters Kashkari (Minneapolis) and Harker (Cleveland) both speak on monetary policy on June 2, adding rate-path uncertainty",
+      "catalyst_type": "macro",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-02T14:15:00.000Z",
+        "signal_end": "2026-06-02T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.5189,
+        "relation": "near_0_3h",
+        "delta_min": 135
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-outflow-streak-13day-peak-june13",
+      "catalyst_date_utc": "2026-06-03",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "U.S. spot Bitcoin ETF 13-day, ~$4.4B net outflow streak peaks through June 3 — longest redemption run since January 2024 launch",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_dc56b382_20260604t0015",
+        "signal_window": "00:15-02:00 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-04T00:15:00.000Z",
+        "signal_end": "2026-06-04T01:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.4301,
+        "relation": "same_day",
+        "delta_min": 735
+      }
+    },
+    {
+      "catalyst_event_id": "btc-strategy-sale-liquidation-cascade-june3",
+      "catalyst_date_utc": "2026-06-03",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Bitcoin hits $65,710 intraday low on June 3 as Strategy BTC sale and $1.8B in forced liquidations compound ETF outflow pressure",
+      "catalyst_type": "liquidation",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_dc56b382_20260604t0015",
+        "signal_window": "00:15-02:00 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-04T00:15:00.000Z",
+        "signal_end": "2026-06-04T01:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.4301,
+        "relation": "same_day",
+        "delta_min": 735
+      }
+    },
+    {
+      "catalyst_event_id": "strategy-btc-sale-disclosure-jun01",
+      "catalyst_date_utc": "2026-06-04",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Strategy's First Net BTC Sale Since 2022 Continues to Weigh on Market Sentiment Through June 4–5",
+      "catalyst_type": "institutional",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+        "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-04T03:00:00.000Z",
+        "signal_end": "2026-06-04T03:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.1407,
+        "relation": "same_day",
+        "delta_min": 495
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-13day-outflow-streak",
+      "catalyst_date_utc": "2026-06-04",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US Spot Bitcoin ETF 13-Day, $4.4B Outflow Streak Ends June 4–5 After Record Redemption Pressure",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+        "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-04T03:00:00.000Z",
+        "signal_end": "2026-06-04T03:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.1407,
+        "relation": "same_day",
+        "delta_min": 495
+      }
+    },
+    {
+      "catalyst_event_id": "btc-eth-mass-liquidation-cascade",
+      "catalyst_date_utc": "2026-06-04",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "~$1.75–1.84B in Crypto Liquidations in 24 Hours; BTC Open Interest Drops 22%",
+      "catalyst_type": "liquidation",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+        "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-04T03:00:00.000Z",
+        "signal_end": "2026-06-04T03:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.1407,
+        "relation": "same_day",
+        "delta_min": 495
+      }
+    },
+    {
+      "catalyst_event_id": "clarity-act-senate-calendar-placement",
+      "catalyst_date_utc": "2026-06-04",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "CLARITY Act Placed on Senate Legislative Calendar June 1, but Full Senate Passage Prospects Remain Uncertain",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+        "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-04T03:00:00.000Z",
+        "signal_end": "2026-06-04T03:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.1407,
+        "relation": "same_day",
+        "delta_min": 495
+      }
+    },
+    {
+      "catalyst_event_id": "liquidity-rotation-spacex-ai-chips",
+      "catalyst_date_utc": "2026-06-04",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Speculative Capital Rotates Out of Crypto Into SpaceX IPO and AI/Chip Trades",
+      "catalyst_type": "market_structure",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+        "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-04T03:00:00.000Z",
+        "signal_end": "2026-06-04T03:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.1407,
+        "relation": "same_day",
+        "delta_min": 495
+      }
+    },
+    {
+      "catalyst_event_id": "eth-etf-outflow-streak-june-window",
+      "catalyst_date_utc": "2026-06-04",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Ethereum Spot ETFs Record $429.3M in 7-Day Outflows Heading Into June 4–6",
+      "catalyst_type": "etf_flows",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+        "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-04T03:00:00.000Z",
+        "signal_end": "2026-06-04T03:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.1407,
+        "relation": "same_day",
+        "delta_min": 495
+      }
+    },
+    {
+      "catalyst_event_id": "toncoin-telegram-gram-rebrand-drop",
+      "catalyst_date_utc": "2026-06-04",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Toncoin Falls 13.5% on June 4 After Post-Telegram 'Gram' Rebrand Announcement Profit-Taking",
+      "catalyst_type": "exchange_project",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+        "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-04T03:00:00.000Z",
+        "signal_end": "2026-06-04T03:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.1407,
+        "relation": "same_day",
+        "delta_min": 495
+      }
+    },
+    {
+      "catalyst_event_id": "us-may-nfp-beat-june05",
+      "catalyst_date_utc": "2026-06-05",
+      "catalyst_time_utc": "2026-06-05T08:30:00.000Z",
+      "catalyst_headline": "US May Nonfarm Payrolls Printed 172K vs. 85K Consensus, Reinforcing Fed Hold Narrative",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_c54de378_20260605t0715",
+        "signal_window": "07:15-07:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-05T07:15:00.000Z",
+        "signal_end": "2026-06-05T07:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.8182,
+        "relation": "near_0_3h",
+        "delta_min": 45
+      }
+    },
+    {
+      "catalyst_event_id": "hezbollah-ceasefire-rejection-geopolitical",
+      "catalyst_date_utc": "2026-06-05",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Hezbollah Rejects Israel Ceasefire Offer; Middle East Tensions Cited as Crypto Headwind",
+      "catalyst_type": "geopolitical",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_c54de378_20260605t0715",
+        "signal_window": "07:15-07:45 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-05T07:15:00.000Z",
+        "signal_end": "2026-06-05T07:44:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.8182,
+        "relation": "near_3_6h",
+        "delta_min": 255
+      }
+    },
+    {
+      "catalyst_event_id": "iran-missile-israel-jun7",
+      "catalyst_date_utc": "2026-06-07",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Iran fires 11 ballistic missiles at northern Israel, breaking April ceasefire",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_228a8778_20260607t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-07T01:00:00.000Z",
+        "signal_end": "2026-06-07T01:29:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9891,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "strategy-saylor-btc-resumption-hint-jun7",
+      "catalyst_date_utc": "2026-06-07",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Michael Saylor hints Strategy is resuming Bitcoin accumulation after first-ever sale shock",
+      "catalyst_type": "institutional",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_228a8778_20260607t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-07T01:00:00.000Z",
+        "signal_end": "2026-06-07T01:29:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9891,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "strategy-first-btc-sale-market-shock-context",
+      "catalyst_date_utc": "2026-06-07",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Strategy's June 1 BTC sale (32 BTC) continues to depress sentiment entering June 7 week",
+      "catalyst_type": "institutional",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_228a8778_20260607t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-07T01:00:00.000Z",
+        "signal_end": "2026-06-07T01:29:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9891,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-historic-outflows-early-june",
+      "catalyst_date_utc": "2026-06-07",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US spot Bitcoin ETFs record historic ~$3.4B weekly outflow — largest since January 2024 launch",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_228a8778_20260607t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-07T01:00:00.000Z",
+        "signal_end": "2026-06-07T01:29:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9891,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "ai-capital-rotation-btc-headwind",
+      "catalyst_date_utc": "2026-06-07",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Capital rotation from crypto to AI equities cited as structural headwind entering June 7 week",
+      "catalyst_type": "market_structure",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_228a8778_20260607t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-07T01:00:00.000Z",
+        "signal_end": "2026-06-07T01:29:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 1.9891,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "israel-retaliatory-strikes-iran-jun8",
+      "catalyst_date_utc": "2026-06-08",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Israel launches retaliatory airstrikes on Iranian military and petrochemical targets; ceasefire collapses",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_33798218_20260608t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-08T01:00:00.000Z",
+        "signal_end": "2026-06-08T01:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.3496,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "geopolitical-liquidation-cascade-jun8",
+      "catalyst_date_utc": "2026-06-08",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Over $1 billion in crypto liquidations triggered by Israel-Iran escalation on June 8",
+      "catalyst_type": "liquidation",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_33798218_20260608t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-08T01:00:00.000Z",
+        "signal_end": "2026-06-08T01:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.3496,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "strategy-mstr-btc-official-purchase-jun8",
+      "catalyst_date_utc": "2026-06-08",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Strategy officially purchases 1,550 BTC for ~$100M, growing total holdings to 845,256 BTC",
+      "catalyst_type": "institutional",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_33798218_20260608t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-08T01:00:00.000Z",
+        "signal_end": "2026-06-08T01:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.3496,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "macro-usd-rate-pressure-june8",
+      "catalyst_date_utc": "2026-06-08",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Stronger US dollar and elevated rate expectations suppress crypto risk appetite on June 8",
+      "catalyst_type": "macro",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_33798218_20260608t0100",
+        "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-08T01:00:00.000Z",
+        "signal_end": "2026-06-08T01:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.3496,
+        "relation": "same_day",
+        "delta_min": 630
+      }
+    },
+    {
+      "catalyst_event_id": "geo-us-iran-strikes-jun10",
+      "catalyst_date_utc": "2026-06-10",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US Central Command launches new strikes on Iranian military targets on June 10, escalating conflict",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-09T14:15:00.000Z",
+        "signal_end": "2026-06-09T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.086,
+        "relation": "same_day",
+        "delta_min": 1230
+      }
+    },
+    {
+      "catalyst_event_id": "geo-us-iran-diplomacy-jun10",
+      "catalyst_date_utc": "2026-06-10",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US-Iran indirect negotiations continue despite strikes; Qatar facilitates talks in Tehran on June 10",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-09T14:15:00.000Z",
+        "signal_end": "2026-06-09T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.086,
+        "relation": "same_day",
+        "delta_min": 1230
+      }
+    },
+    {
+      "catalyst_event_id": "geo-iran-btc-sanctions-nobitex",
+      "catalyst_date_utc": "2026-06-10",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US Treasury freezes ~$344M in crypto linked to Iran's Strait of Hormuz BTC toll-collection scheme; Nobitex sanctioned June 2",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-09T14:15:00.000Z",
+        "signal_end": "2026-06-09T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.086,
+        "relation": "same_day",
+        "delta_min": 1230
+      }
+    },
+    {
+      "catalyst_event_id": "macro-spx-risk-appetite-jun10",
+      "catalyst_date_utc": "2026-06-10",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "S&P 500 drops 2.2% intraday on geopolitical shock; crypto weakens in tandem, reflecting fragile risk appetite",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-09T14:15:00.000Z",
+        "signal_end": "2026-06-09T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.086,
+        "relation": "same_day",
+        "delta_min": 1230
+      }
+    },
+    {
+      "catalyst_event_id": "etf-btc-record-weekly-outflow-earlyJun",
+      "catalyst_date_utc": "2026-06-10",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US spot Bitcoin ETFs record historic $3.4B weekly net outflow in early June — largest since January 2024 launch",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-09T14:15:00.000Z",
+        "signal_end": "2026-06-09T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.086,
+        "relation": "same_day",
+        "delta_min": 1230
+      }
+    },
+    {
+      "catalyst_event_id": "etf-sol-xrp-rotation-jun10-12",
+      "catalyst_date_utc": "2026-06-10",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Intra-crypto ETF rotation: XRP and Solana ETFs absorb ~$226M combined as BTC and ETH funds bleed",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-09T14:15:00.000Z",
+        "signal_end": "2026-06-09T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.086,
+        "relation": "same_day",
+        "delta_min": 1230
+      }
+    },
+    {
+      "catalyst_event_id": "regulatory-clarity-act-senate-committee-may14",
+      "catalyst_date_utc": "2026-06-10",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US Clarity Act Senate Banking Committee passage (May 14) remains active regulatory backdrop shaping crypto market structure sentiment through June 10–12",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+        "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+        "signal_start": "2026-06-09T14:15:00.000Z",
+        "signal_end": "2026-06-09T15:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -1.086,
+        "relation": "same_day",
+        "delta_min": 1230
+      }
+    },
+    {
+      "catalyst_event_id": "macro-us-ppi-jun11",
+      "catalyst_date_utc": "2026-06-11",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US May PPI and weekly jobless claims released June 11 — scheduled macro data event for risk sentiment",
+      "catalyst_type": "macro",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_56cdb3f3_20260611t1715",
+        "signal_window": "17:15-18:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-11T17:15:00.000Z",
+        "signal_end": "2026-06-11T17:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.9119,
+        "relation": "near_3_6h",
+        "delta_min": 315
+      }
+    },
+    {
+      "catalyst_event_id": "exchange-bybit-spacex-ipo-express-jun11-12",
+      "catalyst_date_utc": "2026-06-11",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Bybit/Binance tokenized SpaceX IPO subscription closes June 11; spot trading set for June 12 — but xStocks fails to deliver allocations",
+      "catalyst_type": "exchange_project",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_56cdb3f3_20260611t1715",
+        "signal_window": "17:15-18:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-11T17:15:00.000Z",
+        "signal_end": "2026-06-11T17:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.9119,
+        "relation": "near_3_6h",
+        "delta_min": 315
+      }
+    },
+    {
+      "catalyst_event_id": "etf-btc-inflow-reversal-jun12",
+      "catalyst_date_utc": "2026-06-12",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Spot Bitcoin ETFs record $85.85M net inflow on June 12, breaking outflow streak; ETH ETFs extend losses for 4th day",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_56cdb3f3_20260611t1715",
+        "signal_window": "17:15-18:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-11T17:15:00.000Z",
+        "signal_end": "2026-06-11T17:59:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 2.9119,
+        "relation": "same_day",
+        "delta_min": 1080
+      }
+    },
+    {
+      "catalyst_event_id": "geopo-us-iran-deal-announcement-jun13",
+      "catalyst_date_utc": "2026-06-13",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Trump announces imminent US-Iran peace deal; Strait of Hormuz reopening signalled",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+        "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+        "signal_start": "2026-06-14T21:15:00.000Z",
+        "signal_end": "2026-06-15T00:14:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 3.5295,
+        "relation": "outside_24h",
+        "delta_min": 1995
+      }
+    },
+    {
+      "catalyst_event_id": "exchange-project-spacex-ipo-firstday-jun13",
+      "catalyst_date_utc": "2026-06-13",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "SpaceX (SPCX) begins first trading day on Nasdaq after record $75B IPO; crypto capital-rotation risk and BTC treasury transparency created",
+      "catalyst_type": "market_structure",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+        "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+        "signal_start": "2026-06-14T21:15:00.000Z",
+        "signal_end": "2026-06-15T00:14:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 3.5295,
+        "relation": "outside_24h",
+        "delta_min": 1995
+      }
+    },
+    {
+      "catalyst_event_id": "etf-flows-btc-ibit-recovery-streak-end-jun13",
+      "catalyst_date_utc": "2026-06-13",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US spot BTC ETFs record $85.85M net inflow on June 12-13, ending record $3.4B outflow streak; ETH ETFs extend outflow run",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+        "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+        "signal_start": "2026-06-14T21:15:00.000Z",
+        "signal_end": "2026-06-15T00:14:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 3.5295,
+        "relation": "outside_24h",
+        "delta_min": 1995
+      }
+    },
+    {
+      "catalyst_event_id": "etf-flows-sol-xrp-rotation-jun13",
+      "catalyst_date_utc": "2026-06-13",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Solana ETFs reach $1.118B cumulative inflows within weeks of May 26 launch; XRP/SOL rotation absorbs ~$226M as BTC/ETH funds bleed",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+        "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+        "signal_start": "2026-06-14T21:15:00.000Z",
+        "signal_end": "2026-06-15T00:14:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 3.5295,
+        "relation": "outside_24h",
+        "delta_min": 1995
+      }
+    },
+    {
+      "catalyst_event_id": "geopo-us-iran-mou-signed-jun14",
+      "catalyst_date_utc": "2026-06-14",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Trump formally announces US-Iran peace deal; MOU confirmed; oil drops sharply, BTC surges above $65,600",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+        "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+        "signal_start": "2026-06-14T21:15:00.000Z",
+        "signal_end": "2026-06-15T00:14:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 3.5295,
+        "relation": "same_day",
+        "delta_min": 555
+      }
+    },
+    {
+      "catalyst_event_id": "macro-oil-drop-inflation-fed-jun14-15",
+      "catalyst_date_utc": "2026-06-14",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Oil falls sharply on Hormuz reopening; Fed rate-hike expectations recede, easing macro headwind for crypto",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+        "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+        "signal_start": "2026-06-14T21:15:00.000Z",
+        "signal_end": "2026-06-15T00:14:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 3.5295,
+        "relation": "same_day",
+        "delta_min": 555
+      }
+    },
+    {
+      "catalyst_event_id": "regulatory-sec-trowe-multisset-etf-jun15",
+      "catalyst_date_utc": "2026-06-15",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "SEC approves T. Rowe Price actively managed multi-asset crypto ETF covering up to 15 digital assets",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_16999967_20260615t1300",
+        "signal_window": "13:00-13:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-15T13:00:00.000Z",
+        "signal_end": "2026-06-15T13:29:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 0.996,
+        "relation": "near_0_3h",
+        "delta_min": 60
+      }
+    },
+    {
+      "catalyst_event_id": "regulatory-cftc-perp-contracts-jun15",
+      "catalyst_date_utc": "2026-06-15",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "CFTC formally upgrades crypto quasi-perpetual futures to true perpetual contracts with compliance pathway",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_16999967_20260615t1300",
+        "signal_window": "13:00-13:30 UTC - 30 min - 2 candles",
+        "signal_start": "2026-06-15T13:00:00.000Z",
+        "signal_end": "2026-06-15T13:29:59.998Z",
+        "signal_direction": "observed_up",
+        "signal_avg_change_pct": 0.996,
+        "relation": "near_0_3h",
+        "delta_min": 60
+      }
+    },
+    {
+      "catalyst_event_id": "us-iran-ceasefire-geopolitical",
+      "catalyst_date_utc": "2026-06-16",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US–Iran ceasefire and Strait of Hormuz reopening framework lifts risk sentiment early in the window",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fcff80b4_20260616t1300",
+        "signal_window": "13:00-14:30 UTC - 90 min - 6 candles",
+        "signal_start": "2026-06-16T13:00:00.000Z",
+        "signal_end": "2026-06-16T14:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.3572,
+        "relation": "near_0_3h",
+        "delta_min": 60
+      }
+    },
+    {
+      "catalyst_event_id": "blackrock-bita-xrp-etf-listing",
+      "catalyst_date_utc": "2026-06-16",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "BlackRock BITA ETF listed June 16, fueling XRP ETF speculation and modest XRP rally",
+      "catalyst_type": "etf_flows",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_fcff80b4_20260616t1300",
+        "signal_window": "13:00-14:30 UTC - 90 min - 6 candles",
+        "signal_start": "2026-06-16T13:00:00.000Z",
+        "signal_end": "2026-06-16T14:29:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.3572,
+        "relation": "near_0_3h",
+        "delta_min": 60
+      }
+    },
+    {
+      "catalyst_event_id": "boj-rate-hike-31yr-high",
+      "catalyst_date_utc": "2026-06-17",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Bank of Japan raises policy rate to 1.0%, highest in 31 years, ahead of FOMC",
+      "catalyst_type": "macro",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+        "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-17T18:00:00.000Z",
+        "signal_end": "2026-06-17T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.0711,
+        "relation": "near_3_6h",
+        "delta_min": 360
+      }
+    },
+    {
+      "catalyst_event_id": "btc-etf-outflow-fomc-jun17",
+      "catalyst_date_utc": "2026-06-17",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "US spot Bitcoin ETF complex bleeds $82.16M net on June 17 post-FOMC; Fidelity FBTC sole notable inflow at $14M",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+        "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-17T18:00:00.000Z",
+        "signal_end": "2026-06-17T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.0711,
+        "relation": "near_3_6h",
+        "delta_min": 360
+      }
+    },
+    {
+      "catalyst_event_id": "mara-btc-purchase-circle-usdc-minting",
+      "catalyst_date_utc": "2026-06-17",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "MARA adds 1,000 BTC; Circle mints $1B USDC on Solana with $3.5B weekly issuance",
+      "catalyst_type": "institutional",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+        "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-17T18:00:00.000Z",
+        "signal_end": "2026-06-17T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.0711,
+        "relation": "near_3_6h",
+        "delta_min": 360
+      }
+    },
+    {
+      "catalyst_event_id": "microsoft-cryptobandits-malware-disclosure",
+      "catalyst_date_utc": "2026-06-17",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Microsoft discloses Trojan:Win32/CryptoBandits USB-spread crypto clipper malware active since February 2026",
+      "catalyst_type": "security",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+        "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-17T18:00:00.000Z",
+        "signal_end": "2026-06-17T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.0711,
+        "relation": "near_3_6h",
+        "delta_min": 360
+      }
+    },
+    {
+      "catalyst_event_id": "dubai-vara-aml-fatf-update",
+      "catalyst_date_utc": "2026-06-17",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Dubai VARA updates AML guidelines requiring crypto firms to integrate real-time FATF blacklist screening",
+      "catalyst_type": "regulatory",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+        "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-17T18:00:00.000Z",
+        "signal_end": "2026-06-17T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.0711,
+        "relation": "near_3_6h",
+        "delta_min": 360
+      }
+    },
+    {
+      "catalyst_event_id": "us-retail-sales-jun17",
+      "catalyst_date_utc": "2026-06-17",
+      "catalyst_time_utc": "2026-06-17T12:30:00.000Z",
+      "catalyst_headline": "US May Retail Sales MoM data released June 17 ahead of FOMC decision",
+      "catalyst_type": "macro",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+        "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-17T18:00:00.000Z",
+        "signal_end": "2026-06-17T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.0711,
+        "relation": "near_3_6h",
+        "delta_min": 330
+      }
+    },
+    {
+      "catalyst_event_id": "fomc-jun16-17-warsh-debut",
+      "catalyst_date_utc": "2026-06-17",
+      "catalyst_time_utc": "2026-06-17T18:00:00.000Z",
+      "catalyst_headline": "FOMC holds rates at 3.50–3.75%; Chair Warsh's debut press conference signals hawkish dot-plot revision",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+        "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+        "signal_start": "2026-06-17T18:00:00.000Z",
+        "signal_end": "2026-06-17T19:44:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -3.0711,
+        "relation": "overlap",
+        "delta_min": 0
+      }
+    },
+    {
+      "catalyst_event_id": "strc-sata-leverage-liquidation-jun18",
+      "catalyst_date_utc": "2026-06-18",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Strategy STRC and Strive SATA digital credit products suffer leverage liquidation selloff on June 18",
+      "catalyst_type": "liquidation",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "near_3_6h",
+        "delta_min": 195
+      }
+    },
+    {
+      "catalyst_event_id": "security-microsoft-cryptobandits-malware-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": "2026-06-19T08:48:00.000Z",
+      "catalyst_headline": "Microsoft Discloses CryptoBandits USB-Worm Malware Targeting Crypto Wallets via Clipboard Hijacking",
+      "catalyst_type": "security",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1008
+      }
+    },
+    {
+      "catalyst_event_id": "geo-iran-switzerland-signing-collapse-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Iran-Switzerland Peace Memorandum Signing Postponed Indefinitely After Israeli Lebanon Airstrikes",
+      "catalyst_type": "geopolitical",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1200
+      }
+    },
+    {
+      "catalyst_event_id": "macro-fed-hawkish-dotplot-carry-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Fed June FOMC Hawkish Dot Plot Residual Pressure: 9 Officials Project 2026 Rate Hike",
+      "catalyst_type": "macro",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1200
+      }
+    },
+    {
+      "catalyst_event_id": "institutional-strategy-strc-record-low-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Strategy's STRC Preferred Stock Hits Record Low; Strive CEO Blames Leverage Liquidations",
+      "catalyst_type": "institutional",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1200
+      }
+    },
+    {
+      "catalyst_event_id": "etf-franklin-templeton-bitcoin-drip-filing-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Franklin Templeton Files SEC Registration for Two 'Bitcoin DRIP' ETFs That Reinvest Stock Dividends Into BTC",
+      "catalyst_type": "etf_flows",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1200
+      }
+    },
+    {
+      "catalyst_event_id": "regulatory-clarity-act-senate-floor-july4-target-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "CLARITY Act Remains on Senate Floor Calendar; White House Targets July 4 Signing — XRP Commodity Classification Key Outcome",
+      "catalyst_type": "regulatory",
+      "source_support": "high",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1200
+      }
+    },
+    {
+      "catalyst_event_id": "exchange-upbit-nine-altcoin-listings-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Upbit Lists 9 Digital Assets Including LDO, PAXG, and MORPHO in Staggered Rollout",
+      "catalyst_type": "exchange_project",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1200
+      }
+    },
+    {
+      "catalyst_event_id": "institutional-btc-lth-accumulation-125k-june-20260619",
+      "catalyst_date_utc": "2026-06-19",
+      "catalyst_time_utc": null,
+      "catalyst_headline": "Long-Term BTC Holders Absorb 125,000 BTC in June; Strategy Holds 846,842 BTC",
+      "catalyst_type": "institutional",
+      "source_support": "medium",
+      "nearest_signal": {
+        "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+        "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+        "signal_start": "2026-06-18T15:15:00.000Z",
+        "signal_end": "2026-06-18T15:59:59.998Z",
+        "signal_direction": "observed_down",
+        "signal_avg_change_pct": -2.2573,
+        "relation": "same_day",
+        "delta_min": 1200
+      }
+    }
+  ],
+  "catalysts_near_signal_count": 82,
+  "catalyst_without_near_signal_count": 14,
+  "signals_near_catalyst_count": 20,
+  "signal_without_near_catalyst_count": 3,
+  "_debug_catalyst_matches": {
+    "btc-etf-outflows-week-may20": {
+      "signal_event_id": "vnext_c_a838e493_20260522t1830",
+      "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-22T18:30:00.000Z",
+      "signal_end": "2026-05-22T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.2917,
+      "relation": "outside_24h",
+      "delta_min": 3270
+    },
+    "crypto-liquidation-661m-may20": {
+      "signal_event_id": "vnext_c_a838e493_20260522t1830",
+      "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-22T18:30:00.000Z",
+      "signal_end": "2026-05-22T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.2917,
+      "relation": "outside_24h",
+      "delta_min": 3270
+    },
+    "us-iran-geopolitical-risk-may20": {
+      "signal_event_id": "vnext_c_a838e493_20260522t1830",
+      "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-22T18:30:00.000Z",
+      "signal_end": "2026-05-22T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.2917,
+      "relation": "outside_24h",
+      "delta_min": 3270
+    },
+    "global-bond-yield-surge-may20": {
+      "signal_event_id": "vnext_c_a838e493_20260522t1830",
+      "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-22T18:30:00.000Z",
+      "signal_end": "2026-05-22T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.2917,
+      "relation": "outside_24h",
+      "delta_min": 3270
+    },
+    "fomc-minutes-may20": {
+      "signal_event_id": "vnext_c_a838e493_20260522t1830",
+      "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-22T18:30:00.000Z",
+      "signal_end": "2026-05-22T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.2917,
+      "relation": "outside_24h",
+      "delta_min": 2910
+    },
+    "nvidia-earnings-may20": {
+      "signal_event_id": "vnext_c_a838e493_20260522t1830",
+      "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-22T18:30:00.000Z",
+      "signal_end": "2026-05-22T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.2917,
+      "relation": "outside_24h",
+      "delta_min": 2730
+    },
+    "nakamoto-reverse-split-may22": {
+      "signal_event_id": "vnext_c_a838e493_20260522t1830",
+      "signal_window": "18:30-19:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-22T18:30:00.000Z",
+      "signal_end": "2026-05-22T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.2917,
+      "relation": "same_day",
+      "delta_min": 390
+    },
+    "btc-etf-outflow-streak-may23-25": {
+      "signal_event_id": "vnext_c_60319648_20260523t2030",
+      "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-23T20:30:00.000Z",
+      "signal_end": "2026-05-23T20:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9469,
+      "relation": "same_day",
+      "delta_min": 510
+    },
+    "blockchaincom-ipo-filing-may23": {
+      "signal_event_id": "vnext_c_60319648_20260523t2030",
+      "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-23T20:30:00.000Z",
+      "signal_end": "2026-05-23T20:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9469,
+      "relation": "same_day",
+      "delta_min": 510
+    },
+    "ecb-stablecoin-warning-may23-week": {
+      "signal_event_id": "vnext_c_60319648_20260523t2030",
+      "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-23T20:30:00.000Z",
+      "signal_end": "2026-05-23T20:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9469,
+      "relation": "same_day",
+      "delta_min": 510
+    },
+    "cftc-gemini-penalty-withdrawal-may23-week": {
+      "signal_event_id": "vnext_c_60319648_20260523t2030",
+      "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-23T20:30:00.000Z",
+      "signal_end": "2026-05-23T20:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9469,
+      "relation": "same_day",
+      "delta_min": 510
+    },
+    "btc-etf-outflow-liquidation-risk-off-may23-context": {
+      "signal_event_id": "vnext_c_60319648_20260523t2030",
+      "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-23T20:30:00.000Z",
+      "signal_end": "2026-05-23T20:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9469,
+      "relation": "same_day",
+      "delta_min": 510
+    },
+    "clarity-act-senate-passage-risk-may23-week": {
+      "signal_event_id": "vnext_c_60319648_20260523t2030",
+      "signal_window": "20:30-21:00 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-23T20:30:00.000Z",
+      "signal_end": "2026-05-23T20:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9469,
+      "relation": "same_day",
+      "delta_min": 510
+    },
+    "crypto-market-selloff-recovery-may25": {
+      "signal_event_id": "vnext_c_c29a0892_20260526t0030",
+      "signal_window": "00:30-01:45 UTC - 75 min - 5 candles",
+      "signal_start": "2026-05-26T00:30:00.000Z",
+      "signal_end": "2026-05-26T01:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7439,
+      "relation": "same_day",
+      "delta_min": 750
+    },
+    "geo-us-iran-strikes-hormuz-may26-28": {
+      "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+      "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-26T10:15:00.000Z",
+      "signal_end": "2026-05-26T10:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.0788,
+      "relation": "near_0_3h",
+      "delta_min": 75
+    },
+    "etf-btc-weekly-outflow-record-may26": {
+      "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+      "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-26T10:15:00.000Z",
+      "signal_end": "2026-05-26T10:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.0788,
+      "relation": "near_0_3h",
+      "delta_min": 75
+    },
+    "us-memorial-day-holiday-thin-liquidity-may26": {
+      "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+      "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-26T10:15:00.000Z",
+      "signal_end": "2026-05-26T10:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.0788,
+      "relation": "near_0_3h",
+      "delta_min": 75
+    },
+    "btc-etf-oi-decline-leverage-flush-may26": {
+      "signal_event_id": "vnext_c_cca96e5f_20260526t1015",
+      "signal_window": "10:15-10:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-26T10:15:00.000Z",
+      "signal_end": "2026-05-26T10:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.0788,
+      "relation": "near_0_3h",
+      "delta_min": 75
+    },
+    "treasury-ofac-iran-sanctions-may27": {
+      "signal_event_id": "vnext_c_b525c422_20260527t2130",
+      "signal_window": "21:30-23:30 UTC - 120 min - 8 candles",
+      "signal_start": "2026-05-27T21:30:00.000Z",
+      "signal_end": "2026-05-27T23:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.3661,
+      "relation": "same_day",
+      "delta_min": 570
+    },
+    "boj-ueda-monetary-policy-conference-may27": {
+      "signal_event_id": "vnext_c_b525c422_20260527t2130",
+      "signal_window": "21:30-23:30 UTC - 120 min - 8 candles",
+      "signal_start": "2026-05-27T21:30:00.000Z",
+      "signal_end": "2026-05-27T23:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.3661,
+      "relation": "same_day",
+      "delta_min": 570
+    },
+    "dtcc-stellar-tokenization-announcement": {
+      "signal_event_id": "vnext_c_b525c422_20260527t2130",
+      "signal_window": "21:30-23:30 UTC - 120 min - 8 candles",
+      "signal_start": "2026-05-27T21:30:00.000Z",
+      "signal_end": "2026-05-27T23:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.3661,
+      "relation": "same_day",
+      "delta_min": 447
+    },
+    "liquidation-btc-eth-1b-may28": {
+      "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+      "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+      "signal_start": "2026-05-28T03:15:00.000Z",
+      "signal_end": "2026-05-28T05:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.6897,
+      "relation": "overlap",
+      "delta_min": 0
+    },
+    "etf-btc-single-day-outflow-may28": {
+      "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+      "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+      "signal_start": "2026-05-28T03:15:00.000Z",
+      "signal_end": "2026-05-28T05:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.6897,
+      "relation": "same_day",
+      "delta_min": 390
+    },
+    "macro-us-core-pce-q1-gdp-pending-may28": {
+      "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+      "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+      "signal_start": "2026-05-28T03:15:00.000Z",
+      "signal_end": "2026-05-28T05:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.6897,
+      "relation": "same_day",
+      "delta_min": 390
+    },
+    "eu-mica-enforcement-french-regulator-warning": {
+      "signal_event_id": "vnext_c_1d469c0e_20260528t0315",
+      "signal_window": "03:15-05:30 UTC - 135 min - 9 candles",
+      "signal_start": "2026-05-28T03:15:00.000Z",
+      "signal_end": "2026-05-28T05:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.6897,
+      "relation": "same_day",
+      "delta_min": 390
+    },
+    "us-pce-gdp-macro-slowdown-may29": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "us-iran-ceasefire-uncertainty-geopolitical": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "vaneck-bnb-etf-launch-vbnb-may29": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "btc-etf-weekly-outflow-streak-final-week-may": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "clarity-act-bessent-treasury-advocacy-may29": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "fbi-operation-blackout-8b-crypto-seizure": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "grayscale-ghyp-staking-etf-final-filing-may29": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "cftc-btcperp-kalshi-coinbase-may29": {
+      "signal_event_id": "vnext_c_fc005a7c_20260529t1415",
+      "signal_window": "14:15-14:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-05-29T14:15:00.000Z",
+      "signal_end": "2026-05-29T14:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -0.7148,
+      "relation": "overlap",
+      "delta_min": 0
+    },
+    "clarity-act-senate-calendar-20260601": {
+      "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-02T14:15:00.000Z",
+      "signal_end": "2026-06-02T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.5189,
+      "relation": "outside_24h",
+      "delta_min": 1575
+    },
+    "binance-us-stocks-bstocks-launch-20260601": {
+      "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-02T14:15:00.000Z",
+      "signal_end": "2026-06-02T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.5189,
+      "relation": "outside_24h",
+      "delta_min": 1575
+    },
+    "cftc-247-kalshi-btc-perps-20260601": {
+      "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-02T14:15:00.000Z",
+      "signal_end": "2026-06-02T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.5189,
+      "relation": "outside_24h",
+      "delta_min": 1575
+    },
+    "japan-fsa-stablecoin-regulation-20260601": {
+      "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-02T14:15:00.000Z",
+      "signal_end": "2026-06-02T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.5189,
+      "relation": "outside_24h",
+      "delta_min": 1575
+    },
+    "sec-draft-strategic-plan-digital-assets-20260602": {
+      "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-02T14:15:00.000Z",
+      "signal_end": "2026-06-02T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.5189,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "blockchain-assoc-clarity-act-letter-20260602": {
+      "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-02T14:15:00.000Z",
+      "signal_end": "2026-06-02T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.5189,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "fomc-speaker-kashkari-harker-june2-macro": {
+      "signal_event_id": "vnext_c_1357e2a2_20260602t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-02T14:15:00.000Z",
+      "signal_end": "2026-06-02T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.5189,
+      "relation": "near_0_3h",
+      "delta_min": 135
+    },
+    "btc-etf-outflow-streak-13day-peak-june13": {
+      "signal_event_id": "vnext_c_dc56b382_20260604t0015",
+      "signal_window": "00:15-02:00 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-04T00:15:00.000Z",
+      "signal_end": "2026-06-04T01:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.4301,
+      "relation": "same_day",
+      "delta_min": 735
+    },
+    "btc-strategy-sale-liquidation-cascade-june3": {
+      "signal_event_id": "vnext_c_dc56b382_20260604t0015",
+      "signal_window": "00:15-02:00 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-04T00:15:00.000Z",
+      "signal_end": "2026-06-04T01:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.4301,
+      "relation": "same_day",
+      "delta_min": 735
+    },
+    "strategy-btc-sale-disclosure-jun01": {
+      "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+      "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-04T03:00:00.000Z",
+      "signal_end": "2026-06-04T03:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.1407,
+      "relation": "same_day",
+      "delta_min": 495
+    },
+    "btc-etf-13day-outflow-streak": {
+      "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+      "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-04T03:00:00.000Z",
+      "signal_end": "2026-06-04T03:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.1407,
+      "relation": "same_day",
+      "delta_min": 495
+    },
+    "btc-eth-mass-liquidation-cascade": {
+      "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+      "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-04T03:00:00.000Z",
+      "signal_end": "2026-06-04T03:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.1407,
+      "relation": "same_day",
+      "delta_min": 495
+    },
+    "clarity-act-senate-calendar-placement": {
+      "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+      "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-04T03:00:00.000Z",
+      "signal_end": "2026-06-04T03:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.1407,
+      "relation": "same_day",
+      "delta_min": 495
+    },
+    "liquidity-rotation-spacex-ai-chips": {
+      "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+      "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-04T03:00:00.000Z",
+      "signal_end": "2026-06-04T03:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.1407,
+      "relation": "same_day",
+      "delta_min": 495
+    },
+    "eth-etf-outflow-streak-june-window": {
+      "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+      "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-04T03:00:00.000Z",
+      "signal_end": "2026-06-04T03:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.1407,
+      "relation": "same_day",
+      "delta_min": 495
+    },
+    "toncoin-telegram-gram-rebrand-drop": {
+      "signal_event_id": "vnext_c_6c394e07_20260604t0300",
+      "signal_window": "03:00-03:45 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-04T03:00:00.000Z",
+      "signal_end": "2026-06-04T03:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.1407,
+      "relation": "same_day",
+      "delta_min": 495
+    },
+    "us-may-nfp-beat-june05": {
+      "signal_event_id": "vnext_c_c54de378_20260605t0715",
+      "signal_window": "07:15-07:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-05T07:15:00.000Z",
+      "signal_end": "2026-06-05T07:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.8182,
+      "relation": "near_0_3h",
+      "delta_min": 45
+    },
+    "hezbollah-ceasefire-rejection-geopolitical": {
+      "signal_event_id": "vnext_c_c54de378_20260605t0715",
+      "signal_window": "07:15-07:45 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-05T07:15:00.000Z",
+      "signal_end": "2026-06-05T07:44:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.8182,
+      "relation": "near_3_6h",
+      "delta_min": 255
+    },
+    "iran-missile-israel-jun7": {
+      "signal_event_id": "vnext_c_228a8778_20260607t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-07T01:00:00.000Z",
+      "signal_end": "2026-06-07T01:29:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9891,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "strategy-saylor-btc-resumption-hint-jun7": {
+      "signal_event_id": "vnext_c_228a8778_20260607t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-07T01:00:00.000Z",
+      "signal_end": "2026-06-07T01:29:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9891,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "strategy-first-btc-sale-market-shock-context": {
+      "signal_event_id": "vnext_c_228a8778_20260607t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-07T01:00:00.000Z",
+      "signal_end": "2026-06-07T01:29:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9891,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "btc-etf-historic-outflows-early-june": {
+      "signal_event_id": "vnext_c_228a8778_20260607t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-07T01:00:00.000Z",
+      "signal_end": "2026-06-07T01:29:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9891,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "ai-capital-rotation-btc-headwind": {
+      "signal_event_id": "vnext_c_228a8778_20260607t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-07T01:00:00.000Z",
+      "signal_end": "2026-06-07T01:29:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 1.9891,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "israel-retaliatory-strikes-iran-jun8": {
+      "signal_event_id": "vnext_c_33798218_20260608t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-08T01:00:00.000Z",
+      "signal_end": "2026-06-08T01:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.3496,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "geopolitical-liquidation-cascade-jun8": {
+      "signal_event_id": "vnext_c_33798218_20260608t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-08T01:00:00.000Z",
+      "signal_end": "2026-06-08T01:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.3496,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "strategy-mstr-btc-official-purchase-jun8": {
+      "signal_event_id": "vnext_c_33798218_20260608t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-08T01:00:00.000Z",
+      "signal_end": "2026-06-08T01:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.3496,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "macro-usd-rate-pressure-june8": {
+      "signal_event_id": "vnext_c_33798218_20260608t0100",
+      "signal_window": "01:00-01:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-08T01:00:00.000Z",
+      "signal_end": "2026-06-08T01:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.3496,
+      "relation": "same_day",
+      "delta_min": 630
+    },
+    "geo-us-iran-strikes-jun10": {
+      "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-09T14:15:00.000Z",
+      "signal_end": "2026-06-09T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.086,
+      "relation": "same_day",
+      "delta_min": 1230
+    },
+    "geo-us-iran-diplomacy-jun10": {
+      "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-09T14:15:00.000Z",
+      "signal_end": "2026-06-09T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.086,
+      "relation": "same_day",
+      "delta_min": 1230
+    },
+    "geo-iran-btc-sanctions-nobitex": {
+      "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-09T14:15:00.000Z",
+      "signal_end": "2026-06-09T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.086,
+      "relation": "same_day",
+      "delta_min": 1230
+    },
+    "macro-spx-risk-appetite-jun10": {
+      "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-09T14:15:00.000Z",
+      "signal_end": "2026-06-09T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.086,
+      "relation": "same_day",
+      "delta_min": 1230
+    },
+    "etf-btc-record-weekly-outflow-earlyJun": {
+      "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-09T14:15:00.000Z",
+      "signal_end": "2026-06-09T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.086,
+      "relation": "same_day",
+      "delta_min": 1230
+    },
+    "etf-sol-xrp-rotation-jun10-12": {
+      "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-09T14:15:00.000Z",
+      "signal_end": "2026-06-09T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.086,
+      "relation": "same_day",
+      "delta_min": 1230
+    },
+    "regulatory-clarity-act-senate-committee-may14": {
+      "signal_event_id": "vnext_c_3870ebb2_20260609t1415",
+      "signal_window": "14:15-15:30 UTC - 75 min - 5 candles",
+      "signal_start": "2026-06-09T14:15:00.000Z",
+      "signal_end": "2026-06-09T15:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -1.086,
+      "relation": "same_day",
+      "delta_min": 1230
+    },
+    "macro-us-ppi-jun11": {
+      "signal_event_id": "vnext_c_56cdb3f3_20260611t1715",
+      "signal_window": "17:15-18:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-11T17:15:00.000Z",
+      "signal_end": "2026-06-11T17:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.9119,
+      "relation": "near_3_6h",
+      "delta_min": 315
+    },
+    "exchange-bybit-spacex-ipo-express-jun11-12": {
+      "signal_event_id": "vnext_c_56cdb3f3_20260611t1715",
+      "signal_window": "17:15-18:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-11T17:15:00.000Z",
+      "signal_end": "2026-06-11T17:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.9119,
+      "relation": "near_3_6h",
+      "delta_min": 315
+    },
+    "etf-btc-inflow-reversal-jun12": {
+      "signal_event_id": "vnext_c_56cdb3f3_20260611t1715",
+      "signal_window": "17:15-18:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-11T17:15:00.000Z",
+      "signal_end": "2026-06-11T17:59:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 2.9119,
+      "relation": "same_day",
+      "delta_min": 1080
+    },
+    "geopo-us-iran-deal-announcement-jun13": {
+      "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+      "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+      "signal_start": "2026-06-14T21:15:00.000Z",
+      "signal_end": "2026-06-15T00:14:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 3.5295,
+      "relation": "outside_24h",
+      "delta_min": 1995
+    },
+    "exchange-project-spacex-ipo-firstday-jun13": {
+      "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+      "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+      "signal_start": "2026-06-14T21:15:00.000Z",
+      "signal_end": "2026-06-15T00:14:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 3.5295,
+      "relation": "outside_24h",
+      "delta_min": 1995
+    },
+    "etf-flows-btc-ibit-recovery-streak-end-jun13": {
+      "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+      "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+      "signal_start": "2026-06-14T21:15:00.000Z",
+      "signal_end": "2026-06-15T00:14:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 3.5295,
+      "relation": "outside_24h",
+      "delta_min": 1995
+    },
+    "etf-flows-sol-xrp-rotation-jun13": {
+      "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+      "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+      "signal_start": "2026-06-14T21:15:00.000Z",
+      "signal_end": "2026-06-15T00:14:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 3.5295,
+      "relation": "outside_24h",
+      "delta_min": 1995
+    },
+    "geopo-us-iran-mou-signed-jun14": {
+      "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+      "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+      "signal_start": "2026-06-14T21:15:00.000Z",
+      "signal_end": "2026-06-15T00:14:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 3.5295,
+      "relation": "same_day",
+      "delta_min": 555
+    },
+    "macro-oil-drop-inflation-fed-jun14-15": {
+      "signal_event_id": "vnext_c_a45cf681_20260614t2115",
+      "signal_window": "21:15-00:15 UTC - 180 min - 12 candles",
+      "signal_start": "2026-06-14T21:15:00.000Z",
+      "signal_end": "2026-06-15T00:14:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 3.5295,
+      "relation": "same_day",
+      "delta_min": 555
+    },
+    "regulatory-sec-trowe-multisset-etf-jun15": {
+      "signal_event_id": "vnext_c_16999967_20260615t1300",
+      "signal_window": "13:00-13:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-15T13:00:00.000Z",
+      "signal_end": "2026-06-15T13:29:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 0.996,
+      "relation": "near_0_3h",
+      "delta_min": 60
+    },
+    "regulatory-cftc-perp-contracts-jun15": {
+      "signal_event_id": "vnext_c_16999967_20260615t1300",
+      "signal_window": "13:00-13:30 UTC - 30 min - 2 candles",
+      "signal_start": "2026-06-15T13:00:00.000Z",
+      "signal_end": "2026-06-15T13:29:59.998Z",
+      "signal_direction": "observed_up",
+      "signal_avg_change_pct": 0.996,
+      "relation": "near_0_3h",
+      "delta_min": 60
+    },
+    "us-iran-ceasefire-geopolitical": {
+      "signal_event_id": "vnext_c_fcff80b4_20260616t1300",
+      "signal_window": "13:00-14:30 UTC - 90 min - 6 candles",
+      "signal_start": "2026-06-16T13:00:00.000Z",
+      "signal_end": "2026-06-16T14:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.3572,
+      "relation": "near_0_3h",
+      "delta_min": 60
+    },
+    "blackrock-bita-xrp-etf-listing": {
+      "signal_event_id": "vnext_c_fcff80b4_20260616t1300",
+      "signal_window": "13:00-14:30 UTC - 90 min - 6 candles",
+      "signal_start": "2026-06-16T13:00:00.000Z",
+      "signal_end": "2026-06-16T14:29:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.3572,
+      "relation": "near_0_3h",
+      "delta_min": 60
+    },
+    "boj-rate-hike-31yr-high": {
+      "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+      "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-17T18:00:00.000Z",
+      "signal_end": "2026-06-17T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.0711,
+      "relation": "near_3_6h",
+      "delta_min": 360
+    },
+    "btc-etf-outflow-fomc-jun17": {
+      "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+      "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-17T18:00:00.000Z",
+      "signal_end": "2026-06-17T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.0711,
+      "relation": "near_3_6h",
+      "delta_min": 360
+    },
+    "mara-btc-purchase-circle-usdc-minting": {
+      "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+      "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-17T18:00:00.000Z",
+      "signal_end": "2026-06-17T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.0711,
+      "relation": "near_3_6h",
+      "delta_min": 360
+    },
+    "microsoft-cryptobandits-malware-disclosure": {
+      "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+      "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-17T18:00:00.000Z",
+      "signal_end": "2026-06-17T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.0711,
+      "relation": "near_3_6h",
+      "delta_min": 360
+    },
+    "dubai-vara-aml-fatf-update": {
+      "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+      "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-17T18:00:00.000Z",
+      "signal_end": "2026-06-17T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.0711,
+      "relation": "near_3_6h",
+      "delta_min": 360
+    },
+    "us-retail-sales-jun17": {
+      "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+      "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-17T18:00:00.000Z",
+      "signal_end": "2026-06-17T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.0711,
+      "relation": "near_3_6h",
+      "delta_min": 330
+    },
+    "fomc-jun16-17-warsh-debut": {
+      "signal_event_id": "vnext_c_e71b58af_20260617t1800",
+      "signal_window": "18:00-19:45 UTC - 105 min - 7 candles",
+      "signal_start": "2026-06-17T18:00:00.000Z",
+      "signal_end": "2026-06-17T19:44:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -3.0711,
+      "relation": "overlap",
+      "delta_min": 0
+    },
+    "strc-sata-leverage-liquidation-jun18": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "near_3_6h",
+      "delta_min": 195
+    },
+    "security-microsoft-cryptobandits-malware-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1008
+    },
+    "geo-iran-switzerland-signing-collapse-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1200
+    },
+    "macro-fed-hawkish-dotplot-carry-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1200
+    },
+    "institutional-strategy-strc-record-low-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1200
+    },
+    "etf-franklin-templeton-bitcoin-drip-filing-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1200
+    },
+    "regulatory-clarity-act-senate-floor-july4-target-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1200
+    },
+    "exchange-upbit-nine-altcoin-listings-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1200
+    },
+    "institutional-btc-lth-accumulation-125k-june-20260619": {
+      "signal_event_id": "vnext_c_1188cecc_20260618t1515",
+      "signal_window": "15:15-16:00 UTC - 45 min - 3 candles",
+      "signal_start": "2026-06-18T15:15:00.000Z",
+      "signal_end": "2026-06-18T15:59:59.998Z",
+      "signal_direction": "observed_down",
+      "signal_avg_change_pct": -2.2573,
+      "relation": "same_day",
+      "delta_min": 1200
+    }
+  }
+}

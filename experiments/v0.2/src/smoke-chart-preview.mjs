@@ -16,6 +16,13 @@ const EXPECTED_COUNTS = {
   dayGroups: 31,
   dailyOverviews: 31,
   candleSymbols: 5,
+  catalystCandidates: 96,
+  catalystTimeRefinements: 81,
+  catalystEventTimestamps: 8,
+  catalystSourceAuditRows: 175,
+  catalystSourceAuditUniqueUrls: 102,
+  publicSourceMarkers: 47,
+  sourceMarkersWithin6h: 31,
 };
 
 const REQUIRED_PREVIEW_JS_MARKERS = [
@@ -24,6 +31,28 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   "function renderDailySection",
   "function drawStoryOverlay",
   "function drawStoryAuditOverlay",
+  "function drawCatalystMarkers",
+  "function buildPublicSourceMarkerItems",
+  "function drawPublicSourceMarkers",
+  "function renderCatalystCandidateGroup",
+  "function renderCatalystCandidateRow",
+  "function hasCatalystEventTimestamp",
+  "function catalystEventTimeIso",
+  "function catalystAppliedTimeRefinementFor",
+  "function catalystTimeIso",
+  "function catalystRelationLabel",
+  "function catalystTimeRefinementFor",
+  "function catalystTimingKind",
+  "source timestamp",
+  "function updateCatalystSourcePanel",
+  "function sourceLinksHtml",
+  "function defaultCatalystSourcesHtml",
+  "function defaultPublicSourceMarkersHtml",
+  "source_marker",
+  "signal/audit keep/conditional unique source URLs",
+  "sourceMarkerTimingWindowLabel",
+  "SOURCE_MARKER_WITHIN_6H_COLOR",
+  "within 6h in green",
   "function renderStorySection",
   "story_context_label",
   "function renderSignalSection",
@@ -75,6 +104,16 @@ const REQUIRED_PREVIEW_JS_MARKERS = [
   '"story"',
   '"story_audit"',
   "Audit Events",
+  "Accepted-source catalysts",
+  "Catalyst sources on chart",
+  "accepted-source candidates are plotted as diamonds",
+  "Catalysts",
+  "catalyst-toggle",
+  "catalyst-source-panel",
+  "source-link-list",
+  "source-candidate-button",
+  "default-source-list",
+  "accepted-source catalysts",
   "Audit-linked Market Stories",
   "selected-audit",
   "combined-audit-group",
@@ -144,6 +183,10 @@ async function loadPreviewData() {
       feedContract: payload.feedContract,
       groupedPreview: payload.groupedPreview,
       auditEvents: payload.auditEvents,
+      catalysts: payload.catalysts,
+      catalystAlignment: payload.catalystAlignment,
+      catalystTimeRefinements: payload.catalystTimeRefinements,
+      catalystSourceAudit: payload.catalystSourceAudit,
       candles: payload.candles,
     };
   }
@@ -158,6 +201,22 @@ async function loadPreviewData() {
       CHART_PREVIEW_DATA_DIR,
       "non_public_audit_events.json",
     ),
+    catalysts: path.join(
+      CHART_PREVIEW_DATA_DIR,
+      "independent_catalyst_events_30d.json",
+    ),
+    catalystAlignment: path.join(
+      CHART_PREVIEW_DATA_DIR,
+      "catalyst_signal_alignment.json",
+    ),
+    catalystTimeRefinements: path.join(
+      CHART_PREVIEW_DATA_DIR,
+      "catalyst_time_refinements.json",
+    ),
+    catalystSourceAudit: path.join(
+      CHART_PREVIEW_DATA_DIR,
+      "catalyst_source_audit.json",
+    ),
     candles: path.join(CHART_PREVIEW_DATA_DIR, "candles_30d.json"),
   };
 
@@ -170,6 +229,12 @@ async function loadPreviewData() {
     feedContract: await readJson(jsonPaths.feedContract),
     groupedPreview: await readJson(jsonPaths.groupedPreview),
     auditEvents: await readJson(jsonPaths.auditEvents),
+    catalysts: await readJson(jsonPaths.catalysts),
+    catalystAlignment: await readJson(jsonPaths.catalystAlignment),
+    catalystTimeRefinements: await readJson(
+      jsonPaths.catalystTimeRefinements,
+    ),
+    catalystSourceAudit: await readJson(jsonPaths.catalystSourceAudit),
     candles: await readJson(jsonPaths.candles),
   };
 }
@@ -212,6 +277,53 @@ function assertNoForbiddenVisibleLabels(label, value) {
       `${label} contains forbidden visible marker: ${marker}`,
     );
   }
+}
+
+function publicSourceMarkerUrls(catalystSourceAudit) {
+  const urls = new Set();
+  for (const row of catalystSourceAudit.rows ?? []) {
+    const publicMatch =
+      row.public_signal_timing?.catalyst_candidate_within_12h === true;
+    const auditMatch =
+      row.all_detected_timing?.catalyst_candidate_within_12h === true &&
+      row.all_detected_timing?.nearest_signal?.detection_scope ===
+        "audit_event";
+    if (
+      row.source?.url &&
+      row.event_timestamp?.timestamp_utc &&
+      (publicMatch || auditMatch) &&
+      ["keep", "conditional_keep"].includes(row.context_decision)
+    ) {
+      urls.add(row.source.url);
+    }
+  }
+  return urls;
+}
+
+function sourceMarkerWithin6hUrls(catalystSourceAudit) {
+  const urls = new Set();
+  for (const row of catalystSourceAudit.rows ?? []) {
+    const publicMatch =
+      row.public_signal_timing?.catalyst_candidate_within_12h === true;
+    const auditMatch =
+      row.all_detected_timing?.catalyst_candidate_within_12h === true &&
+      row.all_detected_timing?.nearest_signal?.detection_scope ===
+        "audit_event";
+    const publicStrong =
+      row.public_signal_timing?.timing_decision === "strong_timing_match";
+    const auditStrong =
+      row.all_detected_timing?.timing_decision === "strong_timing_match";
+    if (
+      row.source?.url &&
+      row.event_timestamp?.timestamp_utc &&
+      (publicMatch || auditMatch) &&
+      (publicStrong || auditStrong) &&
+      ["keep", "conditional_keep"].includes(row.context_decision)
+    ) {
+      urls.add(row.source.url);
+    }
+  }
+  return urls;
 }
 
 function assertDayPostCollapseContract(feedContract, groupedPreview) {
@@ -315,12 +427,29 @@ async function runSmoke() {
     "index.html must expose the Both feed mode",
   );
   assert.ok(
+    indexHtml.includes('id="catalyst-toggle"'),
+    "index.html must expose the catalyst overlay toggle",
+  );
+  assert.ok(
+    indexHtml.includes('id="catalyst-source-panel"'),
+    "index.html must expose the chart catalyst source panel",
+  );
+  assert.ok(
     previewJs.includes("__BYTESIREN_V02_PREVIEW__"),
     "preview.js must try the direct-file-safe global bundle",
   );
   assert.ok(
     previewJs.includes("Preview data could not load"),
     "preview.js must render a visible data-load error",
+  );
+  assert.ok(
+    previewJs.includes("if (hasCatalystEventTimestamp(item)) return null;"),
+    "preview.js must prefer exact/hour catalyst event times over source refinements",
+  );
+  assert.ok(
+    previewJs.includes("const eventTime = catalystEventTimeIso(item);") &&
+      previewJs.includes("if (eventTime) return eventTime;"),
+    "preview.js must resolve catalyst event time before source-refined time",
   );
   assert.ok(
     previewJs.includes('state.mode === "both"'),
@@ -356,12 +485,25 @@ async function runSmoke() {
     );
   }
 
-  const { feedContract, groupedPreview, auditEvents, candles } = data;
+  const {
+    feedContract,
+    groupedPreview,
+    auditEvents,
+    catalysts,
+    catalystAlignment,
+    catalystTimeRefinements,
+    catalystSourceAudit,
+    candles,
+  } = data;
   const items = contractItems(feedContract);
   const signals = items.filter((item) => item.item_type === "signal_event");
   const stories = items.filter((item) => item.item_type === "market_story");
   const overviews = items.filter((item) => item.item_type === "daily_overview");
   const candleSymbols = Object.keys(candles.candles_by_symbol ?? {});
+  const catalystItems = catalysts.items ?? [];
+  const publicSourceMarkerUrlSet = publicSourceMarkerUrls(catalystSourceAudit);
+  const sourceMarkerWithin6hUrlSet =
+    sourceMarkerWithin6hUrls(catalystSourceAudit);
 
   assert.equal(feedContract.day_groups.length, EXPECTED_COUNTS.dayGroups);
   assert.ok(
@@ -563,9 +705,86 @@ async function runSmoke() {
     feedContract.preview_diagnostics.audit_event_count,
   );
   assert.equal(candleSymbols.length, EXPECTED_COUNTS.candleSymbols);
-  assert.equal(feedContract.detector_version, "vnext_c");
+  assert.equal(
+    catalystItems.length,
+    EXPECTED_COUNTS.catalystCandidates,
+    "chart preview bundle must include all accepted-source catalyst candidates",
+  );
+  assert.equal(
+    catalystSourceAudit.rows?.length,
+    EXPECTED_COUNTS.catalystSourceAuditRows,
+    "chart preview bundle must include catalyst source audit rows",
+  );
+  assert.equal(
+    new Set(
+      (catalystSourceAudit.rows ?? [])
+        .map((row) => row.source?.url)
+        .filter(Boolean),
+    ).size,
+    EXPECTED_COUNTS.catalystSourceAuditUniqueUrls,
+    "chart preview bundle must preserve unique source URL coverage",
+  );
+  assert.equal(
+    publicSourceMarkerUrlSet.size,
+    EXPECTED_COUNTS.publicSourceMarkers,
+    "chart preview must expose signal/audit keep/conditional unique source URL markers",
+  );
+  assert.equal(
+    sourceMarkerWithin6hUrlSet.size,
+    EXPECTED_COUNTS.sourceMarkersWithin6h,
+    "chart preview must mark <=6h signal/audit unique source URL markers",
+  );
+  assert.equal(
+    catalystItems.filter(
+      (item) =>
+        item.event_time_utc && ["exact", "hour"].includes(item.time_granularity),
+    ).length,
+    EXPECTED_COUNTS.catalystEventTimestamps,
+    "chart preview bundle must preserve exact/hour catalyst event timestamps",
+  );
+  assert.equal(
+    catalystAlignment.catalyst_alignment?.length,
+    EXPECTED_COUNTS.catalystCandidates,
+    "chart preview bundle must include catalyst-to-signal alignment rows",
+  );
+  assert.equal(catalystAlignment.catalysts_near_signal_count, 82);
+  assert.equal(catalystAlignment.catalyst_without_near_signal_count, 14);
+  assert.equal(
+    catalystTimeRefinements.refined_count,
+    EXPECTED_COUNTS.catalystTimeRefinements,
+    "chart preview bundle must include direct-source timestamp refinements",
+  );
+  assert.ok(
+    catalystTimeRefinements.items.some(
+      (item) => item.refined_time_kind === "source_published_json_ld",
+    ),
+    "refinements should preserve timestamp extraction provenance",
+  );
+  assert.ok(
+    catalystTimeRefinements.items.every(
+      (item) => item.old_time_granularity === "day",
+    ),
+    "source-time refinements should be fallback timing only for day-granularity catalysts",
+  );
+  assert.ok(
+    catalystItems.every(
+      (item) =>
+        item.event_id &&
+        item.event_date_utc &&
+        item.headline &&
+        item.sources?.length > 0,
+    ),
+    "every catalyst marker must have accepted-source detail",
+  );
+  assert.ok(
+    ["vnext_c", "vnext_c_source_tuned"].includes(feedContract.detector_version),
+  );
   assert.equal(feedContract.chart_context_enabled, true);
-  assert.equal(groupedPreview.detector_version, "vnext_c");
+  assert.ok(
+    ["vnext_c", "vnext_c_source_tuned"].includes(
+      groupedPreview.detector_version,
+    ),
+  );
   assert.equal(groupedPreview.chart_context_enabled, true);
   assertLatestItemsExist(feedContract);
   assert.ok(
@@ -589,9 +808,11 @@ async function runSmoke() {
       (item) =>
         item.display_window &&
         item.evidence_window_label === "Evidence window" &&
-        item.evidence_window_display?.includes("candles") &&
-        item.evidence_window?.display?.includes("candles") &&
-        Number(item.evidence_bar_count) >= 2 &&
+        item.evidence_window_display?.includes("candle") &&
+        item.evidence_window?.display?.includes("candle") &&
+        (Number(item.evidence_bar_count) >= 2 ||
+          item.publish_gate?.publish_reason ===
+            "source_calibrated_one_bar_range_break_review") &&
         item.avg_change_label === "Avg Change" &&
         item.chart_context_label &&
         Number.isFinite(item.chart_context_score) &&
@@ -607,9 +828,11 @@ async function runSmoke() {
     signals.every(
       (item) =>
         item.expanded?.diagnostics?.evidence_bar_count >= 2 ||
-        item.evidence_bar_count >= 2,
+        item.evidence_bar_count >= 2 ||
+        item.publish_gate?.publish_reason ===
+          "source_calibrated_one_bar_range_break_review",
     ),
-    "public signal cards must represent multi-candle evidence windows",
+    "public signal cards must represent multi-candle evidence windows unless source-calibrated one-bar review applies",
   );
   assert.ok(
     overviews.every((item) => item.daily_change_label === "24h Change"),
@@ -653,6 +876,13 @@ async function runSmoke() {
     market_stories: stories.length,
     story_audit_event_links: storyAuditEventLinks,
     audit_events: auditEvents.count,
+    catalyst_candidates: catalystItems.length,
+    catalyst_candidates_near_signal:
+      catalystAlignment.catalysts_near_signal_count,
+    catalyst_candidates_without_near_signal:
+      catalystAlignment.catalyst_without_near_signal_count,
+    signal_audit_keep_conditional_source_markers: publicSourceMarkerUrlSet.size,
+    source_markers_within_6h_green: sourceMarkerWithin6hUrlSet.size,
     candle_symbols: candleSymbols,
   };
 

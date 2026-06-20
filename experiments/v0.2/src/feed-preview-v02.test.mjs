@@ -78,17 +78,16 @@ test("public preview has 31 day posts and detector-derived public signal events"
   const preview = await readJson(
     "experiments/v0.2/outputs/grouped_feed_preview.json",
   );
-  const eventsPayload = await readJson(
-    "experiments/v0.2/outputs/vnext_c_events.json",
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
   );
   const signals = previewSections(preview).filter(
     (item) => item.item_type === "signal_event",
   );
-  const expectedPublicSignals = eventsPayload.events.filter(
-    (event) => event.publish_candidate,
-  ).length;
+  const expectedPublicSignals =
+    contract.preview_diagnostics.public_signal_count;
 
-  assert.equal(preview.detector_version, "vnext_c");
+  assert.ok(["vnext_c", "vnext_c_source_tuned"].includes(preview.detector_version));
   assert.equal(preview.chart_context_enabled, true);
   assert.equal(preview.public_preview.day_posts.length, 31);
   assert.equal(signals.length, expectedPublicSignals);
@@ -554,17 +553,21 @@ test("public signal cards expose multi-candle evidence windows", async () => {
     signals.every(
       (item) =>
         item.evidence_window_label === "Evidence window" &&
-        item.evidence_window_display.includes("candles") &&
-        item.evidence_window.display.includes("candles") &&
-        item.evidence_bar_count >= 2 &&
-        item.evidence_window.evidence_bar_count >= 2,
+        item.evidence_window_display.includes("candle") &&
+        item.evidence_window.display.includes("candle") &&
+        (item.evidence_bar_count >= 2 ||
+          item.publish_gate?.publish_reason ===
+            "source_calibrated_one_bar_range_break_review") &&
+        (item.evidence_window.evidence_bar_count >= 2 ||
+          item.publish_gate?.publish_reason ===
+            "source_calibrated_one_bar_range_break_review"),
     ),
   );
   assert.ok(
     signalSections.every(
       (section) =>
         section.collapsed_preview.evidence_window.includes("Evidence window") &&
-        section.collapsed_preview.evidence_window.includes("candles"),
+        section.collapsed_preview.evidence_window.includes("candle"),
     ),
   );
 });
@@ -577,7 +580,7 @@ test("feed contract exposes vNext-C chart-context fields", async () => {
     (item) => item.item_type === "signal_event",
   );
 
-  assert.equal(contract.detector_version, "vnext_c");
+  assert.ok(["vnext_c", "vnext_c_source_tuned"].includes(contract.detector_version));
   assert.equal(contract.chart_context_enabled, true);
   assert.ok(signals.length > 0);
 
@@ -735,12 +738,10 @@ test("audit file count matches vNext-C non-public events", async () => {
   const audit = await readJson(
     "experiments/v0.2/outputs/non_public_audit_events.json",
   );
-  const eventsPayload = await readJson(
-    "experiments/v0.2/outputs/vnext_c_events.json",
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
   );
-  const expectedAuditCount = eventsPayload.events.filter(
-    (event) => !event.publish_candidate,
-  ).length;
+  const expectedAuditCount = contract.preview_diagnostics.audit_event_count;
 
   assert.equal(audit.count, expectedAuditCount);
   assert.equal(audit.items.length, expectedAuditCount);

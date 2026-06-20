@@ -10,6 +10,9 @@ const SYMBOL_COLORS = {
   SOLUSDT: "#14b8a6",
   XRPUSDT: "#38bdf8",
 };
+const PUBLIC_SOURCE_MARKER_COLOR = "#f97316";
+const SOURCE_MARKER_WITHIN_6H_COLOR = "#22c55e";
+const PUBLIC_SOURCE_MARKER_DECISIONS = new Set(["keep", "conditional_keep"]);
 
 const state = {
   mode: initialMode(),
@@ -21,16 +24,23 @@ const state = {
   selectedType: null,
   pendingScrollId: null,
   hitZones: [],
+  showCatalysts: true,
 };
 
 let feedContract;
 let auditEvents;
+let catalysts;
+let catalystAlignment;
+let catalystTimeRefinements;
+let catalystSourceAudit;
 let candles;
 let canvas;
 let ctx;
 let feedEl;
 let feedDiagnostics;
 let symbolSelect;
+let catalystToggle;
+let catalystSourcePanel;
 let selectionLabel;
 let dayToggle;
 let publicDayPosts = [];
@@ -38,6 +48,12 @@ let publicItems = [];
 let publicById = new Map();
 let auditItems = [];
 let auditById = new Map();
+let catalystItems = [];
+let catalystById = new Map();
+let catalystAlignmentById = new Map();
+let catalystTimeRefinementById = new Map();
+let sourceMarkerItems = [];
+let sourceMarkerById = new Map();
 let itemToDayPost = new Map();
 let dayPostById = new Map();
 
@@ -73,6 +89,24 @@ function normalizePreviewData(data) {
     feedContract: data.feedContract,
     groupedPreview: data.groupedPreview,
     auditEvents: data.auditEvents,
+    catalysts: data.catalysts ?? { catalyst_count: 0, items: [] },
+    catalystAlignment: data.catalystAlignment ?? {
+      catalyst_alignment: [],
+      catalysts_near_signal_count: 0,
+      catalyst_without_near_signal_count: 0,
+      signals_near_catalyst_count: 0,
+      signal_without_near_catalyst_count: 0,
+    },
+    catalystTimeRefinements: data.catalystTimeRefinements ?? {
+      refined_count: 0,
+      same_day_refined_count: 0,
+      items: [],
+    },
+    catalystSourceAudit: data.catalystSourceAudit ?? {
+      generated_at: null,
+      summary: {},
+      rows: [],
+    },
     candles: data.candles,
   };
 
@@ -95,18 +129,34 @@ async function loadPreviewData() {
     return normalizePreviewData(bundled);
   }
 
-  const [loadedFeedContract, groupedPreview, loadedAuditEvents, loadedCandles] =
-    await Promise.all([
-      fetchJson("./data/feed_contract_v02.json"),
-      fetchJson("./data/grouped_feed_preview.json"),
-      fetchJson("./data/non_public_audit_events.json"),
-      fetchJson("./data/candles_30d.json"),
-    ]);
+  const [
+    loadedFeedContract,
+    groupedPreview,
+    loadedAuditEvents,
+    loadedCatalysts,
+    loadedCatalystAlignment,
+    loadedCatalystTimeRefinements,
+    loadedCatalystSourceAudit,
+    loadedCandles,
+  ] = await Promise.all([
+    fetchJson("./data/feed_contract_v02.json"),
+    fetchJson("./data/grouped_feed_preview.json"),
+    fetchJson("./data/non_public_audit_events.json"),
+    fetchJson("./data/independent_catalyst_events_30d.json"),
+    fetchJson("./data/catalyst_signal_alignment.json"),
+    fetchJson("./data/catalyst_time_refinements.json"),
+    fetchJson("./data/catalyst_source_audit.json"),
+    fetchJson("./data/candles_30d.json"),
+  ]);
 
   return normalizePreviewData({
     feedContract: loadedFeedContract,
     groupedPreview,
     auditEvents: loadedAuditEvents,
+    catalysts: loadedCatalysts,
+    catalystAlignment: loadedCatalystAlignment,
+    catalystTimeRefinements: loadedCatalystTimeRefinements,
+    catalystSourceAudit: loadedCatalystSourceAudit,
     candles: loadedCandles,
   });
 }
@@ -257,6 +307,10 @@ function previewCounts() {
     stories: storyCount,
     signals: signalCount,
     audit: auditItems.length,
+    catalysts: catalystItems.length,
+    publicSourceMarkers: sourceMarkerItems.length,
+    sourceMarkersWithin6h: sourceMarkerItems.filter((item) => item.within_6h)
+      .length,
   };
 }
 
@@ -269,7 +323,18 @@ function updateDiagnostics() {
     ? "chart context enabled"
     : "chart context disabled";
   feedDiagnostics.classList.remove("is-error");
-  feedDiagnostics.textContent = `Preview data loaded: detector ${detectorVersion} · ${counts.days} days · ${counts.daily} daily overviews · ${counts.stories} market stories · ${counts.signals} signal events · ${counts.audit} audit events · ${chartContext}`;
+  feedDiagnostics.textContent = [
+    `Preview data loaded: detector ${detectorVersion}`,
+    `${counts.days} days`,
+    `${counts.daily} daily overviews`,
+    `${counts.stories} market stories`,
+    `${counts.signals} signal events`,
+    `${counts.audit} audit events`,
+    `${counts.catalysts} accepted-source catalysts`,
+    `${counts.publicSourceMarkers} signal/audit keep/conditional unique source URLs`,
+    `${counts.sourceMarkersWithin6h} within 6h in green`,
+    chartContext,
+  ].join(" · ");
 }
 
 function syncModeButtons() {
@@ -463,6 +528,511 @@ function includedAuditItems(ids) {
   return auditItems.filter((item) => wanted.has(item.id));
 }
 
+function hasCatalystEventTimestamp(item) {
+  return (
+    Boolean(item.event_time_utc) &&
+    ["exact", "hour"].includes(item.time_granularity)
+  );
+}
+
+function catalystEventTimeIso(item) {
+  if (!hasCatalystEventTimestamp(item)) return null;
+
+  const raw = String(item.event_time_utc);
+  if (raw.includes("T")) return raw;
+  const timeWithoutZone = raw.replace(/Z$/, "");
+  const withSeconds =
+    timeWithoutZone.split(":").length === 2
+      ? `${timeWithoutZone}:00`
+      : timeWithoutZone;
+  return `${item.event_date_utc}T${withSeconds}${
+    withSeconds.includes(".") ? "Z" : ".000Z"
+  }`;
+}
+
+function catalystAppliedTimeRefinementFor(item) {
+  if (hasCatalystEventTimestamp(item)) return null;
+  return catalystTimeRefinementFor(item);
+}
+
+function catalystTimeIso(item) {
+  const eventTime = catalystEventTimeIso(item);
+  if (eventTime) return eventTime;
+
+  const refinement = catalystAppliedTimeRefinementFor(item);
+  if (refinement?.refined_time_utc) {
+    return refinement.refined_time_utc;
+  }
+
+  return `${item.event_date_utc}T12:00:00.000Z`;
+}
+
+function catalystTimeMs(item) {
+  const parsed = Date.parse(catalystTimeIso(item));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function catalystDisplayTime(item) {
+  if (catalystTimingKind(item) !== "day_only") {
+    const date = new Date(catalystTimeIso(item));
+    if (Number.isFinite(date.getTime())) {
+      return date.toISOString().slice(0, 16).replace("T", " ") + " UTC";
+    }
+  }
+
+  return `${item.event_date_utc} UTC day`;
+}
+
+function sortedCatalystItems() {
+  return catalystItems
+    .slice()
+    .sort((a, b) => (catalystTimeMs(a) ?? 0) - (catalystTimeMs(b) ?? 0));
+}
+
+function catalystAlignmentFor(item) {
+  return catalystAlignmentById.get(item.event_id) ?? null;
+}
+
+function catalystTimeRefinementFor(item) {
+  const refinement = catalystTimeRefinementById.get(item.event_id);
+  return refinement?.refined_time_utc ? refinement : null;
+}
+
+function catalystTimingKind(item) {
+  if (hasCatalystEventTimestamp(item)) {
+    return "event_time";
+  }
+  if (catalystAppliedTimeRefinementFor(item)) {
+    return "source_time";
+  }
+  return "day_only";
+}
+
+function catalystTimingLabel(item) {
+  const kind = catalystTimingKind(item);
+  if (kind === "event_time") return "event time";
+  if (kind === "source_time") return "source timestamp";
+  return "day-only";
+}
+
+function catalystRelationLabel(item) {
+  const relation = catalystAlignmentFor(item)?.nearest_signal?.relation;
+  if (relation === "within_24h") return "near signal";
+  if (relation === "outside_24h") return "outside 24h";
+  return "not matched";
+}
+
+function sourceMarkerTimingForRow(row) {
+  const publicMatch =
+    row.public_signal_timing?.catalyst_candidate_within_12h === true;
+  const auditMatch =
+    row.all_detected_timing?.catalyst_candidate_within_12h === true &&
+    row.all_detected_timing?.nearest_signal?.detection_scope === "audit_event";
+
+  if (!publicMatch && !auditMatch) return null;
+
+  const publicStrong =
+    row.public_signal_timing?.timing_decision === "strong_timing_match";
+  const auditStrong =
+    row.all_detected_timing?.timing_decision === "strong_timing_match";
+  const primary =
+    publicStrong && publicMatch
+      ? row.public_signal_timing
+      : auditStrong && auditMatch
+        ? row.all_detected_timing
+        : auditMatch && !publicMatch
+          ? row.all_detected_timing
+          : row.public_signal_timing;
+
+  return {
+    scope:
+      publicMatch && auditMatch
+        ? "public_and_audit"
+        : auditMatch
+          ? "audit_evidence"
+          : "public_signal",
+    primary,
+    publicTiming: publicMatch ? row.public_signal_timing : null,
+    auditTiming: auditMatch ? row.all_detected_timing : null,
+    within6h: publicStrong || auditStrong,
+  };
+}
+
+function sourceMarkerScopeLabel(item) {
+  if (item.source_timing_scope === "public_and_audit") {
+    return "public + audit evidence";
+  }
+  if (item.source_timing_scope === "audit_evidence") {
+    return "audit evidence";
+  }
+  return "public signal";
+}
+
+function sourceMarkerScore(row) {
+  const timing = sourceMarkerTimingForRow(row);
+  const decisionScore = row.context_decision === "keep" ? 300 : 220;
+  const qualityScore = {
+    direct_catalyst: 50,
+    market_mechanics_catalyst: 42,
+    single_asset_context: 24,
+    conditional_backdrop: 12,
+  }[row.context_quality] ?? 0;
+  const supportScore = { high: 30, medium: 18, low: 4 }[row.source_support] ?? 0;
+  const timingScore = {
+    strong_timing_match: 36,
+    reasonable_timing_match: 26,
+    loose_timing_match: 12,
+  }[timing?.primary?.timing_decision] ?? 0;
+  const timestampScore = {
+    high: 20,
+    medium: 12,
+    low: 2,
+  }[row.event_timestamp?.timestamp_reliability] ?? 0;
+  const distance =
+    timing?.primary?.nearest_signal?.distance_min ??
+    Number.POSITIVE_INFINITY;
+  const proximityScore = Number.isFinite(distance)
+    ? Math.max(0, 24 - Math.min(24, distance / 30))
+    : 0;
+
+  return (
+    decisionScore +
+    qualityScore +
+    supportScore +
+    timingScore +
+    timestampScore +
+    proximityScore
+  );
+}
+
+function buildPublicSourceMarkerItems() {
+  const byUrl = new Map();
+  for (const row of catalystSourceAudit?.rows ?? []) {
+    const url = row.source?.url;
+    const markerTime = row.event_timestamp?.timestamp_utc;
+    if (!url || !markerTime) continue;
+    if (!PUBLIC_SOURCE_MARKER_DECISIONS.has(row.context_decision)) continue;
+    if (!sourceMarkerTimingForRow(row)) continue;
+
+    const existing = byUrl.get(url);
+    if (!existing || sourceMarkerScore(row) > sourceMarkerScore(existing)) {
+      byUrl.set(url, row);
+    }
+  }
+
+  return Array.from(byUrl.values())
+    .map((row) => {
+      const timing = sourceMarkerTimingForRow(row);
+      return {
+        id: `source:${row.source_url_hash ?? row.source.url}`,
+        item_type: "source_marker",
+        source_url_hash: row.source_url_hash,
+        source: row.source,
+        sources: [row.source],
+        catalyst_event_id: row.catalyst_event_id,
+        headline: row.catalyst_headline,
+        catalyst_type: row.catalyst_type,
+        context_decision: row.context_decision,
+        context_quality: row.context_quality,
+        context_reason: row.context_reason,
+        source_support: row.source_support,
+        event_timestamp: row.event_timestamp,
+        public_signal_timing: timing.publicTiming,
+        audit_evidence_timing: timing.auditTiming,
+        marker_timing: timing.primary,
+        source_timing_scope: timing.scope,
+        within_6h: timing.within6h,
+        marker_time_utc: row.event_timestamp.timestamp_utc,
+      };
+    })
+    .sort((a, b) => (sourceMarkerTimeMs(a) ?? 0) - (sourceMarkerTimeMs(b) ?? 0));
+}
+
+function sourceMarkerTimeMs(item) {
+  const parsed = Date.parse(item.marker_time_utc);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function sourceMarkerDisplayTime(item) {
+  const date = new Date(item.marker_time_utc);
+  if (!Number.isFinite(date.getTime())) return "time pending";
+  return date.toISOString().slice(0, 16).replace("T", " ") + " UTC";
+}
+
+function sourceMarkerDecisionLabel(item) {
+  return item.context_decision === "conditional_keep"
+    ? "conditional keep"
+    : "keep";
+}
+
+function sourceMarkerTimingLabel(item) {
+  return item.marker_timing?.timing_decision?.replace(/_/g, " ") ?? "timing match";
+}
+
+function sourceMarkerTimingWindowLabel(item) {
+  return item.within_6h ? "within 6h" : "6-12h";
+}
+
+function sourceMarkerColor(item) {
+  return item.within_6h
+    ? SOURCE_MARKER_WITHIN_6H_COLOR
+    : PUBLIC_SOURCE_MARKER_COLOR;
+}
+
+function sourceLinksHtml(sources = []) {
+  if (!sources.length) return "<li>No accepted source links available.</li>";
+  return sources
+    .map((source) => {
+      const publisher = source.publisher ?? "source";
+      const title = source.title ?? source.url ?? "Untitled source";
+      const publishedAt = source.published_at ?? "date pending";
+      return `<li>
+        <a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a>
+        <span>${escapeHtml(publisher)} · ${escapeHtml(publishedAt)} · ${escapeHtml(source.tag ?? "Accepted source")}</span>
+      </li>`;
+    })
+    .join("");
+}
+
+function defaultCatalystSourcesHtml() {
+  if (!catalystItems.length) return "<li>No accepted-source candidates loaded.</li>";
+
+  return sortedCatalystItems()
+    .map((item) => {
+      const source = item.sources?.[0];
+      const timingLabel = catalystTimingLabel(item);
+      const publisher = source?.publisher ?? "source";
+      const sourceTitle = source?.title ?? "accepted source";
+      return `<li>
+        <button class="source-candidate-button" data-catalyst-source-link="${escapeHtml(item.event_id)}">
+          ${escapeHtml(catalystDisplayTime(item))} · ${escapeHtml(timingLabel)} · ${escapeHtml(item.headline)}
+        </button>
+        ${
+          source?.url
+            ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(publisher)} · ${escapeHtml(sourceTitle)}</a>`
+            : `<span>${escapeHtml(publisher)} · ${escapeHtml(sourceTitle)}</span>`
+        }
+      </li>`;
+    })
+    .join("");
+}
+
+function defaultPublicSourceMarkersHtml() {
+  if (!sourceMarkerItems.length) {
+    return "<li>No signal/audit keep/conditional source URLs loaded.</li>";
+  }
+
+  return sourceMarkerItems
+    .map((item) => {
+      const nearest = item.marker_timing?.nearest_signal;
+      return `<li>
+        <button class="source-candidate-button is-source-marker ${item.within_6h ? "is-within-6h" : "is-6-12h"}" data-catalyst-source-link="${escapeHtml(item.id)}">
+          ${escapeHtml(sourceMarkerDisplayTime(item))} · ${escapeHtml(sourceMarkerTimingWindowLabel(item))} · ${escapeHtml(sourceMarkerDecisionLabel(item))} · ${escapeHtml(sourceMarkerScopeLabel(item))} · ${escapeHtml(item.headline)}
+        </button>
+        <a href="${escapeHtml(item.source.url)}" target="_blank" rel="noreferrer">${escapeHtml(item.source.publisher ?? "source")} · ${escapeHtml(item.source.title ?? item.source.url)}</a>
+        ${
+          nearest
+            ? `<span>Nearest signal: ${escapeHtml(nearest.signal_event_id)} · ${nearest.distance_min} min · ${escapeHtml(nearest.relation ?? "matched")}</span>`
+            : ""
+        }
+      </li>`;
+    })
+    .join("");
+}
+
+function selectedSourceMarkerPanelHtml(selected) {
+  const nearest = selected.marker_timing?.nearest_signal;
+  return `
+    <div class="source-panel-title">${escapeHtml(selected.headline)}</div>
+    <div class="source-panel-meta">
+      ${selected.within_6h ? "Green" : "Orange"} signal/audit source URL · ${escapeHtml(sourceMarkerDisplayTime(selected))} · ${escapeHtml(sourceMarkerTimingWindowLabel(selected))} · ${escapeHtml(sourceMarkerDecisionLabel(selected))} · ${escapeHtml(sourceMarkerScopeLabel(selected))} · ${escapeHtml(selected.context_quality.replace(/_/g, " "))} · ${escapeHtml(selected.source_support)} support
+    </div>
+    <div class="source-panel-meta">
+      Timing: ${escapeHtml(sourceMarkerTimingLabel(selected))} · basis ${escapeHtml(selected.event_timestamp?.timestamp_basis ?? "unknown")} · reliability ${escapeHtml(selected.event_timestamp?.timestamp_reliability ?? "unknown")}
+    </div>
+    ${
+      nearest
+        ? `<div class="source-panel-meta">Nearest signal: ${escapeHtml(nearest.signal_event_id)} · ${nearest.distance_min} min · ${escapeHtml(nearest.relation ?? "matched")} · ${escapeHtml(nearest.signal_window ?? "window pending")}</div>`
+        : ""
+    }
+    <div class="source-panel-meta">${escapeHtml(selected.context_reason ?? "Context decision available in source audit.")}</div>
+    <ul class="source-link-list">${sourceLinksHtml(selected.sources)}</ul>`;
+}
+
+function updateCatalystSourcePanel() {
+  if (!catalystSourcePanel) return;
+
+  if (!state.showCatalysts) {
+    catalystSourcePanel.innerHTML = `
+      <div class="source-panel-title">Accepted-source catalysts hidden</div>
+      <div class="source-panel-meta">Use the Catalysts button to show source-backed catalyst markers on the chart.</div>`;
+    return;
+  }
+
+  const selected =
+    state.selectedType === "catalyst"
+      ? catalystById.get(state.selectedId)
+      : state.selectedType === "source_marker"
+        ? sourceMarkerById.get(state.selectedId)
+      : null;
+
+  if (!selected) {
+    const nearCount =
+      catalystAlignment?.catalysts_near_signal_count ??
+      catalystItems.filter(
+        (item) =>
+          catalystAlignmentFor(item)?.nearest_signal?.relation ===
+          "within_24h",
+      ).length;
+    const refinedCount = catalystTimeRefinements?.refined_count ?? 0;
+    const eventTimeCount = catalystItems.filter(hasCatalystEventTimestamp).length;
+    const within6hCount = sourceMarkerItems.filter((item) => item.within_6h)
+      .length;
+    const sixTo12hCount = Math.max(0, sourceMarkerItems.length - within6hCount);
+    catalystSourcePanel.innerHTML = `
+      <div class="source-panel-title">Catalyst sources on chart</div>
+      <div class="source-panel-meta">${sourceMarkerItems.length} signal/audit keep/conditional unique source URLs are plotted · ${within6hCount} within 6h in green · ${sixTo12hCount} in 6-12h in orange.</div>
+      <div class="source-panel-meta">${catalystItems.length} accepted-source candidates are plotted as diamonds · ${eventTimeCount} use exact/hour event timestamps · ${refinedCount} use source timestamps · ${nearCount} near a Signal Event · click a diamond or row to show source links here.</div>
+      <div class="source-panel-legend">
+        <span><i class="legend-diamond filled"></i> exact event/source timestamp</span>
+        <span><i class="legend-diamond hollow"></i> day-only source candidate</span>
+        <span><i class="legend-diamond source-within-6h"></i> keep/conditional URL within 6h</span>
+        <span><i class="legend-diamond source-6-12h"></i> keep/conditional URL 6-12h</span>
+      </div>
+      <ul class="source-link-list default-source-list">${defaultPublicSourceMarkersHtml()}</ul>
+      <ul class="source-link-list default-source-list">${defaultCatalystSourcesHtml()}</ul>`;
+    return;
+  }
+
+  if (state.selectedType === "source_marker") {
+    catalystSourcePanel.innerHTML = selectedSourceMarkerPanelHtml(selected);
+    return;
+  }
+
+  const alignment = catalystAlignmentFor(selected);
+  const refinement = catalystAppliedTimeRefinementFor(selected);
+  const nearest = alignment?.nearest_signal;
+  catalystSourcePanel.innerHTML = `
+    <div class="source-panel-title">${escapeHtml(selected.headline)}</div>
+    <div class="source-panel-meta">
+      ${escapeHtml(catalystDisplayTime(selected))} · ${escapeHtml(catalystTimingLabel(selected))} · ${escapeHtml(selected.catalyst_type.replace(/_/g, " "))} · ${escapeHtml(selected.source_support)} source support · ${escapeHtml(catalystRelationLabel(selected))}
+    </div>
+    ${
+      refinement
+        ? `<div class="source-panel-meta">Timing basis: ${escapeHtml(refinement.refined_time_kind)} · confidence ${escapeHtml(refinement.confidence)} · source timestamp, not guaranteed catalyst occurrence time</div>`
+        : ""
+    }
+    ${
+      nearest
+        ? `<div class="source-panel-meta">Nearest signal: ${escapeHtml(nearest.signal_event_id)} · ${nearest.delta_min} min · ${escapeHtml(nearest.relation)}</div>`
+        : ""
+    }
+    <ul class="source-link-list">${sourceLinksHtml(selected.sources)}</ul>`;
+}
+
+function catalystColor(item) {
+  if (item.source_support === "high") return "#22d3ee";
+  if (item.source_support === "medium") return "#a78bfa";
+  return "#94a3b8";
+}
+
+function drawCatalystMarkerShape(x, y, color, precise, selected) {
+  const radius = selected ? 7 : 5;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.PI / 4);
+  ctx.lineWidth = selected ? 2 : 1.4;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = precise ? color : "rgba(8, 11, 17, 0.92)";
+  if (precise) {
+    ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+  } else {
+    ctx.strokeRect(-radius, -radius, radius * 2, radius * 2);
+  }
+  ctx.restore();
+}
+
+function drawCatalystMarkers(plot) {
+  if (!state.showCatalysts || !catalystItems.length) return;
+
+  const sorted = sortedCatalystItems();
+  sorted.forEach((item, index) => {
+    const time = catalystTimeMs(item);
+    if (!Number.isFinite(time)) return;
+
+    const x = plot.xForTime(time);
+    const lane = index % 4;
+    const y = plot.top + 34 + lane * 13;
+    const selected =
+      state.selectedType === "catalyst" && state.selectedId === item.event_id;
+    const precise = catalystTimingKind(item) !== "day_only";
+    const color = catalystColor(item);
+
+    if (selected) {
+      ctx.strokeStyle = "rgba(34, 211, 238, 0.5)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, plot.top);
+      ctx.lineTo(x, plot.bottom);
+      ctx.stroke();
+    }
+
+    drawCatalystMarkerShape(x, y, color, precise, selected);
+    state.hitZones.push({
+      id: item.event_id,
+      kind: "catalyst",
+      x: x - 9,
+      y: y - 9,
+      w: 18,
+      h: 18,
+    });
+  });
+}
+
+function drawPublicSourceMarkers(plot) {
+  if (!state.showCatalysts || !sourceMarkerItems.length) return;
+
+  sourceMarkerItems.forEach((item, index) => {
+    const time = sourceMarkerTimeMs(item);
+    if (!Number.isFinite(time)) return;
+
+    const x = plot.xForTime(time);
+    const lane = index % 5;
+    const y = plot.top + 96 + lane * 13;
+    const selected =
+      state.selectedType === "source_marker" && state.selectedId === item.id;
+    const precise = item.context_decision === "keep";
+    const color = sourceMarkerColor(item);
+
+    if (selected) {
+      ctx.strokeStyle = item.within_6h
+        ? "rgba(34, 197, 94, 0.62)"
+        : "rgba(249, 115, 22, 0.62)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(x, plot.top);
+      ctx.lineTo(x, plot.bottom);
+      ctx.stroke();
+    }
+
+    drawCatalystMarkerShape(
+      x,
+      y,
+      color,
+      precise,
+      selected,
+    );
+    state.hitZones.push({
+      id: item.id,
+      kind: "source_marker",
+      x: x - 10,
+      y: y - 10,
+      w: 20,
+      h: 20,
+    });
+  });
+}
+
 function drawActiveOverlays(plot) {
   if (state.mode === "audit") {
     const selectedStory =
@@ -600,7 +1170,11 @@ function drawActiveOverlays(plot) {
     drawMarker(plot, item, colorForDirection(item.direction));
   }
 
-  if (state.mode === "both" && !state.selectedType) {
+  if (
+    state.mode === "both" &&
+    (!state.selectedType ||
+      ["catalyst", "source_marker"].includes(state.selectedType))
+  ) {
     for (const item of auditItems) {
       drawAuditOverlay(plot, item, false);
     }
@@ -675,6 +1249,8 @@ function drawAllSymbolsChart(rect) {
     bottom: rect.height - pad.bottom,
     width: rect.width - pad.left - pad.right,
     height: rect.height - pad.top - pad.bottom,
+    startTime: commonStart,
+    endTime: commonEnd,
   };
 
   plot.xForTime = (time) => {
@@ -721,6 +1297,8 @@ function drawAllSymbolsChart(rect) {
   }
 
   drawActiveOverlays(plot);
+  drawCatalystMarkers(plot);
+  drawPublicSourceMarkers(plot);
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "12px system-ui";
@@ -767,6 +1345,8 @@ function drawChart() {
     bottom: priceBottom,
     width: rect.width - pad.left - pad.right,
     height: priceBottom - priceTop,
+    startTime: series[0].time,
+    endTime: series.at(-1).time,
   };
   const firstTime = series[0].time;
   const lastTime = series.at(-1).time;
@@ -831,6 +1411,8 @@ function drawChart() {
   }
 
   drawActiveOverlays(plot);
+  drawCatalystMarkers(plot);
+  drawPublicSourceMarkers(plot);
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "12px system-ui";
@@ -855,6 +1437,10 @@ function clearSelection() {
 
 function selectionTypeForItem(item) {
   if (!item) return null;
+  if (item.item_type === "source_marker" || sourceMarkerById.has(item.id)) {
+    return "source_marker";
+  }
+  if (catalystById.has(item.event_id)) return "catalyst";
   if (auditById.has(item.id)) return "audit_event";
   if (item.item_type === "market_story") return "market_story";
   return item.item_type === "daily_overview"
@@ -878,6 +1464,10 @@ function updateSelectionLabel(item, selectedType) {
     selectionLabel.textContent = `Selected market story: ${item.id}`;
   } else if (selectedType === "audit_event") {
     selectionLabel.textContent = `Selected audit: ${item.id}`;
+  } else if (selectedType === "catalyst") {
+    selectionLabel.textContent = `Selected catalyst: ${catalystDisplayTime(item)} - ${item.headline}`;
+  } else if (selectedType === "source_marker") {
+    selectionLabel.textContent = `Selected source: ${sourceMarkerDisplayTime(item)} - ${item.headline}`;
   } else {
     selectionLabel.textContent = `Selected signal: ${item.id}`;
   }
@@ -885,8 +1475,14 @@ function updateSelectionLabel(item, selectedType) {
 
 function selectItem(id, options = {}) {
   const item = auditFeedVisible() && !publicFeedVisible()
-    ? auditById.get(id) || publicById.get(id)
-    : publicById.get(id) || auditById.get(id);
+    ? auditById.get(id) ||
+      publicById.get(id) ||
+      catalystById.get(id) ||
+      sourceMarkerById.get(id)
+    : publicById.get(id) ||
+      auditById.get(id) ||
+      catalystById.get(id) ||
+      sourceMarkerById.get(id);
   const selectedType = selectionTypeForItem(item);
 
   if (!item || !selectedType) {
@@ -902,7 +1498,12 @@ function selectItem(id, options = {}) {
   state.selectedId = id;
   state.selectedType = selectedType;
 
-  if (options.expandDay && selectedType !== "audit_event") {
+  if (
+    options.expandDay &&
+    selectedType !== "audit_event" &&
+    selectedType !== "catalyst" &&
+    selectedType !== "source_marker"
+  ) {
     revealDayPostForItem(id);
   }
 
@@ -927,7 +1528,7 @@ function scrollPendingSelectionIntoView() {
   if (!state.pendingScrollId || !feedEl) return;
 
   const selectedCard = Array.from(
-    feedEl.querySelectorAll(".section-card"),
+    feedEl.querySelectorAll(".section-card, .catalyst-row"),
   ).find((card) => card.dataset.id === state.pendingScrollId);
 
   if (selectedCard) {
@@ -1239,22 +1840,88 @@ function renderCombinedAuditGroup() {
     </section>`;
 }
 
+function renderCatalystCandidateRow(item) {
+  const alignment = catalystAlignmentFor(item);
+  const nearest = alignment?.nearest_signal;
+  const selected =
+    state.selectedType === "catalyst" && state.selectedId === item.event_id;
+  const sourceCount = item.sources?.length ?? 0;
+  const relation = catalystRelationLabel(item);
+  const firstSource = item.sources?.[0];
+
+  return `
+    <button class="catalyst-row ${selected ? "is-selected" : ""}" data-id="${escapeHtml(item.event_id)}">
+      <span class="catalyst-dot" style="--catalyst-color: ${escapeHtml(catalystColor(item))}"></span>
+      <span class="catalyst-copy">
+        <span class="catalyst-title">${escapeHtml(item.headline)}</span>
+        <span class="catalyst-meta">
+          ${escapeHtml(catalystDisplayTime(item))} · ${escapeHtml(item.catalyst_type.replace(/_/g, " "))} · ${escapeHtml(item.source_support)} support · ${sourceCount} source${sourceCount === 1 ? "" : "s"} · ${escapeHtml(relation)}
+        </span>
+        ${
+          nearest
+            ? `<span class="catalyst-meta">Nearest signal: ${escapeHtml(nearest.signal_event_id)} (${nearest.delta_min} min)</span>`
+            : ""
+        }
+        ${
+          firstSource
+            ? `<span class="catalyst-meta">Source: ${escapeHtml(firstSource.publisher ?? "source")} · ${escapeHtml(firstSource.published_at ?? "date pending")}</span>`
+            : ""
+        }
+      </span>
+    </button>`;
+}
+
+function renderCatalystCandidateGroup() {
+  if (!state.showCatalysts || !catalystItems.length) return "";
+
+  const nearCount =
+    catalystAlignment?.catalysts_near_signal_count ??
+    catalystItems.filter(
+      (item) => catalystAlignmentFor(item)?.nearest_signal?.relation === "within_24h",
+    ).length;
+  const outsideCount =
+    catalystAlignment?.catalyst_without_near_signal_count ??
+    Math.max(0, catalystItems.length - nearCount);
+
+  return `
+    <section class="catalyst-group" aria-label="Accepted-source catalyst candidates">
+      <div class="catalyst-header">
+        <div>
+          <h2 class="combined-title">Accepted-source catalysts</h2>
+          <div class="combined-meta">${catalystItems.length} candidates · ${nearCount} near signal · ${outsideCount} without nearby signal</div>
+        </div>
+        <span class="chip catalyst-chip">Chart overlay</span>
+      </div>
+      <div class="catalyst-list">
+        ${sortedCatalystItems().map(renderCatalystCandidateRow).join("")}
+      </div>
+    </section>`;
+}
+
 function renderFeed() {
+  const catalystHtml = renderCatalystCandidateGroup();
   if (state.mode === "audit") {
-    feedEl.innerHTML = `${renderAuditStoryGroup()}${renderAuditFeed()}`;
+    feedEl.innerHTML = `${renderAuditStoryGroup()}${renderAuditFeed()}${catalystHtml}`;
   } else if (state.mode === "both") {
     const publicHtml = publicDayPosts.length
       ? publicDayPosts.map(renderDayPost).join("")
       : '<div class="empty">Preview data loaded, but no public day posts were found.</div>';
-    feedEl.innerHTML = `${publicHtml}${renderCombinedAuditGroup()}`;
+    feedEl.innerHTML = `${publicHtml}${catalystHtml}${renderCombinedAuditGroup()}`;
   } else {
     feedEl.innerHTML = publicDayPosts.length
       ? publicDayPosts.map(renderDayPost).join("")
       : '<div class="empty">Preview data loaded, but no public day posts were found.</div>';
+    feedEl.innerHTML += catalystHtml;
   }
 
   feedEl.querySelectorAll(".section-card").forEach((card) => {
     card.addEventListener("click", () => selectItem(card.dataset.id));
+  });
+
+  feedEl.querySelectorAll(".catalyst-row").forEach((row) => {
+    row.addEventListener("click", () =>
+      selectItem(row.dataset.id, { scrollIntoView: true }),
+    );
   });
 
   feedEl.querySelectorAll("[data-section-toggle]").forEach((button) => {
@@ -1286,6 +1953,7 @@ function renderFeed() {
 function render() {
   syncDayToggle();
   renderFeed();
+  updateCatalystSourcePanel();
   drawChart();
 }
 
@@ -1293,24 +1961,40 @@ function exposePreviewRuntime() {
   window.__BYTESIREN_V02_RUNTIME__ = {
     feedContract,
     auditEvents,
+    catalysts,
+    catalystAlignment,
+    catalystTimeRefinements,
+    catalystSourceAudit,
     candles,
     state,
     publicDayPosts,
     publicItems,
     auditItems,
+    catalystItems,
+    sourceMarkerItems,
   };
   window.feedContract = feedContract;
   window.auditEvents = auditEvents;
+  window.catalysts = catalysts;
+  window.catalystAlignment = catalystAlignment;
+  window.catalystTimeRefinements = catalystTimeRefinements;
+  window.catalystSourceAudit = catalystSourceAudit;
   window.candles = candles;
   window.state = state;
   window.publicDayPosts = publicDayPosts;
   window.publicItems = publicItems;
   window.auditItems = auditItems;
+  window.catalystItems = catalystItems;
+  window.sourceMarkerItems = sourceMarkerItems;
 }
 
 function startPreview(data) {
   feedContract = data.feedContract;
   auditEvents = data.auditEvents;
+  catalysts = data.catalysts;
+  catalystAlignment = data.catalystAlignment;
+  catalystTimeRefinements = data.catalystTimeRefinements;
+  catalystSourceAudit = data.catalystSourceAudit;
   candles = data.candles;
 
   canvas = document.getElementById("chart");
@@ -1318,6 +2002,8 @@ function startPreview(data) {
   feedEl = document.getElementById("feed");
   feedDiagnostics = document.getElementById("feed-diagnostics");
   symbolSelect = document.getElementById("symbol-select");
+  catalystToggle = document.getElementById("catalyst-toggle");
+  catalystSourcePanel = document.getElementById("catalyst-source-panel");
   selectionLabel = document.getElementById("selection-label");
   dayToggle = document.getElementById("day-toggle");
   symbolSelect.value = state.symbol;
@@ -1327,6 +2013,19 @@ function startPreview(data) {
   publicById = new Map(publicItems.map((item) => [item.id, item]));
   auditItems = auditEvents.items;
   auditById = new Map(auditItems.map((item) => [item.id, item]));
+  catalystItems = catalysts.items ?? [];
+  catalystById = new Map(catalystItems.map((item) => [item.event_id, item]));
+  sourceMarkerItems = buildPublicSourceMarkerItems();
+  sourceMarkerById = new Map(sourceMarkerItems.map((item) => [item.id, item]));
+  catalystAlignmentById = new Map(
+    (catalystAlignment.catalyst_alignment ?? []).map((item) => [
+      item.catalyst_event_id,
+      item,
+    ]),
+  );
+  catalystTimeRefinementById = new Map(
+    (catalystTimeRefinements.items ?? []).map((item) => [item.event_id, item]),
+  );
   itemToDayPost = new Map(
     publicDayPosts.flatMap((group) =>
       group.items.map((item) => [item.id, group.day_post_id]),
@@ -1356,6 +2055,28 @@ function startPreview(data) {
   symbolSelect.addEventListener("change", () => {
     state.symbol = symbolSelect.value;
     drawChart();
+  });
+
+  catalystToggle.addEventListener("click", () => {
+    state.showCatalysts = !state.showCatalysts;
+    catalystToggle.classList.toggle("is-active", state.showCatalysts);
+    catalystToggle.textContent = state.showCatalysts
+      ? "Catalysts"
+      : "Catalysts off";
+    if (
+      !state.showCatalysts &&
+      ["catalyst", "source_marker"].includes(state.selectedType)
+    ) {
+      resetSelectionState();
+    }
+    render();
+  });
+
+  catalystSourcePanel.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-catalyst-source-link]");
+    if (!button) return;
+    event.preventDefault();
+    selectItem(button.dataset.catalystSourceLink, { scrollIntoView: true });
   });
 
   feedEl.addEventListener("click", (event) => {

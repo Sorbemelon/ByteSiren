@@ -34,14 +34,26 @@
                 <option value="XRPUSDT">XRP</option>
               </select>
             </label>
+            <button id="catalyst-toggle" class="is-active">
+              Catalysts
+            </button>
             <div id="selection-label" class="selection-label">No selection</div>
           </div>
-          <canvas
-            id="chart"
-            aria-label="Candlestick chart with event windows"
-          ></canvas>
+          <div class="chart-stage">
+            <canvas
+              id="chart"
+              aria-label="Candlestick chart with event windows"
+            ></canvas>
+            <div
+              id="catalyst-source-panel"
+              class="catalyst-source-panel"
+              aria-live="polite"
+            >
+              Accepted-source catalyst markers loading...
+            </div>
+          </div>
           <div class="chart-hint">
-            Click a feed card, story band, or highlighted event window to inspect the chart.
+            Click a feed card, story band, catalyst point, or highlighted event window to inspect the chart.
           </div>
         </section>
 
