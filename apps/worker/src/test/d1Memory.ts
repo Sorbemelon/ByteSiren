@@ -93,13 +93,125 @@ interface PublicViewCountRow {
   updated_at: string;
 }
 
+interface SignalEventV02Row {
+  id: string;
+  date_utc: string;
+  event_start: string;
+  event_end: string;
+  duration_min: number;
+  peak_time: string | null;
+  direction: string;
+  signals_count: number;
+  n_tracked: number;
+  avg_change_pct: number | null;
+  avg_change_method: string | null;
+  event_strength_score: number | null;
+  impact_label: string | null;
+  chart_context_score: number | null;
+  chart_context_label: string | null;
+  event_story_type: string | null;
+  trend_context: string | null;
+  momentum_context: string | null;
+  volatility_context: string | null;
+  event_range_context: string | null;
+  chart_context_reasons_json: string;
+  chart_context_warnings_json: string;
+  macro_aligned: number;
+  nearest_macro_event: string | null;
+  macro_delta_min: number | null;
+  source_route_hint: string | null;
+  publish_candidate: number;
+  publish_reason: string | null;
+  suppress_reason: string | null;
+  detector_version: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SignalEventSymbolV02Row {
+  id: string;
+  signal_event_id: string;
+  symbol: string;
+  window_change_pct: number | null;
+  peak_15m_change_pct: number | null;
+  volume_ratio: number | null;
+  range_position: string | null;
+  prev_24h_high: number | null;
+  prev_24h_low: number | null;
+  range_break_direction: string | null;
+  range_break_pct: number | null;
+  range_break_strength: number | null;
+  distance_to_range_high_pct: number | null;
+  distance_to_range_low_pct: number | null;
+  is_lead_mover: number;
+  is_peak_15m_highlight: number;
+  participated: number;
+  evidence_json: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AuditEventV02Row {
+  id: string;
+  date_utc: string;
+  event_start: string;
+  event_end: string;
+  duration_min: number;
+  direction: string | null;
+  avg_change_pct: number | null;
+  signals_count: number | null;
+  n_tracked: number;
+  event_strength_score: number | null;
+  chart_context_score: number | null;
+  chart_context_label: string | null;
+  suppress_reason: string | null;
+  why_suppressed: string | null;
+  nearby_public_event_id: string | null;
+  detector_version: string;
+  evidence_json: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ClaudeBriefV02Row {
+  id: string;
+  target_type: string;
+  target_id: string;
+  prompt_mode: string;
+  status: string;
+  public_label: string | null;
+  classification: string | null;
+  confidence: string | null;
+  headline: string | null;
+  collapsed_summary: string | null;
+  context_details: string | null;
+  source_support: string | null;
+  source_timing_alignment: string | null;
+  validation_flags_json: string;
+  detector_feedback_json: string;
+  prompt_version: string | null;
+  model: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MemoryD1Tables {
   market_candles: MarketCandle[];
   market_features: MarketFeatureRow[];
   raw_signal_events: RawSignalEventRow[];
   incidents: IncidentRow[];
   claude_briefs: ClaudeBriefRow[];
+  claude_briefs_v02: ClaudeBriefV02Row[];
   source_references: SourceReferenceRow[];
+  source_references_v02: Array<Record<string, unknown>>;
+  signal_events_v02: SignalEventV02Row[];
+  signal_event_symbols_v02: SignalEventSymbolV02Row[];
+  audit_events_v02: AuditEventV02Row[];
+  market_stories_v02: Array<Record<string, unknown>>;
+  market_story_members_v02: Array<Record<string, unknown>>;
+  daily_overviews_v02: Array<Record<string, unknown>>;
   claude_analysis_usage: ClaudeAnalysisUsageRow[];
   public_view_counts: PublicViewCountRow[];
   job_runs: JobRunRow[];
@@ -126,7 +238,15 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
     raw_signal_events: [...(initial.raw_signal_events ?? [])],
     incidents: [...(initial.incidents ?? [])],
     claude_briefs: [...(initial.claude_briefs ?? [])],
+    claude_briefs_v02: [...(initial.claude_briefs_v02 ?? [])],
     source_references: [...(initial.source_references ?? [])],
+    source_references_v02: [...(initial.source_references_v02 ?? [])],
+    signal_events_v02: [...(initial.signal_events_v02 ?? [])],
+    signal_event_symbols_v02: [...(initial.signal_event_symbols_v02 ?? [])],
+    audit_events_v02: [...(initial.audit_events_v02 ?? [])],
+    market_stories_v02: [...(initial.market_stories_v02 ?? [])],
+    market_story_members_v02: [...(initial.market_story_members_v02 ?? [])],
+    daily_overviews_v02: [...(initial.daily_overviews_v02 ?? [])],
     claude_analysis_usage: [...(initial.claude_analysis_usage ?? [])],
     public_view_counts: [...(initial.public_view_counts ?? [])],
     job_runs: [...(initial.job_runs ?? [])],
@@ -777,6 +897,263 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
             views: 1,
             updated_at: updatedAt,
           });
+        }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO signal_events_v02")) {
+        const [
+          id,
+          dateUtc,
+          eventStart,
+          eventEnd,
+          durationMin,
+          peakTime,
+          direction,
+          signalsCount,
+          nTracked,
+          avgChangePct,
+          avgChangeMethod,
+          eventStrengthScore,
+          impactLabel,
+          chartContextScore,
+          chartContextLabel,
+          eventStoryType,
+          trendContext,
+          momentumContext,
+          volatilityContext,
+          eventRangeContext,
+          chartContextReasonsJson,
+          chartContextWarningsJson,
+          macroAligned,
+          nearestMacroEvent,
+          macroDeltaMin,
+          sourceRouteHint,
+          publishCandidate,
+          publishReason,
+          suppressReason,
+          detectorVersion,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string,
+          number,
+          string | null,
+          string,
+          number,
+          number,
+          number | null,
+          string | null,
+          number | null,
+          string | null,
+          number | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string,
+          string,
+          number,
+          string | null,
+          number | null,
+          string | null,
+          number,
+          string | null,
+          string | null,
+          string,
+        ];
+        const existing = tables.signal_events_v02.find((row) => row.id === id);
+        const now = new Date().toISOString();
+        const row: SignalEventV02Row = {
+          id,
+          date_utc: dateUtc,
+          event_start: eventStart,
+          event_end: eventEnd,
+          duration_min: durationMin,
+          peak_time: peakTime,
+          direction,
+          signals_count: signalsCount,
+          n_tracked: nTracked,
+          avg_change_pct: avgChangePct,
+          avg_change_method: avgChangeMethod,
+          event_strength_score: eventStrengthScore,
+          impact_label: impactLabel,
+          chart_context_score: chartContextScore,
+          chart_context_label: chartContextLabel,
+          event_story_type: eventStoryType,
+          trend_context: trendContext,
+          momentum_context: momentumContext,
+          volatility_context: volatilityContext,
+          event_range_context: eventRangeContext,
+          chart_context_reasons_json: chartContextReasonsJson,
+          chart_context_warnings_json: chartContextWarningsJson,
+          macro_aligned: macroAligned,
+          nearest_macro_event: nearestMacroEvent,
+          macro_delta_min: macroDeltaMin,
+          source_route_hint: sourceRouteHint,
+          publish_candidate: publishCandidate,
+          publish_reason: publishReason,
+          suppress_reason: suppressReason,
+          detector_version: detectorVersion,
+          created_at: existing?.created_at ?? now,
+          updated_at: now,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.signal_events_v02.push(row);
+        }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO signal_event_symbols_v02")) {
+        const [
+          id,
+          signalEventId,
+          symbol,
+          windowChangePct,
+          peak15mChangePct,
+          volumeRatio,
+          rangePosition,
+          prev24hHigh,
+          prev24hLow,
+          rangeBreakDirection,
+          rangeBreakPct,
+          rangeBreakStrength,
+          distanceToRangeHighPct,
+          distanceToRangeLowPct,
+          isLeadMover,
+          isPeak15mHighlight,
+          participated,
+          evidenceJson,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          number | null,
+          number | null,
+          number | null,
+          string | null,
+          number | null,
+          number | null,
+          string | null,
+          number | null,
+          number | null,
+          number | null,
+          number | null,
+          number,
+          number,
+          number,
+          string,
+        ];
+        const existing = tables.signal_event_symbols_v02.find(
+          (row) => row.id === id,
+        );
+        const now = new Date().toISOString();
+        const row: SignalEventSymbolV02Row = {
+          id,
+          signal_event_id: signalEventId,
+          symbol,
+          window_change_pct: windowChangePct,
+          peak_15m_change_pct: peak15mChangePct,
+          volume_ratio: volumeRatio,
+          range_position: rangePosition,
+          prev_24h_high: prev24hHigh,
+          prev_24h_low: prev24hLow,
+          range_break_direction: rangeBreakDirection,
+          range_break_pct: rangeBreakPct,
+          range_break_strength: rangeBreakStrength,
+          distance_to_range_high_pct: distanceToRangeHighPct,
+          distance_to_range_low_pct: distanceToRangeLowPct,
+          is_lead_mover: isLeadMover,
+          is_peak_15m_highlight: isPeak15mHighlight,
+          participated,
+          evidence_json: evidenceJson,
+          created_at: existing?.created_at ?? now,
+          updated_at: now,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.signal_event_symbols_v02.push(row);
+        }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO audit_events_v02")) {
+        const [
+          id,
+          dateUtc,
+          eventStart,
+          eventEnd,
+          durationMin,
+          direction,
+          avgChangePct,
+          signalsCount,
+          nTracked,
+          eventStrengthScore,
+          chartContextScore,
+          chartContextLabel,
+          suppressReason,
+          whySuppressed,
+          nearbyPublicEventId,
+          detectorVersion,
+          evidenceJson,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string,
+          number,
+          string | null,
+          number | null,
+          number | null,
+          number,
+          number | null,
+          number | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string,
+          string,
+        ];
+        const existing = tables.audit_events_v02.find((row) => row.id === id);
+        const now = new Date().toISOString();
+        const row: AuditEventV02Row = {
+          id,
+          date_utc: dateUtc,
+          event_start: eventStart,
+          event_end: eventEnd,
+          duration_min: durationMin,
+          direction,
+          avg_change_pct: avgChangePct,
+          signals_count: signalsCount,
+          n_tracked: nTracked,
+          event_strength_score: eventStrengthScore,
+          chart_context_score: chartContextScore,
+          chart_context_label: chartContextLabel,
+          suppress_reason: suppressReason,
+          why_suppressed: whySuppressed,
+          nearby_public_event_id: nearbyPublicEventId,
+          detector_version: detectorVersion,
+          evidence_json: evidenceJson,
+          created_at: existing?.created_at ?? now,
+          updated_at: now,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.audit_events_v02.push(row);
         }
 
         return result(1);

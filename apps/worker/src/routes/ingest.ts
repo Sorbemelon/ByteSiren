@@ -242,7 +242,7 @@ export async function ingestCandlesResponse(
     const { symbol, candles, runDetectorRequested } = validated;
     const upserted = await upsertMarketCandles(env.DB, candles);
     const detector = runDetectorRequested
-      ? await runDetector(env.DB)
+      ? await runDetector(env.DB, { env })
       : undefined;
 
     return json({

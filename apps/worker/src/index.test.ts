@@ -429,10 +429,34 @@ test("scheduled detector cron runs detector only", async () => {
     tables.job_runs.some((row) => row.job_name === "run_detector"),
     true,
   );
+  assert.equal(tables.signal_events_v02.length, 0);
   assert.equal(
     tables.job_runs.some((row) => row.job_name === "poll_market"),
     false,
   );
+});
+
+test("scheduled detector cron can run v0.2 detector behind DETECTOR_VERSION", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+    DETECTOR_VERSION: "v02",
+  };
+
+  await worker.scheduled(scheduledController(DETECTOR_CRON), env);
+
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector_v02"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector"),
+    false,
+  );
+  assert.equal(tables.incidents.length, 0);
 });
 
 test("scheduled Claude cron runs enrichment only", async () => {

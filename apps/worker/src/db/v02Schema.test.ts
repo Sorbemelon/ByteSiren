@@ -6,11 +6,17 @@ import { fileURLToPath } from "node:url";
 
 const workerSrcDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(workerSrcDir, "../../../..");
-const migrationPath = resolve(
+const feedMigrationPath = resolve(
   repoRoot,
   "apps/worker/migrations/0007_v02_feed_schema.sql",
 );
-const migrationSql = readFileSync(migrationPath, "utf8");
+const claudeMigrationPath = resolve(
+  repoRoot,
+  "apps/worker/migrations/0008_claude_briefs_v02.sql",
+);
+const feedMigrationSql = readFileSync(feedMigrationPath, "utf8");
+const claudeMigrationSql = readFileSync(claudeMigrationPath, "utf8");
+const migrationSql = `${feedMigrationSql}\n${claudeMigrationSql}`;
 
 function tableBlock(tableName: string): string {
   const match = migrationSql.match(
@@ -154,6 +160,35 @@ test("v0.2 migration does not destructively alter v0.1 data", () => {
       pattern.test(migrationSql),
       false,
       `unexpected destructive SQL: ${pattern}`,
+    );
+  }
+});
+
+test("v0.2 Claude briefs use a new table without legacy incident coupling", () => {
+  const claudeBriefs = tableBlock("claude_briefs_v02");
+
+  assert.match(claudeBriefs, /target_type TEXT NOT NULL CHECK/);
+  assert.match(claudeBriefs, /'signal_event_v02'/);
+  assert.match(claudeBriefs, /'daily_overview_v02'/);
+  assert.equal(claudeBriefs.includes("'market_story_v02'"), false);
+  assert.equal(claudeBriefs.includes("incident_id"), false);
+  assert.match(claudeBriefs, /prompt_mode TEXT NOT NULL CHECK/);
+  assert.match(claudeBriefs, /'signal_event'/);
+  assert.match(claudeBriefs, /'daily_overview'/);
+});
+
+test("v0.2 Claude brief indexes support target, status, and prompt mode", () => {
+  const requiredIndexes = [
+    "idx_claude_briefs_v02_target",
+    "idx_claude_briefs_v02_status",
+    "idx_claude_briefs_v02_prompt_mode",
+  ];
+
+  for (const indexName of requiredIndexes) {
+    assert.match(
+      claudeMigrationSql,
+      new RegExp(`CREATE INDEX IF NOT EXISTS ${indexName}`),
+      `${indexName} should exist`,
     );
   }
 });

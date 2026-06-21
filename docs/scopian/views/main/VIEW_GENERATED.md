@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-21T16:03:41+07:00
+generated_at: 2026-06-21T16:31:12+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -13,10 +13,10 @@ canonical_inputs:
   - source_registry.yml
 input_hashes:
   view: sha256:8c6b400b796c
-  sources: sha256:8c7f9453aee9
+  sources: sha256:6f46f34a73a1
   buffer: sha256:11e7a1a3d36e
   context: sha256:5ef45bc1a5d7
-  registry: sha256:c8331888d505
+  registry: sha256:5faffe231da9
 ---
 
 # Generated Scope View
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-21T16:03:41+07:00
+- generated_at: 2026-06-21T16:31:12+07:00
 
 ## Selected Sources
 
@@ -52,7 +52,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5)
 - PRODUCT.md (sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd)
 - docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:17714e28df9947f0407ed63293221cb2c93320016968d19a3a51bd0bb69e8709)
-- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:36e75b018d1f0df5599bc5303cfa13b7a36af571f6ed0fe1cc14af253d5651a1)
+- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:b6829a3d8e216a47568795ea81cfd5a0ef1f6df0a067dc24f53960ec17f8fa31)
 
 ## Approved Buffer Summary
 
@@ -144,7 +144,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-public-ui-summary-constraints-1a6f2c7d | allowed_with_limits | Public UI summary constraints | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#public-ui-summary-constraints | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-purpose-e8e4b104 | allowed_with_limits | Purpose | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#purpose | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-rate-and-failure-behavior-9d0282dd | allowed_with_limits | Rate and failure behavior | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#rate-and-failure-behavior | none | not_checked_in_generated_view |
-| ITEM-allowed-with-limits-rollout-phases-v0-2i1-schema-spe-8940bb72 | allowed_with_limits | Rollout Phases: v0.2I1 schema/spec: add additive schema and this source spec only.; v0.2I2 detector vNext behind feature flag: write v0.2 detector output wi ... | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#rollout-phases | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-rollout-phases-v0-2i1-schema-spe-74ea9167 | allowed_with_limits | Rollout Phases: v0.2I1 schema/spec: add additive schema and this source spec only.; v0.2I2A Signal/Audit detector write path: write v0.2 Signal Event and Au ... | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#rollout-phases | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-scopian-7d2b6bd6 | allowed_with_limits | Scopian | docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md#scopian | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-search-count-policy-3ddb5dc4 | allowed_with_limits | Search count policy | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#search-count-policy | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-security-and-secrets-e079f592 | allowed_with_limits | Security and secrets | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#security-and-secrets | none | not_checked_in_generated_view |
@@ -208,17 +208,17 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-21T16:03:41+07:00
+- generated_refresh: 2026-06-21T16:31:12+07:00
 - selected_sources: 18
 - approved_buffer_records: 4
 
 ## Freshness Metadata
 
 - view: sha256:8c6b400b796c
-- sources: sha256:8c7f9453aee9
+- sources: sha256:6f46f34a73a1
 - buffer: sha256:11e7a1a3d36e
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:c8331888d505
+- registry: sha256:5faffe231da9
 
 ## Refresh Instructions
 

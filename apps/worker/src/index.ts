@@ -140,14 +140,14 @@ export default {
     }
 
     if (controller.cron === DETECTOR_CRON) {
-      await runDetector(env.DB);
+      await runDetector(env.DB, { env });
       return;
     }
 
     if (controller.cron === LEGACY_POLL_MARKET_CRON) {
       if (isWorkerMarketFetchEnabled(env)) {
         await pollMarket(env.DB);
-        await runDetector(env.DB);
+        await runDetector(env.DB, { env });
       }
 
       return;

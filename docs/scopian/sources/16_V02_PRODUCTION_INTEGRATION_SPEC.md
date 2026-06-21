@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I1-schema-spec-v1
+version: v0.2I2A-signal-audit-write-path-v1
 last_updated: 2026-06-21
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -41,7 +41,8 @@ Storage decisions:
 - Store optional normalized Market Story membership in `market_story_members_v02`.
 - Store one UTC-day Daily Overview record in `daily_overviews_v02`.
 - Store accepted/rejected v0.2 source records in `source_references_v02`.
-- Store Signal Event and Daily Overview Claude results in existing `claude_briefs` through nullable `target_type`, `target_id`, and `prompt_mode` columns when this is compatible with v0.1 rows.
+- Store Signal Event and Daily Overview Claude results in `claude_briefs_v02`.
+- Existing `claude_briefs` remains the v0.1/legacy table. The nullable `target_type`, `target_id`, and `prompt_mode` columns added in v0.2I1 are retained for additive compatibility, but they are not the preferred v0.2 write path and should not be used for new v0.2 writes unless explicitly revisited.
 - Do not store Claude results directly on Market Story rows.
 
 ## Feed Item Types
@@ -94,6 +95,18 @@ Deterministic-only item types:
 
 Claude must not infer cause from chart context alone. If source support is weak or missing, the Claude result should use the existing honest v0.1-style statuses and labels rather than force a cause.
 
+v0.2 Claude persistence uses `claude_briefs_v02` with these target types only:
+
+- `signal_event_v02`
+- `daily_overview_v02`
+
+`claude_briefs_v02.prompt_mode` values are:
+
+- `signal_event`
+- `daily_overview`
+
+Market Story must not have a `claude_briefs_v02` row.
+
 ## Source Reference Versioning
 
 `source_references_v02` is versioned separately from v0.1 `source_references`.
@@ -134,7 +147,8 @@ Rollback behavior should be feature-flag/config based:
 ## Rollout Phases
 
 - v0.2I1 schema/spec: add additive schema and this source spec only.
-- v0.2I2 detector vNext behind feature flag: write v0.2 detector output without changing public feed behavior.
+- v0.2I2A Signal/Audit detector write path: write v0.2 Signal Event and Audit Event output behind `DETECTOR_VERSION=v02` without changing public feed behavior.
+- v0.2I2B Market Story write path: generate deterministic Market Story rows after Signal/Audit writes.
 - v0.2I3 feed API v02 contract: support grouped day posts behind a feed version flag.
 - v0.2I4 Claude payload / Daily Overview enrichment: add Signal Event and Daily Overview Claude modes.
 - v0.2I5 frontend day-post integration: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
@@ -163,3 +177,14 @@ v0.2I1 does not:
 - deploy
 - add futures data
 - add trading advice, price targets, or buy/sell/long/short/hold language
+
+v0.2I2A does not:
+
+- change the public feed API
+- change frontend UI
+- call Claude
+- write `claude_briefs_v02`
+- write `source_references_v02`
+- generate Market Stories
+- generate Daily Overviews
+- write v0.1 `incidents` from the v0.2 detector path

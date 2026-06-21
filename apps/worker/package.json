@@ -11,7 +11,7 @@
     "d1:migrations:local": "wrangler d1 migrations apply bytesiren-placeholder --local",
     "d1:migrations:remote": "wrangler d1 migrations apply bytesiren-placeholder --remote",
     "lint": "eslint src --max-warnings=0",
-    "test": "node --test src/services/binance.test.ts src/services/githubDispatch.test.ts src/db/marketRepository.test.ts src/db/incidentRepository.test.ts src/db/claudeRepository.test.ts src/db/v02Schema.test.ts src/jobs/pollMarket.test.ts src/jobs/runDetector.test.ts src/jobs/enrichQueuedIncidents.test.ts src/index.test.ts src/deploymentBoundary.test.ts src/services/detector/detector.test.ts src/services/claude/sourcePolicy.test.ts src/services/claude/briefValidator.test.ts src/services/claude/promptBuilder.test.ts src/services/claude/anthropicClient.test.ts ../../scripts/import-binance-candles.test.mjs",
+    "test": "node --test src/config.test.ts src/services/binance.test.ts src/services/githubDispatch.test.ts src/db/marketRepository.test.ts src/db/incidentRepository.test.ts src/db/claudeRepository.test.ts src/db/v02Schema.test.ts src/jobs/pollMarket.test.ts src/jobs/runDetector.test.ts src/jobs/enrichQueuedIncidents.test.ts src/index.test.ts src/deploymentBoundary.test.ts src/services/detector/detector.test.ts src/services/detectorV02/detector.test.ts src/services/claude/sourcePolicy.test.ts src/services/claude/briefValidator.test.ts src/services/claude/promptBuilder.test.ts src/services/claude/anthropicClient.test.ts ../../scripts/import-binance-candles.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

@@ -24,6 +24,8 @@ export const CLEANUP_CRON = "17 0 * * *";
 export const GITHUB_INGEST_DISPATCH_CRON = "2,17,32,47 * * * *";
 export const LEGACY_POLL_MARKET_CRON = "*/5 * * * *";
 
+export type DetectorVersion = "v01" | "v02";
+
 const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);
 
 export function isAllowedSymbol(symbol: string): symbol is MarketSymbol {
@@ -37,6 +39,10 @@ export function parseMarketSymbol(symbol: string | null): MarketSymbol | null {
 
   const normalized = symbol.toUpperCase();
   return isAllowedSymbol(normalized) ? normalized : null;
+}
+
+export function parseDetectorVersion(value?: string | null): DetectorVersion {
+  return value?.trim().toLowerCase() === "v02" ? "v02" : "v01";
 }
 
 export function isoDaysAgo(days: number, now = new Date()): string {

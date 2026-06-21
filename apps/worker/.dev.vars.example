@@ -37,6 +37,10 @@ CLAUDE_BLOCKED_DOMAINS=coindcx.com,bitcoinfoundation.org,tradingkey.com,intellec
 # Keep local dev origins and add the deployed Cloudflare Pages origin before deploy.
 PUBLIC_WEB_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://bytesiren.pages.dev
 
+# Detector version switch. v01 is the production default; v02 writes only to
+# additive v0.2 Signal/Audit tables while v0.2 feed integration is disabled.
+DETECTOR_VERSION=v01
+
 # Protected maintenance diagnostics. Keep disabled except during controlled maintenance.
 # ADMIN_BACKFILL_TOKEN must be set as a Worker secret in production.
 ENABLE_ADMIN_MAINTENANCE=false

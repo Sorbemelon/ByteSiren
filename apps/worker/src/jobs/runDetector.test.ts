@@ -87,6 +87,7 @@ test("runDetector skips safely when any symbol lacks sufficient candles", async 
   const result = await runDetector(db, detectorNow);
 
   assert.equal(result.status, "skipped");
+  assert.equal(result.detector_version, "v01");
   assert.match(result.message, /insufficient 15m candle history/);
   assert.equal(tables.incidents.length, 0);
   assert.equal(tables.job_runs.at(-1)?.status, "skipped");
@@ -101,6 +102,7 @@ test("runDetector persists candidates, features, and suppressed raw events idemp
   const secondRun = await runDetector(db, detectorNow);
 
   assert.equal(firstRun.status, "success");
+  assert.equal(firstRun.detector_version, "v01");
   assert.ok(firstRun.candidate_count >= 1);
   assert.equal(secondRun.status, "success");
   assert.equal(tables.incidents.length, firstRun.candidate_count);
@@ -127,6 +129,7 @@ test("runDetector stores single-symbol suppressions without final candidates", a
   const result = await runDetector(db, detectorNow);
 
   assert.equal(result.status, "success");
+  assert.equal(result.detector_version, "v01");
   assert.equal(result.candidate_count, 0);
   assert.equal(tables.incidents.length, 0);
   assert.ok(
@@ -136,4 +139,58 @@ test("runDetector stores single-symbol suppressions without final candidates", a
         event.suppression_reason === "single_symbol_public_mvp_suppressed",
     ),
   );
+});
+
+test("runDetector uses v0.2 Signal/Audit write path only when DETECTOR_VERSION=v02", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols(),
+  });
+
+  const result = await runDetector(db, {
+    env: { DETECTOR_VERSION: "v02" },
+    now: detectorNow,
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.detector_version, "v02");
+  assert.ok(result.signal_count! >= 1);
+  assert.ok(result.publish_candidate_count! >= 1);
+  assert.equal(tables.signal_events_v02.length, result.signal_count);
+  assert.equal(
+    tables.signal_event_symbols_v02.length,
+    result.signal_count! * 5,
+  );
+  assert.equal(tables.incidents.length, 0);
+  assert.equal(tables.raw_signal_events.length, 0);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(tables.market_stories_v02.length, 0);
+  assert.equal(tables.daily_overviews_v02.length, 0);
+  assert.equal(tables.job_runs.at(-1)?.job_name, "run_detector_v02");
+});
+
+test("runDetector v0.2 writes Audit Events and is idempotent", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols({
+      spikeSymbols: ["BTCUSDT", "ETHUSDT"],
+    }),
+  });
+
+  const firstRun = await runDetector(db, {
+    env: { DETECTOR_VERSION: "v02" },
+    now: detectorNow,
+  });
+  const secondRun = await runDetector(db, {
+    env: { DETECTOR_VERSION: "v02" },
+    now: detectorNow,
+  });
+
+  assert.equal(firstRun.status, "success");
+  assert.equal(secondRun.status, "success");
+  assert.equal(tables.signal_events_v02.length, 0);
+  assert.equal(tables.audit_events_v02.length, firstRun.audit_count);
+  assert.ok(tables.audit_events_v02.length >= 1);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(tables.incidents.length, 0);
 });

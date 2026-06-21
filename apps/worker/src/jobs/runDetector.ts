@@ -3,6 +3,7 @@ import {
   BASELINE_BARS_24H,
   INTERNAL_RETENTION_DAYS,
   isoDaysAgo,
+  parseDetectorVersion,
   type MarketSymbol,
 } from "../config.ts";
 import {
@@ -21,18 +22,33 @@ import {
   type SymbolFeature,
 } from "../services/detector/index.ts";
 import type { MarketCandle } from "../types/market.ts";
+import type { Env } from "../types/env.ts";
 import { safeErrorMessage } from "../utils/http.ts";
+import { runDetectorV02, type RunDetectorV02Result } from "./runDetectorV02.ts";
 
 const MIN_CANDLES_PER_SYMBOL = BASELINE_BARS_24H + 1;
 
 export interface RunDetectorResult {
   status: "success" | "skipped" | "failed";
   message: string;
+  detector_version?: "v01" | "v02";
   features_written: number;
   raw_events_written: number;
   suppressed_events_written: number;
   incidents_written: number;
   candidate_count: number;
+  signal_count?: number;
+  audit_count?: number;
+  publish_candidate_count?: number;
+  suppressed_count?: number;
+  signal_events_written?: number;
+  signal_event_symbols_written?: number;
+  audit_events_written?: number;
+}
+
+export interface RunDetectorOptions {
+  env?: Pick<Env, "DETECTOR_VERSION">;
+  now?: Date;
 }
 
 interface LoadedCandles {
@@ -73,8 +89,23 @@ function insufficientSymbols(
 
 export async function runDetector(
   db: D1Database,
-  now = new Date(),
+  input: Date | RunDetectorOptions = {},
 ): Promise<RunDetectorResult> {
+  const options = input instanceof Date ? { now: input } : input;
+  const now = options.now ?? new Date();
+  const detectorVersion = parseDetectorVersion(options.env?.DETECTOR_VERSION);
+
+  if (detectorVersion === "v02") {
+    const result: RunDetectorV02Result = await runDetectorV02(db, now);
+    return {
+      ...result,
+      features_written: 0,
+      raw_events_written: 0,
+      suppressed_events_written: 0,
+      incidents_written: 0,
+    };
+  }
+
   const startedAt = new Date();
 
   try {
@@ -100,6 +131,7 @@ export async function runDetector(
       return {
         status: "skipped",
         message,
+        detector_version: "v01",
         features_written: 0,
         raw_events_written: 0,
         suppressed_events_written: 0,
@@ -144,6 +176,7 @@ export async function runDetector(
     return {
       status: "success",
       message,
+      detector_version: "v01",
       features_written: featuresWritten,
       raw_events_written: rawEventsWritten,
       suppressed_events_written: suppressedEventsWritten,
@@ -166,6 +199,7 @@ export async function runDetector(
     return {
       status: "failed",
       message,
+      detector_version: "v01",
       features_written: 0,
       raw_events_written: 0,
       suppressed_events_written: 0,
