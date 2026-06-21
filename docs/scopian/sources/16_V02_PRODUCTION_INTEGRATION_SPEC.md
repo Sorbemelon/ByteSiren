@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I3-feed-api-contract-v1
+version: v0.2I4A-claude-payload-persistence-v1
 last_updated: 2026-06-21
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -109,6 +109,34 @@ v0.2 Claude persistence uses `claude_briefs_v02` with these target types only:
 
 Market Story must not have a `claude_briefs_v02` row.
 
+v0.2I4A adds local Worker builders, validators, and repository helpers for v0.2 Claude payload persistence only. It does not call Claude, does not wire cron/enrichment jobs, and does not replace the existing production Claude prompt runtime.
+
+Signal Event payloads must include:
+
+- `mode: "signal_event"`
+- `target_type: "signal_event_v02"`
+- exact evidence window start/end/peak time
+- `Avg Change`
+- per-symbol `Window Change`, `Peak 15m`, and `Range Position`
+- chart-context fields as descriptive evidence
+- macro context when present
+- source route hints and bounded suggested search queries
+- `no_trading_advice: true`
+
+Daily Overview payloads must include:
+
+- `mode: "daily_overview"`
+- `target_type: "daily_overview_v02"`
+- UTC day start/end
+- `24h Change`
+- market tone, range, notable symbols, and top symbol moves
+- Signal Event IDs for the day
+- deterministic Market Story IDs/context for the day when useful
+- audit event count for the day
+- `no_trading_advice: true`
+
+Market Story is not a Claude payload mode. Market Story may appear inside a Daily Overview payload only as deterministic context, not as a standalone Claude target.
+
 ## Source Reference Versioning
 
 `source_references_v02` is versioned separately from v0.1 `source_references`.
@@ -123,6 +151,10 @@ Disallowed target:
 - `market_story_v02`
 
 Market Story has no Claude source references. Source markers in the chart may be produced only from Claude-backed Signal Event or Daily Overview source references.
+
+v0.2 source persistence uses `source_references_v02` only. It must reject root/homepage URLs, low-quality source patterns covered by source policy, and any `market_story_v02` target. Accepted article URLs should be preserved exactly for public display.
+
+`source_references_v02.brief_id` was created during the first additive schema pass with a legacy `claude_briefs` reference. New v0.2 source writes should keep that legacy column null and use `brief_v02_id` for optional `claude_briefs_v02` linkage. The canonical public association remains `target_type` plus `target_id`.
 
 ## Planned Feature Flags
 
@@ -157,7 +189,8 @@ Rollback behavior should be feature-flag/config based:
 - v0.2I2A Signal/Audit detector write path: write v0.2 Signal Event and Audit Event output behind `DETECTOR_VERSION=v02` without changing public feed behavior.
 - v0.2I2B Market Story write path: generate deterministic Market Story rows after Signal/Audit writes when `DETECTOR_VERSION=v02` and `ENABLE_MARKET_STORIES=true`.
 - v0.2I3 feed API v02 contract: support read-only grouped day posts behind `FEED_VERSION=v02` while keeping v0.1 as the default feed response.
-- v0.2I4 Claude payload / Daily Overview enrichment: add Signal Event and Daily Overview Claude modes.
+- v0.2I4A Claude payload persistence foundation: add Signal Event and Daily Overview payload builders, prompt builders, validators, `claude_briefs_v02` helpers, and `source_references_v02` helpers without calling Claude or wiring enrichment.
+- v0.2I4B Claude enrichment jobs: wire bounded v0.2 Signal Event and Daily Overview analysis behind explicit feature flags.
 - v0.2I5 frontend day-post integration: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
@@ -232,4 +265,26 @@ v0.2I3 does not:
 - generate Market Story rows
 - expose Audit Events in the public feed
 - add Claude status, source chips, source references, or cause labels to Market Story
+- change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`
+
+v0.2I4A does:
+
+- build Signal Event Claude payloads from `signal_events_v02` and `signal_event_symbols_v02`
+- build Daily Overview Claude payloads from `daily_overviews_v02` plus deterministic Signal Event and Market Story context for the same day
+- provide prompt builders for the future Signal Event and Daily Overview Claude modes
+- validate fixture Claude results for v0.2 output labels and source tag rules
+- write fixture/test v0.2 Claude results to `claude_briefs_v02`
+- write fixture/test v0.2 source references to `source_references_v02`
+- keep Market Story excluded from Claude payloads, Claude results, and source references
+
+v0.2I4A does not:
+
+- call Claude
+- add live Anthropic or Web Search calls
+- wire cron or enrichment jobs
+- change the current production Claude prompt behavior
+- generate Daily Overview rows
+- generate Market Story rows
+- write old `claude_briefs` or old `source_references` for v0.2 targets
+- change frontend UI
 - change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`

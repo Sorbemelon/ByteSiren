@@ -14,9 +14,17 @@ const claudeMigrationPath = resolve(
   repoRoot,
   "apps/worker/migrations/0008_claude_briefs_v02.sql",
 );
+const sourceReferenceLinkMigrationPath = resolve(
+  repoRoot,
+  "apps/worker/migrations/0009_source_references_v02_brief_link.sql",
+);
 const feedMigrationSql = readFileSync(feedMigrationPath, "utf8");
 const claudeMigrationSql = readFileSync(claudeMigrationPath, "utf8");
-const migrationSql = `${feedMigrationSql}\n${claudeMigrationSql}`;
+const sourceReferenceLinkMigrationSql = readFileSync(
+  sourceReferenceLinkMigrationPath,
+  "utf8",
+);
+const migrationSql = `${feedMigrationSql}\n${claudeMigrationSql}\n${sourceReferenceLinkMigrationSql}`;
 
 function tableBlock(tableName: string): string {
   const match = migrationSql.match(
@@ -191,4 +199,15 @@ test("v0.2 Claude brief indexes support target, status, and prompt mode", () => 
       `${indexName} should exist`,
     );
   }
+});
+
+test("v0.2 source references use additive v02 brief linkage", () => {
+  assert.match(
+    sourceReferenceLinkMigrationSql,
+    /ALTER TABLE source_references_v02\s+ADD COLUMN brief_v02_id TEXT;/,
+  );
+  assert.match(
+    sourceReferenceLinkMigrationSql,
+    /CREATE INDEX IF NOT EXISTS idx_source_references_v02_brief_v02_id/,
+  );
 });

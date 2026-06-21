@@ -237,6 +237,7 @@ interface SourceReferenceV02Row {
   target_type: string;
   target_id: string;
   brief_id: string | null;
+  brief_v02_id?: string | null;
   source_role: string;
   source_strength: string | null;
   publisher: string | null;
@@ -533,6 +534,24 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       }
 
       if (
+        this.sql.includes("FROM claude_briefs_v02") &&
+        this.sql.includes("status = ?")
+      ) {
+        const [status, limit] = this.params as [string, number];
+
+        return {
+          results: tables.claude_briefs_v02
+            .filter((row) => row.status === status)
+            .sort(
+              (a, b) =>
+                a.updated_at.localeCompare(b.updated_at) ||
+                a.created_at.localeCompare(b.created_at),
+            )
+            .slice(0, limit) as T[],
+        };
+      }
+
+      if (
         this.sql.includes("FROM incidents") &&
         this.sql.includes("started_at >= ?")
       ) {
@@ -608,11 +627,20 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         this.sql.includes("target_type = ?") &&
         this.sql.includes("target_id = ?")
       ) {
-        const [targetType, targetId] = this.params as [string, string];
+        const [targetType, targetId, promptMode] = this.params as [
+          string,
+          string,
+          string | undefined,
+        ];
+        const filtersPromptMode =
+          this.sql.includes("prompt_mode = ?") &&
+          typeof promptMode === "string";
         const row = tables.claude_briefs_v02
           .filter(
             (brief) =>
-              brief.target_type === targetType && brief.target_id === targetId,
+              brief.target_type === targetType &&
+              brief.target_id === targetId &&
+              (!filtersPromptMode || brief.prompt_mode === promptMode),
           )
           .sort(
             (a, b) =>
@@ -936,6 +964,86 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         return result(1);
       }
 
+      if (this.sql.includes("INSERT INTO claude_briefs_v02")) {
+        const [
+          id,
+          targetType,
+          targetId,
+          promptMode,
+          status,
+          publicLabel,
+          classification,
+          confidence,
+          headline,
+          collapsedSummary,
+          contextDetails,
+          sourceSupport,
+          sourceTimingAlignment,
+          validationFlagsJson,
+          detectorFeedbackJson,
+          promptVersion,
+          model,
+          errorCode,
+          errorMessage,
+          createdAt,
+          updatedAt,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string,
+          string,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string,
+          string,
+          string | null,
+          string | null,
+          string | null,
+          string | null,
+          string,
+          string,
+        ];
+        const existing = tables.claude_briefs_v02.find((row) => row.id === id);
+        const row: ClaudeBriefV02Row = {
+          id,
+          target_type: targetType,
+          target_id: targetId,
+          prompt_mode: promptMode,
+          status,
+          public_label: publicLabel,
+          classification,
+          confidence,
+          headline,
+          collapsed_summary: collapsedSummary,
+          context_details: contextDetails,
+          source_support: sourceSupport,
+          source_timing_alignment: sourceTimingAlignment,
+          validation_flags_json: validationFlagsJson,
+          detector_feedback_json: detectorFeedbackJson,
+          prompt_version: promptVersion,
+          model,
+          error_code: errorCode,
+          error_message: errorMessage,
+          created_at: existing?.created_at ?? createdAt,
+          updated_at: updatedAt,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.claude_briefs_v02.push(row);
+        }
+
+        return result(1);
+      }
+
       if (this.sql.includes("INSERT INTO claude_briefs")) {
         const [
           id,
@@ -1003,6 +1111,71 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           Object.assign(existing, row);
         } else {
           tables.claude_briefs.push(row);
+        }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO source_references_v02")) {
+        const [
+          id,
+          targetType,
+          targetId,
+          briefId,
+          briefV02Id,
+          sourceRole,
+          sourceStrength,
+          publisher,
+          title,
+          url,
+          publishedAt,
+          usedFor,
+          accepted,
+          rejectionReason,
+          metadataJson,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string | null,
+          string | null,
+          string,
+          string | null,
+          string | null,
+          string | null,
+          string,
+          string | null,
+          string | null,
+          number,
+          string | null,
+          string,
+        ];
+        const existing = tables.source_references_v02.find(
+          (row) => row.id === id,
+        );
+        const row: SourceReferenceV02Row = {
+          id,
+          target_type: targetType,
+          target_id: targetId,
+          brief_id: briefId,
+          brief_v02_id: briefV02Id,
+          source_role: sourceRole,
+          source_strength: sourceStrength,
+          publisher,
+          title,
+          url,
+          published_at: publishedAt,
+          used_for: usedFor,
+          accepted,
+          rejection_reason: rejectionReason,
+          metadata_json: metadataJson,
+          created_at: existing?.created_at ?? new Date().toISOString(),
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.source_references_v02.push(row);
         }
 
         return result(1);
@@ -1468,6 +1641,23 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           role,
           created_at: new Date().toISOString(),
         });
+
+        return result(1);
+      }
+
+      if (this.sql.includes("UPDATE claude_briefs_v02")) {
+        const [status, errorCode, errorMessage, updatedAt, id] = this
+          .params as [string, string | null, string | null, string, string];
+        const brief = tables.claude_briefs_v02.find((row) => row.id === id);
+
+        if (!brief) {
+          return result(0);
+        }
+
+        brief.status = status;
+        brief.error_code = errorCode;
+        brief.error_message = errorMessage;
+        brief.updated_at = updatedAt;
 
         return result(1);
       }
