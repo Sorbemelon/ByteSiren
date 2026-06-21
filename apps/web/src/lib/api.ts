@@ -1,17 +1,16 @@
 import type {
   ApiCandle,
-  ApiFeedItem,
-  ApiSymbolEvidence,
   CandleBar,
   CandlesApiResponse,
   FeedApiResponse,
   FeedItem,
   MarketLatest,
   MarketLatestApiResponse,
-  SymbolEvidence,
+  NormalizedFeedEnvelope,
   ViewMetrics,
   ViewMetricsApiResponse,
 } from "./types";
+import { normalizeFeedResponse } from "./feedAdapters";
 
 const rawApiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -50,82 +49,6 @@ export function apiUrl(path: string, base = API_BASE_URL): string {
   return `${trimmedBase}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-function normalizeSymbolEvidence(raw: ApiSymbolEvidence): SymbolEvidence {
-  return {
-    symbol: raw.symbol,
-    change_15m_pct: raw.change_15m_pct,
-    price_z: raw.price_z,
-    volume_x: raw.volume_ratio,
-    range_x: raw.volatility_ratio,
-    score: roundScore(raw.severity_score),
-  };
-}
-
-function roundScore(value: number | null | undefined): number {
-  return typeof value === "number" && Number.isFinite(value)
-    ? Math.round(value)
-    : 0;
-}
-
-function normalizeFeedItem(raw: ApiFeedItem): FeedItem {
-  const rawEvidence: ApiSymbolEvidence[] =
-    raw.symbol_evidence ?? raw.expanded_details?.symbol_evidence ?? [];
-  const symbolEvidence: SymbolEvidence[] = rawEvidence.map(
-    normalizeSymbolEvidence,
-  );
-  const eventStartTime =
-    raw.event_start_time ?? raw.started_at ?? raw.detected_at;
-  const eventEndTime =
-    raw.event_end_time ?? raw.ended_at ?? raw.started_at ?? raw.detected_at;
-  const peakTime = raw.peak_time ?? raw.detected_at ?? eventStartTime;
-
-  return {
-    incident_id: raw.incident_id,
-    incident_key: raw.incident_key,
-    detected_at: raw.detected_at,
-    started_at: raw.started_at ?? eventStartTime,
-    ended_at: raw.ended_at ?? null,
-    event_start_time: eventStartTime,
-    event_end_time: eventEndTime,
-    peak_time: peakTime,
-    first_detected_at: raw.first_detected_at ?? raw.detected_at,
-    last_evaluated_at: raw.last_evaluated_at ?? raw.detected_at,
-    display_date: raw.display_date,
-    scope: raw.scope,
-    direction: raw.direction,
-    symbols: raw.symbols ?? [],
-    tags: raw.tags ?? [],
-    evidence: {
-      signal_window: raw.evidence.signal_window,
-      baseline_window: raw.evidence.baseline_window,
-      summary: raw.evidence.summary ?? raw.evidence.evidence_summary ?? "",
-      breadth_label: raw.evidence.breadth_label,
-      severity_score: roundScore(raw.evidence.severity_score),
-      severity_label: raw.evidence.severity_label,
-      avg_15m_change_pct: raw.evidence.avg_15m_change_pct ?? null,
-      peak_symbol: raw.evidence.peak_symbol ?? "",
-    },
-    brief: {
-      status: raw.brief.status,
-      catalyst_status: raw.brief.catalyst_status,
-      label: raw.brief.label,
-      summary: raw.brief.summary ?? null,
-      confidence: raw.brief.confidence,
-      price_context_check: raw.brief.price_context_check,
-    },
-    sources: raw.sources ?? [],
-    expanded_details: {
-      symbol_evidence: symbolEvidence,
-      claude_context:
-        (raw.expanded_details?.claude_context as {
-          summary?: string;
-          caveats?: string[];
-        }) ?? {},
-      caveats: raw.expanded_details?.caveats ?? [],
-    },
-  };
-}
-
 function normalizeCandle(candle: ApiCandle): CandleBar {
   return {
     time: Math.floor(new Date(candle.open_time).getTime() / 1000),
@@ -137,10 +60,10 @@ function normalizeCandle(candle: ApiCandle): CandleBar {
   };
 }
 
-export async function fetchFeed(
+export async function fetchFeedEnvelope(
   base = API_BASE_URL,
   options: ApiFetchOptions = {},
-): Promise<{ items: FeedItem[]; updatedAt: string | null }> {
+): Promise<NormalizedFeedEnvelope> {
   const res = await fetch(apiUrl("/api/intelligence/feed", base), {
     signal: options.signal,
   });
@@ -148,9 +71,17 @@ export async function fetchFeed(
   if (!res.ok) throw new Error(`feed HTTP ${res.status}`);
 
   const data = (await res.json()) as FeedApiResponse;
+  return normalizeFeedResponse(data);
+}
+
+export async function fetchFeed(
+  base = API_BASE_URL,
+  options: ApiFetchOptions = {},
+): Promise<{ items: FeedItem[]; updatedAt: string | null }> {
+  const data = await fetchFeedEnvelope(base, options);
   return {
-    items: (data.items ?? []).map(normalizeFeedItem),
-    updatedAt: data.updated_at ?? null,
+    items: data.items,
+    updatedAt: data.updatedAt,
   };
 }
 

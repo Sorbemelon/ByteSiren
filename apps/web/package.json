@@ -10,7 +10,7 @@
     "pages:deploy": "wrangler pages deploy out --project-name bytesiren --branch main",
     "pages:preview": "wrangler pages dev out",
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/lib/eventTiming.test.mjs"
+    "test": "node --test src/lib/eventTiming.test.mjs src/lib/feedAdapters.test.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.10",

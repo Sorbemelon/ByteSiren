@@ -270,7 +270,8 @@ If an existing Daily Overview row has a terminal Claude status, row generation s
 - v0.2I4A Claude payload persistence foundation: add Signal Event and Daily Overview payload builders, prompt builders, validators, `claude_briefs_v02` helpers, and `source_references_v02` helpers without calling Claude or wiring enrichment.
 - v0.2I4B Claude enrichment jobs: wire bounded v0.2 Signal Event and Daily Overview analysis behind explicit feature flags, using `claude_briefs_v02`, `source_references_v02`, and `brief_v02_id`.
 - v0.2I4C Daily Overview row generation: create deterministic `daily_overviews_v02` rows from existing candles and v0.2 records behind `ENABLE_DAILY_OVERVIEWS`, without calling Claude or writing source rows.
-- v0.2I5 frontend day-post integration: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
+- v0.2I5A frontend API types/adapters: add v0.2 feed response types and normalized day-post adapter support without switching the active v0.1 UI rendering.
+- v0.2I5B frontend day-post rendering: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
 - v0.2I8 cleanup experiments: untrack local experiment artifacts after production integration is complete.
@@ -417,3 +418,23 @@ v0.2I4C does not:
 - change frontend UI
 - change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`
 - change v0.1 runtime behavior when `ENABLE_DAILY_OVERVIEWS` is absent or false
+
+v0.2I5A does:
+
+- add frontend TypeScript types for the `FEED_VERSION=v02` grouped day-post response
+- add a normalized v0.2 day-post adapter model for future UI work
+- preserve the current v0.1 feed item adapter and active `fetchFeed` rendering path
+- expose a safe feed envelope helper so future UI code can branch on `v02`
+- strip or ignore accidental Claude/source fields from normalized Market Story sections
+
+v0.2I5A does not:
+
+- change Worker/backend behavior
+- change the active production feed rendering
+- implement day-post UI
+- implement Daily Overview, Market Story, or Signal Event v0.2 section components
+- implement chart selection or source markers
+- invent Daily Overview summaries or sources
+- allow Market Story Claude status, Claude labels, or sources in the normalized frontend model
+
+Future v0.2I5B should implement day-post rendering using the v0.1 visual baseline.

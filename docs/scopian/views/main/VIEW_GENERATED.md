@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-21T18:42:02+07:00
+generated_at: 2026-06-21T19:05:34+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -13,10 +13,10 @@ canonical_inputs:
   - source_registry.yml
 input_hashes:
   view: sha256:8c6b400b796c
-  sources: sha256:50be6b67ae99
+  sources: sha256:d67251b94f3b
   buffer: sha256:11e7a1a3d36e
   context: sha256:5ef45bc1a5d7
-  registry: sha256:87722fce1950
+  registry: sha256:89d5b977dbef
 ---
 
 # Generated Scope View
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-21T18:42:02+07:00
+- generated_at: 2026-06-21T19:05:34+07:00
 
 ## Selected Sources
 
@@ -52,7 +52,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5)
 - PRODUCT.md (sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd)
 - docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:17714e28df9947f0407ed63293221cb2c93320016968d19a3a51bd0bb69e8709)
-- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:a182aaab7b21e7f785c56b700c35d827a7312a06843bd6ce254df322612248d6)
+- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:12c17479d00b49717ad40b7d4c28c5f473b09c6911e1b8216d50019e9914cebb)
 
 ## Approved Buffer Summary
 
@@ -212,17 +212,17 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-21T18:42:02+07:00
+- generated_refresh: 2026-06-21T19:05:34+07:00
 - selected_sources: 18
 - approved_buffer_records: 4
 
 ## Freshness Metadata
 
 - view: sha256:8c6b400b796c
-- sources: sha256:50be6b67ae99
+- sources: sha256:d67251b94f3b
 - buffer: sha256:11e7a1a3d36e
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:87722fce1950
+- registry: sha256:89d5b977dbef
 
 ## Refresh Instructions
 
