@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import Header from "../Header";
 import ChartPanel, { type ChartStatus } from "../ChartPanel";
 import IntelligenceFeed from "../IntelligenceFeed";
+import IntelligenceFeedV02 from "../IntelligenceFeedV02";
 import BottomAccordions from "../BottomAccordions";
 import {
   API_BASE_CONFIGURED,
   API_BASE_URL,
   fetchCandles,
-  fetchFeed,
+  fetchFeedEnvelope,
   fetchMarket,
   fetchViewMetrics,
   recordViewMetric,
@@ -23,6 +24,7 @@ import type {
   CandleBar,
   FeedItem,
   MarketLatest,
+  NormalizedFeedV02,
   Symbol,
   ViewMetrics,
 } from "../../lib/types";
@@ -62,6 +64,8 @@ export default function DashboardClient() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [chartInterval, setChartInterval] = useState<ChartInterval>("15m");
   const [feed, setFeed] = useState<FeedItem[]>(getInitialFeed);
+  const [feedV02, setFeedV02] = useState<NormalizedFeedV02 | null>(null);
+  const [feedVersion, setFeedVersion] = useState<"v01" | "v02">("v01");
   const [market, setMarket] =
     useState<Record<string, MarketLatest>>(getInitialMarket);
   const [candles, setCandles] = useState<CandleBar[]>(() =>
@@ -92,7 +96,7 @@ export default function DashboardClient() {
 
     async function loadDashboardData() {
       const [feedResult, marketResult] = await Promise.allSettled([
-        fetchFeed(API_BASE_URL, { signal: controller.signal }),
+        fetchFeedEnvelope(API_BASE_URL, { signal: controller.signal }),
         fetchMarket(API_BASE_URL, { signal: controller.signal }),
       ]);
 
@@ -101,8 +105,18 @@ export default function DashboardClient() {
       }
 
       if (feedResult.status === "fulfilled") {
-        const { items } = feedResult.value;
-        setFeed(items);
+        const envelope = feedResult.value;
+        setFeedVersion(envelope.version);
+
+        if (envelope.version === "v02") {
+          setFeed([]);
+          setFeedV02(envelope.v02);
+          setSelectedId(null);
+          setExpandedId(null);
+        } else {
+          setFeed(envelope.items);
+          setFeedV02(null);
+        }
       } else if (!isAbortError(feedResult.reason)) {
         setApiError("Intelligence Feed could not be loaded.");
       }
@@ -273,13 +287,17 @@ export default function DashboardClient() {
           className="min-h-0 rounded-2xl lg:col-start-2 lg:row-span-2 lg:row-start-1"
           style={{ scrollbarGutter: "stable" } as React.CSSProperties}
         >
-          <IntelligenceFeed
-            items={feed}
-            selectedId={selectedId}
-            expandedId={expandedId}
-            onToggle={handleToggle}
-            loading={feedLoading}
-          />
+          {feedVersion === "v02" ? (
+            <IntelligenceFeedV02 feed={feedV02} loading={feedLoading} />
+          ) : (
+            <IntelligenceFeed
+              items={feed}
+              selectedId={selectedId}
+              expandedId={expandedId}
+              onToggle={handleToggle}
+              loading={feedLoading}
+            />
+          )}
         </div>
 
         <div className="lg:col-start-1 lg:row-start-2">
@@ -288,10 +306,16 @@ export default function DashboardClient() {
       </section>
 
       <p className="sr-only">
-        Displaying {feed.length} market-wide intelligence events from the past
-        30 days for {Object.values(SYMBOL_FULL).join(", ")} using Binance public
-        market data. This is read-only market intelligence and not financial
-        advice.
+        Displaying{" "}
+        {feedVersion === "v02"
+          ? (feedV02?.dayPosts.reduce(
+              (count, day) => count + day.sections.length,
+              0,
+            ) ?? 0)
+          : feed.length}{" "}
+        market-wide intelligence events from the past 30 days for{" "}
+        {Object.values(SYMBOL_FULL).join(", ")} using Binance public market
+        data. This is read-only market intelligence and not financial advice.
       </p>
     </main>
   );

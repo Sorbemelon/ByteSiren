@@ -294,6 +294,19 @@ function normalizeSection(item: FeedItemV02): NormalizedFeedSection {
   return normalizeSignalEventSection(item);
 }
 
+function isPublicFeedItemV02(item: unknown): item is FeedItemV02 {
+  if (!item || typeof item !== "object" || !("item_type" in item)) {
+    return false;
+  }
+
+  const itemType = (item as { item_type?: unknown }).item_type;
+  return (
+    itemType === "daily_overview" ||
+    itemType === "market_story" ||
+    itemType === "signal_event"
+  );
+}
+
 export function normalizeFeedV02(
   response: FeedApiResponseV02,
 ): NormalizedFeedV02 {
@@ -317,7 +330,9 @@ export function normalizeFeedV02(
       hasExtraItems: group.has_extra_items,
       expandedControlLabel: group.expanded_control_label ?? null,
       collapsedControlLabel: group.collapsed_control_label ?? null,
-      sections: (group.items ?? []).map(normalizeSection),
+      sections: (group.items ?? [])
+        .filter(isPublicFeedItemV02)
+        .map(normalizeSection),
     })),
   };
 }

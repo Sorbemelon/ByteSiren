@@ -437,4 +437,27 @@ v0.2I5A does not:
 - invent Daily Overview summaries or sources
 - allow Market Story Claude status, Claude labels, or sources in the normalized frontend model
 
-Future v0.2I5B should implement day-post rendering using the v0.1 visual baseline.
+v0.2I5B does:
+
+- branch the frontend feed rendering on the normalized feed envelope version
+- keep the existing v0.1 `IntelligenceFeed` rendering path active for `v01`
+- render `v02` grouped UTC day posts using the v0.1 visual baseline
+- render Daily Overview first, Market Story sections second, and Signal Event sections last inside each day post
+- support the feed-level `Collapse days` / `Expand days` control
+- support per-day `+N events · Collapse post` / `+N events · Expand post` controls
+- support section-level `Show more` / `Hide` controls independent from day-post collapse state
+- render Daily Overview `24h Change`, Signal Event `Avg Change`, and Signal Event per-symbol `Window Change`, `Peak 15m`, `Volume ×`, and `Range Position`
+- render Lead mover and strongest `Peak 15m` as table highlights, not headline metrics
+- render accepted source chips only for Claude-backed Daily Overview and Signal Event sections
+- keep Market Story deterministic-only in the frontend with no Claude status, source chips, source labels, or nested Signal Event cards
+
+v0.2I5B does not:
+
+- change Worker/backend behavior
+- change the v0.1 feed rendering path
+- implement chart/feed selection or chart highlight behavior
+- expose Audit Events as public feed sections
+- invent Daily Overview summaries or sources
+- allow Market Story Claude status, Claude labels, or sources in rendered UI
+
+Future v0.2I5C should implement chart/feed selection, source markers, and chart highlight integration for the v0.2 feed.
