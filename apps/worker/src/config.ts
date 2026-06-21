@@ -26,6 +26,8 @@ export const LEGACY_POLL_MARKET_CRON = "*/5 * * * *";
 
 export type DetectorVersion = "v01" | "v02";
 export type FeedVersion = "v01" | "v02";
+export const DEFAULT_CLAUDE_CATCHUP_LIMIT = 5;
+export const MAX_CLAUDE_CATCHUP_LIMIT = 10;
 
 const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);
 
@@ -58,6 +60,16 @@ export function parseBooleanFlag(value?: string | null): boolean {
     normalized === "yes" ||
     normalized === "on"
   );
+}
+
+export function parseClaudeCatchupLimit(value?: string | null): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_CLAUDE_CATCHUP_LIMIT;
+  }
+
+  return Math.min(parsed, MAX_CLAUDE_CATCHUP_LIMIT);
 }
 
 export function isoDaysAgo(days: number, now = new Date()): string {

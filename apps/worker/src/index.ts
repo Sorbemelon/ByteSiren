@@ -9,6 +9,10 @@ import { cleanupOldData } from "./jobs/cleanupOldData.ts";
 import { dispatchGitHubIngest } from "./jobs/dispatchGitHubIngest.ts";
 import { enrichQueuedIncidents } from "./jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "./jobs/pollMarket.ts";
+import {
+  isClaudeEnrichmentV02Enabled,
+  runClaudeEnrichmentV02,
+} from "./jobs/runClaudeEnrichmentV02.ts";
 import { runDetector } from "./jobs/runDetector.ts";
 import { healthResponse, versionResponse } from "./routes/health.ts";
 import { intelligenceFeedResponse } from "./routes/intelligence.ts";
@@ -159,7 +163,11 @@ export default {
     }
 
     if (controller.cron === CLAUDE_ENRICHMENT_CRON) {
-      await enrichQueuedIncidents(env.DB, env);
+      if (isClaudeEnrichmentV02Enabled(env)) {
+        await runClaudeEnrichmentV02(env.DB, env);
+      } else {
+        await enrichQueuedIncidents(env.DB, env);
+      }
     }
   },
 } satisfies ExportedHandler<Env>;

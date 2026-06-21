@@ -545,6 +545,35 @@ test("scheduled Claude cron runs enrichment only", async () => {
   );
 });
 
+test("scheduled Claude cron uses v0.2 enrichment only when v0.2 Claude flags are enabled", async () => {
+  const incident = seededIncident();
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [incident],
+    signal_events_v02: [seededSignalEventV02()],
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+    ENABLE_SIGNAL_CLAUDE_V02: "true",
+    ANTHROPIC_API_KEY: "",
+  };
+
+  await worker.scheduled(scheduledController(CLAUDE_ENRICHMENT_CRON), env);
+
+  assert.equal(tables.incidents[0].status, "queued_for_analysis");
+  assert.equal(tables.incidents[0].brief_status, "queued_for_analysis");
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "claude_enrichment_v02"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "claude_enrichment"),
+    false,
+  );
+});
+
 test("legacy poll cron is inert unless Worker fetch mode is enabled", async () => {
   const { db, tables } = createMemoryD1();
   const env: Env = {

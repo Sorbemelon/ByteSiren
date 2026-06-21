@@ -49,6 +49,12 @@ FEED_VERSION=v01
 # remains disabled until a later phase.
 ENABLE_MARKET_STORIES=false
 
+# Optional v0.2 Claude enrichment switches. Keep disabled unless explicitly
+# validating v0.2 Signal Events or existing Daily Overview rows.
+ENABLE_SIGNAL_CLAUDE_V02=false
+ENABLE_DAILY_CLAUDE=false
+CLAUDE_CATCHUP_LIMIT=5
+
 # Protected maintenance diagnostics. Keep disabled except during controlled maintenance.
 # ADMIN_BACKFILL_TOKEN must be set as a Worker secret in production.
 ENABLE_ADMIN_MAINTENANCE=false

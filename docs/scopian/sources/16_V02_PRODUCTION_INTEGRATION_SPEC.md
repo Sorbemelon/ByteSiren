@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I4A-claude-payload-persistence-v1
+version: v0.2I4B-bounded-claude-enrichment-v1
 last_updated: 2026-06-21
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -111,6 +111,8 @@ Market Story must not have a `claude_briefs_v02` row.
 
 v0.2I4A adds local Worker builders, validators, and repository helpers for v0.2 Claude payload persistence only. It does not call Claude, does not wire cron/enrichment jobs, and does not replace the existing production Claude prompt runtime.
 
+v0.2I4B wires bounded v0.2 Claude enrichment behind explicit flags. v0.2 enrichment may select only `signal_event_v02` and `daily_overview_v02` targets. It must never select Market Story or Audit Event as standalone Claude targets.
+
 Signal Event payloads must include:
 
 - `mode: "signal_event"`
@@ -136,6 +138,18 @@ Daily Overview payloads must include:
 - `no_trading_advice: true`
 
 Market Story is not a Claude payload mode. Market Story may appear inside a Daily Overview payload only as deterministic context, not as a standalone Claude target.
+
+v0.2 Claude status mapping should remain honest:
+
+- Signal Event `Focused Cause` and `Likely Cause` map to `brief_ready`.
+- Signal Event `Market Backdrop` maps to `context_only`.
+- Signal Event `No Clear Cause` maps to `no_clear_cause`.
+- Daily Overview `No Major Driver` maps to `no_major_driver`.
+- Claude search/tool cap failures map to `claude_limited`.
+- Missing API key skips v0.2 enrichment safely and must not mark v0.2 items terminal.
+- Validation failure uses retryable or terminal failure status and must not fake a brief.
+
+If source policy removes focused/likely cause support, Signal Event results must not remain `Focused Cause` or `Likely Cause`. They should downgrade to `Market Backdrop` when accepted backdrop sources remain, otherwise `No Clear Cause`.
 
 ## Source Reference Versioning
 
@@ -183,6 +197,25 @@ Rollback behavior should be feature-flag/config based:
 
 `FEED_VERSION` controls only the public feed read contract. It must default to `v01`. `FEED_VERSION=v02` reads `daily_overviews_v02`, publishable `market_stories_v02`, publishable `signal_events_v02`, `claude_briefs_v02`, and accepted `source_references_v02` for Claude-backed items. It must not expose Audit Events as standalone public feed items.
 
+`ENABLE_SIGNAL_CLAUDE_V02` controls Signal Event v0.2 Claude enrichment. It must default to `false`.
+
+`ENABLE_DAILY_CLAUDE` controls Daily Overview v0.2 Claude enrichment for existing `daily_overviews_v02` rows. It must default to `false` and must not create missing Daily Overview rows.
+
+`CLAUDE_CATCHUP_LIMIT` bounds v0.2 enrichment work per run. The initial safe default is `5`, with an implementation cap of `10` unless explicitly revisited.
+
+When both Signal Event and Daily Overview v0.2 Claude flags are enabled, selection is Signal Events first, then Daily Overviews, newest first within each category, up to `CLAUDE_CATCHUP_LIMIT`.
+
+Scheduled Claude behavior uses Strategy A during integration:
+
+- v0.2 Claude flags false: run the existing v0.1 Claude enrichment path.
+- either v0.2 Claude flag true: run v0.2 Claude enrichment only.
+
+This avoids accidental double-spending across v0.1 and v0.2 enrichment paths.
+
+v0.2 Claude job metadata may record safe counts, selected flags, model, tool type, max uses, source counts, and status counts. It must not store API keys, raw Claude tool traces, public token/budget/search counts, or raw hidden responses in public feed data.
+
+Protected admin catch-up for v0.2 Claude is deferred to v0.2I6 unless explicitly added later.
+
 ## Rollout Phases
 
 - v0.2I1 schema/spec: add additive schema and this source spec only.
@@ -190,7 +223,7 @@ Rollback behavior should be feature-flag/config based:
 - v0.2I2B Market Story write path: generate deterministic Market Story rows after Signal/Audit writes when `DETECTOR_VERSION=v02` and `ENABLE_MARKET_STORIES=true`.
 - v0.2I3 feed API v02 contract: support read-only grouped day posts behind `FEED_VERSION=v02` while keeping v0.1 as the default feed response.
 - v0.2I4A Claude payload persistence foundation: add Signal Event and Daily Overview payload builders, prompt builders, validators, `claude_briefs_v02` helpers, and `source_references_v02` helpers without calling Claude or wiring enrichment.
-- v0.2I4B Claude enrichment jobs: wire bounded v0.2 Signal Event and Daily Overview analysis behind explicit feature flags.
+- v0.2I4B Claude enrichment jobs: wire bounded v0.2 Signal Event and Daily Overview analysis behind explicit feature flags, using `claude_briefs_v02`, `source_references_v02`, and `brief_v02_id`.
 - v0.2I5 frontend day-post integration: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
@@ -288,3 +321,29 @@ v0.2I4A does not:
 - write old `claude_briefs` or old `source_references` for v0.2 targets
 - change frontend UI
 - change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`
+
+v0.2I4B does:
+
+- add default-off v0.2 Claude flags: `ENABLE_SIGNAL_CLAUDE_V02`, `ENABLE_DAILY_CLAUDE`, and bounded `CLAUDE_CATCHUP_LIMIT`
+- select publishable Signal Events only when `ENABLE_SIGNAL_CLAUDE_V02=true`
+- select existing Daily Overview rows only when `ENABLE_DAILY_CLAUDE=true`
+- prioritize Signal Events, then Daily Overviews, newest first within each class
+- persist successful/limited/failed v0.2 results in `claude_briefs_v02`
+- persist accepted/rejected v0.2 source rows in `source_references_v02`
+- keep legacy `source_references_v02.brief_id` null for new v0.2 writes and use `brief_v02_id` for the v0.2 brief link
+- record safe `job_runs` metadata for `claude_enrichment_v02`
+- route the existing Claude cron to v0.2 enrichment only when a v0.2 Claude flag is enabled
+
+v0.2I4B does not:
+
+- enrich Market Stories
+- enrich Audit Events as standalone targets
+- generate Daily Overview rows
+- generate Market Story rows
+- call Claude in tests
+- write old `claude_briefs` or old `source_references` for v0.2 targets
+- expose raw Claude tool traces, token counts, budget counts, or public search counts
+- add a protected admin catch-up endpoint
+- change frontend UI
+- change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`
+- change v0.1 Claude enrichment behavior when v0.2 Claude flags are false

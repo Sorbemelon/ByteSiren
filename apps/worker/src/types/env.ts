@@ -14,6 +14,9 @@ export interface Env {
   DETECTOR_VERSION?: string;
   FEED_VERSION?: string;
   ENABLE_MARKET_STORIES?: string;
+  ENABLE_SIGNAL_CLAUDE_V02?: string;
+  ENABLE_DAILY_CLAUDE?: string;
+  CLAUDE_CATCHUP_LIMIT?: string;
   ENABLE_ADMIN_MAINTENANCE?: string;
   ADMIN_BACKFILL_TOKEN?: string;
   ENABLE_MARKET_IMPORT?: string;

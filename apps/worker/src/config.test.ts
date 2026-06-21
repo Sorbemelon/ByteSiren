@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  DEFAULT_CLAUDE_CATCHUP_LIMIT,
+  MAX_CLAUDE_CATCHUP_LIMIT,
   parseBooleanFlag,
+  parseClaudeCatchupLimit,
   parseDetectorVersion,
   parseFeedVersion,
 } from "./config.ts";
@@ -55,4 +58,20 @@ test("ENABLE_MARKET_STORIES accepts explicit true values", () => {
 test("DETECTOR_VERSION=v02 alone does not imply Market Stories", () => {
   assert.equal(parseDetectorVersion("v02"), "v02");
   assert.equal(parseBooleanFlag(undefined), false);
+});
+
+test("v0.2 Claude flags default false and accept explicit true values", () => {
+  assert.equal(parseBooleanFlag(undefined), false);
+  assert.equal(parseBooleanFlag("false"), false);
+  assert.equal(parseBooleanFlag("true"), true);
+  assert.equal(parseBooleanFlag("on"), true);
+});
+
+test("CLAUDE_CATCHUP_LIMIT uses a bounded safe default", () => {
+  assert.equal(parseClaudeCatchupLimit(), DEFAULT_CLAUDE_CATCHUP_LIMIT);
+  assert.equal(parseClaudeCatchupLimit(""), DEFAULT_CLAUDE_CATCHUP_LIMIT);
+  assert.equal(parseClaudeCatchupLimit("abc"), DEFAULT_CLAUDE_CATCHUP_LIMIT);
+  assert.equal(parseClaudeCatchupLimit("0"), DEFAULT_CLAUDE_CATCHUP_LIMIT);
+  assert.equal(parseClaudeCatchupLimit("3"), 3);
+  assert.equal(parseClaudeCatchupLimit("99"), MAX_CLAUDE_CATCHUP_LIMIT);
 });
