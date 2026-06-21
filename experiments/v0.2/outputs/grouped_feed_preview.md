@@ -20,9 +20,9 @@ Post: 3 items; collapsed item daily_2026-06-18
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: -3.2%; volatile day; 24h change -3.2%; notable range 5.1%.
   Section control: Show more / Hide
-- Signal Event: Evidence window: 04:00-04:45 UTC - 45 min - 3 candles; Observed Down; Signals: 5 of 5; Avg Change: -0.8%; Range Position: Inside range; Chart context: Momentum continuation; Impact: High
-  Section control: Show more / Hide
 - Signal Event: Evidence window: 14:45-16:30 UTC - 105 min - 7 candles; Observed Down; Signals: 5 of 5; Avg Change: -2.4%; Range Position: Range break; Chart context: Range break; Impact: High
+  Section control: Show more / Hide
+- Signal Event: Evidence window: 04:00-04:45 UTC - 45 min - 3 candles; Observed Down; Signals: 5 of 5; Avg Change: -0.8%; Range Position: Inside range; Chart context: Momentum continuation; Impact: High
   Section control: Show more / Hide
 
 ### Jun 17, 2026 UTC
@@ -109,13 +109,13 @@ Post: 5 items; collapsed item daily_2026-06-07
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: +5.7%; volatile day; 24h change +5.7%; notable range 7.9%.
   Section control: Show more / Hide
-- Market Story: Story window: 2026-06-07 01:15 UTC-10:00 UTC; Range break sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +3.6%; Adaptive gap: max 0 min between story events; Story continuation bridges: none; Same UTC day; 1 Signal Events and 1 audit-only events from 2026-06-07 01:15 UTC; story-window path and member signals share range-break chart context.
-  Section control: Show more / Hide
 - Market Story: Story window: 2026-06-07 16:00 UTC-2026-06-08 13:15 UTC; Range break sequence; Signal + audit story; Signal Events: 1; Audit Events: 2; Label decision: story_window_range_break_score; Swing Change: +3.6%; Adaptive gap: max 585 min between story events; Story continuation bridges: none; Crosses UTC day; 1 Signal Events and 2 audit-only events from 2026-06-07 16:00 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
-- Signal Event: Evidence window: 01:15-10:00 UTC - 525 min - 35 candles; Observed Up; Signals: 5 of 5; Avg Change: +3%; Range Position: Range break; Chart context: Range break; Impact: High
+- Market Story: Story window: 2026-06-07 01:15 UTC-10:00 UTC; Range break sequence; Signal + audit story; Signal Events: 1; Audit Events: 1; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +3.6%; Adaptive gap: max 0 min between story events; Story continuation bridges: none; Same UTC day; 1 Signal Events and 1 audit-only events from 2026-06-07 01:15 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
 - Signal Event: Evidence window: 16:00-01:00 UTC - 540 min - 36 candles; Observed Up; Signals: 5 of 5; Avg Change: +2.6%; Range Position: Range break; Chart context: Range break; Impact: High
+  Section control: Show more / Hide
+- Signal Event: Evidence window: 01:15-10:00 UTC - 525 min - 35 candles; Observed Up; Signals: 5 of 5; Avg Change: +3%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### Jun 6, 2026 UTC
@@ -133,9 +133,9 @@ Control: Collapse post
   Section control: Show more / Hide
 - Market Story: Story window: 2026-06-05 02:45 UTC-2026-06-06 12:30 UTC; Range break sequence; Signal + audit story; Signal Events: 3; Audit Events: 3; Label decision: story_window_range_break_score, member_dominant_family_agrees; Swing Change: +9.7%; Adaptive gap: max 420 min between story events; Story continuation bridges: none; Crosses UTC day; 3 Signal Events and 3 audit-only events from 2026-06-05 02:45 UTC; story-window path and member signals share range-break chart context.
   Section control: Show more / Hide
-- Signal Event: Evidence window: 05:15-07:15 UTC - 120 min - 8 candles; Observed Down; Signals: 5 of 5; Avg Change: -3.9%; Range Position: Range break; Chart context: Range break; Impact: High
-  Section control: Show more / Hide
 - Signal Event: Evidence window: 14:15-20:00 UTC - 345 min - 23 candles; Observed Down; Signals: 5 of 5; Avg Change: -2.4%; Range Position: Range break; Chart context: Range break; Impact: High
+  Section control: Show more / Hide
+- Signal Event: Evidence window: 05:15-07:15 UTC - 120 min - 8 candles; Observed Down; Signals: 5 of 5; Avg Change: -3.9%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### Jun 4, 2026 UTC
@@ -233,9 +233,9 @@ Post: 3 items; collapsed item daily_2026-05-23
 Control: Collapse post
 - Daily Overview: Market tone: volatile; 24h Change: +1.6%; volatile day; 24h change +1.6%; notable range 5.6%.
   Section control: Show more / Hide
-- Signal Event: Evidence window: 07:15-08:30 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -1.6%; Range Position: Range break; Chart context: Range break; Impact: High
-  Section control: Show more / Hide
 - Signal Event: Evidence window: 20:00-21:45 UTC - 105 min - 7 candles; Observed Up; Signals: 5 of 5; Avg Change: +0.9%; Range Position: Range break; Chart context: Range break; Impact: High
+  Section control: Show more / Hide
+- Signal Event: Evidence window: 07:15-08:30 UTC - 75 min - 5 candles; Observed Down; Signals: 5 of 5; Avg Change: -1.6%; Range Position: Range break; Chart context: Range break; Impact: High
   Section control: Show more / Hide
 
 ### May 22, 2026 UTC

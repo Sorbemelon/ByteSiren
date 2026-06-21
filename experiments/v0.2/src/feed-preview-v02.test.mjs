@@ -14,6 +14,12 @@ function previewSections(preview) {
   return preview.public_preview.day_posts.flatMap((post) => post.sections);
 }
 
+function itemOrderTime(item) {
+  if (item.item_type === "market_story") return item.story_window.end;
+  if (item.item_type === "signal_event") return item.evidence_window.end;
+  return item.chart.highlight_end;
+}
+
 const FORBIDDEN_CONTROL_LABELS = [
   "Latest only",
   "latest_only",
@@ -72,6 +78,41 @@ test("feed contract has 31 day groups and Daily Overview first", async () => {
     assert.equal(
       group.items.filter((item) => item.item_type === "daily_overview").length,
       1,
+    );
+  }
+});
+
+test("day posts order Daily Overview, then newest Market Stories, then newest Signal Events", async () => {
+  const contract = await readJson(
+    "experiments/v0.2/outputs/feed_contract_v02.json",
+  );
+  const preview = await readJson(
+    "experiments/v0.2/outputs/grouped_feed_preview.json",
+  );
+  const previewByDay = new Map(
+    preview.public_preview.day_posts.map((post) => [post.day_post_id, post]),
+  );
+
+  for (const group of contract.day_groups) {
+    const types = group.items.map((item) => item.item_type);
+    assert.equal(types[0], "daily_overview");
+    assert.deepEqual(
+      types,
+      [...types].sort((a, b) => {
+        const order = { daily_overview: 0, market_story: 1, signal_event: 2 };
+        return order[a] - order[b];
+      }),
+    );
+
+    for (const itemType of ["market_story", "signal_event"]) {
+      const sameType = group.items.filter((item) => item.item_type === itemType);
+      const times = sameType.map(itemOrderTime);
+      assert.deepEqual(times, [...times].sort((a, b) => b.localeCompare(a)));
+    }
+
+    assert.deepEqual(
+      previewByDay.get(group.day_post_id).sections.map((section) => section.item_type),
+      types,
     );
   }
 });

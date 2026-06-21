@@ -783,7 +783,8 @@ function sortDayItems(items) {
     const bOrder = order[b.item_type] ?? 10;
 
     if (aOrder !== bOrder) return aOrder - bOrder;
-    return itemSortTime(a).localeCompare(itemSortTime(b));
+    if (a.item_type === "daily_overview") return 0;
+    return itemSortTime(b).localeCompare(itemSortTime(a));
   });
 }
 

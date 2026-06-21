@@ -1,5 +1,5 @@
 # Catalyst Source Audit
-Generated: 2026-06-20T22:31:29.914Z
+Generated: 2026-06-21T06:21:04.239Z
 No Claude was used for this audit. It rechecks every accepted source link in the independent 30-day catalyst list and classifies whether the source supports a clean catalyst, market-mechanics catalyst, backdrop, price check, or manual-review context.
 ## Scope
 - Catalyst candidates: 96
