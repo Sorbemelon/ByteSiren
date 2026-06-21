@@ -25,6 +25,7 @@ export const GITHUB_INGEST_DISPATCH_CRON = "2,17,32,47 * * * *";
 export const LEGACY_POLL_MARKET_CRON = "*/5 * * * *";
 
 export type DetectorVersion = "v01" | "v02";
+export type FeedVersion = "v01" | "v02";
 
 const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);
 
@@ -42,6 +43,10 @@ export function parseMarketSymbol(symbol: string | null): MarketSymbol | null {
 }
 
 export function parseDetectorVersion(value?: string | null): DetectorVersion {
+  return value?.trim().toLowerCase() === "v02" ? "v02" : "v01";
+}
+
+export function parseFeedVersion(value?: string | null): FeedVersion {
   return value?.trim().toLowerCase() === "v02" ? "v02" : "v01";
 }
 

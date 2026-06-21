@@ -232,6 +232,45 @@ interface ClaudeBriefV02Row {
   updated_at: string;
 }
 
+interface SourceReferenceV02Row {
+  id: string;
+  target_type: string;
+  target_id: string;
+  brief_id: string | null;
+  source_role: string;
+  source_strength: string | null;
+  publisher: string | null;
+  title: string | null;
+  url: string;
+  published_at: string | null;
+  used_for: string | null;
+  accepted: number;
+  rejection_reason: string | null;
+  metadata_json: string;
+  created_at: string;
+}
+
+interface DailyOverviewV02Row {
+  id: string;
+  date_utc: string;
+  day_start: string;
+  day_end: string;
+  market_tone: string | null;
+  daily_change_pct: number | null;
+  daily_change_label: string;
+  market_range_pct: number | null;
+  notable_symbols_json: string;
+  top_symbol_moves_json: string;
+  signal_event_ids_json: string;
+  market_story_ids_json: string;
+  audit_event_count: number;
+  daily_chart_context_summary_json: string;
+  claude_status: string;
+  claude_brief_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MemoryD1Tables {
   market_candles: MarketCandle[];
   market_features: MarketFeatureRow[];
@@ -240,13 +279,13 @@ export interface MemoryD1Tables {
   claude_briefs: ClaudeBriefRow[];
   claude_briefs_v02: ClaudeBriefV02Row[];
   source_references: SourceReferenceRow[];
-  source_references_v02: Array<Record<string, unknown>>;
+  source_references_v02: SourceReferenceV02Row[];
   signal_events_v02: SignalEventV02Row[];
   signal_event_symbols_v02: SignalEventSymbolV02Row[];
   audit_events_v02: AuditEventV02Row[];
   market_stories_v02: MarketStoryV02Row[];
   market_story_members_v02: MarketStoryMemberV02Row[];
-  daily_overviews_v02: Array<Record<string, unknown>>;
+  daily_overviews_v02: DailyOverviewV02Row[];
   claude_analysis_usage: ClaudeAnalysisUsageRow[];
   public_view_counts: PublicViewCountRow[];
   job_runs: JobRunRow[];
@@ -386,6 +425,25 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
 
       if (
         this.sql.includes("FROM signal_events_v02") &&
+        this.sql.includes("publish_candidate = 1")
+      ) {
+        const [cutoff] = this.params as [string];
+
+        return {
+          results: tables.signal_events_v02
+            .filter(
+              (row) => row.event_start >= cutoff && row.publish_candidate === 1,
+            )
+            .sort(
+              (a, b) =>
+                b.event_end.localeCompare(a.event_end) ||
+                b.event_start.localeCompare(a.event_start),
+            ) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM signal_events_v02") &&
         this.sql.includes("ORDER BY event_start ASC")
       ) {
         return {
@@ -403,6 +461,74 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           results: [...tables.audit_events_v02].sort((a, b) =>
             a.event_start.localeCompare(b.event_start),
           ) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM daily_overviews_v02") &&
+        this.sql.includes("day_start >= ?")
+      ) {
+        const [cutoff] = this.params as [string];
+
+        return {
+          results: tables.daily_overviews_v02
+            .filter((row) => row.day_start >= cutoff)
+            .sort((a, b) => b.date_utc.localeCompare(a.date_utc)) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM market_stories_v02") &&
+        this.sql.includes("publish_candidate = 1")
+      ) {
+        const [cutoff] = this.params as [string];
+
+        return {
+          results: tables.market_stories_v02
+            .filter(
+              (row) => row.story_start >= cutoff && row.publish_candidate === 1,
+            )
+            .sort(
+              (a, b) =>
+                b.story_end.localeCompare(a.story_end) ||
+                b.story_start.localeCompare(a.story_start),
+            ) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM signal_event_symbols_v02") &&
+        this.sql.includes("signal_event_id = ?")
+      ) {
+        const [signalEventId] = this.params as [string];
+
+        return {
+          results: tables.signal_event_symbols_v02
+            .filter((row) => row.signal_event_id === signalEventId)
+            .sort((a, b) => a.symbol.localeCompare(b.symbol)) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM source_references_v02") &&
+        this.sql.includes("target_type = ?") &&
+        this.sql.includes("accepted = 1")
+      ) {
+        const [targetType, targetId] = this.params as [string, string];
+
+        return {
+          results: tables.source_references_v02
+            .filter(
+              (row) =>
+                row.target_type === targetType &&
+                row.target_id === targetId &&
+                row.accepted === 1,
+            )
+            .sort(
+              (a, b) =>
+                a.created_at.localeCompare(b.created_at) ||
+                a.id.localeCompare(b.id),
+            ) as T[],
         };
       }
 
@@ -475,6 +601,26 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       if (this.sql.includes("FROM incidents") && this.sql.includes("id = ?")) {
         const [id] = this.params as [string];
         return (tables.incidents.find((row) => row.id === id) ?? null) as T;
+      }
+
+      if (
+        this.sql.includes("FROM claude_briefs_v02") &&
+        this.sql.includes("target_type = ?") &&
+        this.sql.includes("target_id = ?")
+      ) {
+        const [targetType, targetId] = this.params as [string, string];
+        const row = tables.claude_briefs_v02
+          .filter(
+            (brief) =>
+              brief.target_type === targetType && brief.target_id === targetId,
+          )
+          .sort(
+            (a, b) =>
+              b.updated_at.localeCompare(a.updated_at) ||
+              b.created_at.localeCompare(a.created_at),
+          )[0];
+
+        return (row ?? null) as T;
       }
 
       if (

@@ -94,6 +94,68 @@ function seededIncident(): IncidentRow {
   };
 }
 
+function seededSignalEventV02() {
+  return {
+    id: "sig_v02_route",
+    date_utc: "2026-06-15",
+    event_start: "2026-06-15T09:00:00.000Z",
+    event_end: "2026-06-15T09:45:00.000Z",
+    duration_min: 45,
+    peak_time: "2026-06-15T09:15:00.000Z",
+    direction: "observed_up",
+    signals_count: 4,
+    n_tracked: 5,
+    avg_change_pct: 1.8,
+    avg_change_method: "median_participating_symbols",
+    event_strength_score: 82,
+    impact_label: "High",
+    chart_context_score: 88,
+    chart_context_label: "Strong chart context",
+    event_story_type: "range_break_up",
+    trend_context: "trend_up",
+    momentum_context: "impulse",
+    volatility_context: "expansion_after_compression",
+    event_range_context: "broad_broke_high",
+    chart_context_reasons_json: JSON.stringify(["range break"]),
+    chart_context_warnings_json: "[]",
+    macro_aligned: 0,
+    nearest_macro_event: null,
+    macro_delta_min: null,
+    source_route_hint: "broad_market",
+    publish_candidate: 1,
+    publish_reason: "strong context",
+    suppress_reason: null,
+    detector_version: "v02",
+    created_at: "2026-06-15T09:00:00.000Z",
+    updated_at: "2026-06-15T09:00:00.000Z",
+  };
+}
+
+function seededDailyOverviewV02() {
+  return {
+    id: "daily_2026-06-15",
+    date_utc: "2026-06-15",
+    day_start: "2026-06-15T00:00:00.000Z",
+    day_end: "2026-06-15T23:59:59.999Z",
+    market_tone: "volatile",
+    daily_change_pct: 2.2,
+    daily_change_label: "24h Change",
+    market_range_pct: 5.1,
+    notable_symbols_json: JSON.stringify(["BTCUSDT"]),
+    top_symbol_moves_json: JSON.stringify([
+      { symbol: "BTCUSDT", change_pct: 2.2 },
+    ]),
+    signal_event_ids_json: JSON.stringify(["sig_v02_route"]),
+    market_story_ids_json: "[]",
+    audit_event_count: 0,
+    daily_chart_context_summary_json: "{}",
+    claude_status: "queued_for_analysis",
+    claude_brief_id: null,
+    created_at: "2026-06-16T00:10:00.000Z",
+    updated_at: "2026-06-16T00:10:00.000Z",
+  };
+}
+
 function makeEnv(
   options: {
     incidents?: IncidentRow[];
@@ -1142,6 +1204,54 @@ test("worker returns an empty intelligence feed", async () => {
   assert.equal(body.ok, true);
   assert.equal(body.range_days, 30);
   assert.deepEqual(body.items, []);
+});
+
+test("worker keeps v0.1 intelligence feed as the default when v0.2 rows exist", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [seededSignalEventV02()],
+    daily_overviews_v02: [seededDailyOverviewV02()],
+  });
+  const response = await worker.fetch(
+    new Request("http://localhost/api/intelligence/feed"),
+    { DB: db },
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(Object.hasOwn(body, "version"), false);
+  assert.deepEqual(body.items, []);
+  assert.equal(Object.hasOwn(body, "day_groups"), false);
+});
+
+test("worker returns v0.2 grouped intelligence feed only behind FEED_VERSION=v02", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [seededSignalEventV02()],
+    daily_overviews_v02: [seededDailyOverviewV02()],
+  });
+  const env: Env = {
+    DB: db,
+    FEED_VERSION: "v02",
+  };
+  const response = await worker.fetch(
+    new Request("http://localhost/api/intelligence/feed"),
+    env,
+  );
+  const body = await readJson(response);
+  const dayGroups = body.day_groups as Array<Record<string, unknown>>;
+  const firstGroup = dayGroups[0];
+  const items = firstGroup.items as Array<Record<string, unknown>>;
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.version, "v02");
+  assert.equal(body.grouping, "utc_day");
+  assert.equal(dayGroups.length, 1);
+  assert.deepEqual(
+    items.map((item) => item.item_type),
+    ["daily_overview", "signal_event"],
+  );
+  assert.equal(firstGroup.default_collapsed_item_id, "daily_2026-06-15");
 });
 
 test("worker returns intelligence feed items with queued brief shape", async () => {

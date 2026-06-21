@@ -124,7 +124,7 @@ export default {
       }
 
       if (url.pathname === "/api/intelligence/feed") {
-        return respond(await intelligenceFeedResponse(env.DB));
+        return respond(await intelligenceFeedResponse(env.DB, env));
       }
     } catch (error) {
       return respond(jsonError(500, "internal_error", safeErrorMessage(error)));

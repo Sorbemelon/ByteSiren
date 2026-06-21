@@ -98,9 +98,9 @@ sources:
   - id: SRC-16-v02-production-integration-spec
     path: docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md
     status: active
-    content_hash: sha256:a0e38146a9cad3d5461160539c1ebca0df40fe26e3f5f0d2f3c0852fc114e98b
+    content_hash: sha256:2bea9c40b6f97bddcab3a9820d04d4cfedfb5ccc1959d2becbbaa4f9f9eecd5e
     registered_at: 2026-06-21T16:00:00+07:00
-    updated_at: 2026-06-21T17:05:00+07:00
+    updated_at: 2026-06-21T17:31:58+07:00
   - id: SRC-product
     path: PRODUCT.md
     status: active

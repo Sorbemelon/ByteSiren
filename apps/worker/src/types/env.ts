@@ -12,6 +12,7 @@ export interface Env {
   CLAUDE_BLOCKED_DOMAINS?: string;
   PUBLIC_WEB_ORIGINS?: string;
   DETECTOR_VERSION?: string;
+  FEED_VERSION?: string;
   ENABLE_MARKET_STORIES?: string;
   ENABLE_ADMIN_MAINTENANCE?: string;
   ADMIN_BACKFILL_TOKEN?: string;

@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I2B-market-story-write-path-v1
+version: v0.2I3-feed-api-contract-v1
 last_updated: 2026-06-21
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -27,6 +27,8 @@ ByteSiren v0.2 has four feed item concepts:
 - `audit_event`: detected event stored for local/debug/audit review. It is not public as a standalone item unless a future debug route is explicitly approved.
 
 The public feed groups items by UTC day as day posts. Daily Overview appears first. Market Story sections appear after Daily Overview. Signal Event sections appear after Market Story sections. Market Story must not nest Signal Event cards.
+
+The v0.2 feed API is exposed only when `FEED_VERSION=v02`. Missing, invalid, or `v01` feed versions use the existing v0.1 feed response. v0.2 feed reads are read-only: they do not generate Daily Overview rows, Market Story rows, Claude briefs, or source references.
 
 ## Storage Decisions
 
@@ -147,12 +149,14 @@ Rollback behavior should be feature-flag/config based:
 
 `ENABLE_MARKET_STORIES` controls deterministic Market Story generation only after the v0.2 Signal/Audit write path has run. It must default to `false`. It does not expose Market Stories in the public feed until the v0.2 feed API contract is added.
 
+`FEED_VERSION` controls only the public feed read contract. It must default to `v01`. `FEED_VERSION=v02` reads `daily_overviews_v02`, publishable `market_stories_v02`, publishable `signal_events_v02`, `claude_briefs_v02`, and accepted `source_references_v02` for Claude-backed items. It must not expose Audit Events as standalone public feed items.
+
 ## Rollout Phases
 
 - v0.2I1 schema/spec: add additive schema and this source spec only.
 - v0.2I2A Signal/Audit detector write path: write v0.2 Signal Event and Audit Event output behind `DETECTOR_VERSION=v02` without changing public feed behavior.
 - v0.2I2B Market Story write path: generate deterministic Market Story rows after Signal/Audit writes when `DETECTOR_VERSION=v02` and `ENABLE_MARKET_STORIES=true`.
-- v0.2I3 feed API v02 contract: support grouped day posts behind a feed version flag.
+- v0.2I3 feed API v02 contract: support read-only grouped day posts behind `FEED_VERSION=v02` while keeping v0.1 as the default feed response.
 - v0.2I4 Claude payload / Daily Overview enrichment: add Signal Event and Daily Overview Claude modes.
 - v0.2I5 frontend day-post integration: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
@@ -210,3 +214,22 @@ v0.2I2B does not:
 - generate Daily Overviews
 - write source references
 - add Claude status, Claude payload, Claude source tags, or public cause labels to Market Story
+
+v0.2I3 does:
+
+- add `FEED_VERSION=v01|v02` feed contract selection with `v01` as the default
+- return grouped UTC day posts when `FEED_VERSION=v02`
+- include Daily Overview first, then publishable Market Story sections, then publishable Signal Event sections
+- read actual `claude_briefs_v02` and accepted `source_references_v02` rows for Signal Event and Daily Overview items only
+- keep Market Story as a standalone deterministic item with no Claude/source fields
+
+v0.2I3 does not:
+
+- change frontend UI
+- call Claude
+- write any v0.2 feed, Claude, source, detector, or Daily Overview data
+- generate missing Daily Overview rows
+- generate Market Story rows
+- expose Audit Events in the public feed
+- add Claude status, source chips, source references, or cause labels to Market Story
+- change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`
