@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I2A-signal-audit-write-path-v1
+version: v0.2I2B-market-story-write-path-v1
 last_updated: 2026-06-21
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -124,7 +124,7 @@ Market Story has no Claude source references. Source markers in the chart may be
 
 ## Planned Feature Flags
 
-Runtime flags are planned for later phases and are not implemented by v0.2I1:
+Runtime flags should keep v0.1 as the default path until v0.2 is validated:
 
 - `DETECTOR_VERSION=v01|v02`
 - `FEED_VERSION=v01|v02`
@@ -140,15 +140,18 @@ Rollback behavior should be feature-flag/config based:
 
 - set `FEED_VERSION=v01`
 - set `DETECTOR_VERSION=v01`
+- set `ENABLE_MARKET_STORIES=false`
 - disable v0.2 Claude flags
 - leave v0.2 tables in D1 for inspection
 - do not require destructive DB rollback
+
+`ENABLE_MARKET_STORIES` controls deterministic Market Story generation only after the v0.2 Signal/Audit write path has run. It must default to `false`. It does not expose Market Stories in the public feed until the v0.2 feed API contract is added.
 
 ## Rollout Phases
 
 - v0.2I1 schema/spec: add additive schema and this source spec only.
 - v0.2I2A Signal/Audit detector write path: write v0.2 Signal Event and Audit Event output behind `DETECTOR_VERSION=v02` without changing public feed behavior.
-- v0.2I2B Market Story write path: generate deterministic Market Story rows after Signal/Audit writes.
+- v0.2I2B Market Story write path: generate deterministic Market Story rows after Signal/Audit writes when `DETECTOR_VERSION=v02` and `ENABLE_MARKET_STORIES=true`.
 - v0.2I3 feed API v02 contract: support grouped day posts behind a feed version flag.
 - v0.2I4 Claude payload / Daily Overview enrichment: add Signal Event and Daily Overview Claude modes.
 - v0.2I5 frontend day-post integration: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
@@ -188,3 +191,22 @@ v0.2I2A does not:
 - generate Market Stories
 - generate Daily Overviews
 - write v0.1 `incidents` from the v0.2 detector path
+
+v0.2I2B does:
+
+- generate deterministic Market Story rows after v0.2 Signal/Audit writes when explicitly enabled with `ENABLE_MARKET_STORIES=true`
+- write `market_stories_v02`
+- write `market_story_members_v02`
+- keep Market Story rollback as `ENABLE_MARKET_STORIES=false` and/or `DETECTOR_VERSION=v01`
+- leave Market Story rows in D1 for inspection after rollback
+
+v0.2I2B does not:
+
+- change the public feed API
+- change frontend UI
+- call Claude
+- write `claude_briefs_v02`
+- write `source_references_v02`
+- generate Daily Overviews
+- write source references
+- add Claude status, Claude payload, Claude source tags, or public cause labels to Market Story

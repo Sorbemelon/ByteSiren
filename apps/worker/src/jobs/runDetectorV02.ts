@@ -15,6 +15,7 @@ import {
 } from "../services/detectorV02/index.ts";
 import type { MarketCandle } from "../types/market.ts";
 import { safeErrorMessage } from "../utils/http.ts";
+import { runMarketStoriesV02 } from "./runMarketStoriesV02.ts";
 
 export interface RunDetectorV02Result {
   status: "success" | "skipped" | "failed";
@@ -27,7 +28,16 @@ export interface RunDetectorV02Result {
   signal_events_written: number;
   signal_event_symbols_written: number;
   audit_events_written: number;
+  market_story_count?: number;
+  market_story_publish_candidate_count?: number;
+  market_stories_written?: number;
+  market_story_members_written?: number;
   candidate_count: number;
+}
+
+export interface RunDetectorV02Options {
+  now?: Date;
+  enableMarketStories?: boolean;
 }
 
 interface LoadedCandlesV02 {
@@ -65,8 +75,10 @@ function insufficientSymbols(
 
 export async function runDetectorV02(
   db: D1Database,
-  now = new Date(),
+  input: Date | RunDetectorV02Options = {},
 ): Promise<RunDetectorV02Result> {
+  const options = input instanceof Date ? { now: input } : input;
+  const now = options.now ?? new Date();
   const startedAt = new Date();
 
   try {
@@ -107,6 +119,9 @@ export async function runDetectorV02(
 
     const output = detectSignalAndAuditEventsV02({ candlesBySymbol });
     const writeCounts = await upsertDetectorV02Output(db, output);
+    const marketStories = options.enableMarketStories
+      ? await runMarketStoriesV02(db, now)
+      : null;
     const message = `v0.2 detector completed: ${output.summary.signal_count} Signal Events, ${output.summary.audit_count} Audit Events, ${output.summary.publish_candidate_count} public candidates.`;
 
     await recordJobRun(
@@ -122,6 +137,14 @@ export async function runDetectorV02(
         suppressed_count: output.summary.suppressed_count,
         counts_by_reason: output.summary.counts_by_reason,
         written: writeCounts,
+        market_stories_enabled: options.enableMarketStories === true,
+        market_story_result: marketStories
+          ? {
+              status: marketStories.status,
+              story_count: marketStories.story_count,
+              publish_candidate_count: marketStories.publish_candidate_count,
+            }
+          : null,
       },
       startedAt,
       new Date(),
@@ -138,6 +161,11 @@ export async function runDetectorV02(
       signal_events_written: writeCounts.signal_events,
       signal_event_symbols_written: writeCounts.signal_event_symbols,
       audit_events_written: writeCounts.audit_events,
+      market_story_count: marketStories?.story_count,
+      market_story_publish_candidate_count:
+        marketStories?.publish_candidate_count,
+      market_stories_written: marketStories?.market_stories_written,
+      market_story_members_written: marketStories?.market_story_members_written,
       candidate_count: output.summary.signal_count,
     };
   } catch (error) {

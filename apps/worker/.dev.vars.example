@@ -41,6 +41,10 @@ PUBLIC_WEB_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:
 # additive v0.2 Signal/Audit tables while v0.2 feed integration is disabled.
 DETECTOR_VERSION=v01
 
+# Optional v0.2 deterministic Market Story write path. Public feed integration
+# remains disabled until a later phase.
+ENABLE_MARKET_STORIES=false
+
 # Protected maintenance diagnostics. Keep disabled except during controlled maintenance.
 # ADMIN_BACKFILL_TOKEN must be set as a Worker secret in production.
 ENABLE_ADMIN_MAINTENANCE=false

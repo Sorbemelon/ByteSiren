@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-21T16:31:12+07:00
+generated_at: 2026-06-21T16:56:46+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -13,10 +13,10 @@ canonical_inputs:
   - source_registry.yml
 input_hashes:
   view: sha256:8c6b400b796c
-  sources: sha256:6f46f34a73a1
+  sources: sha256:6f8f490d6ba9
   buffer: sha256:11e7a1a3d36e
   context: sha256:5ef45bc1a5d7
-  registry: sha256:5faffe231da9
+  registry: sha256:a86a2b8f9130
 ---
 
 # Generated Scope View
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-21T16:31:12+07:00
+- generated_at: 2026-06-21T16:56:46+07:00
 
 ## Selected Sources
 
@@ -52,7 +52,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5)
 - PRODUCT.md (sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd)
 - docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:17714e28df9947f0407ed63293221cb2c93320016968d19a3a51bd0bb69e8709)
-- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:b6829a3d8e216a47568795ea81cfd5a0ef1f6df0a067dc24f53960ec17f8fa31)
+- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:a0e38146a9cad3d5461160539c1ebca0df40fe26e3f5f0d2f3c0852fc114e98b)
 
 ## Approved Buffer Summary
 
@@ -134,6 +134,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-phase-4-claude-enrichment-a5559d37 | allowed_with_limits | Phase 4 — Claude enrichment | docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md#phase-4-claude-enrichment | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-phase-4c-live-claude-smoke-basel-0cc65236 | allowed_with_limits | Phase 4C live Claude smoke baseline | docs/scopian/sources/00_SOURCE_INDEX.md#phase-4c-live-claude-smoke-baseline | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-phase-5-ui-implementation-7ab719d5 | allowed_with_limits | Phase 5 — UI implementation | docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md#phase-5-ui-implementation | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-planned-feature-flags-detector-v-3cb4fea3 | allowed_with_limits | Planned Feature Flags: `DETECTOR_VERSION=v01\|v02`; `FEED_VERSION=v01\|v02`; `ENABLE_DAILY_OVERVIEWS`; `ENABLE_MARKET_STORIES` | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#planned-feature-flags | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-post-processing-requirements-5d2850aa | allowed_with_limits | Post-processing requirements | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#post-processing-requirements | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-product-identity-a2010428 | allowed_with_limits | Product identity | docs/scopian/sources/01_PRODUCT_SPEC.md#product-identity | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-product-page-structure-f867a21f | allowed_with_limits | Product page structure | docs/scopian/sources/01_PRODUCT_SPEC.md#product-page-structure | none | not_checked_in_generated_view |
@@ -192,7 +193,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 ## Coverage Snapshot
 
 - likely_in_scope: 24
-- allowed_with_limits: 80
+- allowed_with_limits: 81
 - likely_out_of_scope: 19
 - decision_required: 0
 - conflict_detected: 0
@@ -208,17 +209,17 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-21T16:31:12+07:00
+- generated_refresh: 2026-06-21T16:56:46+07:00
 - selected_sources: 18
 - approved_buffer_records: 4
 
 ## Freshness Metadata
 
 - view: sha256:8c6b400b796c
-- sources: sha256:6f46f34a73a1
+- sources: sha256:6f8f490d6ba9
 - buffer: sha256:11e7a1a3d36e
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:5faffe231da9
+- registry: sha256:a86a2b8f9130
 
 ## Refresh Instructions
 

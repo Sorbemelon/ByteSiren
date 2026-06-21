@@ -45,6 +45,16 @@ export function parseDetectorVersion(value?: string | null): DetectorVersion {
   return value?.trim().toLowerCase() === "v02" ? "v02" : "v01";
 }
 
+export function parseBooleanFlag(value?: string | null): boolean {
+  const normalized = value?.trim().toLowerCase();
+  return (
+    normalized === "true" ||
+    normalized === "1" ||
+    normalized === "yes" ||
+    normalized === "on"
+  );
+}
+
 export function isoDaysAgo(days: number, now = new Date()): string {
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
 }

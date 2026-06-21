@@ -3,6 +3,7 @@ import {
   BASELINE_BARS_24H,
   INTERNAL_RETENTION_DAYS,
   isoDaysAgo,
+  parseBooleanFlag,
   parseDetectorVersion,
   type MarketSymbol,
 } from "../config.ts";
@@ -44,10 +45,14 @@ export interface RunDetectorResult {
   signal_events_written?: number;
   signal_event_symbols_written?: number;
   audit_events_written?: number;
+  market_story_count?: number;
+  market_story_publish_candidate_count?: number;
+  market_stories_written?: number;
+  market_story_members_written?: number;
 }
 
 export interface RunDetectorOptions {
-  env?: Pick<Env, "DETECTOR_VERSION">;
+  env?: Pick<Env, "DETECTOR_VERSION" | "ENABLE_MARKET_STORIES">;
   now?: Date;
 }
 
@@ -96,7 +101,10 @@ export async function runDetector(
   const detectorVersion = parseDetectorVersion(options.env?.DETECTOR_VERSION);
 
   if (detectorVersion === "v02") {
-    const result: RunDetectorV02Result = await runDetectorV02(db, now);
+    const result: RunDetectorV02Result = await runDetectorV02(db, {
+      now,
+      enableMarketStories: parseBooleanFlag(options.env?.ENABLE_MARKET_STORIES),
+    });
     return {
       ...result,
       features_written: 0,

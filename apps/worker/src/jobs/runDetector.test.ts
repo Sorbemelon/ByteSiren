@@ -79,6 +79,43 @@ function candlesForAllSymbols(
   );
 }
 
+function storySignalRow(id: string, start: string, end: string) {
+  return {
+    id,
+    date_utc: start.slice(0, 10),
+    event_start: start,
+    event_end: end,
+    duration_min: 60,
+    peak_time: start,
+    direction: "observed_up",
+    signals_count: 4,
+    n_tracked: 5,
+    avg_change_pct: 1.2,
+    avg_change_method: "median_participating_symbols",
+    event_strength_score: 80,
+    impact_label: "High",
+    chart_context_score: 82,
+    chart_context_label: "Range break",
+    event_story_type: "range_break_up",
+    trend_context: "trend_up",
+    momentum_context: "continuation",
+    volatility_context: "ordinary_volatility",
+    event_range_context: "broad_broke_high",
+    chart_context_reasons_json: "[]",
+    chart_context_warnings_json: "[]",
+    macro_aligned: 0,
+    nearest_macro_event: null,
+    macro_delta_min: null,
+    source_route_hint: "broad_market",
+    publish_candidate: 1,
+    publish_reason: "test_public_signal",
+    suppress_reason: null,
+    detector_version: "v02",
+    created_at: start,
+    updated_at: start,
+  };
+}
+
 test("runDetector skips safely when any symbol lacks sufficient candles", async () => {
   const { db, tables } = createMemoryD1({
     market_candles: candlesForAllSymbols({ count: 96 }),
@@ -166,7 +203,66 @@ test("runDetector uses v0.2 Signal/Audit write path only when DETECTOR_VERSION=v
   assert.equal(tables.source_references_v02.length, 0);
   assert.equal(tables.market_stories_v02.length, 0);
   assert.equal(tables.daily_overviews_v02.length, 0);
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_market_stories_v02"),
+    false,
+  );
   assert.equal(tables.job_runs.at(-1)?.job_name, "run_detector_v02");
+});
+
+test("runDetector v0.2 can write Market Stories only when enabled", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols(),
+    signal_events_v02: [
+      storySignalRow(
+        "story_seed_signal_a",
+        "2026-06-14T00:00:00.000Z",
+        "2026-06-14T01:00:00.000Z",
+      ),
+      storySignalRow(
+        "story_seed_signal_b",
+        "2026-06-14T04:00:00.000Z",
+        "2026-06-14T05:00:00.000Z",
+      ),
+    ],
+  });
+
+  const result = await runDetector(db, {
+    env: { DETECTOR_VERSION: "v02", ENABLE_MARKET_STORIES: "true" },
+    now: detectorNow,
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.detector_version, "v02");
+  assert.ok(result.market_story_count! >= 1);
+  assert.ok(result.market_stories_written! >= 1);
+  assert.ok(tables.market_stories_v02.length >= 1);
+  assert.ok(tables.market_story_members_v02.length >= 2);
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_market_stories_v02"),
+    true,
+  );
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+});
+
+test("runDetector v0.1 ignores ENABLE_MARKET_STORIES", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols(),
+  });
+
+  const result = await runDetector(db, {
+    env: { DETECTOR_VERSION: "v01", ENABLE_MARKET_STORIES: "true" },
+    now: detectorNow,
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.detector_version, "v01");
+  assert.equal(tables.market_stories_v02.length, 0);
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_market_stories_v02"),
+    false,
+  );
 });
 
 test("runDetector v0.2 writes Audit Events and is idempotent", async () => {

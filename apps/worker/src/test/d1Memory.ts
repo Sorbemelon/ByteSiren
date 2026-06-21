@@ -173,6 +173,41 @@ interface AuditEventV02Row {
   updated_at: string;
 }
 
+interface MarketStoryV02Row {
+  id: string;
+  date_utc: string;
+  story_start: string;
+  story_end: string;
+  duration_min: number;
+  story_label: string;
+  story_family: string | null;
+  direction: string | null;
+  swing_change_pct: number | null;
+  chart_context_score: number | null;
+  range_context_json: string;
+  trend_context_json: string;
+  momentum_context_json: string;
+  volatility_context_json: string;
+  decision_reasons_json: string;
+  included_signal_event_ids_json: string;
+  included_audit_event_ids_json: string;
+  publish_candidate: number;
+  publish_reason: string | null;
+  suppress_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface MarketStoryMemberV02Row {
+  id: string;
+  market_story_id: string;
+  member_type: string;
+  member_id: string;
+  display_order: number;
+  role: string | null;
+  created_at: string;
+}
+
 interface ClaudeBriefV02Row {
   id: string;
   target_type: string;
@@ -209,8 +244,8 @@ export interface MemoryD1Tables {
   signal_events_v02: SignalEventV02Row[];
   signal_event_symbols_v02: SignalEventSymbolV02Row[];
   audit_events_v02: AuditEventV02Row[];
-  market_stories_v02: Array<Record<string, unknown>>;
-  market_story_members_v02: Array<Record<string, unknown>>;
+  market_stories_v02: MarketStoryV02Row[];
+  market_story_members_v02: MarketStoryMemberV02Row[];
   daily_overviews_v02: Array<Record<string, unknown>>;
   claude_analysis_usage: ClaudeAnalysisUsageRow[];
   public_view_counts: PublicViewCountRow[];
@@ -346,6 +381,28 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
                 b.started_at.localeCompare(a.started_at),
             )
             .slice(0, limit) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM signal_events_v02") &&
+        this.sql.includes("ORDER BY event_start ASC")
+      ) {
+        return {
+          results: [...tables.signal_events_v02].sort((a, b) =>
+            a.event_start.localeCompare(b.event_start),
+          ) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM audit_events_v02") &&
+        this.sql.includes("ORDER BY event_start ASC")
+      ) {
+        return {
+          results: [...tables.audit_events_v02].sort((a, b) =>
+            a.event_start.localeCompare(b.event_start),
+          ) as T[],
         };
       }
 
@@ -1155,6 +1212,116 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         } else {
           tables.audit_events_v02.push(row);
         }
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO market_stories_v02")) {
+        const [
+          id,
+          dateUtc,
+          storyStart,
+          storyEnd,
+          durationMin,
+          storyLabel,
+          storyFamily,
+          direction,
+          swingChangePct,
+          chartContextScore,
+          rangeContextJson,
+          trendContextJson,
+          momentumContextJson,
+          volatilityContextJson,
+          decisionReasonsJson,
+          includedSignalEventIdsJson,
+          includedAuditEventIdsJson,
+          publishCandidate,
+          publishReason,
+          suppressReason,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string,
+          number,
+          string,
+          string | null,
+          string | null,
+          number | null,
+          number | null,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          number,
+          string | null,
+          string | null,
+        ];
+        const existing = tables.market_stories_v02.find((row) => row.id === id);
+        const now = new Date().toISOString();
+        const row: MarketStoryV02Row = {
+          id,
+          date_utc: dateUtc,
+          story_start: storyStart,
+          story_end: storyEnd,
+          duration_min: durationMin,
+          story_label: storyLabel,
+          story_family: storyFamily,
+          direction,
+          swing_change_pct: swingChangePct,
+          chart_context_score: chartContextScore,
+          range_context_json: rangeContextJson,
+          trend_context_json: trendContextJson,
+          momentum_context_json: momentumContextJson,
+          volatility_context_json: volatilityContextJson,
+          decision_reasons_json: decisionReasonsJson,
+          included_signal_event_ids_json: includedSignalEventIdsJson,
+          included_audit_event_ids_json: includedAuditEventIdsJson,
+          publish_candidate: publishCandidate,
+          publish_reason: publishReason,
+          suppress_reason: suppressReason,
+          created_at: existing?.created_at ?? now,
+          updated_at: now,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.market_stories_v02.push(row);
+        }
+
+        return result(1);
+      }
+
+      if (
+        this.sql.includes("DELETE FROM market_story_members_v02") &&
+        this.sql.includes("market_story_id = ?")
+      ) {
+        const [storyId] = this.params as [string];
+        const before = tables.market_story_members_v02.length;
+        tables.market_story_members_v02 =
+          tables.market_story_members_v02.filter(
+            (row) => row.market_story_id !== storyId,
+          );
+
+        return result(before - tables.market_story_members_v02.length);
+      }
+
+      if (this.sql.includes("INSERT INTO market_story_members_v02")) {
+        const [id, storyId, memberType, memberId, displayOrder, role] = this
+          .params as [string, string, string, string, number, string | null];
+        tables.market_story_members_v02.push({
+          id,
+          market_story_id: storyId,
+          member_type: memberType,
+          member_id: memberId,
+          display_order: displayOrder,
+          role,
+          created_at: new Date().toISOString(),
+        });
 
         return result(1);
       }
