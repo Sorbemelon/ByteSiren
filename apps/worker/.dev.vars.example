@@ -49,6 +49,10 @@ FEED_VERSION=v01
 # remains disabled until a later phase.
 ENABLE_MARKET_STORIES=false
 
+# Optional v0.2 deterministic Daily Overview row generation. This creates or
+# updates daily_overviews_v02 rows only; Claude remains separately controlled.
+ENABLE_DAILY_OVERVIEWS=false
+
 # Optional v0.2 Claude enrichment switches. Keep disabled unless explicitly
 # validating v0.2 Signal Events or existing Daily Overview rows.
 ENABLE_SIGNAL_CLAUDE_V02=false

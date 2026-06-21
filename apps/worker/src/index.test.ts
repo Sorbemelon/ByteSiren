@@ -49,6 +49,40 @@ function seededRows(): MarketCandle[] {
   );
 }
 
+function seededCompleteDayRows(dateUtc = "2026-06-15"): MarketCandle[] {
+  const startMs = Date.parse(`${dateUtc}T00:00:00.000Z`);
+  const changes: Record<(typeof symbols)[number], number> = {
+    BTCUSDT: 5,
+    ETHUSDT: 4,
+    BNBUSDT: 3,
+    SOLUSDT: 2,
+    XRPUSDT: 1,
+  };
+
+  return symbols.flatMap((symbol) =>
+    Array.from({ length: 96 }, (_, offset) => {
+      const open = new Date(startMs + offset * 15 * 60 * 1000);
+      const close = new Date(open.getTime() + 15 * 60 * 1000 - 1);
+      const progress = offset / 95;
+      const finalClose = 100 * (1 + changes[symbol] / 100);
+
+      return {
+        symbol,
+        interval: "15m",
+        open_time: open.toISOString(),
+        close_time: close.toISOString(),
+        open: 100,
+        high: 103,
+        low: 97,
+        close: 100 + (finalClose - 100) * progress,
+        volume: 100 + offset,
+        quote_volume: 1000 + offset,
+        trade_count: offset,
+      };
+    }),
+  );
+}
+
 function seededIncident(): IncidentRow {
   const evidence = symbols.map((symbol, index) => ({
     symbol,
@@ -704,6 +738,39 @@ test("scheduled cleanup cron runs cleanup only", async () => {
     tables.job_runs.some((row) => row.job_name === "run_detector"),
     false,
   );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_daily_overviews_v02"),
+    false,
+  );
+  assert.equal(tables.daily_overviews_v02.length, 0);
+});
+
+test("scheduled cleanup cron can generate v0.2 Daily Overviews behind flag", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededCompleteDayRows(),
+  });
+  const env: Env = {
+    DB: db,
+    ENABLE_DAILY_OVERVIEWS: "true",
+  };
+
+  await worker.scheduled(scheduledController(CLEANUP_CRON), env);
+
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "cleanup_old_data"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_daily_overviews_v02"),
+    true,
+  );
+  assert.equal(tables.daily_overviews_v02.length, 1);
+  assert.equal(
+    tables.daily_overviews_v02[0].claude_status,
+    "queued_for_analysis",
+  );
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
 });
 
 test("admin endpoint disabled returns not found without public CORS", async () => {

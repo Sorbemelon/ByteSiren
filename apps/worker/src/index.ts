@@ -13,6 +13,10 @@ import {
   isClaudeEnrichmentV02Enabled,
   runClaudeEnrichmentV02,
 } from "./jobs/runClaudeEnrichmentV02.ts";
+import {
+  isDailyOverviewGenerationEnabled,
+  runDailyOverviewsV02,
+} from "./jobs/runDailyOverviewsV02.ts";
 import { runDetector } from "./jobs/runDetector.ts";
 import { healthResponse, versionResponse } from "./routes/health.ts";
 import { intelligenceFeedResponse } from "./routes/intelligence.ts";
@@ -159,6 +163,11 @@ export default {
 
     if (controller.cron === CLEANUP_CRON) {
       await cleanupOldData(env.DB);
+
+      if (isDailyOverviewGenerationEnabled(env)) {
+        await runDailyOverviewsV02(env.DB, env);
+      }
+
       return;
     }
 

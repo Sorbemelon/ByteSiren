@@ -60,6 +60,14 @@ test("DETECTOR_VERSION=v02 alone does not imply Market Stories", () => {
   assert.equal(parseBooleanFlag(undefined), false);
 });
 
+test("ENABLE_DAILY_OVERVIEWS defaults false and accepts explicit true values", () => {
+  assert.equal(parseBooleanFlag(undefined), false);
+  assert.equal(parseBooleanFlag(""), false);
+  assert.equal(parseBooleanFlag("invalid"), false);
+  assert.equal(parseBooleanFlag("true"), true);
+  assert.equal(parseBooleanFlag("1"), true);
+});
+
 test("v0.2 Claude flags default false and accept explicit true values", () => {
   assert.equal(parseBooleanFlag(undefined), false);
   assert.equal(parseBooleanFlag("false"), false);

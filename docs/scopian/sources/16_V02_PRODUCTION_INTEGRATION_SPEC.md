@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I4B-bounded-claude-enrichment-v1
+version: v0.2I4C-daily-overview-generation-v1
 last_updated: 2026-06-21
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -52,6 +52,8 @@ Storage decisions:
 ### Daily Overview
 
 Daily Overview uses Claude and represents full UTC-day context. It may include deterministic day metrics, Signal Event IDs, Market Story IDs, and audit counts as context for Claude. It should use day-level labels, not Signal Event cause labels as the main status.
+
+Daily Overview rows are created deterministically before Claude enrichment. Row generation computes `24h Change`, market range, market tone, notable symbols, top symbol moves, same-day publishable Signal Event IDs, same-day publishable Market Story IDs, and same-day Audit Event counts from existing spot 15m candles and v0.2 records. It must not fake Claude summaries or sources.
 
 ### Market Story
 
@@ -195,6 +197,8 @@ Rollback behavior should be feature-flag/config based:
 
 `ENABLE_MARKET_STORIES` controls deterministic Market Story generation only after the v0.2 Signal/Audit write path has run. It must default to `false`. It does not expose Market Stories in the public feed until the v0.2 feed API contract is added.
 
+`ENABLE_DAILY_OVERVIEWS` controls deterministic Daily Overview row generation. It must default to `false`. When true, the row-generation job may create or update `daily_overviews_v02` rows for completed UTC days with sufficient candle coverage. It must not call Claude, create Claude briefs, create source references, or generate missing Market Stories or Signal Events.
+
 `FEED_VERSION` controls only the public feed read contract. It must default to `v01`. `FEED_VERSION=v02` reads `daily_overviews_v02`, publishable `market_stories_v02`, publishable `signal_events_v02`, `claude_briefs_v02`, and accepted `source_references_v02` for Claude-backed items. It must not expose Audit Events as standalone public feed items.
 
 `ENABLE_SIGNAL_CLAUDE_V02` controls Signal Event v0.2 Claude enrichment. It must default to `false`.
@@ -216,6 +220,47 @@ v0.2 Claude job metadata may record safe counts, selected flags, model, tool typ
 
 Protected admin catch-up for v0.2 Claude is deferred to v0.2I6 unless explicitly added later.
 
+## Deterministic Daily Overview Generation
+
+v0.2I4C adds deterministic row generation for existing `daily_overviews_v02` storage only. It is controlled by `ENABLE_DAILY_OVERVIEWS=false` by default.
+
+Generation rules:
+
+- Generate rows for complete UTC days only by default.
+- `day_start` is `YYYY-MM-DDT00:00:00.000Z`.
+- `day_end` is `YYYY-MM-DDT23:59:59.999Z`.
+- Expected candles per symbol per day is 96 for 15m candles.
+- A day needs at least 80% coverage per tracked symbol.
+- Incomplete current UTC day and insufficient-coverage days are skipped with safe reasons.
+- Initial v0.2 backfill should create deterministic Daily Overview rows before running any Daily Overview Claude enrichment.
+- Ongoing production should create the previous completed UTC-day row after the UTC day closes.
+
+Deterministic fields:
+
+- `daily_change_pct`: median tracked-symbol percent change from first open to last close in the UTC day.
+- `daily_change_label`: always `24h Change`.
+- `market_range_pct`: median tracked-symbol high-low range percent for the UTC day.
+- `top_symbol_moves_json`: tracked symbols sorted by absolute daily change.
+- `notable_symbols_json`: compact deterministic top-symbol list by change/range.
+- `market_tone`: deterministic `risk_on`, `risk_off`, `mixed`, `quiet`, `volatile`, or `relief`.
+- `signal_event_ids_json`: publishable Signal Event IDs for the same UTC day.
+- `market_story_ids_json`: publishable Market Story IDs anchored to the same UTC day.
+- `audit_event_count`: count of Audit Events for the same UTC day; Audit Event IDs are not public standalone data.
+- `daily_chart_context_summary_json`: deterministic method, coverage, breadth, counts, story labels, tone reasons, and generator metadata.
+
+Daily Overview generation does not:
+
+- call Claude
+- write `claude_briefs_v02`
+- write `source_references_v02`
+- write legacy `claude_briefs`
+- write legacy `source_references`
+- generate Signal Events
+- generate Market Stories
+- create fake summaries, fake context, or fake sources
+
+If an existing Daily Overview row has a terminal Claude status, row generation should preserve that status while updating deterministic market fields.
+
 ## Rollout Phases
 
 - v0.2I1 schema/spec: add additive schema and this source spec only.
@@ -224,6 +269,7 @@ Protected admin catch-up for v0.2 Claude is deferred to v0.2I6 unless explicitly
 - v0.2I3 feed API v02 contract: support read-only grouped day posts behind `FEED_VERSION=v02` while keeping v0.1 as the default feed response.
 - v0.2I4A Claude payload persistence foundation: add Signal Event and Daily Overview payload builders, prompt builders, validators, `claude_briefs_v02` helpers, and `source_references_v02` helpers without calling Claude or wiring enrichment.
 - v0.2I4B Claude enrichment jobs: wire bounded v0.2 Signal Event and Daily Overview analysis behind explicit feature flags, using `claude_briefs_v02`, `source_references_v02`, and `brief_v02_id`.
+- v0.2I4C Daily Overview row generation: create deterministic `daily_overviews_v02` rows from existing candles and v0.2 records behind `ENABLE_DAILY_OVERVIEWS`, without calling Claude or writing source rows.
 - v0.2I5 frontend day-post integration: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
@@ -347,3 +393,27 @@ v0.2I4B does not:
 - change frontend UI
 - change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`
 - change v0.1 Claude enrichment behavior when v0.2 Claude flags are false
+
+v0.2I4C does:
+
+- add default-off `ENABLE_DAILY_OVERVIEWS`
+- generate deterministic Daily Overview rows for complete UTC days with sufficient candle coverage
+- compute `24h Change`, market range, market tone, notable symbols, top symbol moves, and deterministic chart-context summary fields
+- link same-day publishable Signal Event IDs and publishable Market Story IDs
+- count same-day Audit Events without exposing Audit Events as standalone public items
+- set new/retryable Daily Overview rows to `queued_for_analysis`
+- preserve terminal Daily Overview Claude status on existing rows
+- optionally run after daily cleanup only when `ENABLE_DAILY_OVERVIEWS=true`
+
+v0.2I4C does not:
+
+- call Claude
+- write `claude_briefs_v02`
+- write `source_references_v02`
+- write old `claude_briefs`
+- write old `source_references`
+- generate Signal Events
+- generate Market Stories
+- change frontend UI
+- change v0.1 feed behavior when `FEED_VERSION` is missing, invalid, or `v01`
+- change v0.1 runtime behavior when `ENABLE_DAILY_OVERVIEWS` is absent or false

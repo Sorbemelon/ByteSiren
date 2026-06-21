@@ -426,6 +426,27 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
 
       if (
         this.sql.includes("FROM signal_events_v02") &&
+        this.sql.includes("date_utc = ?") &&
+        this.sql.includes("publish_candidate = 1")
+      ) {
+        const [dateUtc] = this.params as [string];
+
+        return {
+          results: tables.signal_events_v02
+            .filter(
+              (row) => row.date_utc === dateUtc && row.publish_candidate === 1,
+            )
+            .sort(
+              (a, b) =>
+                b.event_end.localeCompare(a.event_end) ||
+                b.event_start.localeCompare(a.event_start) ||
+                a.id.localeCompare(b.id),
+            ) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM signal_events_v02") &&
         this.sql.includes("publish_candidate = 1")
       ) {
         const [cutoff] = this.params as [string];
@@ -467,6 +488,20 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
 
       if (
         this.sql.includes("FROM daily_overviews_v02") &&
+        this.sql.includes("ORDER BY date_utc DESC") &&
+        this.sql.includes("LIMIT ?")
+      ) {
+        const [limit] = this.params as [number];
+
+        return {
+          results: [...tables.daily_overviews_v02]
+            .sort((a, b) => b.date_utc.localeCompare(a.date_utc))
+            .slice(0, limit) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM daily_overviews_v02") &&
         this.sql.includes("day_start >= ?")
       ) {
         const [cutoff] = this.params as [string];
@@ -475,6 +510,27 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           results: tables.daily_overviews_v02
             .filter((row) => row.day_start >= cutoff)
             .sort((a, b) => b.date_utc.localeCompare(a.date_utc)) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM market_stories_v02") &&
+        this.sql.includes("date_utc = ?") &&
+        this.sql.includes("publish_candidate = 1")
+      ) {
+        const [dateUtc] = this.params as [string];
+
+        return {
+          results: tables.market_stories_v02
+            .filter(
+              (row) => row.date_utc === dateUtc && row.publish_candidate === 1,
+            )
+            .sort(
+              (a, b) =>
+                b.story_end.localeCompare(a.story_end) ||
+                b.story_start.localeCompare(a.story_start) ||
+                a.id.localeCompare(b.id),
+            ) as T[],
         };
       }
 
@@ -601,6 +657,27 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
 
       if (
         this.sql.includes("COUNT(*) AS count") &&
+        this.sql.includes("FROM daily_overviews_v02")
+      ) {
+        return {
+          count: tables.daily_overviews_v02.length,
+        } as T;
+      }
+
+      if (
+        this.sql.includes("COUNT(*) AS count") &&
+        this.sql.includes("FROM audit_events_v02")
+      ) {
+        const [dateUtc] = this.params as [string];
+        return {
+          count: tables.audit_events_v02.filter(
+            (row) => row.date_utc === dateUtc,
+          ).length,
+        } as T;
+      }
+
+      if (
+        this.sql.includes("COUNT(*) AS count") &&
         this.sql.includes("FROM market_candles")
       ) {
         const [symbol, interval] = this.params as [string, string];
@@ -620,6 +697,16 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       if (this.sql.includes("FROM incidents") && this.sql.includes("id = ?")) {
         const [id] = this.params as [string];
         return (tables.incidents.find((row) => row.id === id) ?? null) as T;
+      }
+
+      if (
+        this.sql.includes("FROM daily_overviews_v02") &&
+        this.sql.includes("date_utc = ?")
+      ) {
+        const [dateUtc] = this.params as [string];
+        return (tables.daily_overviews_v02.find(
+          (row) => row.date_utc === dateUtc,
+        ) ?? null) as T;
       }
 
       if (
@@ -1641,6 +1728,76 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           role,
           created_at: new Date().toISOString(),
         });
+
+        return result(1);
+      }
+
+      if (this.sql.includes("INSERT INTO daily_overviews_v02")) {
+        const [
+          id,
+          dateUtc,
+          dayStart,
+          dayEnd,
+          marketTone,
+          dailyChangePct,
+          dailyChangeLabel,
+          marketRangePct,
+          notableSymbolsJson,
+          topSymbolMovesJson,
+          signalEventIdsJson,
+          marketStoryIdsJson,
+          auditEventCount,
+          dailyChartContextSummaryJson,
+          claudeStatus,
+          claudeBriefId,
+        ] = this.params as [
+          string,
+          string,
+          string,
+          string,
+          string | null,
+          number | null,
+          string,
+          number | null,
+          string,
+          string,
+          string,
+          string,
+          number,
+          string,
+          string,
+          string | null,
+        ];
+        const existing = tables.daily_overviews_v02.find(
+          (row) => row.date_utc === dateUtc,
+        );
+        const now = new Date().toISOString();
+        const row: DailyOverviewV02Row = {
+          id,
+          date_utc: dateUtc,
+          day_start: dayStart,
+          day_end: dayEnd,
+          market_tone: marketTone,
+          daily_change_pct: dailyChangePct,
+          daily_change_label: dailyChangeLabel,
+          market_range_pct: marketRangePct,
+          notable_symbols_json: notableSymbolsJson,
+          top_symbol_moves_json: topSymbolMovesJson,
+          signal_event_ids_json: signalEventIdsJson,
+          market_story_ids_json: marketStoryIdsJson,
+          audit_event_count: auditEventCount,
+          daily_chart_context_summary_json: dailyChartContextSummaryJson,
+          claude_status: claudeStatus,
+          claude_brief_id: existing?.claude_brief_id ?? claudeBriefId,
+          created_at: existing?.created_at ?? now,
+          updated_at: now,
+        };
+
+        if (existing) {
+          Object.assign(existing, row);
+        } else {
+          tables.daily_overviews_v02.push(row);
+        }
 
         return result(1);
       }
