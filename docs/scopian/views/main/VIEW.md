@@ -20,6 +20,7 @@ sources:
   - ../../sources/14_DEPLOYMENT_BOUNDARIES.md
   - ../../../../PRODUCT.md
   - ../../sources/15_DEPLOYMENT_CHECKLIST.md
+  - ../../sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md
 buffer:
   mode: all-approved-in-view
 tags:
