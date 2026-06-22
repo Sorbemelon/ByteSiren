@@ -29,10 +29,15 @@ function emptyCandlesBySymbol(): Record<MarketSymbol, MarketCandle[]> {
 function dayCandles(
   dateUtc: string,
   changes: Record<MarketSymbol, number>,
-  options: { count?: number; rangePct?: number } = {},
+  options: {
+    count?: number;
+    rangePct?: number;
+    volumeMultiplier?: number;
+  } = {},
 ): Record<MarketSymbol, MarketCandle[]> {
   const count = options.count ?? 96;
   const rangePct = options.rangePct ?? 6;
+  const volumeMultiplier = options.volumeMultiplier ?? 1;
   const startMs = Date.parse(`${dateUtc}T00:00:00.000Z`);
   const candlesBySymbol = emptyCandlesBySymbol();
 
@@ -56,8 +61,8 @@ function dayCandles(
         high,
         low,
         close: 100 + (finalClose - 100) * progress,
-        volume: 1000 + index,
-        quote_volume: 100000 + index,
+        volume: (1000 + index) * volumeMultiplier,
+        quote_volume: (100000 + index) * volumeMultiplier,
         trade_count: index,
       };
     });
@@ -130,6 +135,47 @@ test("Daily Overview generation creates one deterministic row for a complete UTC
   assert.equal(summary.signal_event_count, 2);
   assert.equal(summary.market_story_count, 1);
   assert.equal(summary.audit_event_count, 2);
+  assert.equal(
+    summary.daily_volatility_score_method,
+    "rms_15m_bar_open_close_returns_x100",
+  );
+  assert.equal(typeof summary.daily_volatility_score, "number");
+});
+
+test("Daily Overview top symbol moves include peak, volume, and range position fields", () => {
+  const result = generateDailyOverviewsV02({
+    candlesBySymbol: mergeCandles(
+      dayCandles("2026-06-18", changesBySymbol, {
+        rangePct: 4,
+        volumeMultiplier: 1,
+      }),
+      dayCandles("2026-06-19", changesBySymbol, {
+        rangePct: 6,
+        volumeMultiplier: 2,
+      }),
+    ),
+    now: new Date("2026-06-21T12:00:00.000Z"),
+  });
+  const row = result.rows.find((entry) => entry.date_utc === "2026-06-19");
+  assert.ok(row);
+  const topMoves = JSON.parse(row.top_symbol_moves_json) as Array<{
+    symbol: string;
+    peak_change_pct: number;
+    volatility_score_label: string;
+    volatility_score: number | null;
+    volume_ratio: number | null;
+    range_position: string;
+    range_position_display: string;
+  }>;
+
+  assert.equal(topMoves[0].symbol, "BTCUSDT");
+  assert.equal(topMoves[0].peak_change_pct, 5);
+  assert.equal(topMoves[0].volatility_score_label, "Volatility Score");
+  assert.equal(Number.isInteger(topMoves[0].volatility_score), true);
+  assert.ok((topMoves[0].volatility_score ?? 0) > 0);
+  assert.equal(topMoves[0].volume_ratio, 2);
+  assert.equal(topMoves[0].range_position, "broke_high");
+  assert.equal(topMoves[0].range_position_display, "Broke high");
 });
 
 test("Daily Overview generation skips current and insufficient-coverage days", () => {

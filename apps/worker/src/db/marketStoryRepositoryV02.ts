@@ -49,6 +49,29 @@ function boolInt(value: boolean): number {
   return value ? 1 : 0;
 }
 
+const SQLITE_BIND_CHUNK_SIZE = 50;
+const D1_BATCH_STATEMENT_CHUNK_SIZE = 25;
+
+async function runStatementBatches(
+  db: D1Database,
+  statements: D1PreparedStatement[],
+): Promise<number> {
+  let affected = 0;
+
+  for (
+    let index = 0;
+    index < statements.length;
+    index += D1_BATCH_STATEMENT_CHUNK_SIZE
+  ) {
+    const results = await db.batch(
+      statements.slice(index, index + D1_BATCH_STATEMENT_CHUNK_SIZE),
+    );
+    affected += results.reduce((sum, result) => sum + changedRows(result), 0);
+  }
+
+  return affected;
+}
+
 function safeJsonObject(value: string): Record<string, unknown> {
   try {
     const parsed = JSON.parse(value) as unknown;
@@ -259,8 +282,7 @@ export async function upsertMarketStoriesV02(
       ),
   );
 
-  const results = await db.batch(statements);
-  return results.reduce((sum, result) => sum + changedRows(result), 0);
+  return runStatementBatches(db, statements);
 }
 
 export async function replaceMarketStoryMembersV02(
@@ -300,11 +322,55 @@ export async function replaceMarketStoryMembersV02(
       ),
   );
 
-  const insertResults = await db.batch(insertStatements);
   return (
     changedRows(deleteResult) +
-    insertResults.reduce((sum, result) => sum + changedRows(result), 0)
+    (await runStatementBatches(db, insertStatements))
   );
+}
+
+async function deleteStoriesByIds(
+  db: D1Database,
+  storyIds: string[],
+): Promise<void> {
+  for (
+    let index = 0;
+    index < storyIds.length;
+    index += SQLITE_BIND_CHUNK_SIZE
+  ) {
+    const chunk = storyIds.slice(index, index + SQLITE_BIND_CHUNK_SIZE);
+    const placeholders = chunk.map(() => "?").join(", ");
+    await db
+      .prepare(
+        `DELETE FROM market_story_members_v02 WHERE market_story_id IN (${placeholders})`,
+      )
+      .bind(...chunk)
+      .run();
+    await db
+      .prepare(`DELETE FROM market_stories_v02 WHERE id IN (${placeholders})`)
+      .bind(...chunk)
+      .run();
+  }
+}
+
+async function pruneMarketStoryOutputV02(
+  db: D1Database,
+  stories: MarketStoryV02[],
+): Promise<void> {
+  if (stories.length === 0) {
+    await db.prepare("DELETE FROM market_story_members_v02").run();
+    await db.prepare("DELETE FROM market_stories_v02").run();
+    return;
+  }
+
+  const keep = new Set(stories.map((story) => story.id));
+  const existing = await db
+    .prepare("SELECT id AS id FROM market_stories_v02")
+    .all<{ id: string }>();
+  const staleIds = (existing.results ?? [])
+    .map((row) => row.id)
+    .filter((id) => !keep.has(id));
+
+  await deleteStoriesByIds(db, staleIds);
 }
 
 export async function upsertMarketStoryOutputV02(
@@ -314,6 +380,7 @@ export async function upsertMarketStoryOutputV02(
     market_story_members: MarketStoryMemberV02[];
   },
 ): Promise<MarketStoryV02WriteCounts> {
+  await pruneMarketStoryOutputV02(db, output.market_stories);
   const stories = await upsertMarketStoriesV02(db, output.market_stories);
   let members = 0;
 

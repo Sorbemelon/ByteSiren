@@ -49,6 +49,41 @@ interface V02SourceOverlay {
   marker: ChartSourceMarkerViewV02;
 }
 
+function sourceMarkerTone(marker: ChartSourceMarkerViewV02): string {
+  const label = `${marker.label ?? ""}`.toLowerCase();
+
+  if (label.includes("catalyst") || label.includes("focused")) {
+    return "var(--source-focused-text)";
+  }
+
+  if (label.includes("likely")) {
+    return "var(--source-likely-text)";
+  }
+
+  if (label.includes("price")) {
+    return "var(--source-price-text)";
+  }
+
+  if (label.includes("backdrop")) {
+    return "var(--source-backdrop-text)";
+  }
+
+  if (
+    label.includes("main") ||
+    label.includes("support") ||
+    label.includes("daily")
+  ) {
+    return "var(--source-chip-text)";
+  }
+
+  return "var(--source-backdrop-text)";
+}
+
+interface ChartPlotArea {
+  width: number;
+  height: number;
+}
+
 function cssVar(name: string, fallback: string): string {
   if (typeof document === "undefined") return fallback;
   const v = getComputedStyle(document.documentElement)
@@ -83,6 +118,11 @@ function eventOverlapsCandleRange(
 
   return end >= range.first && start <= range.last;
 }
+
+const LEGACY_MARKET_DAY_HIGHLIGHT_COLOR = "#8b5cf6";
+const LEGACY_MARKET_DAY_SELECTED_COLOR = "#a78bfa";
+const DAILY_OVERVIEW_HIGHLIGHT_COLOR = "#f59e0b";
+const MARKET_STORY_HIGHLIGHT_COLOR = "#8b5cf6";
 
 /** Snap an incident time (sec) to the displayed candle bucket containing it. */
 function snapToCandle(
@@ -125,17 +165,21 @@ function incidentMarkers(
       const isSelected = item.incident_id === selectedId;
 
       const color =
-        item.direction === "observed_up"
+        item.scope === "market_day"
           ? isSelected
-            ? "#34d399"
-            : "#10b981"
-          : item.direction === "observed_down"
+            ? LEGACY_MARKET_DAY_SELECTED_COLOR
+            : LEGACY_MARKET_DAY_HIGHLIGHT_COLOR
+          : item.direction === "observed_up"
             ? isSelected
-              ? "#fb7185"
-              : "#f43f5e"
-            : isSelected
-              ? "#c4b5fd"
-              : "#a78bfa";
+              ? "#34d399"
+              : "#10b981"
+            : item.direction === "observed_down"
+              ? isSelected
+                ? "#fb7185"
+                : "#f43f5e"
+              : isSelected
+                ? "#c4b5fd"
+                : "#a78bfa";
 
       const shape =
         item.scope === "market_day"
@@ -160,6 +204,12 @@ function incidentMarkers(
 }
 
 function colorForDirection(item: FeedItem, selected: boolean): string {
+  if (item.scope === "market_day") {
+    return selected
+      ? LEGACY_MARKET_DAY_SELECTED_COLOR
+      : LEGACY_MARKET_DAY_HIGHLIGHT_COLOR;
+  }
+
   if (item.direction === "observed_up") {
     return selected ? "#34d399" : "#10b981";
   }
@@ -244,7 +294,7 @@ function evidenceWindowOverlays(
         left,
         width,
         color: colorForDirection(item, selected),
-        alpha: selected ? 0.18 : 0.055,
+        alpha: selected ? 0.26 : 0.09,
         selected,
       } satisfies EvidenceWindowOverlay;
     })
@@ -264,11 +314,11 @@ function chartTimeToSeconds(time: Time | undefined): number | null {
 
 function colorForV02Highlight(highlight: ChartHighlightViewV02): string {
   if (highlight.itemType === "daily_overview") {
-    return "#8b5cf6";
+    return DAILY_OVERVIEW_HIGHLIGHT_COLOR;
   }
 
   if (highlight.itemType === "market_story") {
-    return "#f59e0b";
+    return MARKET_STORY_HIGHLIGHT_COLOR;
   }
 
   if (
@@ -288,68 +338,15 @@ function colorForV02Highlight(highlight: ChartHighlightViewV02): string {
   return highlight.selected ? "#67e8f9" : "#22d3ee";
 }
 
-function v02Markers(
-  highlights: ChartHighlightViewV02[],
-  candles: CandleBar[],
-): SeriesMarker<Time>[] {
-  const candleTimes = candles.map((c) => c.time);
-  const markers: SeriesMarker<Time>[] = [];
+function v02HighlightLayer(highlight: ChartHighlightViewV02): number {
+  if (highlight.itemType === "signal_event") return 30;
+  if (highlight.itemType === "daily_overview") return 20;
+  if (highlight.itemType === "market_story") return 10;
+  return 1;
+}
 
-  for (const highlight of highlights) {
-    const startRaw = toUnixSeconds(highlight.start);
-    const endRaw = toUnixSeconds(highlight.end);
-    const peakRaw = highlight.peakMarkerTime
-      ? toUnixSeconds(highlight.peakMarkerTime)
-      : null;
-
-    if (startRaw == null || endRaw == null) continue;
-
-    const start = snapToCandle(startRaw, candleTimes);
-    const end = snapToCandle(endRaw, candleTimes);
-    const peak = peakRaw == null ? null : snapToCandle(peakRaw, candleTimes);
-    const color = colorForV02Highlight(highlight);
-    const position =
-      highlight.direction === "observed_down" ||
-      highlight.direction?.endsWith("_down")
-        ? "aboveBar"
-        : "belowBar";
-
-    if (start != null) {
-      markers.push({
-        time: start as Time,
-        position,
-        color,
-        shape: highlight.itemType === "market_story" ? "square" : "circle",
-        size: highlight.selected ? 2 : 1,
-        text: highlight.selected ? highlight.label : "",
-      } as SeriesMarker<Time>);
-    }
-
-    if (end != null && end !== start) {
-      markers.push({
-        time: end as Time,
-        position,
-        color,
-        shape: "circle",
-        size: highlight.selected ? 2 : 1,
-        text: "",
-      } as SeriesMarker<Time>);
-    }
-
-    if (highlight.type === "event_window" && peak != null) {
-      markers.push({
-        time: peak as Time,
-        position,
-        color,
-        shape:
-          highlight.direction === "observed_down" ? "arrowDown" : "arrowUp",
-        size: highlight.selected ? 2 : 1,
-        text: highlight.selected ? "Peak" : "",
-      } as SeriesMarker<Time>);
-    }
-  }
-
-  return markers.sort((a, b) => Number(a.time) - Number(b.time));
+function v02HighlightZIndex(highlight: ChartHighlightViewV02): number {
+  return v02HighlightLayer(highlight) + (highlight.selected ? 1 : 0);
 }
 
 function v02WindowOverlays(
@@ -402,12 +399,16 @@ function v02WindowOverlays(
         left,
         width,
         color,
-        alpha: highlight.selected ? 0.18 : highlight.dimmed ? 0.025 : 0.06,
+        alpha: highlight.selected ? 0.26 : highlight.dimmed ? 0.045 : 0.1,
         selected: highlight.selected,
         highlight,
       } satisfies V02WindowOverlay;
     })
-    .filter((item): item is V02WindowOverlay => item !== null);
+    .filter((item): item is V02WindowOverlay => item !== null)
+    .sort(
+      (a, b) =>
+        v02HighlightZIndex(a.highlight) - v02HighlightZIndex(b.highlight),
+    );
 }
 
 function buildV02SourceOverlays(
@@ -437,6 +438,32 @@ function buildV02SourceOverlays(
     .filter((item): item is V02SourceOverlay => item !== null);
 }
 
+function measurePlotArea(
+  chart: IChartApi | null,
+  container: HTMLDivElement | null,
+): ChartPlotArea {
+  const containerWidth = container?.clientWidth ?? 0;
+  const containerHeight = container?.clientHeight ?? 0;
+
+  if (!chart || !containerWidth || !containerHeight) {
+    return { width: containerWidth, height: containerHeight };
+  }
+
+  const timeScaleWidth = chart.timeScale().width();
+  const timeScaleHeight = chart.timeScale().height();
+  const rightScaleWidth = chart.priceScale("right").width();
+  const leftScaleWidth = chart.priceScale("left").width();
+  const fallbackPaneWidth = Math.max(
+    0,
+    containerWidth - rightScaleWidth - leftScaleWidth,
+  );
+
+  return {
+    width: Math.max(0, Math.min(timeScaleWidth, fallbackPaneWidth)),
+    height: Math.max(0, containerHeight - timeScaleHeight),
+  };
+}
+
 export default function TradingViewChart({
   candles,
   feed,
@@ -458,6 +485,10 @@ export default function TradingViewChart({
   const [v02SourceOverlays, setV02SourceOverlays] = useState<
     V02SourceOverlay[]
   >([]);
+  const [plotArea, setPlotArea] = useState<ChartPlotArea>({
+    width: 0,
+    height: 0,
+  });
 
   const initChart = useCallback(() => {
     const el = containerRef.current;
@@ -520,9 +551,11 @@ export default function TradingViewChart({
           width: el.clientWidth,
           height: el.clientHeight,
         });
+        setPlotArea(measurePlotArea(chartRef.current, el));
       }
     });
     ro.observe(el);
+    setPlotArea(measurePlotArea(chart, el));
 
     return () => {
       ro.disconnect();
@@ -589,11 +622,8 @@ export default function TradingViewChart({
   useEffect(() => {
     const cs = candleSeriesRef.current;
     if (!cs) return;
-    cs.setMarkers([
-      ...incidentMarkers(feed, selectedIncidentId, candles),
-      ...v02Markers(v02Highlights, candles),
-    ]);
-  }, [feed, selectedIncidentId, candles, v02Highlights]);
+    cs.setMarkers(incidentMarkers(feed, selectedIncidentId, candles));
+  }, [feed, selectedIncidentId, candles]);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -603,6 +633,7 @@ export default function TradingViewChart({
     }
 
     const update = () => {
+      setPlotArea(measurePlotArea(chart, containerRef.current));
       setWindowOverlays(
         evidenceWindowOverlays(chart, feed, selectedIncidentId, candles),
       );
@@ -627,6 +658,7 @@ export default function TradingViewChart({
     }
 
     const update = () => {
+      setPlotArea(measurePlotArea(chart, containerRef.current));
       setV02Overlays(v02WindowOverlays(chart, v02Highlights, candles));
       setV02SourceOverlays(
         buildV02SourceOverlays(chart, v02SourceMarkers, candles),
@@ -677,21 +709,26 @@ export default function TradingViewChart({
         v02Highlights.find((highlight) => highlight.selected)?.id ?? ""
       }
       data-v02-source-marker-count={v02SourceMarkers.length}
+      data-plot-area-width={Math.round(plotArea.width)}
+      data-plot-area-height={Math.round(plotArea.height)}
     >
       <div ref={containerRef} className="absolute inset-0" />
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-[2]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-0 top-0 z-[2] overflow-hidden"
+        style={{
+          width: plotArea.width,
+          height: plotArea.height,
+        }}
+      >
         {windowOverlays.map((window) => (
           <div
             key={window.id}
-            className="absolute top-0 h-full border-x"
+            className="absolute top-0 h-full"
             style={{
               left: window.left,
               width: window.width,
               background: hexToRgba(window.color, window.alpha),
-              borderColor: hexToRgba(
-                window.color,
-                window.selected ? 0.32 : 0.1,
-              ),
             }}
           >
             {window.selected && (
@@ -710,7 +747,11 @@ export default function TradingViewChart({
       </div>
       <div
         aria-hidden={!onV02HighlightSelect}
-        className="pointer-events-none absolute inset-0 z-[3]"
+        className="pointer-events-none absolute left-0 top-0 z-[3] overflow-hidden"
+        style={{
+          width: plotArea.width,
+          height: plotArea.height,
+        }}
       >
         {v02Overlays.map((window) => (
           <button
@@ -726,16 +767,12 @@ export default function TradingViewChart({
               onV02HighlightSelect?.(window.highlight);
             }}
             aria-label={`${window.highlight.label} chart window`}
-            className="pointer-events-auto absolute top-0 h-full border-x text-left transition-colors"
+            className="pointer-events-auto absolute top-0 h-full text-left transition-colors"
             style={{
               left: window.left,
               width: window.width,
               background: hexToRgba(window.color, window.alpha),
-              borderColor: hexToRgba(
-                window.color,
-                window.selected ? 0.38 : window.highlight.dimmed ? 0.06 : 0.14,
-              ),
-              zIndex: window.selected ? 2 : 1,
+              zIndex: v02HighlightZIndex(window.highlight),
             }}
           >
             {window.selected && (
@@ -754,7 +791,11 @@ export default function TradingViewChart({
       </div>
       <div
         aria-hidden={!onV02SourceMarkerSelect}
-        className="pointer-events-none absolute inset-x-0 top-0 z-[4] h-12"
+        className="pointer-events-none absolute left-0 top-0 z-[4] overflow-hidden"
+        style={{
+          width: plotArea.width,
+          height: Math.min(48, plotArea.height),
+        }}
       >
         {v02SourceOverlays.map((overlay) => (
           <button
@@ -764,20 +805,38 @@ export default function TradingViewChart({
             data-item-id={overlay.marker.itemId}
             data-item-type={overlay.marker.itemType}
             data-source-url={overlay.marker.url}
+            data-source-label={overlay.marker.label}
+            data-selected={String(overlay.marker.selected)}
             onClick={(event) => {
               event.stopPropagation();
               onV02SourceMarkerSelect?.(overlay.marker);
             }}
             aria-label={`${overlay.marker.label} source marker for ${overlay.marker.publisher ?? overlay.marker.itemType}`}
-            className="pointer-events-auto absolute top-3 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold shadow-sm transition-colors hover:bg-white/10"
+            title={`${overlay.marker.label}: ${overlay.marker.publisher ?? overlay.marker.url}`}
+            className="pointer-events-auto absolute top-2.5 inline-flex h-6 w-6 -translate-x-1/2 items-center justify-center bg-transparent p-0 transition-opacity hover:opacity-90"
             style={{
               left: overlay.left,
-              background: "var(--source-chip-bg)",
-              borderColor: "var(--source-chip-border)",
-              color: "var(--source-chip-text)",
+              color: sourceMarkerTone(overlay.marker),
             }}
           >
-            {overlay.marker.label}
+            <span
+              aria-hidden
+              className={
+                overlay.marker.itemType === "daily_overview"
+                  ? "block rounded-full border"
+                  : "block rotate-45 border"
+              }
+              style={{
+                width: overlay.marker.selected ? 14 : 10,
+                height: overlay.marker.selected ? 14 : 10,
+                borderColor: sourceMarkerTone(overlay.marker),
+                borderWidth: overlay.marker.selected ? 2 : 1.4,
+                background: sourceMarkerTone(overlay.marker),
+                boxShadow: overlay.marker.selected
+                  ? `0 0 0 2px color-mix(in srgb, ${sourceMarkerTone(overlay.marker)} 22%, transparent)`
+                  : "none",
+              }}
+            />
           </button>
         ))}
       </div>

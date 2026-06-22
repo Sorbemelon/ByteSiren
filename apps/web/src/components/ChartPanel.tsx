@@ -183,18 +183,6 @@ export default function ChartPanel({
                 24h Change {fmtPct(mkt.change_24h_pct)}
               </span>
             </p>
-            {mkt.data_status === "delayed" && (
-              <span
-                className="mt-1.5 inline-block rounded-full border px-2 py-0.5 text-[10px] font-medium"
-                style={{
-                  borderColor: "rgba(245,158,11,0.32)",
-                  color: "var(--status-strong)",
-                  background: "rgba(245,158,11,0.08)",
-                }}
-              >
-                Data Delay
-              </span>
-            )}
           </>
         ) : (
           <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
@@ -241,7 +229,7 @@ export default function ChartPanel({
       >
         30-day chart | {chartInterval} display | Detections use 15m signals |
         Binance public market data | Evidence window band shows candles used as
-        evidence | Marker shows strongest 15m signal inside the window
+        evidence | Source markers show accepted source timing when available
       </p>
     </section>
   );

@@ -114,6 +114,23 @@ function marketStory(id: string, start: string, overrides = {}) {
     chart_context_score: 86,
     range_context_json: JSON.stringify({
       event_range_context: "broad_broke_high",
+      avg_change_label: "Avg Change",
+      avg_change_pct: 1.15,
+      swing_score_label: "Volatility Score",
+      swing_score: 42,
+      per_symbol_evidence: [
+        {
+          symbol: "BTCUSDT",
+          avg_change_label: "Avg Change",
+          avg_change_pct: 1.1,
+          swing_score_label: "Volatility Score",
+          swing_score: 31,
+          volume_ratio: 1.2,
+          movement_status_label: "Movement Status",
+          movement_status: "Net up",
+          bar_count: 16,
+        },
+      ],
     }),
     trend_context_json: JSON.stringify({ trend_context: "trend_up" }),
     momentum_context_json: JSON.stringify({ momentum_type: "continuation" }),
@@ -332,9 +349,18 @@ test("Market Story feed item stays deterministic with no Claude or sources field
     string,
     unknown
   >;
+  const storyEvidence = story.per_symbol_evidence as Array<
+    Record<string, unknown>
+  >;
   const serialized = JSON.stringify(story);
 
   assert.equal(story.item_type, "market_story");
+  assert.equal(story.avg_change_label, "Avg Change");
+  assert.equal(story.avg_change_pct, 1.15);
+  assert.equal(story.swing_score_label, "Volatility Score");
+  assert.equal(story.swing_score, 42);
+  assert.equal(storyEvidence[0].swing_score_label, "Volatility Score");
+  assert.equal(storyEvidence[0].movement_status_label, "Movement Status");
   assert.equal(Object.hasOwn(story, "public_context_status"), false);
   assert.equal(Object.hasOwn(story, "brief_status"), false);
   assert.equal(Object.hasOwn(story, "sources"), false);

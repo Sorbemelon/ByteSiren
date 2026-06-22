@@ -10,6 +10,7 @@ import { pollMarket } from "../jobs/pollMarket.ts";
 import { runDailyOverviewsV02 } from "../jobs/runDailyOverviewsV02.ts";
 import { runDetectorV02 } from "../jobs/runDetectorV02.ts";
 import { runMarketStoriesV02 } from "../jobs/runMarketStoriesV02.ts";
+import { seedFixtureClaudeV02 } from "../jobs/seedFixtureClaudeV02.ts";
 import { checkBinanceKlines } from "../services/binance.ts";
 import type { Env } from "../types/env.ts";
 import type { SymbolPollResult } from "../types/market.ts";
@@ -355,13 +356,12 @@ export async function adminResponse(
     }
 
     if (options.includeFixtureClaude) {
-      warnings.push(
-        "Fixture Claude seeding is deferred; no Claude or source rows were written.",
-      );
-      response.fixture_claude = {
-        status: "deferred",
-        written: 0,
-      };
+      const fixtureClaude = await seedFixtureClaudeV02(env.DB);
+      response.fixture_claude = fixtureClaude;
+
+      if (fixtureClaude.status === "skipped") {
+        warnings.push(fixtureClaude.message);
+      }
     }
 
     return json(response);

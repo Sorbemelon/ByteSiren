@@ -4,14 +4,22 @@ import Image from "next/image";
 import {
   Activity,
   ArrowLeftRight,
+  BadgeCheck,
   BookOpen,
-  CalendarDays,
+  ChartSpline,
   ChevronDown,
   ChevronUp,
+  Clock,
   ExternalLink,
+  HelpCircle,
+  Info,
   Layers,
+  LocateFixed,
+  Lock,
+  SearchCheck,
   TrendingDown,
   TrendingUp,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AuroraText } from "./ui/aurora-text";
@@ -39,6 +47,7 @@ import type {
   NormalizedFeedV02,
   NormalizedMarketStorySection,
   NormalizedSignalEventSection,
+  MarketStorySymbolEvidenceV02,
   SignalEventSymbolEvidenceV02,
 } from "../lib/types";
 
@@ -54,13 +63,117 @@ interface IntelligenceFeedV02Props {
   onClearSelection: () => void;
 }
 
-const SIGNAL_CAUSE_LABELS = new Set([
-  "Focused Cause",
-  "Likely Cause",
-  "Market Backdrop",
-  "No Clear Cause",
-  "Claude Limited",
-]);
+interface DailySymbolEvidenceRow {
+  symbol: string;
+  changePct: number | null;
+  rangePct: number | null;
+  volatilityScore: number | null;
+  peakPct: number | null;
+  volumeRatio: number | null;
+  rangePosition: string | null;
+  rangePositionDisplay: string | null;
+}
+
+const SECTION_ICON_COLOR = {
+  daily: "var(--context-backdrop)",
+  marketStory: "var(--two-sided)",
+  signalEvent: "var(--status-strong)",
+} as const;
+
+const STATUS_META: Record<
+  string,
+  { Icon: LucideIcon; color: string; label?: string }
+> = {
+  focused_cause: {
+    Icon: BadgeCheck,
+    color: "var(--cause-focused)",
+    label: "Focused Cause",
+  },
+  likely_cause: {
+    Icon: SearchCheck,
+    color: "var(--cause-likely)",
+    label: "Likely Cause",
+  },
+  market_backdrop: {
+    Icon: Info,
+    color: "var(--context-backdrop)",
+    label: "Market Backdrop",
+  },
+  daily_context: {
+    Icon: BookOpen,
+    color: "var(--context-backdrop)",
+    label: "Daily Overview",
+  },
+  quiet_day: {
+    Icon: Info,
+    color: "var(--status-calm)",
+    label: "Quiet Day",
+  },
+  mixed_day: {
+    Icon: ArrowLeftRight,
+    color: "var(--status-moving)",
+    label: "Mixed Day",
+  },
+  volatile_day: {
+    Icon: Activity,
+    color: "var(--status-severe)",
+    label: "Volatile Day",
+  },
+  risk_on_day: {
+    Icon: TrendingUp,
+    color: "var(--up)",
+    label: "Risk-on Day",
+  },
+  risk_off_day: {
+    Icon: TrendingDown,
+    color: "var(--down)",
+    label: "Risk-off Day",
+  },
+  relief: {
+    Icon: TrendingUp,
+    color: "var(--up)",
+    label: "Relief",
+  },
+  no_clear_cause: {
+    Icon: HelpCircle,
+    color: "var(--none-found)",
+    label: "No Clear Cause",
+  },
+  no_major_driver: {
+    Icon: HelpCircle,
+    color: "var(--none-found)",
+    label: "No Major Driver",
+  },
+  claude_limited: {
+    Icon: Lock,
+    color: "var(--claude-limited)",
+    label: "Claude Limited",
+  },
+  queued_for_analysis: {
+    Icon: Clock,
+    color: "var(--status-moving)",
+    label: "Waiting for Claude",
+  },
+  brief_ready: {
+    Icon: BadgeCheck,
+    color: "var(--cause-focused)",
+  },
+  context_only: {
+    Icon: Info,
+    color: "var(--context-backdrop)",
+    label: "Market Backdrop",
+  },
+  none_found: {
+    Icon: HelpCircle,
+    color: "var(--none-found)",
+    label: "No Clear Cause",
+  },
+  analysis_limited: {
+    Icon: Lock,
+    color: "var(--claude-limited)",
+    label: "Claude Limited",
+  },
+};
 
 const SOURCE_STYLE: Record<string, React.CSSProperties> = {
   focused: {
@@ -121,6 +234,57 @@ function formatUnknownValue(value: unknown): string {
   return humanize(String(value));
 }
 
+function safeFormatScore(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+
+  return String(Math.round(value));
+}
+
+function safeFormatUnsignedPercent(
+  value: number | null | undefined,
+  digits = 2,
+): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return safeFormatScore(null);
+  }
+
+  return `${value.toFixed(digits)}%`;
+}
+
+function hasDisplayableValue(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.some(hasDisplayableValue);
+  }
+
+  if (value && typeof value === "object") {
+    return contextEntries(value as Record<string, unknown>).length > 0;
+  }
+
+  return value !== null && value !== undefined && value !== "";
+}
+
+function isPublicContextKey(key: string): boolean {
+  const normalized = key.toLowerCase();
+  return (
+    normalized !== "model_version" &&
+    normalized !== "version" &&
+    normalized !== "generated_by" &&
+    !normalized.endsWith("_version") &&
+    !normalized.endsWith("_id") &&
+    !normalized.endsWith("_ids") &&
+    !normalized.includes("debug") &&
+    !normalized.includes("internal")
+  );
+}
+
+function contextEntries(data: Record<string, unknown>): [string, unknown][] {
+  return Object.entries(data).filter(
+    ([key, value]) => isPublicContextKey(key) && hasDisplayableValue(value),
+  );
+}
+
 function humanize(value: string | null | undefined): string {
   if (!value) {
     return "—";
@@ -131,6 +295,264 @@ function humanize(value: string | null | undefined): string {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function statusKey(value: string | null | undefined): string {
+  return `${value ?? ""}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function statusMetaFromValues(...values: Array<string | null | undefined>): {
+  Icon: LucideIcon;
+  color: string;
+  label?: string;
+} {
+  for (const value of values) {
+    const meta = STATUS_META[statusKey(value)];
+    if (meta) {
+      return meta;
+    }
+  }
+
+  return {
+    Icon: Info,
+    color: "var(--text-muted)",
+  };
+}
+
+function valueRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function recordString(
+  record: Record<string, unknown>,
+  keys: string[],
+): string | null {
+  for (const key of keys) {
+    const value = textOrNull(record[key]);
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function recordNumber(
+  record: Record<string, unknown>,
+  keys: string[],
+): number | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+function numberValuesFromRecords(values: unknown[], keys: string[]): number[] {
+  return values
+    .map((value) => {
+      const record = valueRecord(value);
+      return record ? recordNumber(record, keys) : null;
+    })
+    .filter((value): value is number => value !== null);
+}
+
+function formatPercentEndpoint(value: number, showSign: boolean): string {
+  const sign = showSign && value >= 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
+}
+
+function percentEndpointColor(value: number, showSign: boolean): string {
+  if (!showSign) {
+    return "var(--text-primary)";
+  }
+
+  return value >= 0 ? "var(--up)" : "var(--down)";
+}
+
+function formatPercentValueRange({
+  values,
+  fallback,
+  showSign,
+}: {
+  values: number[];
+  fallback: number | null | undefined;
+  showSign: boolean;
+}): React.ReactNode {
+  const finiteValues = values.filter(Number.isFinite);
+
+  if (finiteValues.length === 0) {
+    return typeof fallback === "number" && Number.isFinite(fallback)
+      ? formatPercentEndpoint(fallback, showSign)
+      : safeFormatPercent(null);
+  }
+
+  const min = Math.min(...finiteValues);
+  const max = Math.max(...finiteValues);
+
+  if (Math.abs(max - min) < 0.005) {
+    return formatPercentEndpoint(min, showSign);
+  }
+
+  if (showSign) {
+    return (
+      <>
+        <span style={{ color: percentEndpointColor(min, true) }}>
+          {formatPercentEndpoint(min, true)}
+        </span>{" "}
+        <span style={{ color: "var(--text-primary)" }}>to</span>{" "}
+        <span style={{ color: percentEndpointColor(max, true) }}>
+          {formatPercentEndpoint(max, true)}
+        </span>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span>{formatPercentEndpoint(min, false)}</span>{" "}
+      <span style={{ color: "var(--text-primary)" }}>to</span>{" "}
+      <span>{formatPercentEndpoint(max, false)}</span>
+    </>
+  );
+}
+
+function percentRangeColor(
+  values: number[],
+  fallback: number | null | undefined,
+): string {
+  const finiteValues =
+    values.length > 0
+      ? values.filter(Number.isFinite)
+      : typeof fallback === "number" && Number.isFinite(fallback)
+        ? [fallback]
+        : [];
+
+  if (finiteValues.length === 0) {
+    return "var(--text-muted)";
+  }
+
+  if (finiteValues.every((value) => value >= 0)) {
+    return "var(--up)";
+  }
+
+  if (finiteValues.every((value) => value <= 0)) {
+    return "var(--down)";
+  }
+
+  return "var(--text-primary)";
+}
+
+function medianNumber(values: number[]): number | null {
+  const finiteValues = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (finiteValues.length === 0) {
+    return null;
+  }
+
+  const middle = Math.floor(finiteValues.length / 2);
+  if (finiteValues.length % 2 === 1) {
+    return finiteValues[middle];
+  }
+
+  return (finiteValues[middle - 1] + finiteValues[middle]) / 2;
+}
+
+function dailyVolatilityScore(
+  section: NormalizedDailyOverviewSection,
+): number | null {
+  const chartSummary = valueRecord(section.details.daily_chart_context_summary);
+  const summaryScore = chartSummary
+    ? recordNumber(chartSummary, ["daily_volatility_score", "volatility_score"])
+    : null;
+
+  if (summaryScore !== null) {
+    return summaryScore;
+  }
+
+  const rowScores = numberValuesFromRecords(section.topSymbolMoves, [
+    "volatility_score",
+    "swing_score",
+  ]);
+  const medianScore = medianNumber(rowScores);
+
+  return medianScore === null ? null : Math.round(medianScore);
+}
+
+function leadDailyMove(
+  section: NormalizedDailyOverviewSection,
+): { symbol: string; change: number | null } | null {
+  let lead: {
+    symbol: string;
+    change: number | null;
+    absChange: number;
+  } | null = null;
+
+  for (const move of section.topSymbolMoves) {
+    const record = valueRecord(move);
+    if (!record) {
+      continue;
+    }
+
+    const symbol = recordString(record, ["symbol", "asset", "name"]);
+    const change = recordNumber(record, [
+      "change_pct",
+      "daily_change_pct",
+      "window_change_pct",
+      "move_pct",
+    ]);
+
+    if (!symbol || change === null) {
+      continue;
+    }
+
+    const absChange = Math.abs(change);
+    if (!lead || absChange > lead.absChange) {
+      lead = { symbol, change, absChange };
+    }
+  }
+
+  return lead ? { symbol: lead.symbol, change: lead.change } : null;
+}
+
+function peakDailyMove(section: NormalizedDailyOverviewSection): string | null {
+  let peak: { symbol: string; value: number } | null = null;
+
+  for (const move of section.topSymbolMoves) {
+    const record = valueRecord(move);
+    if (!record) {
+      continue;
+    }
+
+    const symbol = recordString(record, ["symbol", "asset", "name"]);
+    const value = recordNumber(record, [
+      "peak_change_pct",
+      "peak_24h_change_pct",
+      "range_pct",
+      "daily_range_pct",
+    ]);
+
+    if (!symbol || value === null) {
+      continue;
+    }
+
+    if (!peak || Math.abs(value) > Math.abs(peak.value)) {
+      peak = { symbol, value };
+    }
+  }
+
+  return peak?.symbol ?? null;
 }
 
 function formatDirection(value: string | null | undefined): string {
@@ -146,27 +568,82 @@ function formatDirection(value: string | null | undefined): string {
   return humanize(value);
 }
 
-function chartContextLabel(score: number | null): string | null {
-  if (score === null) {
-    return null;
+function formatMarketStoryMovement(value: string | null | undefined): string {
+  if (value === "observed_up") {
+    return "Upward movement";
   }
-  if (score >= 75) {
-    return "Strong chart context";
+  if (value === "observed_down") {
+    return "Downward movement";
   }
-  if (score >= 50) {
-    return "Moderate chart context";
+  if (value === "two_sided") {
+    return "Multi-swing movement";
   }
-  return "Weak chart context";
+  return humanize(value);
 }
 
-function directionColor(value: string | null | undefined): string {
-  if (value === "observed_up" || value?.endsWith("_up")) {
-    return "var(--up)";
+function displayDateWithoutUtc(value: string): string {
+  return value.replace(/\s+UTC$/i, "");
+}
+
+const UTC_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+function utcParts(value: string | null | undefined): {
+  date: string;
+  time: string;
+} | null {
+  if (!value) {
+    return null;
   }
-  if (value === "observed_down" || value?.endsWith("_down")) {
-    return "var(--down)";
+
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return null;
   }
-  return "var(--two-sided)";
+
+  const month = UTC_MONTHS[date.getUTCMonth()];
+  const day = date.getUTCDate();
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+
+  return {
+    date: `${month} ${day}`,
+    time: `${hours}:${minutes}`,
+  };
+}
+
+function spaceTimeRangeSeparator(value: string): string {
+  return value.replace(/(\d{1,2}:\d{2})\s*-\s*/g, "$1 - ");
+}
+
+function formatMarketStoryWindow(section: NormalizedMarketStorySection): string {
+  const start = utcParts(section.chart?.highlight_start);
+  const end = utcParts(section.chart?.highlight_end);
+
+  if (start && end) {
+    return start.date === end.date
+      ? `${start.date}, ${start.time} - ${end.time}`
+      : `${start.date}, ${start.time} - ${end.date}, ${end.time}`;
+  }
+
+  const day = utcParts(section.dateUtc);
+  if (day && section.displayTime) {
+    return `${day.date}, ${spaceTimeRangeSeparator(section.displayTime)}`;
+  }
+
+  return spaceTimeRangeSeparator(section.displayTime);
 }
 
 function DirectionIcon({
@@ -192,18 +669,6 @@ function sourceStyle(source: FeedSourceV02): React.CSSProperties {
   if (role.includes("daily") || role.includes("main"))
     return SOURCE_STYLE.daily;
   return SOURCE_STYLE.backdrop;
-}
-
-function sourceChipLabel(source: FeedSourceV02): string {
-  const role = `${source.used_for ?? source.tag ?? ""}`.toLowerCase();
-
-  if (role.includes("focused")) return "Catalyst";
-  if (role.includes("likely")) return "Likely";
-  if (role.includes("main")) return "Main";
-  if (role.includes("support")) return "Support";
-  if (role.includes("backdrop")) return "Backdrop";
-  if (role.includes("price")) return "Price";
-  return "Source";
 }
 
 function signalToneStyle(
@@ -254,8 +719,6 @@ function Chip({
 
 function SourceChip({ source }: { source: FeedSourceV02 }) {
   const publisher = source.publisher || source.title || "Source";
-  const label = sourceChipLabel(source);
-  const sourceRole = source.tag || source.used_for || "Source";
 
   return (
     <a
@@ -265,62 +728,250 @@ function SourceChip({ source }: { source: FeedSourceV02 }) {
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
       title={source.title ?? source.url}
-      aria-label={`${publisher}: ${source.title ?? sourceRole} (opens in new tab)`}
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors hover:bg-white/5"
+      aria-label={`${publisher}: ${source.title ?? source.url} (opens in new tab)`}
+      className="inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-px text-[10px] font-medium transition-colors hover:bg-white/5 hover:brightness-110 focus-visible:ring-2"
       style={{
         background: "var(--source-chip-bg)",
         ...sourceStyle(source),
+        textDecoration: "none",
       }}
     >
-      <span className="shrink-0">{label}</span>
-      <span aria-hidden style={{ color: "var(--text-muted)" }}>
-        ·
-      </span>
       <span className="truncate">{publisher}</span>
-      <ExternalLink size={12} aria-hidden className="shrink-0" />
+      <ExternalLink size={9} aria-hidden className="shrink-0" />
     </a>
   );
 }
 
-function ContextGrid({
-  title,
-  data,
-}: {
-  title: string;
-  data: Record<string, unknown>;
-}) {
-  const entries = Object.entries(data).filter(([, value]) => {
-    if (Array.isArray(value)) return value.length > 0;
-    return value !== null && value !== undefined && value !== "";
-  });
+function marketStoryPublicRangeContext(
+  data: Record<string, unknown>,
+): Record<string, unknown> {
+  const hiddenKeys = new Set([
+    "avg_change_label",
+    "avg_change_pct",
+    "swing_score_label",
+    "swing_score",
+    "swing_score_method",
+    "per_symbol_evidence",
+  ]);
 
-  if (entries.length === 0) {
-    return null;
+  return Object.fromEntries(
+    Object.entries(data).filter(([key]) => !hiddenKeys.has(key)),
+  );
+}
+
+const RANGE_PROFILE_OPTIONS = [
+  { key: "broad_broke_high", label: "Broke high" },
+  { key: "broad_broke_low", label: "Broke low" },
+  { key: "mixed_range_position", label: "Mixed range" },
+  { key: "mostly_inside_range", label: "Inside range" },
+  { key: "weak_range_context", label: "Weak range" },
+  { key: "unknown", label: "Unknown" },
+] as const;
+
+const TREND_PROFILE_OPTIONS = [
+  { key: "trend_up", label: "Trend up" },
+  { key: "trend_down", label: "Trend down" },
+  { key: "trend_mixed", label: "Mixed trend" },
+  { key: "unknown", label: "Unknown" },
+] as const;
+
+const MOMENTUM_PROFILE_OPTIONS = [
+  { key: "continuation", label: "Continuation" },
+  { key: "no_clear_trend", label: "No clear trend" },
+  { key: "mixed", label: "Mixed" },
+  { key: "unknown", label: "Unknown" },
+] as const;
+
+const VOLATILITY_PROFILE_OPTIONS = [
+  { key: "ordinary_volatility", label: "Ordinary volatility" },
+  { key: "high_volatility_continuation", label: "High volatility" },
+  { key: "expansion_after_compression", label: "Expansion after compression" },
+  { key: "volatility_expansion", label: "Volatility expansion" },
+  { key: "unknown", label: "Unknown" },
+] as const;
+
+type StoryProfileOption = {
+  key: string;
+  label: string;
+};
+
+function optionCountRecord(
+  data: Record<string, unknown>,
+  countKeys: string[],
+  directValueKeys: string[],
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  let foundCountRecord = false;
+
+  for (const key of countKeys) {
+    const record = valueRecord(data[key]);
+    if (!record) {
+      continue;
+    }
+
+    foundCountRecord = true;
+    for (const [entryKey, entryValue] of Object.entries(record)) {
+      const count =
+        typeof entryValue === "number"
+          ? entryValue
+          : typeof entryValue === "string"
+            ? Number(entryValue)
+            : 0;
+      counts[entryKey] = Number.isFinite(count) ? Math.max(0, count) : 0;
+    }
   }
+
+  if (!foundCountRecord) {
+    for (const key of directValueKeys) {
+      const value = textOrNull(data[key]);
+      if (value) {
+        counts[value] = (counts[value] ?? 0) + 1;
+      }
+    }
+  }
+
+  return counts;
+}
+
+function profileOptionLines(
+  data: Record<string, unknown>,
+  countKeys: string[],
+  directValueKeys: string[],
+  options: readonly StoryProfileOption[],
+): Array<{ label: string; count: number }> {
+  const counts = optionCountRecord(data, countKeys, directValueKeys);
+
+  return options.map((option) => ({
+    label: option.label,
+    count: Math.round(counts[option.key] ?? 0),
+  }));
+}
+
+function storyTrendMeta(data: Record<string, unknown>): {
+  Icon: LucideIcon;
+  color: string;
+} {
+  const text = JSON.stringify(data).toLowerCase();
+  if (text.includes("down")) {
+    return { Icon: TrendingDown, color: "var(--down)" };
+  }
+  if (text.includes("up")) {
+    return { Icon: TrendingUp, color: "var(--up)" };
+  }
+  return { Icon: ArrowLeftRight, color: "var(--status-moving)" };
+}
+
+function StoryStructureList({
+  section,
+  rangeContext,
+}: {
+  section: NormalizedMarketStorySection;
+  rangeContext: Record<string, unknown>;
+}) {
+  const items: Array<{
+    label: string;
+    valueLines: Array<{ label: string; count: number }>;
+    description: string;
+    Icon: LucideIcon;
+    color: string;
+  }> = [
+    {
+      label: "Range position",
+      valueLines: profileOptionLines(
+        rangeContext,
+        ["event_range_contexts"],
+        ["event_range_context", "range_context"],
+        RANGE_PROFILE_OPTIONS,
+      ),
+      description: "Where the story sat versus the recent range.",
+      Icon: LocateFixed,
+      color: "var(--market-chip-text)",
+    },
+    {
+      label: "Trend shape",
+      valueLines: profileOptionLines(
+        section.trendContext,
+        ["trend_contexts"],
+        ["trend_context", "trend_direction", "trend_shape"],
+        TREND_PROFILE_OPTIONS,
+      ),
+      description: "The broader direction during the story window.",
+      ...storyTrendMeta(section.trendContext),
+    },
+    {
+      label: "Momentum",
+      valueLines: profileOptionLines(
+        section.momentumContext,
+        ["momentum_contexts"],
+        ["momentum_type", "momentum_context", "momentum_direction"],
+        MOMENTUM_PROFILE_OPTIONS,
+      ),
+      description: "Whether movement continued, reversed, or faded.",
+      Icon: ChartSpline,
+      color: "var(--status-strong)",
+    },
+    {
+      label: "Volatility",
+      valueLines: profileOptionLines(
+        section.volatilityContext,
+        ["volatility_contexts"],
+        ["volatility_context", "volatility_type", "volatility_state"],
+        VOLATILITY_PROFILE_OPTIONS,
+      ),
+      description: "How active the 15m bars were in the story.",
+      Icon: ArrowLeftRight,
+      color: "var(--two-sided)",
+    },
+  ];
 
   return (
     <div>
-      <p
-        className="mb-2 text-[11px] font-semibold"
-        style={{ color: "var(--text-secondary)" }}
-      >
-        {title}
-      </p>
+      <ExpandedSectionHeader>Movement Profile</ExpandedSectionHeader>
       <dl className="grid gap-2 sm:grid-cols-2">
-        {entries.map(([key, value]) => (
-          <div key={key} className="min-w-0">
-            <dt
-              className="text-[10px] font-medium uppercase"
-              style={{ color: "var(--text-muted)", letterSpacing: "0.02em" }}
-            >
-              {humanize(key)}
-            </dt>
-            <dd
-              className="mt-0.5 break-words text-[12px]"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {formatUnknownValue(value)}
-            </dd>
+        {items.map(({ label, valueLines, description, Icon, color }) => (
+          <div
+            key={label}
+            className="flex gap-2.5 rounded-lg border px-3 py-2.5"
+            style={{
+              background: "var(--bg-panel)",
+              borderColor: "var(--border-row)",
+            }}
+          >
+            <Icon
+              size={15}
+              aria-hidden
+              className="mt-0.5 shrink-0"
+              style={{ color }}
+            />
+            <div className="min-w-0 flex-1">
+              <dt
+                className="text-[12px] font-bold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {label}
+              </dt>
+              <p
+                className="mt-0.5 text-[11px] font-normal leading-snug"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {description}
+              </p>
+              <dd
+                className="mt-2 text-[12px] font-normal leading-snug"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <ul className="space-y-0.5">
+                  {valueLines.map((line) => (
+                    <li key={line.label} className="tabular-nums">
+                      <span>{line.label}: </span>
+                      <span style={{ color: "var(--text-primary)" }}>
+                        {line.count > 0 ? line.count : "-"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
           </div>
         ))}
       </dl>
@@ -339,6 +990,17 @@ function SourceList({ sources }: { sources: FeedSourceV02[] }) {
         <SourceChip key={source.url} source={source} />
       ))}
     </div>
+  );
+}
+
+function ExpandedSectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      className="mb-1.5 text-[12px] font-semibold"
+      style={{ color: "var(--text-primary)" }}
+    >
+      {children}
+    </p>
   );
 }
 
@@ -386,114 +1048,220 @@ function DailyOverviewSection({
   onToggle: () => void;
   hasDetails: boolean;
 }) {
-  const dailyLabel =
-    section.dailyLabel && !SIGNAL_CAUSE_LABELS.has(section.dailyLabel)
-      ? section.dailyLabel
-      : "Daily Overview";
   const summary =
     textOrNull(section.brief?.collapsed_summary) ??
     textOrNull(section.brief?.headline);
   const visibleSources = section.sources.slice(0, 2);
   const overflowCount = section.sources.length - visibleSources.length;
+  const dailyChangeValues = numberValuesFromRecords(section.topSymbolMoves, [
+    "change_pct",
+    "daily_change_pct",
+    "window_change_pct",
+    "move_pct",
+  ]);
+  const rangeValues = numberValuesFromRecords(section.topSymbolMoves, [
+    "range_pct",
+    "daily_range_pct",
+  ]);
+  const toneMeta = statusMetaFromValues(
+    section.marketTone ? `${section.marketTone}_day` : null,
+    section.marketTone,
+  );
+  const ToneIcon = toneMeta.Icon;
+  const toneLabel = section.marketTone
+    ? (toneMeta.label ?? humanize(section.marketTone))
+    : null;
+  const leadMove = leadDailyMove(section);
+  const peakSymbol = peakDailyMove(section);
+  const volatilityScore = dailyVolatilityScore(section);
+  const dailyChangeStyle = {
+    color: percentRangeColor(dailyChangeValues, section.dailyChangePct),
+  };
 
   return (
     <div className="min-w-0 flex-1">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <p
-            className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
-            style={{ color: "var(--text-primary)" }}
-          >
-            <BookOpen size={15} aria-hidden />
-            <span className="text-[15px] font-semibold">Daily Overview</span>
-          </p>
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(118px,0.8fr)_minmax(220px,1.35fr)_minmax(74px,0.65fr)] sm:items-start sm:gap-x-3">
+        <div className="min-w-0 space-y-2">
+          {toneLabel ? (
+            <>
+              <span
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[13px] font-semibold leading-none"
+                style={{
+                  color: toneMeta.color,
+                  borderColor: "var(--chip-border)",
+                  background: "var(--chip-bg)",
+                }}
+              >
+                <ToneIcon size={14} aria-hidden />
+                {toneLabel}
+              </span>
+              <p
+                className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
+                style={{ color: "var(--text-primary)" }}
+              >
+                <BookOpen
+                  size={15}
+                  aria-hidden
+                  style={{ color: SECTION_ICON_COLOR.daily }}
+                />
+                <span className="text-[15px] font-semibold">
+                  Daily Overview
+                </span>
+              </p>
+            </>
+          ) : (
+            <p
+              className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <BookOpen
+                size={15}
+                aria-hidden
+                style={{ color: SECTION_ICON_COLOR.daily }}
+              />
+              <span className="text-[15px] font-semibold">Daily Overview</span>
+            </p>
+          )}
         </div>
-        {section.displayTime && (
-          <p
-            className="text-right text-[14px] font-semibold tabular-nums"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {section.displayTime}
-          </p>
-        )}
+
+        <div className="grid min-w-0 gap-y-1 sm:justify-self-center">
+          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+            <p
+              className="shrink-0 text-[13px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {section.dailyChangeLabel}:
+            </p>
+            <p
+              className="min-w-0 whitespace-nowrap text-[13px] font-normal leading-tight tabular-nums"
+              style={dailyChangeStyle}
+            >
+              {formatPercentValueRange({
+                values: dailyChangeValues,
+                fallback: section.dailyChangePct,
+                showSign: true,
+              })}
+            </p>
+          </div>
+
+          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+            <p
+              className="shrink-0 text-[13px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Range:
+            </p>
+            <p
+              className="min-w-0 whitespace-nowrap text-[13px] font-normal leading-tight tabular-nums"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {formatPercentValueRange({
+                values: rangeValues,
+                fallback: section.marketRangePct,
+                showSign: false,
+              })}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid min-w-0 gap-y-1 sm:min-w-[74px] sm:justify-self-end">
+          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap sm:justify-end">
+            <p
+              className="shrink-0 text-[13px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Lead:
+            </p>
+            <p
+              className="min-w-0 truncate text-[13px] font-normal leading-tight tabular-nums"
+              style={{
+                color: leadMove ? "var(--text-primary)" : "var(--text-muted)",
+              }}
+            >
+              {leadMove?.symbol ?? "—"}
+            </p>
+          </div>
+          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap sm:justify-end">
+            <p
+              className="shrink-0 text-[13px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Peak:
+            </p>
+            <p
+              className="min-w-0 truncate text-[13px] font-normal leading-tight tabular-nums"
+              style={{
+                color: peakSymbol ? "var(--text-primary)" : "var(--text-muted)",
+              }}
+            >
+              {peakSymbol ?? "—"}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="feed-card-grid">
-        <div className="flex self-stretch flex-col">
-          <div>
+      <div className="grid gap-2.5">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(108px,16%)_minmax(126px,22%)]">
+          <div className="min-w-0 space-y-1.5">
+            {summary ? (
+              <p
+                className="text-[12.5px] leading-snug"
+                style={{
+                  color: "var(--text-secondary)",
+                  display: "-webkit-box",
+                  WebkitLineClamp: isExpanded ? "unset" : 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: isExpanded ? "visible" : "hidden",
+                }}
+              >
+                {summary}
+              </p>
+            ) : (
+              <p
+                className="text-[12px] leading-snug"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Daily context has not been added yet.
+              </p>
+            )}
+            {hasDetails && (
+              <div className="pt-0.5">
+                <SectionToggleButton
+                  isExpanded={isExpanded}
+                  onToggle={onToggle}
+                  sectionId={section.id}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 space-y-1.5">
             <p
               className="text-[12px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
             >
-              Tone: {humanize(section.marketTone)}
+              Volatility Score
             </p>
             <p
-              className="mt-1 text-[11px] tabular-nums"
+              className="text-[13px] font-normal leading-tight tabular-nums"
               style={{ color: "var(--text-primary)" }}
             >
-              {section.dailyChangeLabel}{" "}
-              <span
-                style={{
-                  color:
-                    section.dailyChangePct == null
-                      ? "var(--text-muted)"
-                      : section.dailyChangePct >= 0
-                        ? "var(--up)"
-                        : "var(--down)",
-                  fontWeight: 600,
-                }}
-              >
-                {safeFormatPercent(section.dailyChangePct)}
-              </span>
-            </p>
-            <p
-              className="mt-1 text-[11px] tabular-nums"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Range {safeFormatPercent(section.marketRangePct)}
+              {safeFormatScore(volatilityScore)}
             </p>
           </div>
 
-          {hasDetails && (
-            <div className="mt-auto flex justify-start pt-2">
-              <SectionToggleButton
-                isExpanded={isExpanded}
-                onToggle={onToggle}
-                sectionId={section.id}
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="min-w-0 space-y-1.5">
-          <h3
-            className="inline-flex items-center gap-1.5 text-[15px] font-semibold leading-snug"
-            style={{ color: "var(--text-primary)" }}
-          >
-            <BookOpen size={14} aria-hidden className="shrink-0" />
-            {dailyLabel}
-          </h3>
-          {summary ? (
+          <div className="min-w-0 space-y-1.5">
             <p
-              className="mt-1 text-[12px] leading-relaxed"
+              className="text-[12px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
             >
-              {summary}
+              Sources
             </p>
-          ) : (
-            <p
-              className="mt-1 text-[12px] leading-relaxed"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Daily context has not been added yet.
-            </p>
-          )}
-        </div>
-
-        <div className="flex self-stretch flex-col">
-          <div>
             {section.sources.length > 0 ? (
-              <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
+              <div
+                className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col"
+                aria-label="Daily Overview sources"
+              >
                 {visibleSources.map((source) => (
                   <SourceChip key={source.url} source={source} />
                 ))}
@@ -526,7 +1294,7 @@ function DailyOverviewSection({
                 className="text-[11px]"
                 style={{ color: "var(--text-muted)" }}
               >
-                -
+                No source
               </span>
             )}
           </div>
@@ -540,12 +1308,7 @@ function DailyOverviewSection({
         >
           {section.brief?.context_details && (
             <div>
-              <p
-                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Context Details
-              </p>
+              <ExpandedSectionHeader>Context summary</ExpandedSectionHeader>
               <p
                 className="max-w-[70ch] text-[13px] leading-relaxed"
                 style={{ color: "var(--text-secondary)" }}
@@ -554,68 +1317,352 @@ function DailyOverviewSection({
               </p>
             </div>
           )}
-          <DailyOverviewLists section={section} />
-          <ContextGrid title="Daily chart context" data={section.details} />
-          {section.sources.length > visibleSources.length && (
-            <div>
-              <p
-                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Sources
-              </p>
-              <SourceList sources={section.sources} />
-            </div>
-          )}
+          <DailyOverviewSnapshot section={section} />
+          <DailyOverviewEvidenceTable section={section} />
+          <DailyOverviewSources sources={section.sources} />
         </div>
       )}
     </div>
   );
 }
 
-function DailyOverviewLists({
+function dailySymbolEvidenceRows(
+  section: NormalizedDailyOverviewSection,
+): DailySymbolEvidenceRow[] {
+  const rows = new Map<string, DailySymbolEvidenceRow>();
+  const addRecord = (item: unknown) => {
+    const record = valueRecord(item);
+    if (!record) {
+      return;
+    }
+
+    const symbol = recordString(record, ["symbol", "asset", "name"]);
+    if (!symbol) {
+      return;
+    }
+
+    const existing = rows.get(symbol);
+    rows.set(symbol, {
+      symbol,
+      changePct:
+        existing?.changePct ??
+        recordNumber(record, [
+          "change_pct",
+          "daily_change_pct",
+          "change_24h_pct",
+          "window_change_pct",
+          "move_pct",
+        ]),
+      rangePct:
+        existing?.rangePct ??
+        recordNumber(record, ["range_pct", "daily_range_pct"]),
+      volatilityScore:
+        existing?.volatilityScore ??
+        recordNumber(record, ["volatility_score", "swing_score"]),
+      peakPct:
+        existing?.peakPct ??
+        recordNumber(record, [
+          "peak_change_pct",
+          "peak_24h_change_pct",
+          "peak_pct",
+          "max_intraday_change_pct",
+          "peak_15m_change_pct",
+        ]),
+      volumeRatio:
+        existing?.volumeRatio ??
+        recordNumber(record, [
+          "volume_ratio",
+          "volume_x",
+          "volume_confirmation",
+        ]),
+      rangePosition:
+        existing?.rangePosition ??
+        recordString(record, [
+          "range_position",
+          "range_position_status",
+          "range_status",
+        ]),
+      rangePositionDisplay:
+        existing?.rangePositionDisplay ??
+        recordString(record, [
+          "range_position_display",
+          "range_context",
+          "range_label",
+        ]),
+    });
+  };
+
+  for (const move of section.topSymbolMoves) {
+    addRecord(move);
+  }
+
+  for (const item of section.notableSymbols) {
+    addRecord(item);
+  }
+
+  return Array.from(rows.values());
+}
+
+function strongestDailyChangeSymbol(
+  rows: DailySymbolEvidenceRow[],
+): string | null {
+  let strongest: { symbol: string; value: number } | null = null;
+
+  for (const row of rows) {
+    if (row.changePct === null) {
+      continue;
+    }
+
+    if (!strongest || Math.abs(row.changePct) > Math.abs(strongest.value)) {
+      strongest = { symbol: row.symbol, value: row.changePct };
+    }
+  }
+
+  return strongest?.symbol ?? null;
+}
+
+function strongestDailyPeakSymbol(
+  rows: DailySymbolEvidenceRow[],
+): string | null {
+  let strongest: { symbol: string; value: number } | null = null;
+
+  for (const row of rows) {
+    if (row.peakPct === null) {
+      continue;
+    }
+
+    if (!strongest || Math.abs(row.peakPct) > Math.abs(strongest.value)) {
+      strongest = { symbol: row.symbol, value: row.peakPct };
+    }
+  }
+
+  return strongest?.symbol ?? null;
+}
+
+function dailyRangePositionDisplay(row: DailySymbolEvidenceRow): string {
+  return textOrNull(row.rangePositionDisplay) ?? humanize(row.rangePosition);
+}
+
+function DailyOverviewEvidenceTable({
   section,
 }: {
   section: NormalizedDailyOverviewSection;
 }) {
-  const topMoves = section.topSymbolMoves.slice(0, 5);
-  const notable = section.notableSymbols.slice(0, 4);
+  const rows = dailySymbolEvidenceRows(section);
+  const leadSymbol = strongestDailyChangeSymbol(rows);
+  const peakSymbol = strongestDailyPeakSymbol(rows);
 
-  if (topMoves.length === 0 && notable.length === 0) {
+  if (rows.length === 0) {
     return null;
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {topMoves.length > 0 && (
-        <div>
-          <p
-            className="mb-2 text-[11px] font-semibold"
+    <div>
+      <ExpandedSectionHeader>Per-symbol evidence</ExpandedSectionHeader>
+      <div
+        className="overflow-x-auto rounded-lg"
+        style={{
+          background: "var(--bg-panel)",
+          border: "1px solid var(--border-row)",
+        }}
+      >
+        <table className="min-w-[760px] w-full border-collapse text-left text-[12px]">
+          <thead
+            style={{
+              background: "var(--bg-panel)",
+              color: "var(--text-muted)",
+            }}
+          >
+            <tr>
+              <th className="px-3 py-2 font-medium">Symbol</th>
+              <th className="px-3 py-2 font-medium">24h Change</th>
+              <th className="px-3 py-2 font-medium">Range</th>
+              <th className="px-3 py-2 font-medium">Volatility Score</th>
+              <th className="px-3 py-2 font-medium">Peak</th>
+              <th className="px-3 py-2 font-medium">Volume x</th>
+              <th className="px-3 py-2 font-medium">Range Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const isLead = row.symbol === leadSymbol;
+              const isPeak = row.symbol === peakSymbol;
+
+              return (
+                <tr
+                  key={row.symbol}
+                  style={{
+                    borderTop: "1px solid var(--border-row)",
+                    background: isLead
+                      ? "color-mix(in srgb, var(--brand-orange) 8%, transparent)"
+                      : "var(--bg-panel)",
+                  }}
+                >
+                  <td
+                    className="px-3 py-2 font-semibold"
+                    style={{
+                      color: isLead
+                        ? "var(--status-strong)"
+                        : "var(--text-primary)",
+                    }}
+                  >
+                    {row.symbol}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{
+                      color:
+                        row.changePct == null
+                          ? "var(--text-muted)"
+                          : row.changePct >= 0
+                            ? "var(--up)"
+                            : "var(--down)",
+                    }}
+                  >
+                    {safeFormatPercent(row.changePct)}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {safeFormatUnsignedPercent(row.rangePct)}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {safeFormatScore(row.volatilityScore)}
+                  </td>
+                  <td
+                    className="px-3 py-2 font-medium"
+                    style={{
+                      background: isPeak
+                        ? "color-mix(in srgb, var(--status-strong) 14%, transparent)"
+                        : "transparent",
+                      color: isPeak
+                        ? "var(--status-strong)"
+                        : "var(--text-primary)",
+                    }}
+                  >
+                    {safeFormatPercent(row.peakPct)}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {row.volumeRatio === null || row.volumeRatio === undefined
+                      ? "—"
+                      : `${row.volumeRatio.toFixed(2)}x`}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {dailyRangePositionDisplay(row)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
+        Lead symbol is highlighted in the Symbol column. Strongest Peak is
+        highlighted in the Peak column. Volume x compares the day&apos;s average
+        15m volume with the prior 24h average.
+      </p>
+    </div>
+  );
+}
+
+function DailyOverviewSnapshot({
+  section,
+}: {
+  section: NormalizedDailyOverviewSection;
+}) {
+  const chartSummary = valueRecord(section.details.daily_chart_context_summary);
+  const toneReasons =
+    chartSummary && Array.isArray(chartSummary.tone_reasons)
+      ? chartSummary.tone_reasons.filter(hasDisplayableValue).slice(0, 3)
+      : [];
+  const signalCount = section.chart?.included_signal_event_ids?.length ?? 0;
+  const storyCount = section.chart?.included_market_story_ids?.length ?? 0;
+
+  return (
+    <div>
+      <ExpandedSectionHeader>Day summary</ExpandedSectionHeader>
+      <dl
+        className="grid overflow-hidden rounded-lg border sm:grid-cols-[minmax(0,1.5fr)_minmax(84px,0.55fr)_minmax(84px,0.55fr)]"
+        style={{
+          background: "var(--bg-panel)",
+          borderColor: "var(--border-row)",
+        }}
+      >
+        <div className="min-w-0 px-3 py-2">
+          <dt
+            className="text-[11px] font-medium"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Tone detail
+          </dt>
+          <dd
+            className="mt-1 text-[12px] leading-snug"
             style={{ color: "var(--text-secondary)" }}
           >
-            Top symbol moves
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {topMoves.map((move, index) => (
-              <Chip key={index}>{formatUnknownValue(move)}</Chip>
-            ))}
-          </div>
+            {toneReasons.length > 0 ? (
+              <ul className="space-y-0.5">
+                {toneReasons.map((reason, index) => (
+                  <li key={index}>{humanize(formatUnknownValue(reason))}</li>
+                ))}
+              </ul>
+            ) : (
+              safeFormatScore(null)
+            )}
+          </dd>
         </div>
-      )}
-      {notable.length > 0 && (
-        <div>
-          <p
-            className="mb-2 text-[11px] font-semibold"
-            style={{ color: "var(--text-secondary)" }}
+        <div className="min-w-0 px-3 py-2">
+          <dt
+            className="text-[11px] font-medium"
+            style={{ color: "var(--text-muted)" }}
           >
-            Notable symbols
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {notable.map((item, index) => (
-              <Chip key={index}>{formatUnknownValue(item)}</Chip>
-            ))}
-          </div>
+            Signal
+          </dt>
+          <dd
+            className="mt-0.5 truncate text-[13px] tabular-nums"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {signalCount}
+          </dd>
         </div>
+        <div className="min-w-0 px-3 py-2">
+          <dt
+            className="text-[11px] font-medium"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Stories
+          </dt>
+          <dd
+            className="mt-0.5 truncate text-[13px] tabular-nums"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {storyCount}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+function DailyOverviewSources({ sources }: { sources: FeedSourceV02[] }) {
+  return (
+    <div>
+      <ExpandedSectionHeader>Sources</ExpandedSectionHeader>
+      {sources.length > 0 ? (
+        <SourceList sources={sources} />
+      ) : (
+        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+          No source
+        </span>
       )}
     </div>
   );
@@ -632,7 +1679,20 @@ function MarketStorySection({
   onToggle: () => void;
   hasDetails: boolean;
 }) {
-  const contextLabel = chartContextLabel(section.chartContextScore);
+  const movementLabel = section.direction
+    ? formatMarketStoryMovement(section.direction)
+    : null;
+  const avgChangeStyle = {
+    color:
+      section.avgChangePct == null
+        ? "var(--text-muted)"
+        : section.avgChangePct >= 0
+          ? "var(--up)"
+          : "var(--down)",
+    fontWeight: 600,
+  };
+  const rangeContext = marketStoryPublicRangeContext(section.rangeContext);
+  const storyWindow = formatMarketStoryWindow(section);
 
   return (
     <div className="min-w-0 flex-1">
@@ -642,54 +1702,57 @@ function MarketStorySection({
             className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
             style={{ color: "var(--text-primary)" }}
           >
-            <Layers size={15} aria-hidden />
-            <span className="text-[15px] font-semibold">Market Story</span>
+            <Layers
+              size={15}
+              aria-hidden
+              style={{ color: SECTION_ICON_COLOR.marketStory }}
+            />
+            <span className="text-[15px] font-semibold">
+              Market Story{section.isContinuation ? " (Continue)" : ""}
+            </span>
           </p>
-          {section.direction && (
-            <Chip style={{ color: directionColor(section.direction) }}>
-              <span className="mr-1 inline-flex">
-                <DirectionIcon direction={section.direction} />
-              </span>
-              {formatDirection(section.direction)}
-            </Chip>
-          )}
+          <Chip
+            style={{
+              background:
+                "color-mix(in srgb, var(--two-sided) 10%, transparent)",
+              borderColor:
+                "color-mix(in srgb, var(--two-sided) 38%, transparent)",
+              color: SECTION_ICON_COLOR.marketStory,
+            }}
+          >
+            {section.storyLabel}
+          </Chip>
         </div>
-        <p
-          className="text-right text-[14px] font-semibold tabular-nums"
-          style={{ color: "var(--text-primary)" }}
-        >
-          {section.displayTime || "Story window"}
-        </p>
+        {storyWindow && (
+          <p
+            className="text-right text-[14px] font-semibold tabular-nums"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {storyWindow}
+          </p>
+        )}
       </div>
 
-      <div className="feed-card-grid">
+      <div
+        className="grid items-start gap-2"
+        style={{
+          gridTemplateColumns:
+            "minmax(136px, 0.9fr) minmax(118px, 0.8fr) minmax(0, 1.35fr)",
+        }}
+      >
         <div className="flex self-stretch flex-col">
-          <div>
+          <div className="flex min-w-0 items-baseline gap-1.5">
             <p
-              className="text-[12px] font-semibold"
+              className="shrink-0 text-[13px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
             >
-              Pattern:{" "}
-              {section.storyFamily ? humanize(section.storyFamily) : "Context"}
+              {section.avgChangeLabel}:
             </p>
             <p
-              className="mt-1 text-[11px] tabular-nums"
-              style={{ color: "var(--text-primary)" }}
+              className="min-w-0 text-[13px] font-semibold leading-tight tabular-nums"
+              style={avgChangeStyle}
             >
-              {section.swingChangeLabel}{" "}
-              <span
-                style={{
-                  color:
-                    section.swingChangePct == null
-                      ? "var(--text-muted)"
-                      : section.swingChangePct >= 0
-                        ? "var(--up)"
-                        : "var(--down)",
-                  fontWeight: 600,
-                }}
-              >
-                {safeFormatPercent(section.swingChangePct)}
-              </span>
+              {safeFormatPercent(section.avgChangePct)}
             </p>
           </div>
 
@@ -704,97 +1767,50 @@ function MarketStorySection({
           )}
         </div>
 
-        <div className="min-w-0 space-y-1.5">
-          {contextLabel && (
-            <div className="flex items-center gap-1.5">
-              <Layers size={14} color="var(--market-chip-text)" aria-hidden />
-              <span
-                className="text-[12.5px] font-semibold"
-                style={{ color: "var(--market-chip-text)" }}
-              >
-                {contextLabel}
-              </span>
-            </div>
-          )}
-          <h3
-            className="text-[15px] font-semibold leading-snug"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {section.storyLabel}
-          </h3>
+        <div className="flex self-stretch flex-col">
+          <div className="flex min-w-0 items-baseline gap-1.5">
+            <p
+              className="shrink-0 text-[13px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {section.swingScoreLabel}:
+            </p>
+            <p
+              className="min-w-0 text-[13px] font-semibold leading-tight tabular-nums"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {safeFormatScore(section.swingScore)}
+            </p>
+          </div>
         </div>
 
-        <div className="flex self-stretch flex-col">
-          <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
-            <Chip>{section.storyWindowLabel}</Chip>
-            {section.storyFamily && (
-              <Chip>{humanize(section.storyFamily)}</Chip>
-            )}
-            <Chip>Deterministic</Chip>
-          </div>
+        <div className="min-w-0">
+          {movementLabel && (
+            <div className="flex min-w-0 items-baseline gap-1.5">
+              <p
+                className="shrink-0 text-[13px] font-semibold"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Movement:
+              </p>
+              <p
+                className="min-w-0 text-[13px] font-normal leading-tight"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {movementLabel}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       {isExpanded && (
         <div
-          className="feed-expand mt-3 space-y-4 pt-3"
+          className="feed-expand mt-3 space-y-3 pt-3"
           style={{ borderTop: "1px solid var(--border-row)" }}
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ContextGrid title="Range context" data={section.rangeContext} />
-            <ContextGrid title="Trend context" data={section.trendContext} />
-            <ContextGrid
-              title="Momentum context"
-              data={section.momentumContext}
-            />
-            <ContextGrid
-              title="Volatility context"
-              data={section.volatilityContext}
-            />
-          </div>
-
-          {section.decisionReasons.length > 0 && (
-            <div>
-              <p
-                className="mb-2 text-[11px] font-semibold"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Chart context reasons
-              </p>
-              <ul className="space-y-1">
-                {section.decisionReasons.map((reason, index) => (
-                  <li
-                    key={index}
-                    className="text-[12px] leading-relaxed"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {formatUnknownValue(reason)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {section.publishReason && (
-            <p
-              className="text-[12px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {section.publishReason}
-            </p>
-          )}
-
-          {(section.chart?.included_signal_event_ids?.length ||
-            section.chart?.included_audit_event_ids?.length) && (
-            <div className="flex flex-wrap gap-1.5">
-              {(section.chart.included_signal_event_ids ?? []).map((id) => (
-                <Chip key={id}>Signal {id}</Chip>
-              ))}
-              {(section.chart.included_audit_event_ids ?? []).map((id) => (
-                <Chip key={id}>Audit evidence {id}</Chip>
-              ))}
-            </div>
-          )}
+          <MarketStoryEvidenceTable rows={section.perSymbolEvidence} />
+          <StoryStructureList section={section} rangeContext={rangeContext} />
         </div>
       )}
     </div>
@@ -812,18 +1828,30 @@ function SignalEventSection({
   onToggle: () => void;
   hasDetails: boolean;
 }) {
-  const statusLabel =
+  const explicitStatusLabel =
     textOrNull(section.brief?.public_label) ??
-    textOrNull(section.brief?.classification) ??
-    (section.publicContextStatus
-      ? humanize(section.publicContextStatus)
-      : null);
+    textOrNull(section.brief?.classification);
   const summary =
     textOrNull(section.brief?.collapsed_summary) ??
     textOrNull(section.brief?.headline);
   const visibleSources = section.sources.slice(0, 2);
   const overflowCount = section.sources.length - visibleSources.length;
-  const windowLabel = section.displayWindow || section.displayTime;
+  const windowLabel = spaceTimeRangeSeparator(
+    section.displayWindow || section.displayTime,
+  );
+  const statusMeta = statusMetaFromValues(
+    section.brief?.public_label,
+    section.brief?.classification,
+    section.brief?.status,
+    section.publicContextStatus,
+  );
+  const StatusIcon = statusMeta.Icon;
+  const statusLabel =
+    explicitStatusLabel ??
+    statusMeta.label ??
+    (section.publicContextStatus
+      ? humanize(section.publicContextStatus)
+      : null);
 
   return (
     <div className="min-w-0 flex-1">
@@ -833,7 +1861,11 @@ function SignalEventSection({
             className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
             style={{ color: "var(--text-primary)" }}
           >
-            <Activity size={15} aria-hidden />
+            <Activity
+              size={15}
+              aria-hidden
+              style={{ color: SECTION_ICON_COLOR.signalEvent }}
+            />
             <span className="text-[15px] font-semibold">Signal Event</span>
           </p>
           <Chip style={signalToneStyle(section.direction)}>
@@ -912,10 +1944,10 @@ function SignalEventSection({
         <div className="min-w-0 space-y-1.5">
           {statusLabel && (
             <div className="flex items-center gap-1.5">
-              <Activity size={14} color="var(--accent-primary)" aria-hidden />
+              <StatusIcon size={14} color={statusMeta.color} aria-hidden />
               <span
                 className="text-[12.5px] font-semibold"
-                style={{ color: "var(--accent-primary)" }}
+                style={{ color: statusMeta.color }}
               >
                 {statusLabel}
               </span>
@@ -944,46 +1976,50 @@ function SignalEventSection({
           )}
         </div>
 
-        <div className="flex self-stretch flex-col">
-          <div>
-            {section.sources.length > 0 ? (
-              <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
-                {visibleSources.map((source) => (
-                  <SourceChip key={source.url} source={source} />
-                ))}
-                {overflowCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onToggle();
-                    }}
-                    onKeyDown={(event) => event.stopPropagation()}
-                    aria-label={
-                      "Show " +
-                      overflowCount +
-                      " more accepted source" +
-                      (overflowCount === 1 ? "" : "s")
-                    }
-                    className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
-                    style={{
-                      borderColor: "var(--border-row)",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    +{overflowCount}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <span
-                className="text-[11px]"
-                style={{ color: "var(--text-muted)" }}
-              >
-                -
-              </span>
-            )}
-          </div>
+        <div className="min-w-0 space-y-1.5">
+          <p
+            className="text-[12px] font-semibold"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Sources
+          </p>
+          {section.sources.length > 0 ? (
+            <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
+              {visibleSources.map((source) => (
+                <SourceChip key={source.url} source={source} />
+              ))}
+              {overflowCount > 0 && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggle();
+                  }}
+                  onKeyDown={(event) => event.stopPropagation()}
+                  aria-label={
+                    "Show " +
+                    overflowCount +
+                    " more accepted source" +
+                    (overflowCount === 1 ? "" : "s")
+                  }
+                  className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
+                  style={{
+                    borderColor: "var(--border-row)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  +{overflowCount}
+                </button>
+              )}
+            </div>
+          ) : (
+            <span
+              className="text-[11px]"
+              style={{ color: "var(--text-muted)" }}
+            >
+              No source
+            </span>
+          )}
         </div>
       </div>
 
@@ -993,12 +2029,7 @@ function SignalEventSection({
           style={{ borderTop: "1px solid var(--border-row)" }}
         >
           <div>
-            <p
-              className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Per-symbol evidence
-            </p>
+            <ExpandedSectionHeader>Per-symbol evidence</ExpandedSectionHeader>
             <SignalEvidenceTable section={section} />
             <p
               className="mt-1.5 text-[11px]"
@@ -1010,12 +2041,7 @@ function SignalEventSection({
           </div>
           {section.brief?.context_details && (
             <div>
-              <p
-                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Context Details
-              </p>
+              <ExpandedSectionHeader>Context Details</ExpandedSectionHeader>
               <p
                 className="max-w-[70ch] text-[13px] leading-relaxed"
                 style={{ color: "var(--text-secondary)" }}
@@ -1024,18 +2050,23 @@ function SignalEventSection({
               </p>
             </div>
           )}
-          {section.sources.length > visibleSources.length && (
-            <div>
-              <p
-                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Sources
-              </p>
-              <SourceList sources={section.sources} />
-            </div>
-          )}
+          <SignalEventSources sources={section.sources} />
         </div>
+      )}
+    </div>
+  );
+}
+
+function SignalEventSources({ sources }: { sources: FeedSourceV02[] }) {
+  return (
+    <div>
+      <ExpandedSectionHeader>Sources</ExpandedSectionHeader>
+      {sources.length > 0 ? (
+        <SourceList sources={sources} />
+      ) : (
+        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+          No source
+        </span>
       )}
     </div>
   );
@@ -1059,6 +2090,126 @@ function rangePositionDisplay(row: SignalEventSymbolEvidenceV02): string {
   return humanize(row.range_position);
 }
 
+function signalRangePct(row: SignalEventSymbolEvidenceV02): number | null {
+  if (row.range_pct !== null && row.range_pct !== undefined) {
+    return row.range_pct;
+  }
+
+  if (
+    row.prev_24h_high !== null &&
+    row.prev_24h_high !== undefined &&
+    row.prev_24h_low !== null &&
+    row.prev_24h_low !== undefined &&
+    row.prev_24h_low > 0
+  ) {
+    return ((row.prev_24h_high - row.prev_24h_low) / row.prev_24h_low) * 100;
+  }
+
+  return null;
+}
+
+function marketStoryMovementStatus(row: MarketStorySymbolEvidenceV02): string {
+  return textOrNull(row.movement_status) ?? "No bar data";
+}
+
+function MarketStoryEvidenceTable({
+  rows,
+}: {
+  rows: MarketStorySymbolEvidenceV02[];
+}) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <ExpandedSectionHeader>Per-symbol evidence</ExpandedSectionHeader>
+      <div
+        className="overflow-x-auto rounded-lg"
+        style={{
+          background: "var(--bg-panel)",
+          border: "1px solid var(--border-row)",
+        }}
+      >
+        <table className="min-w-[720px] w-full border-collapse text-left text-[12px]">
+          <thead
+            style={{
+              background: "var(--bg-panel)",
+              color: "var(--text-muted)",
+            }}
+          >
+            <tr>
+              <th className="px-3 py-2 font-medium">Symbol</th>
+              <th className="px-3 py-2 font-medium">Change</th>
+              <th className="px-3 py-2 font-medium">Range</th>
+              <th className="px-3 py-2 font-medium">Volatility Score</th>
+              <th className="px-3 py-2 font-medium">Volume ×</th>
+              <th className="px-3 py-2 font-medium">Movement Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.symbol}
+                style={{
+                  borderTop: "1px solid var(--border-row)",
+                  background: "var(--bg-panel)",
+                }}
+              >
+                <td
+                  className="px-3 py-2 font-semibold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {row.symbol}
+                </td>
+                <td
+                  className="px-3 py-2"
+                  style={{
+                    color:
+                      row.avg_change_pct == null
+                        ? "var(--text-muted)"
+                        : row.avg_change_pct >= 0
+                          ? "var(--up)"
+                          : "var(--down)",
+                  }}
+                >
+                  {safeFormatPercent(row.avg_change_pct)}
+                </td>
+                <td
+                  className="px-3 py-2"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {safeFormatUnsignedPercent(row.range_pct)}
+                </td>
+                <td
+                  className="px-3 py-2 font-medium"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {safeFormatScore(row.swing_score)}
+                </td>
+                <td
+                  className="px-3 py-2"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {row.volume_ratio === null || row.volume_ratio === undefined
+                    ? "—"
+                    : `${row.volume_ratio.toFixed(2)}x`}
+                </td>
+                <td
+                  className="px-3 py-2"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {marketStoryMovementStatus(row)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function SignalEvidenceTable({
   section,
 }: {
@@ -1076,7 +2227,7 @@ function SignalEvidenceTable({
         border: "1px solid var(--border-row)",
       }}
     >
-      <table className="min-w-[620px] w-full border-collapse text-left text-[12px]">
+      <table className="min-w-[720px] w-full border-collapse text-left text-[12px]">
         <thead
           style={{
             background: "var(--bg-panel)",
@@ -1085,7 +2236,8 @@ function SignalEvidenceTable({
         >
           <tr>
             <th className="px-3 py-2 font-medium">Symbol</th>
-            <th className="px-3 py-2 font-medium">Window Change</th>
+            <th className="px-3 py-2 font-medium">Change</th>
+            <th className="px-3 py-2 font-medium">Range</th>
             <th className="px-3 py-2 font-medium">Peak 15m</th>
             <th className="px-3 py-2 font-medium">Volume ×</th>
             <th className="px-3 py-2 font-medium">Range Position</th>
@@ -1124,9 +2276,22 @@ function SignalEvidenceTable({
                 </td>
                 <td
                   className="px-3 py-2"
-                  style={{ color: "var(--text-primary)" }}
+                  style={{
+                    color:
+                      row.window_change_pct == null
+                        ? "var(--text-muted)"
+                        : row.window_change_pct >= 0
+                          ? "var(--up)"
+                          : "var(--down)",
+                  }}
                 >
                   {safeFormatPercent(row.window_change_pct)}
+                </td>
+                <td
+                  className="px-3 py-2"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {safeFormatUnsignedPercent(signalRangePct(row))}
                 </td>
                 <td
                   className="px-3 py-2 font-medium"
@@ -1186,9 +2351,9 @@ function FeedSection({
   const hasDetails = sectionHasExpandableDetails(section);
   const sectionStyle: React.CSSProperties = {
     borderTop: isFirst ? "0" : "1px solid var(--border-row)",
-    background: isSelected ? "var(--accent-selected-bg)" : undefined,
+    background: isSelected ? "rgba(254, 114, 3, 0.12)" : undefined,
     boxShadow: isSelected
-      ? "inset 0 0 0 1px var(--accent-selected-border)"
+      ? "inset 0 0 0 1px rgba(254, 114, 3, 0.68)"
       : undefined,
   };
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -1286,34 +2451,21 @@ function DayPost({
 
   return (
     <article
-      className="feed-row overflow-hidden rounded-2xl"
+      className="feed-row shrink-0 overflow-hidden rounded-2xl"
       data-testid="day-post-v02"
       data-day-post-id={day.id}
     >
-      <header className="flex flex-col gap-3 px-3.5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border"
-            style={{
-              borderColor: "rgba(139, 92, 246, 0.32)",
-              background: "var(--accent-selected-bg)",
-              color: "var(--accent-primary)",
-            }}
-            aria-hidden
+      <header
+        className="flex flex-col gap-2 px-3.5 py-2 sm:flex-row sm:items-center sm:justify-between"
+        style={{ borderBottom: "1px solid var(--border-row)" }}
+      >
+        <div className="flex min-w-0 items-start">
+          <h3
+            className="text-[15px] font-semibold leading-tight"
+            style={{ color: "var(--text-primary)" }}
           >
-            <CalendarDays size={17} />
-          </span>
-          <div className="min-w-0">
-            <h3
-              className="text-[17px] font-semibold leading-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              {day.displayDate}
-            </h3>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              {day.isCurrentUtcDay && <Chip>Current UTC day</Chip>}
-            </div>
-          </div>
+            {displayDateWithoutUtc(day.displayDate)}
+          </h3>
         </div>
 
         {dayControlLabel && (
@@ -1336,7 +2488,7 @@ function DayPost({
               data-testid="day-post-toggle-v02"
               data-day-post-id={day.id}
               aria-expanded={isExpanded}
-              className="inline-flex min-h-9 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[12px] font-medium transition-colors hover:bg-white/5"
+              className="inline-flex min-h-7 items-center justify-center gap-1 rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors hover:bg-white/5"
               style={{
                 borderColor: "var(--border-row)",
                 color: "var(--text-secondary)",
@@ -1388,6 +2540,7 @@ export default function IntelligenceFeedV02({
     () => new Set(),
   );
   const sectionRefs = useRef(new Map<string, HTMLElement>());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setExpandedDayIds(createInitialExpandedDayIds(feed));
@@ -1403,13 +2556,30 @@ export default function IntelligenceFeedV02({
       ensureSelectedDayExpandedV02(current, selection),
     );
 
-    const frame = window.requestAnimationFrame(() => {
-      sectionRefs.current
-        .get(selection.itemId ?? "")
-        ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    let secondFrame: number | null = null;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        const section = sectionRefs.current.get(selection.itemId ?? "");
+        const scroller = scrollContainerRef.current;
+        if (!section || !scroller) {
+          return;
+        }
+
+        const sectionTop = section.getBoundingClientRect().top;
+        const scrollerTop = scroller.getBoundingClientRect().top;
+        scroller.scrollTo({
+          top: scroller.scrollTop + sectionTop - scrollerTop,
+          behavior: "smooth",
+        });
+      });
     });
 
-    return () => window.cancelAnimationFrame(frame);
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame !== null) {
+        window.cancelAnimationFrame(secondFrame);
+      }
+    };
   }, [selection]);
 
   const globalLabel = useMemo(() => {
@@ -1507,7 +2677,10 @@ export default function IntelligenceFeedV02({
       </div>
 
       <div
-        className="flex min-h-50 flex-1 flex-col gap-3 overflow-y-auto pr-0.5"
+        ref={scrollContainerRef}
+        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-1"
+        data-testid="feed-scroll-v02"
+        style={{ scrollbarGutter: "stable" }}
         onClick={(event) => {
           if (event.target === event.currentTarget) {
             onClearSelection();

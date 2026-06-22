@@ -1083,7 +1083,7 @@ test("admin v0.2 pipeline is hidden unless both admin gates are enabled", async 
   assert.equal(wrongTokenBody.includes("test-admin-token"), false);
 });
 
-test("admin v0.2 pipeline runs protected local steps without Claude or legacy writes", async () => {
+test("admin v0.2 pipeline can seed fixture experiment news without live Claude or legacy writes", async () => {
   const firstSignal = seededSignalEventV02();
   const secondSignal = {
     ...seededSignalEventV02(),
@@ -1138,11 +1138,26 @@ test("admin v0.2 pipeline runs protected local steps without Claude or legacy wr
   assert.equal(tables.market_stories_v02.length >= 1, true);
   assert.equal(tables.market_story_members_v02.length >= 2, true);
   assert.equal(tables.daily_overviews_v02.length >= 1, true);
-  assert.equal(tables.claude_briefs_v02.length, 0);
-  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(tables.claude_briefs_v02.length >= 1, true);
+  assert.equal(tables.source_references_v02.length >= 1, true);
   assert.equal(tables.claude_briefs.length, 0);
   assert.equal(tables.source_references.length, 0);
   assert.equal(tables.incidents.length, 1);
+  assert.equal(
+    tables.source_references_v02.every(
+      (row) => String(row.target_type) !== "market_story_v02",
+    ),
+    true,
+  );
+  assert.equal(
+    tables.source_references_v02.some(
+      (row) =>
+        row.url.includes("coindesk.com") ||
+        row.url.includes("cryptotimes.io") ||
+        row.url.includes("cryptobriefing.com"),
+    ),
+    true,
+  );
   assert.equal(
     tables.job_runs.some((row) => row.job_name === "run_detector_v02"),
     true,
@@ -1156,7 +1171,24 @@ test("admin v0.2 pipeline runs protected local steps without Claude or legacy wr
     true,
   );
   assert.equal(serialized.includes("test-admin-token"), false);
-  assert.match(serialized, /Fixture Claude seeding is deferred/);
+  assert.equal(
+    serialized.includes("Fixture Claude seeding is deferred"),
+    false,
+  );
+  assert.equal(
+    (body.fixture_claude as Record<string, unknown>).fixture_only,
+    true,
+  );
+  assert.equal(
+    (body.fixture_claude as Record<string, unknown>).status,
+    "seeded",
+  );
+  assert.equal(
+    Number(
+      (body.fixture_claude as Record<string, unknown>).sources_written ?? 0,
+    ) > 0,
+    true,
+  );
 });
 
 test("admin v0.2 pipeline validates requested steps", async () => {

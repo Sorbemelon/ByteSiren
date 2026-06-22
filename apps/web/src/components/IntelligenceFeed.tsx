@@ -534,7 +534,7 @@ function FeedCard({ item, isSelected, isExpanded, onToggle }: FeedCardProps) {
 
   return (
     <article
-      className="feed-row relative rounded-2xl"
+      className="feed-row relative shrink-0 rounded-2xl"
       data-selected={isSelected}
     >
       <div className="relative">
@@ -726,6 +726,7 @@ export default function IntelligenceFeed({
     <section
       aria-label="Intelligence Feed"
       className="flex h-full min-h-0 flex-col rounded-2xl p-4"
+      data-testid="intelligence-feed"
       style={{
         background: "var(--bg-panel)",
         border: "1px solid var(--border-panel)",
@@ -806,7 +807,11 @@ export default function IntelligenceFeed({
         </div>
       </div>
 
-      <div className="flex min-h-50 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">
+      <div
+        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-1"
+        data-testid="feed-scroll-v01"
+        style={{ scrollbarGutter: "stable" }}
+      >
         {loading && (
           <div className="flex items-center justify-center py-8">
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>

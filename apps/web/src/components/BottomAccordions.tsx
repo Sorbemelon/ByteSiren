@@ -454,15 +454,6 @@ export default function BottomAccordions({
           >
             The detection is queued for date-matched public web context.
           </DefinitionCard>
-          <DefinitionCard
-            term={
-              <StatusTextLabel color="var(--text-primary)" Icon={Clock}>
-                Data Delay
-              </StatusTextLabel>
-            }
-          >
-            Latest market data may be delayed or incomplete.
-          </DefinitionCard>
         </DefinitionGrid>
 
         <GroupLabel>Signal labels</GroupLabel>
@@ -539,8 +530,9 @@ export default function BottomAccordions({
           <DefinitionCard term="Story window">
             The broader deterministic Market Story window.
           </DefinitionCard>
-          <DefinitionCard term="Swing Change">
-            Market Story movement across the broader story window.
+          <DefinitionCard term="Volatility Score">
+            Market Story movement score from the RMS of 15m bar changes inside
+            the broader story window, scaled by 100.
           </DefinitionCard>
           <DefinitionCard term="Range Position labels">
             Inside range, Near high, Near low, Broke high, and Broke low are

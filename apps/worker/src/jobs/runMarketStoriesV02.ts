@@ -3,7 +3,11 @@ import {
   listSignalEventsV02ForStoryGeneration,
   upsertMarketStoryOutputV02,
 } from "../db/marketStoryRepositoryV02.ts";
-import { recordJobRun } from "../db/marketRepository.ts";
+import {
+  getCandlesForSymbolSince,
+  recordJobRun,
+} from "../db/marketRepository.ts";
+import { ALLOWED_SYMBOLS } from "../config.ts";
 import {
   generateMarketStoriesV02,
   MARKET_STORY_V02_MODEL_VERSION,
@@ -36,6 +40,11 @@ export async function runMarketStoriesV02(
     const sourceEvents = [...signalEvents, ...auditEvents];
 
     if (sourceEvents.length < 2) {
+      await upsertMarketStoryOutputV02(db, {
+        market_stories: [],
+        market_story_members: [],
+      });
+
       const message =
         "v0.2 Market Story generation skipped: fewer than two Signal/Audit events.";
 
@@ -68,7 +77,21 @@ export async function runMarketStoriesV02(
       };
     }
 
-    const output = generateMarketStoriesV02(sourceEvents);
+    const earliestEventStart = sourceEvents.reduce(
+      (earliest, event) =>
+        event.event_start.localeCompare(earliest) < 0
+          ? event.event_start
+          : earliest,
+      sourceEvents[0].event_start,
+    );
+    const marketCandles = (
+      await Promise.all(
+        ALLOWED_SYMBOLS.map((symbol) =>
+          getCandlesForSymbolSince(db, symbol, earliestEventStart),
+        ),
+      )
+    ).flat();
+    const output = generateMarketStoriesV02(sourceEvents, {}, marketCandles);
     const writeCounts = await upsertMarketStoryOutputV02(db, output);
     const message = `v0.2 Market Story generation completed: ${output.summary.story_count} stories, ${output.summary.publish_candidate_count} public candidates.`;
 

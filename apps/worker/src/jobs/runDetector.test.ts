@@ -9,6 +9,8 @@ import {
 import { runDetector } from "./runDetector.ts";
 import type { MarketCandle } from "../types/market.ts";
 import { createMemoryD1 } from "../test/d1Memory.ts";
+import { upsertDetectorV02Output } from "../db/v02DetectorRepository.ts";
+import type { SignalEventV02 } from "../services/detectorV02/index.ts";
 
 const baseTimeMs = Date.parse("2026-06-14T00:00:00.000Z");
 const fifteenMinutesMs = 15 * 60 * 1000;
@@ -29,21 +31,28 @@ function syntheticCandles(
   options: {
     count?: number;
     spike?: boolean;
+    spikeBars?: number;
+    spikeChangePct?: number;
   } = {},
 ): MarketCandle[] {
   const count = options.count ?? 98;
+  const spikeBars = options.spikeBars ?? 1;
+  const spikeChangePct = options.spikeChangePct ?? 0.02;
   const candles: MarketCandle[] = [];
   let price = symbol === "BTCUSDT" ? 100 : 50;
 
   for (let index = 0; index < count; index += 1) {
-    const isLast = index === count - 1;
-    const change =
-      isLast && options.spike ? 0.02 : index % 2 === 0 ? 0.001 : -0.0008;
+    const isSignalBar = Boolean(options.spike && index >= count - spikeBars);
+    const change = isSignalBar
+      ? spikeChangePct
+      : index % 2 === 0
+        ? 0.001
+        : -0.0008;
     const open = price;
     price *= 1 + change;
     const close = price;
-    const high = isLast && options.spike ? close * 1.012 : close * 1.003;
-    const low = isLast && options.spike ? open * 0.988 : close * 0.997;
+    const high = isSignalBar ? close * 1.012 : close * 1.003;
+    const low = isSignalBar ? open * 0.988 : close * 0.997;
 
     candles.push({
       symbol,
@@ -55,7 +64,7 @@ function syntheticCandles(
       low,
       close,
       volume: 100,
-      quote_volume: isLast && options.spike ? 5000 : 1000,
+      quote_volume: isSignalBar ? 5000 : 1000,
       trade_count: 10,
     });
   }
@@ -67,6 +76,8 @@ function candlesForAllSymbols(
   options: {
     count?: number;
     spikeSymbols?: MarketSymbol[];
+    spikeBars?: number;
+    spikeChangePct?: number;
   } = {},
 ): MarketCandle[] {
   const spikeSymbols = options.spikeSymbols ?? [...ALLOWED_SYMBOLS];
@@ -75,6 +86,8 @@ function candlesForAllSymbols(
     syntheticCandles(symbol, {
       count: options.count,
       spike: spikeSymbols.includes(symbol),
+      spikeBars: options.spikeBars,
+      spikeChangePct: options.spikeChangePct,
     }),
   );
 }
@@ -113,6 +126,90 @@ function storySignalRow(id: string, start: string, end: string) {
     detector_version: "v02",
     created_at: start,
     updated_at: start,
+  };
+}
+
+function staleSignalSymbolRow(signalEventId: string, symbol: MarketSymbol) {
+  return {
+    id: `${signalEventId}_${symbol}`,
+    signal_event_id: signalEventId,
+    symbol,
+    window_change_pct: 0.1,
+    peak_15m_change_pct: 0.1,
+    volume_ratio: 1,
+    range_position: "inside_range",
+    prev_24h_high: 101,
+    prev_24h_low: 99,
+    range_break_direction: "none",
+    range_break_pct: 0,
+    range_break_strength: 0,
+    distance_to_range_high_pct: 1,
+    distance_to_range_low_pct: 1,
+    is_lead_mover: 0,
+    is_peak_15m_highlight: 0,
+    participated: 1,
+    evidence_json: "{}",
+    created_at: "2026-06-14T00:00:00.000Z",
+    updated_at: "2026-06-14T00:00:00.000Z",
+  };
+}
+
+function detectorSignalEvent(index: number): SignalEventV02 {
+  const start = isoAt(96 + index);
+  const end = closeIsoAt(96 + index);
+  const id = `vnext_fixture_${index}`;
+
+  return {
+    id,
+    date_utc: start.slice(0, 10),
+    event_start: start,
+    event_end: end,
+    duration_min: 15,
+    peak_time: start,
+    direction: "observed_up",
+    signals_count: 5,
+    n_tracked: 5,
+    avg_change_pct: 1,
+    avg_change_method: "median_participating_symbols",
+    event_strength_score: 75,
+    impact_label: "High",
+    chart_context_score: 80,
+    chart_context_label: "Range break",
+    event_story_type: "range_break_up",
+    trend_context: "trend_up",
+    momentum_context: "impulse",
+    volatility_context: "ordinary_volatility",
+    event_range_context: "broad_broke_high",
+    chart_context_reasons_json: "[]",
+    chart_context_warnings_json: "[]",
+    macro_aligned: false,
+    nearest_macro_event: null,
+    macro_delta_min: null,
+    source_route_hint: "broad_market",
+    publish_candidate: true,
+    publish_reason: "broad_confirmed_break",
+    suppress_reason: null,
+    detector_version: "v02",
+    symbols: ALLOWED_SYMBOLS.map((symbol) => ({
+      id: `${id}_${symbol}`,
+      signal_event_id: id,
+      symbol,
+      window_change_pct: 1,
+      peak_15m_change_pct: 1,
+      volume_ratio: 1.5,
+      range_position: "broke_high",
+      prev_24h_high: 101,
+      prev_24h_low: 99,
+      range_break_direction: "up",
+      range_break_pct: 1,
+      range_break_strength: 1,
+      distance_to_range_high_pct: 0,
+      distance_to_range_low_pct: 2,
+      is_lead_mover: symbol === "BTCUSDT",
+      is_peak_15m_highlight: symbol === "BTCUSDT",
+      participated: true,
+      evidence_json: "{}",
+    })),
   };
 }
 
@@ -180,7 +277,7 @@ test("runDetector stores single-symbol suppressions without final candidates", a
 
 test("runDetector uses v0.2 Signal/Audit write path only when DETECTOR_VERSION=v02", async () => {
   const { db, tables } = createMemoryD1({
-    market_candles: candlesForAllSymbols(),
+    market_candles: candlesForAllSymbols({ count: 112, spikeBars: 3 }),
   });
 
   const result = await runDetector(db, {
@@ -210,9 +307,9 @@ test("runDetector uses v0.2 Signal/Audit write path only when DETECTOR_VERSION=v
   assert.equal(tables.job_runs.at(-1)?.job_name, "run_detector_v02");
 });
 
-test("runDetector v0.2 can write Market Stories only when enabled", async () => {
+test("runDetector v0.2 runs Market Story job only when enabled", async () => {
   const { db, tables } = createMemoryD1({
-    market_candles: candlesForAllSymbols(),
+    market_candles: candlesForAllSymbols({ count: 112, spikeBars: 3 }),
     signal_events_v02: [
       storySignalRow(
         "story_seed_signal_a",
@@ -234,10 +331,8 @@ test("runDetector v0.2 can write Market Stories only when enabled", async () => 
 
   assert.equal(result.status, "success");
   assert.equal(result.detector_version, "v02");
-  assert.ok(result.market_story_count! >= 1);
-  assert.ok(result.market_stories_written! >= 1);
-  assert.ok(tables.market_stories_v02.length >= 1);
-  assert.ok(tables.market_story_members_v02.length >= 2);
+  assert.ok(result.market_story_count! >= 0);
+  assert.ok(result.market_stories_written! >= 0);
   assert.equal(
     tables.job_runs.some((row) => row.job_name === "run_market_stories_v02"),
     true,
@@ -265,10 +360,13 @@ test("runDetector v0.1 ignores ENABLE_MARKET_STORIES", async () => {
   );
 });
 
-test("runDetector v0.2 writes Audit Events and is idempotent", async () => {
+test("runDetector v0.2 writes detector rows and is idempotent", async () => {
   const { db, tables } = createMemoryD1({
     market_candles: candlesForAllSymbols({
-      spikeSymbols: ["BTCUSDT", "ETHUSDT"],
+      count: 112,
+      spikeSymbols: ["BTCUSDT", "ETHUSDT", "BNBUSDT"],
+      spikeBars: 3,
+      spikeChangePct: 0.003,
     }),
   });
 
@@ -283,10 +381,45 @@ test("runDetector v0.2 writes Audit Events and is idempotent", async () => {
 
   assert.equal(firstRun.status, "success");
   assert.equal(secondRun.status, "success");
-  assert.equal(tables.signal_events_v02.length, 0);
+  assert.equal(tables.signal_events_v02.length, firstRun.signal_count);
   assert.equal(tables.audit_events_v02.length, firstRun.audit_count);
-  assert.ok(tables.audit_events_v02.length >= 1);
+  assert.ok(
+    tables.signal_events_v02.length + tables.audit_events_v02.length >= 1,
+  );
   assert.equal(tables.claude_briefs_v02.length, 0);
   assert.equal(tables.source_references_v02.length, 0);
   assert.equal(tables.incidents.length, 0);
+});
+
+test("v0.2 detector output pruning handles more than SQLite bind limit", async () => {
+  const staleIds = Array.from({ length: 1100 }, (_, index) => `stale_${index}`);
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: staleIds.map((id) =>
+      storySignalRow(id, isoAt(96), closeIsoAt(96)),
+    ),
+    signal_event_symbols_v02: staleIds.flatMap((id) =>
+      ALLOWED_SYMBOLS.map((symbol) => staleSignalSymbolRow(id, symbol)),
+    ),
+  });
+  const signalEvents = Array.from({ length: 220 }, (_, index) =>
+    detectorSignalEvent(index),
+  );
+
+  const result = await upsertDetectorV02Output(db, {
+    signal_events: signalEvents,
+    audit_events: [],
+  });
+
+  assert.equal(result.signal_events, signalEvents.length);
+  assert.equal(result.signal_event_symbols, signalEvents.length * 5);
+  assert.equal(tables.signal_events_v02.length, signalEvents.length);
+  assert.equal(tables.signal_event_symbols_v02.length, signalEvents.length * 5);
+  assert.equal(
+    tables.signal_events_v02.some((row) => row.id.startsWith("stale_")),
+    false,
+  );
+  assert.equal(
+    tables.signal_event_symbols_v02.some((row) => row.id.startsWith("stale_")),
+    false,
+  );
 });

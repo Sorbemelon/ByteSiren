@@ -233,12 +233,26 @@ export interface MarketStoryFeedItemV02 extends BaseFeedItemV02 {
   item_type: "market_story";
   display_time: string;
   story_window_label: "Story window";
-  swing_change_label: "Swing Change";
+  avg_change_label: "Avg Change";
+  avg_change_pct: number | null;
+  swing_score_label: "Volatility Score";
+  swing_score: number | null;
   story_label: string;
   story_family: string | null;
   direction: string | null;
-  swing_change_pct: number | null;
   chart_context_score: number | null;
+  per_symbol_evidence: Array<{
+    symbol: string;
+    avg_change_label: "Avg Change";
+    avg_change_pct: number | null;
+    range_pct: number | null;
+    swing_score_label: "Volatility Score";
+    swing_score: number | null;
+    volume_ratio: number | null;
+    movement_status_label: "Movement Status";
+    movement_status: string | null;
+    bar_count: number | null;
+  }>;
   range_context: Record<string, unknown>;
   trend_context: Record<string, unknown>;
   momentum_context: Record<string, unknown>;
@@ -292,6 +306,7 @@ export interface SignalEventFeedItemV02 extends BaseFeedItemV02 {
     window_change_pct: number | null;
     peak_15m_label: "Peak 15m";
     peak_15m_change_pct: number | null;
+    range_pct: number | null;
     volume_ratio: number | null;
     range_position_label: "Range Position";
     range_position: string | null;
@@ -387,6 +402,65 @@ function parseJsonObject(value: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+function numberFromRecord(
+  object: Record<string, unknown>,
+  key: string,
+): number | null {
+  const value = object[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function rangePctFromHighLow(
+  high: number | null,
+  low: number | null,
+): number | null {
+  if (high === null || low === null || low <= 0) {
+    return null;
+  }
+
+  return Math.round(((high - low) / low) * 100 * 10000) / 10000;
+}
+
+function stringFromRecord(
+  object: Record<string, unknown>,
+  key: string,
+): string | null {
+  const value = object[key];
+  return typeof value === "string" ? value : null;
+}
+
+function arrayFromRecord(
+  object: Record<string, unknown>,
+  key: string,
+): unknown[] {
+  const value = object[key];
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeMarketStoryPerSymbolEvidence(
+  rangeContext: Record<string, unknown>,
+): MarketStoryFeedItemV02["per_symbol_evidence"] {
+  return arrayFromRecord(rangeContext, "per_symbol_evidence").map((item) => {
+    const row =
+      item && typeof item === "object" && !Array.isArray(item)
+        ? (item as Record<string, unknown>)
+        : {};
+
+    return {
+      symbol: stringFromRecord(row, "symbol") ?? "Unknown",
+      avg_change_label: "Avg Change",
+      avg_change_pct: numberFromRecord(row, "avg_change_pct"),
+      range_pct: numberFromRecord(row, "range_pct"),
+      swing_score_label: "Volatility Score",
+      swing_score: numberFromRecord(row, "swing_score"),
+      volume_ratio: numberFromRecord(row, "volume_ratio"),
+      movement_status_label: "Movement Status",
+      movement_status: stringFromRecord(row, "movement_status"),
+      bar_count: numberFromRecord(row, "bar_count"),
+    };
+  });
 }
 
 function displayDateUtc(dateUtc: string): string {
@@ -706,6 +780,9 @@ async function getMarketStoryItems(
 
   return result.results.map((row) => {
     const decisionReasons = parseJsonArray(row.decision_reasons_json);
+    const rangeContext = parseJsonObject(row.range_context_json);
+    const swingScore =
+      numberFromRecord(rangeContext, "swing_score") ?? row.swing_change_pct;
     return {
       item_type: "market_story",
       id: row.id,
@@ -713,13 +790,16 @@ async function getMarketStoryItems(
       _sort_time: row.story_end,
       display_time: displayTimeRange(row.story_start, row.story_end),
       story_window_label: "Story window",
-      swing_change_label: "Swing Change",
+      avg_change_label: "Avg Change",
+      avg_change_pct: numberFromRecord(rangeContext, "avg_change_pct"),
+      swing_score_label: "Volatility Score",
+      swing_score: swingScore,
       story_label: row.story_label,
       story_family: row.story_family,
       direction: row.direction,
-      swing_change_pct: row.swing_change_pct,
       chart_context_score: row.chart_context_score,
-      range_context: parseJsonObject(row.range_context_json),
+      per_symbol_evidence: normalizeMarketStoryPerSymbolEvidence(rangeContext),
+      range_context: rangeContext,
       trend_context: parseJsonObject(row.trend_context_json),
       momentum_context: parseJsonObject(row.momentum_context_json),
       volatility_context: parseJsonObject(row.volatility_context_json),
@@ -853,6 +933,10 @@ async function getSignalEventItems(
         window_change_pct: symbol.window_change_pct,
         peak_15m_label: "Peak 15m",
         peak_15m_change_pct: symbol.peak_15m_change_pct,
+        range_pct: rangePctFromHighLow(
+          symbol.prev_24h_high,
+          symbol.prev_24h_low,
+        ),
         volume_ratio: symbol.volume_ratio,
         range_position_label: "Range Position",
         range_position: symbol.range_position,

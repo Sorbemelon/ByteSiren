@@ -96,7 +96,14 @@ const v02Feed = {
           market_tone: "mixed",
           market_range_pct: 3.7,
           notable_symbols: [{ symbol: "BTCUSDT", reason: "largest change" }],
-          top_symbol_moves: [{ symbol: "BTCUSDT", change_pct: 1.9 }],
+          top_symbol_moves: [
+            {
+              symbol: "BTCUSDT",
+              change_pct: 1.9,
+              range_pct: 3.7,
+              volatility_score: 34,
+            },
+          ],
           public_context_status: "queued_for_analysis",
           sources: [
             {
@@ -129,12 +136,28 @@ const v02Feed = {
           date_utc: "2026-06-20",
           display_time: "04:00-16:00 UTC",
           story_window_label: "Story window",
-          swing_change_label: "Swing Change",
+          avg_change_label: "Avg Change",
+          avg_change_pct: -0.8,
+          swing_score_label: "Volatility Score",
+          swing_score: 51,
           story_label: "Reversal sequence",
           story_family: "reversal",
           direction: "two_sided",
-          swing_change_pct: 3.2,
           chart_context_score: 84,
+          per_symbol_evidence: [
+            {
+              symbol: "ETHUSDT",
+              avg_change_label: "Avg Change",
+              avg_change_pct: -0.7,
+              range_pct: 3.6,
+              swing_score_label: "Volatility Score",
+              swing_score: 44,
+              volume_ratio: 1.1,
+              movement_status_label: "Movement Status",
+              movement_status: "Net down",
+              bar_count: 48,
+            },
+          ],
           range_context: { event_range_context: "mixed_range_position" },
           trend_context: { trend_context: "trend_down" },
           momentum_context: { momentum_type: "reversal" },
@@ -206,6 +229,7 @@ const v02Feed = {
               symbol: "BTCUSDT",
               window_change_label: "Window Change",
               window_change_pct: 2.2,
+              range_pct: 4.8,
               peak_15m_label: "Peak 15m",
               peak_15m_change_pct: 1.2,
               volume_ratio: 2.7,
@@ -366,15 +390,20 @@ test("v0.2 normalized labels preserve day-post and section wording", () => {
   assert.equal(feed.globalControlLabelWhenCollapsed, "Expand days");
   assert.equal(daily.itemType, "daily_overview");
   assert.equal(daily.dailyChangeLabel, "24h Change");
+  assert.equal(daily.topSymbolMoves[0].volatility_score, 34);
   assert.equal(story.itemType, "market_story");
   assert.equal(story.storyWindowLabel, "Story window");
-  assert.equal(story.swingChangeLabel, "Swing Change");
+  assert.equal(story.avgChangeLabel, "Avg Change");
+  assert.equal(story.swingScoreLabel, "Volatility Score");
+  assert.equal(story.perSymbolEvidence[0].range_pct, 3.6);
+  assert.equal(story.perSymbolEvidence[0].movement_status, "Net down");
   assert.equal(signal.itemType, "signal_event");
   assert.equal(signal.avgChangeLabel, "Avg Change");
   assert.equal(
     signal.perSymbolEvidence[0].window_change_label,
     "Window Change",
   );
+  assert.equal(signal.perSymbolEvidence[0].range_pct, 4.8);
   assert.equal(
     signal.perSymbolEvidence[0].range_position_label,
     "Range Position",
@@ -390,6 +419,31 @@ test("v0.2 normalized labels preserve day-post and section wording", () => {
   assert.equal(controlLabels.includes("Collapse all"), false);
   assert.equal(controlLabels.includes("Collapse day"), false);
   assert.equal(controlLabels.includes("Expand day"), false);
+});
+
+test("Market Story private context fields do not create public details", () => {
+  const feed = normalizedV02();
+  const story = feed.dayPosts[0].sections[1];
+
+  assert.equal(story.itemType, "market_story");
+  assert.equal(sectionHasExpandableDetails(story), true);
+
+  const privateOnlyStory = {
+    ...story,
+    decisionReasons: ["internal chart bridge reason"],
+    rangeContext: {},
+    trendContext: {},
+    momentumContext: {},
+    volatilityContext: {},
+    perSymbolEvidence: [],
+    publishReason: "internal publish gate reason",
+    deterministicContext: {
+      story_source: "internal detector state",
+      included_signal_event_ids: ["sig_internal"],
+    },
+  };
+
+  assert.equal(sectionHasExpandableDetails(privateOnlyStory), false);
 });
 
 test("Signal Event highlights and exact source URLs are preserved", () => {
@@ -500,6 +554,52 @@ test("v0.2 chart highlights follow default and selected item rules", () => {
   );
 });
 
+test("cross-day Market Story continuations do not duplicate default chart highlights", () => {
+  const crossDay = structuredClone(v02Feed);
+  const story = crossDay.day_groups[0].items[1];
+  story.display_time = "20:00-03:00 UTC";
+  story.chart.highlight_start = "2026-06-20T20:00:00.000Z";
+  story.chart.highlight_end = "2026-06-21T03:00:00.000Z";
+
+  const feed = normalizeFeedV02(crossDay);
+  const defaultHighlights = buildChartHighlightsV02(
+    feed,
+    EMPTY_FEED_SELECTION_V02,
+  );
+  const defaultStoryHighlights = defaultHighlights.filter(
+    (highlight) =>
+      highlight.itemType === "market_story" &&
+      highlight.start === "2026-06-20T20:00:00.000Z" &&
+      highlight.end === "2026-06-21T03:00:00.000Z",
+  );
+
+  assert.equal(defaultStoryHighlights.length, 1);
+
+  const continuationDay = feed.dayPosts.find(
+    (day) => day.dateUtc === "2026-06-21",
+  );
+  const continuationStory = continuationDay.sections.find(
+    (section) => section.itemType === "market_story",
+  );
+  const selectedContinuation = toggleFeedSelectionV02(
+    EMPTY_FEED_SELECTION_V02,
+    continuationStory.itemType,
+    continuationStory.id,
+    continuationDay.id,
+  );
+  const selectedHighlights = buildChartHighlightsV02(
+    feed,
+    selectedContinuation,
+  );
+  const selectedStory = selectedHighlights.find(
+    (highlight) => highlight.itemId === continuationStory.id,
+  );
+
+  assert.equal(continuationStory.isContinuation, true);
+  assert.equal(selectedStory?.type, "story_window");
+  assert.equal(selectedStory?.selected, true);
+});
+
 test("chart highlight hit testing prefers selected, then narrower, then recent", () => {
   const feed = normalizedV02();
   const day = feed.dayPosts[0];
@@ -535,14 +635,27 @@ test("chart highlight hit testing prefers selected, then narrower, then recent",
   );
 });
 
-test("v0.2 chart source markers are only built for selected Claude-backed items", () => {
+test("v0.2 chart source markers are built for Claude-backed items", () => {
   const feed = normalizedV02();
   const day = feed.dayPosts[0];
   const [daily, story, signal] = day.sections;
 
+  const defaultMarkers = buildChartSourceMarkersV02(
+    feed,
+    EMPTY_FEED_SELECTION_V02,
+  );
+  assert.equal(defaultMarkers.length, 2);
   assert.deepEqual(
-    buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02),
-    [],
+    defaultMarkers.map((marker) => marker.itemType),
+    ["daily_overview", "signal_event"],
+  );
+  assert.equal(
+    defaultMarkers.some((marker) => marker.selected),
+    false,
+  );
+  assert.equal(
+    defaultMarkers.some((marker) => marker.itemId === story.id),
+    false,
   );
 
   const signalMarkers = buildChartSourceMarkersV02(
@@ -557,6 +670,7 @@ test("v0.2 chart source markers are only built for selected Claude-backed items"
   assert.equal(signalMarkers.length, 1);
   assert.equal(signalMarkers[0].itemType, "signal_event");
   assert.equal(signalMarkers[0].label, "Likely");
+  assert.equal(signalMarkers[0].selected, true);
   assert.equal(
     signalMarkers[0].url,
     "https://www.reuters.com/markets/2026/06/20/signal-fixture/",
@@ -573,6 +687,7 @@ test("v0.2 chart source markers are only built for selected Claude-backed items"
   );
   assert.equal(dailyMarkers[0].itemType, "daily_overview");
   assert.equal(dailyMarkers[0].label, "Main");
+  assert.equal(dailyMarkers[0].selected, true);
 
   const storyMarkers = buildChartSourceMarkersV02(
     feed,

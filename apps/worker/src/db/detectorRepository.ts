@@ -21,6 +21,8 @@ function numberOrZero(value: number | null): number {
   return value === null || !Number.isFinite(value) ? 0 : value;
 }
 
+const D1_BATCH_STATEMENT_CHUNK_SIZE = 50;
+
 function rawEventStatus(
   event: DetectorRawEventInput,
 ): "confirmed" | "suppressed" {
@@ -109,7 +111,7 @@ export async function upsertMarketFeatures(
   );
 
   let affected = 0;
-  const batchSize = 100;
+  const batchSize = D1_BATCH_STATEMENT_CHUNK_SIZE;
 
   for (let index = 0; index < statements.length; index += batchSize) {
     const results = await db.batch(statements.slice(index, index + batchSize));
@@ -187,7 +189,7 @@ export async function upsertRawSignalEvents(
   );
 
   let affected = 0;
-  const batchSize = 100;
+  const batchSize = D1_BATCH_STATEMENT_CHUNK_SIZE;
 
   for (let index = 0; index < statements.length; index += batchSize) {
     const results = await db.batch(statements.slice(index, index + batchSize));

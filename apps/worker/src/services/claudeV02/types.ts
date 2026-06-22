@@ -126,7 +126,7 @@ export interface DailyOverviewClaudePayloadV02 extends ClaudePayloadBaseV02 {
       end: string;
       duration_min: number;
     };
-    swing_change_pct: number | null;
+    swing_score: number | null;
     chart_context_score: number | null;
     decision_reasons: unknown[];
   }>;

@@ -68,6 +68,7 @@ interface MarketStoryContextRow {
   story_label: string;
   story_family: string | null;
   swing_change_pct: number | null;
+  range_context_json: string;
   chart_context_score: number | null;
   decision_reasons_json: string;
 }
@@ -96,6 +97,14 @@ function parseJsonObject(value: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+function numberFromRecord(
+  object: Record<string, unknown>,
+  key: string,
+): number | null {
+  const value = object[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function directionQueryWord(direction: string): string {
@@ -246,6 +255,7 @@ async function getMarketStoryRows(
         story_label,
         story_family,
         swing_change_pct,
+        range_context_json,
         chart_context_score,
         decision_reasons_json
        FROM market_stories_v02
@@ -382,7 +392,11 @@ export async function buildDailyOverviewClaudePayloadsV02(
           end: story.story_end,
           duration_min: story.duration_min,
         },
-        swing_change_pct: story.swing_change_pct,
+        swing_score:
+          numberFromRecord(
+            parseJsonObject(story.range_context_json),
+            "swing_score",
+          ) ?? story.swing_change_pct,
         chart_context_score: story.chart_context_score,
         decision_reasons: parseJsonArray(story.decision_reasons_json),
       })),

@@ -290,12 +290,15 @@ export interface MarketStoryItemV02 {
   date_utc: string;
   display_time?: string;
   story_window_label: "Story window";
-  swing_change_label: "Swing Change";
+  avg_change_label?: "Avg Change";
+  avg_change_pct?: number | null;
+  swing_score_label?: "Volatility Score";
+  swing_score?: number | null;
   story_label: string;
   story_family?: string | null;
   direction?: string | null;
-  swing_change_pct?: number | null;
   chart_context_score?: number | null;
+  per_symbol_evidence?: MarketStorySymbolEvidenceV02[];
   range_context?: Record<string, unknown>;
   trend_context?: Record<string, unknown>;
   momentum_context?: Record<string, unknown>;
@@ -306,12 +309,26 @@ export interface MarketStoryItemV02 {
   deterministic_context?: Record<string, unknown>;
 }
 
+export interface MarketStorySymbolEvidenceV02 {
+  symbol: string;
+  avg_change_label?: "Avg Change";
+  avg_change_pct?: number | null;
+  range_pct?: number | null;
+  swing_score_label?: "Volatility Score";
+  swing_score?: number | null;
+  volume_ratio?: number | null;
+  movement_status_label?: "Movement Status";
+  movement_status?: string | null;
+  bar_count?: number | null;
+}
+
 export interface SignalEventSymbolEvidenceV02 {
   symbol: string;
   window_change_label: "Window Change";
   window_change_pct: number | null;
   peak_15m_label: "Peak 15m";
   peak_15m_change_pct: number | null;
+  range_pct?: number | null;
   volume_ratio?: number | null;
   range_position_label: "Range Position";
   range_position?: string | null;
@@ -425,15 +442,20 @@ export interface NormalizedDailyOverviewSection {
 export interface NormalizedMarketStorySection {
   itemType: "market_story";
   id: string;
+  originalId: string;
+  isContinuation: boolean;
   dateUtc: string;
   displayTime: string;
   storyWindowLabel: "Story window";
-  swingChangeLabel: "Swing Change";
+  avgChangeLabel: "Avg Change";
+  avgChangePct: number | null;
+  swingScoreLabel: "Volatility Score";
+  swingScore: number | null;
   storyLabel: string;
   storyFamily: string | null;
   direction: string | null;
-  swingChangePct: number | null;
   chartContextScore: number | null;
+  perSymbolEvidence: MarketStorySymbolEvidenceV02[];
   rangeContext: Record<string, unknown>;
   trendContext: Record<string, unknown>;
   momentumContext: Record<string, unknown>;

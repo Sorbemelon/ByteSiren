@@ -75,6 +75,30 @@ export interface MarketStorySourceEventV02 {
   suppress_reason?: string | null;
 }
 
+export interface MarketStoryCandleV02 {
+  symbol: string;
+  open_time: string;
+  close_time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface MarketStorySymbolEvidenceV02 {
+  symbol: string;
+  avg_change_label: "Avg Change";
+  avg_change_pct: number | null;
+  range_pct: number | null;
+  swing_score_label: "Volatility Score";
+  swing_score: number | null;
+  volume_ratio: number | null;
+  movement_status_label: "Movement Status";
+  movement_status: string;
+  bar_count: number;
+}
+
 export interface MarketStoryMemberV02 {
   id: string;
   market_story_id: string;
@@ -93,7 +117,7 @@ export interface MarketStoryV02 {
   story_label: MarketStoryLabelV02;
   story_family: MarketStoryFamilyV02;
   direction: MarketStoryDirectionV02;
-  swing_change_pct: number;
+  swing_change_pct: number | null;
   chart_context_score: number;
   range_context_json: string;
   trend_context_json: string;
@@ -164,7 +188,13 @@ interface StoryEligibilityV02 {
   auditCount: number;
   averageChartContextScore: number;
   durationMin: number;
-  swingChangePct: number;
+  eventSwingPct: number;
+}
+
+interface StoryBarStatsV02 {
+  avgChangePct: number | null;
+  swingScore: number | null;
+  perSymbolEvidence: MarketStorySymbolEvidenceV02[];
 }
 
 const STRUCTURED_STORY_FAMILIES = new Set<MarketStoryFamilyV02>([
@@ -307,6 +337,134 @@ function swingChangePct(events: MarketStorySourceEventV02[]): number {
     ),
     4,
   );
+}
+
+function percentChange(current: number, previous: number): number | null {
+  if (
+    !Number.isFinite(current) ||
+    !Number.isFinite(previous) ||
+    previous === 0
+  ) {
+    return null;
+  }
+
+  return ((current - previous) / previous) * 100;
+}
+
+function average(values: number[]): number | null {
+  if (values.length === 0) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function rootMeanSquare(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const meanSquare =
+    values.reduce((sum, value) => sum + value ** 2, 0) / values.length;
+  return Math.sqrt(meanSquare) * 100;
+}
+
+function barReturnPct(candle: MarketStoryCandleV02): number | null {
+  return percentChange(Number(candle.close), Number(candle.open));
+}
+
+function movementStatus(
+  avgChangePct: number | null,
+  swingScore: number | null,
+): string {
+  if (avgChangePct === null) return "No bar data";
+  if (Math.abs(avgChangePct) < 0.15 && (swingScore ?? 0) >= 35) {
+    return "Choppy";
+  }
+  if (Math.abs(avgChangePct) < 0.15) {
+    return "Mostly flat";
+  }
+  return avgChangePct > 0 ? "Net up" : "Net down";
+}
+
+function storyBarStats(
+  storyStart: string,
+  storyEnd: string,
+  candles: MarketStoryCandleV02[] = [],
+): StoryBarStatsV02 {
+  const bySymbol = new Map<string, MarketStoryCandleV02[]>();
+
+  for (const candle of candles) {
+    if (candle.open_time < storyStart || candle.close_time > storyEnd) {
+      continue;
+    }
+
+    const rows = bySymbol.get(candle.symbol) ?? [];
+    rows.push(candle);
+    bySymbol.set(candle.symbol, rows);
+  }
+
+  const allReturns: number[] = [];
+  const perSymbolEvidence = [...bySymbol.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([symbol, rows]) => {
+      const sortedRows = rows.sort((a, b) =>
+        a.open_time.localeCompare(b.open_time),
+      );
+      const returns = sortedRows
+        .map(barReturnPct)
+        .filter((value): value is number => value !== null);
+      allReturns.push(...returns);
+
+      const first = sortedRows[0];
+      const last = sortedRows.at(-1);
+      const avgChangePct =
+        first && last
+          ? percentChange(Number(last.close), Number(first.open))
+          : null;
+      const high = Math.max(...sortedRows.map((row) => Number(row.high)));
+      const low = Math.min(...sortedRows.map((row) => Number(row.low)));
+      const rangePct =
+        first && Number(first.open) > 0
+          ? ((high - low) / Number(first.open)) * 100
+          : null;
+      const swingScore = rootMeanSquare(returns);
+      const baselineRows = candles.filter(
+        (candle) =>
+          candle.symbol === symbol &&
+          candle.close_time <= storyStart &&
+          candle.volume > 0,
+      );
+      const baselineVolume =
+        average(
+          baselineRows.slice(-96).map((candle) => Number(candle.volume)),
+        ) ?? null;
+      const windowVolume =
+        average(sortedRows.map((candle) => Number(candle.volume))) ?? null;
+      const volumeRatio =
+        baselineVolume && windowVolume
+          ? round(windowVolume / baselineVolume, 4)
+          : null;
+
+      return {
+        symbol,
+        avg_change_label: "Avg Change" as const,
+        avg_change_pct: avgChangePct === null ? null : round(avgChangePct, 4),
+        range_pct: rangePct === null ? null : round(rangePct, 4),
+        swing_score_label: "Volatility Score" as const,
+        swing_score: swingScore === null ? null : Math.round(swingScore),
+        volume_ratio: volumeRatio,
+        movement_status_label: "Movement Status" as const,
+        movement_status: movementStatus(avgChangePct, swingScore),
+        bar_count: sortedRows.length,
+      };
+    });
+
+  const avgChanges = perSymbolEvidence
+    .map((row) => row.avg_change_pct)
+    .filter((value): value is number => value !== null);
+  const avgChangePct = average(avgChanges);
+  const swingScore = rootMeanSquare(allReturns);
+
+  return {
+    avgChangePct: avgChangePct === null ? null : round(avgChangePct, 4),
+    swingScore: swingScore === null ? null : Math.round(swingScore),
+    perSymbolEvidence,
+  };
 }
 
 function directionalSwingStats(events: MarketStorySourceEventV02[]) {
@@ -530,7 +688,10 @@ function clusterHasStrongMixedPublicAuditContext(
   );
 }
 
-function storyRange(events: MarketStorySourceEventV02[]) {
+function storyRange(
+  events: MarketStorySourceEventV02[],
+  candles: MarketStoryCandleV02[] = [],
+) {
   const storyStart = events[0].event_start;
   const storyEnd = events.reduce(
     (latest, event) =>
@@ -542,7 +703,8 @@ function storyRange(events: MarketStorySourceEventV02[]) {
     storyStart,
     storyEnd,
     durationMin: durationMinutes(storyStart, storyEnd),
-    swingPct: swingChangePct(events),
+    eventSwingPct: swingChangePct(events),
+    barStats: storyBarStats(storyStart, storyEnd, candles),
   };
 }
 
@@ -557,7 +719,7 @@ function storyEligibility(
 
   if (
     range.durationMin < options.minStoryDurationMinutes ||
-    range.swingPct < options.minStorySwingChangePct
+    range.eventSwingPct < options.minStorySwingChangePct
   ) {
     return {
       eligible: false,
@@ -566,7 +728,7 @@ function storyEligibility(
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
-      swingChangePct: range.swingPct,
+      eventSwingPct: range.eventSwingPct,
     };
   }
 
@@ -578,7 +740,7 @@ function storyEligibility(
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
-      swingChangePct: range.swingPct,
+      eventSwingPct: range.eventSwingPct,
     };
   }
 
@@ -594,7 +756,7 @@ function storyEligibility(
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
-      swingChangePct: range.swingPct,
+      eventSwingPct: range.eventSwingPct,
     };
   }
 
@@ -606,7 +768,7 @@ function storyEligibility(
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
-      swingChangePct: range.swingPct,
+      eventSwingPct: range.eventSwingPct,
     };
   }
 
@@ -617,7 +779,7 @@ function storyEligibility(
     auditCount,
     averageChartContextScore: averageScore,
     durationMin: range.durationMin,
-    swingChangePct: range.swingPct,
+    eventSwingPct: range.eventSwingPct,
   };
 }
 
@@ -901,11 +1063,12 @@ function storySourceType(events: MarketStorySourceEventV02[]) {
 function storyFromCluster(
   cluster: StoryClusterV02,
   options: MarketStoryOptionsV02,
+  candles: MarketStoryCandleV02[] = [],
 ): { story: MarketStoryV02; members: MarketStoryMemberV02[] } | null {
   if (cluster.events.length < 2) return null;
 
   const events = cluster.events;
-  const range = storyRange(events);
+  const range = storyRange(events, candles);
   const eligibility = storyEligibility(events, options);
   const label = normalizedStoryLabel(events);
   const sourceType = storySourceType(events);
@@ -937,12 +1100,18 @@ function storyFromCluster(
     story_label: label.label,
     story_family: label.family,
     direction: storyDirection(events),
-    swing_change_pct: range.swingPct,
+    swing_change_pct: range.barStats.swingScore,
     chart_context_score: eligibility.averageChartContextScore,
     range_context_json: JSON.stringify({
       event_range_contexts: countValues(
         events.map((event) => event.event_range_context),
       ),
+      avg_change_label: "Avg Change",
+      avg_change_pct: range.barStats.avgChangePct,
+      swing_score_label: "Volatility Score",
+      swing_score: range.barStats.swingScore,
+      swing_score_method: "rms_15m_bar_open_close_returns_x100",
+      per_symbol_evidence: range.barStats.perSymbolEvidence,
       model_version: MARKET_STORY_V02_MODEL_VERSION,
     }),
     trend_context_json: JSON.stringify({
@@ -988,6 +1157,7 @@ function storyFromCluster(
 export function generateMarketStoriesV02(
   sourceEvents: MarketStorySourceEventV02[],
   options: Partial<MarketStoryOptionsV02> = {},
+  candles: MarketStoryCandleV02[] = [],
 ): MarketStoryV02Output {
   const resolvedOptions = {
     ...MARKET_STORY_V02_DEFAULT_OPTIONS,
@@ -1031,7 +1201,7 @@ export function generateMarketStoriesV02(
   }
 
   const storyParts = mergeStoryContinuationClusters(clusters, resolvedOptions)
-    .map((cluster) => storyFromCluster(cluster, resolvedOptions))
+    .map((cluster) => storyFromCluster(cluster, resolvedOptions, candles))
     .filter(
       (
         story,

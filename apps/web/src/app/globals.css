@@ -27,6 +27,8 @@
   --chip-text: var(--text-secondary);
   --source-chip-bg: rgba(34, 211, 238, 0.08);
   --source-chip-border: rgba(34, 211, 238, 0.36);
+  --source-chip-bg-strong: rgba(34, 211, 238, 0.18);
+  --source-chip-border-strong: rgba(34, 211, 238, 0.58);
   --source-chip-text: #67e8f9;
   --source-focused-text: #3b82f6;
   --source-likely-text: #7dd3fc;
@@ -49,7 +51,7 @@
 
   /* ── Evidence confidence ── */
   --cause-focused: #10b981;
-  --cause-likely: #65a30d;
+  --cause-likely: #84cc16;
   --context-backdrop: #b45309;
   --none-found: #94a3b8;
   --claude-limited: #8b5cf6;
@@ -113,6 +115,8 @@
   --chip-border: rgba(15, 23, 42, 0.1);
   --source-chip-bg: rgba(14, 165, 233, 0.08);
   --source-chip-border: rgba(14, 165, 233, 0.3);
+  --source-chip-bg-strong: rgba(14, 165, 233, 0.16);
+  --source-chip-border-strong: rgba(14, 165, 233, 0.5);
   --source-chip-text: #0369a1;
   --source-focused-text: #1e3a8a;
   --source-likely-text: #0369a1;
@@ -125,7 +129,7 @@
   --accent-selected-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25);
 
   --cause-focused: #047857;
-  --cause-likely: #3f6212;
+  --cause-likely: #4d7c0f;
   --context-backdrop: #7c2d12;
   --none-found: #5b6677;
 
@@ -288,6 +292,7 @@ details > summary::-webkit-details-marker {
 
 /* ── Feed row ── */
 .feed-row {
+  flex: 0 0 auto;
   background: var(--bg-row);
   border: 1px solid var(--feed-row-border);
   transition:

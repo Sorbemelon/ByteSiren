@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   generateMarketStoriesV02,
+  type MarketStoryCandleV02,
   type MarketStorySourceEventV02,
 } from "./index.ts";
 
@@ -36,6 +37,26 @@ function event(
     publish_candidate: options.publish_candidate ?? publish,
     macro_aligned: options.macro_aligned ?? false,
     suppress_reason: options.suppress_reason ?? null,
+  };
+}
+
+function candle(
+  symbol: string,
+  openTime: string,
+  open: number,
+  close: number,
+): MarketStoryCandleV02 {
+  return {
+    symbol,
+    open_time: openTime,
+    close_time: new Date(Date.parse(openTime) + 15 * 60 * 1000 - 1)
+      .toISOString()
+      .replace(".000Z", "Z"),
+    open,
+    high: Math.max(open, close),
+    low: Math.min(open, close),
+    close,
+    volume: 100,
   };
 }
 
@@ -198,6 +219,50 @@ test("story duration and swing thresholds are respected", () => {
     output.market_stories[0].suppress_reason,
     "below_minimum_story_range",
   );
+});
+
+test("Volatility Score uses RMS of all 15m bar changes inside the story window", () => {
+  const output = generateMarketStoriesV02(
+    [
+      event("signal_a", { startHour: 0, endHour: 1 }),
+      event("signal_b", { startHour: 4, endHour: 5 }),
+    ],
+    {},
+    [
+      candle("BTCUSDT", iso(0), 100, 101),
+      candle("BTCUSDT", iso(0, 15), 101, 102.01),
+    ],
+  );
+  const rangeContext = JSON.parse(output.market_stories[0].range_context_json);
+
+  assert.equal(
+    rangeContext.swing_score_method,
+    "rms_15m_bar_open_close_returns_x100",
+  );
+  assert.equal(rangeContext.swing_score, 100);
+  assert.equal(rangeContext.per_symbol_evidence[0].range_pct, 2.01);
+  assert.equal(rangeContext.per_symbol_evidence[0].swing_score, 100);
+  assert.equal(rangeContext.per_symbol_evidence[0].movement_status, "Net up");
+});
+
+test("Volatility Score rounds fractional raw scores to whole numbers", () => {
+  const output = generateMarketStoriesV02(
+    [
+      event("signal_a", { startHour: 0, endHour: 1 }),
+      event("signal_b", { startHour: 4, endHour: 5 }),
+    ],
+    {},
+    [candle("BTCUSDT", iso(0), 100, 100.123)],
+  );
+  const rangeContext = JSON.parse(output.market_stories[0].range_context_json);
+
+  assert.equal(rangeContext.swing_score, 12);
+  assert.equal(rangeContext.per_symbol_evidence[0].swing_score, 12);
+  assert.equal(
+    rangeContext.per_symbol_evidence[0].movement_status,
+    "Mostly flat",
+  );
+  assert.equal(Number.isInteger(rangeContext.swing_score), true);
 });
 
 test("deterministic story IDs are stable across repeated generation", () => {

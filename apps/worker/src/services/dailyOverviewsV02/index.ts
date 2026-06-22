@@ -88,6 +88,11 @@ interface SymbolDailyStatsV02 {
   symbol: MarketSymbol;
   change_pct: number;
   range_pct: number;
+  volatility_score: number | null;
+  peak_change_pct: number;
+  volume_ratio: number | null;
+  range_position: string;
+  range_position_display: string;
   first_price: number;
   last_price: number;
   candle_count: number;
@@ -97,6 +102,7 @@ interface DailyStatsV02 {
   dateUtc: string;
   dailyChangePct: number;
   marketRangePct: number;
+  dailyVolatilityScore: number | null;
   positiveSymbolCount: number;
   negativeSymbolCount: number;
   maxAbsSymbolChangePct: number;
@@ -135,6 +141,113 @@ function candlesForDate(candles: MarketCandle[], dateUtc: string) {
   return candles
     .filter((candle) => candle.open_time.slice(0, 10) === dateUtc)
     .sort((a, b) => a.open_time.localeCompare(b.open_time));
+}
+
+function previousCandlesForDate(
+  candles: MarketCandle[],
+  dateUtc: string,
+): MarketCandle[] {
+  const dayStartMs = Date.parse(`${dateUtc}T00:00:00.000Z`);
+  const previousStartMs =
+    dayStartMs - DAILY_OVERVIEW_EXPECTED_15M_CANDLES * 15 * 60 * 1000;
+
+  return candles
+    .filter((candle) => {
+      const openMs = Date.parse(candle.open_time);
+      return openMs >= previousStartMs && openMs < dayStartMs;
+    })
+    .sort((a, b) => a.open_time.localeCompare(b.open_time));
+}
+
+function averageVolume(candles: MarketCandle[]): number | null {
+  const volumes = candles
+    .map((candle) => candle.volume)
+    .filter((volume) => Number.isFinite(volume) && volume > 0);
+
+  if (volumes.length === 0) {
+    return null;
+  }
+
+  return volumes.reduce((sum, volume) => sum + volume, 0) / volumes.length;
+}
+
+function peakCandleChangePct(candles: MarketCandle[]): number {
+  let peak = 0;
+
+  for (const candle of candles) {
+    if (candle.open <= 0) {
+      continue;
+    }
+
+    const change = ((candle.close - candle.open) / candle.open) * 100;
+    if (Math.abs(change) > Math.abs(peak)) {
+      peak = change;
+    }
+  }
+
+  return round4(peak);
+}
+
+function candleReturnPct(candle: MarketCandle): number | null {
+  if (candle.open <= 0) {
+    return null;
+  }
+
+  return ((candle.close - candle.open) / candle.open) * 100;
+}
+
+function volatilityScore(candles: MarketCandle[]): number | null {
+  const returns = candles
+    .map(candleReturnPct)
+    .filter((value): value is number => value !== null);
+
+  if (returns.length === 0) {
+    return null;
+  }
+
+  const meanSquare =
+    returns.reduce((sum, value) => sum + value ** 2, 0) / returns.length;
+  return Math.round(Math.sqrt(meanSquare) * 100);
+}
+
+function rangePositionFromReference({
+  close,
+  referenceHigh,
+  referenceLow,
+}: {
+  close: number;
+  referenceHigh: number;
+  referenceLow: number;
+}): string {
+  if (close > referenceHigh) {
+    return "broke_high";
+  }
+
+  if (close < referenceLow) {
+    return "broke_low";
+  }
+
+  const range = referenceHigh - referenceLow;
+  if (range <= 0) {
+    return "inside_range";
+  }
+
+  const position = (close - referenceLow) / range;
+  if (position >= 0.8) {
+    return "near_high";
+  }
+  if (position <= 0.2) {
+    return "near_low";
+  }
+  return "inside_range";
+}
+
+function rangePositionDisplay(value: string): string {
+  if (value === "near_high") return "Near high";
+  if (value === "near_low") return "Near low";
+  if (value === "broke_high") return "Broke high";
+  if (value === "broke_low") return "Broke low";
+  return "Inside range";
 }
 
 function coverageSummary(
@@ -176,6 +289,7 @@ function computeDailyStats(
   dateUtc: string,
 ): DailyStatsV02 | null {
   const symbolStats: SymbolDailyStatsV02[] = [];
+  const allCandles: MarketCandle[] = [];
 
   for (const symbol of ALLOWED_SYMBOLS) {
     const candles = candlesForDate(candlesBySymbol[symbol], dateUtc);
@@ -195,11 +309,42 @@ function computeDailyStats(
     const low = Math.min(...candles.map((candle) => candle.low));
     const changePct = ((last.close - first.open) / first.open) * 100;
     const rangePct = ((high - low) / first.open) * 100;
+    allCandles.push(...candles);
+    const previousCandles = previousCandlesForDate(
+      candlesBySymbol[symbol],
+      dateUtc,
+    );
+    const previousHigh =
+      previousCandles.length > 0
+        ? Math.max(...previousCandles.map((candle) => candle.high))
+        : high;
+    const previousLow =
+      previousCandles.length > 0
+        ? Math.min(...previousCandles.map((candle) => candle.low))
+        : low;
+    const currentAverageVolume = averageVolume(candles);
+    const previousAverageVolume = averageVolume(previousCandles);
+    const volumeRatio =
+      currentAverageVolume !== null &&
+      previousAverageVolume !== null &&
+      previousAverageVolume > 0
+        ? round4(currentAverageVolume / previousAverageVolume)
+        : null;
+    const rangePosition = rangePositionFromReference({
+      close: last.close,
+      referenceHigh: previousHigh,
+      referenceLow: previousLow,
+    });
 
     symbolStats.push({
       symbol,
       change_pct: round4(changePct),
       range_pct: round4(rangePct),
+      volatility_score: volatilityScore(candles),
+      peak_change_pct: peakCandleChangePct(candles),
+      volume_ratio: volumeRatio,
+      range_position: rangePosition,
+      range_position_display: rangePositionDisplay(rangePosition),
       first_price: first.open,
       last_price: last.close,
       candle_count: candles.length,
@@ -213,6 +358,7 @@ function computeDailyStats(
     dateUtc,
     dailyChangePct: round4(median(changes)),
     marketRangePct: round4(median(ranges)),
+    dailyVolatilityScore: volatilityScore(allCandles),
     positiveSymbolCount: symbolStats.filter((stat) => stat.change_pct > 0)
       .length,
     negativeSymbolCount: symbolStats.filter((stat) => stat.change_pct < 0)
@@ -282,6 +428,12 @@ function topSymbolMoves(stats: DailyStatsV02) {
       symbol: stat.symbol,
       change_pct: stat.change_pct,
       range_pct: stat.range_pct,
+      volatility_score_label: "Volatility Score",
+      volatility_score: stat.volatility_score,
+      peak_change_pct: stat.peak_change_pct,
+      volume_ratio: stat.volume_ratio,
+      range_position: stat.range_position,
+      range_position_display: stat.range_position_display,
       first_price: stat.first_price,
       last_price: stat.last_price,
     }));
@@ -398,6 +550,8 @@ export function generateDailyOverviewsV02({
     const chartSummary = {
       daily_change_method: "median_symbol_open_to_last_close_pct",
       market_range_method: "median_symbol_high_low_range_pct",
+      daily_volatility_score_method: "rms_15m_bar_open_close_returns_x100",
+      daily_volatility_score: stats.dailyVolatilityScore,
       positive_symbol_count: stats.positiveSymbolCount,
       negative_symbol_count: stats.negativeSymbolCount,
       max_abs_symbol_change_pct: stats.maxAbsSymbolChangePct,

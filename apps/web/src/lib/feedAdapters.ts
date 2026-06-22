@@ -8,6 +8,7 @@ import type {
   FeedItemV02,
   FeedSourceV02,
   NormalizedDailyOverviewSection,
+  NormalizedDayPost,
   NormalizedFeedEnvelope,
   NormalizedFeedSection,
   NormalizedFeedV02,
@@ -182,15 +183,31 @@ function normalizeMarketStorySection(
   return {
     itemType: "market_story",
     id: item.id,
+    originalId: item.id,
+    isContinuation: false,
     dateUtc: item.date_utc,
     displayTime: item.display_time ?? "",
     storyWindowLabel: "Story window",
-    swingChangeLabel: "Swing Change",
+    avgChangeLabel: "Avg Change",
+    avgChangePct: nullableNumber(item.avg_change_pct),
+    swingScoreLabel: "Volatility Score",
+    swingScore: nullableNumber(item.swing_score),
     storyLabel: item.story_label,
     storyFamily: nullableString(item.story_family),
     direction: nullableString(item.direction),
-    swingChangePct: nullableNumber(item.swing_change_pct),
     chartContextScore: nullableNumber(item.chart_context_score),
+    perSymbolEvidence: arrayOrEmpty(item.per_symbol_evidence).map((row) => ({
+      symbol: row.symbol,
+      avg_change_label: "Avg Change",
+      avg_change_pct: nullableNumber(row.avg_change_pct),
+      range_pct: nullableNumber(row.range_pct),
+      swing_score_label: "Volatility Score",
+      swing_score: nullableNumber(row.swing_score),
+      volume_ratio: nullableNumber(row.volume_ratio),
+      movement_status_label: "Movement Status",
+      movement_status: nullableString(row.movement_status),
+      bar_count: nullableNumber(row.bar_count),
+    })),
     rangeContext: recordOrEmpty(item.range_context),
     trendContext: recordOrEmpty(item.trend_context),
     momentumContext: recordOrEmpty(item.momentum_context),
@@ -202,6 +219,189 @@ function normalizeMarketStorySection(
   };
 }
 
+function utcDateKey(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDisplayDateUtc(dateUtc: string): string {
+  const date = new Date(`${dateUtc}T00:00:00.000Z`);
+  if (!Number.isFinite(date.getTime())) {
+    return `${dateUtc} UTC`;
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }) + " UTC";
+}
+
+function isCurrentUtcDay(dateUtc: string): boolean {
+  return new Date().toISOString().slice(0, 10) === dateUtc;
+}
+
+function marketStorySpanDates(section: NormalizedMarketStorySection): string[] {
+  const startMs = section.chart?.highlight_start
+    ? new Date(section.chart.highlight_start).getTime()
+    : NaN;
+  const endMs = section.chart?.highlight_end
+    ? new Date(section.chart.highlight_end).getTime()
+    : NaN;
+
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+    return [];
+  }
+
+  const startDay = utcDateKey(new Date(Math.min(startMs, endMs)).toISOString());
+  const endDay = utcDateKey(new Date(Math.max(startMs, endMs)).toISOString());
+
+  if (!startDay || !endDay) {
+    return [];
+  }
+
+  const dates: string[] = [];
+  let cursor = Date.parse(`${startDay}T00:00:00.000Z`);
+  const end = Date.parse(`${endDay}T00:00:00.000Z`);
+  const oneDayMs = 24 * 60 * 60 * 1000;
+
+  while (cursor <= end && dates.length < 45) {
+    dates.push(new Date(cursor).toISOString().slice(0, 10));
+    cursor += oneDayMs;
+  }
+
+  return dates;
+}
+
+function cloneMarketStoryContinuation(
+  section: NormalizedMarketStorySection,
+  dateUtc: string,
+): NormalizedMarketStorySection {
+  return {
+    ...section,
+    id: `${section.originalId}__continue__${dateUtc}`,
+    originalId: section.originalId,
+    isContinuation: true,
+    dateUtc,
+  };
+}
+
+function sectionOrder(section: NormalizedFeedSection): number {
+  if (section.itemType === "daily_overview") return 0;
+  if (section.itemType === "market_story") return 1;
+  return 2;
+}
+
+function sortSections(sections: NormalizedFeedSection[]): NormalizedFeedSection[] {
+  return sections
+    .map((section, index) => ({ section, index }))
+    .sort((a, b) => {
+      const typeOrder = sectionOrder(a.section) - sectionOrder(b.section);
+      return typeOrder === 0 ? a.index - b.index : typeOrder;
+    })
+    .map(({ section }) => section);
+}
+
+function finalizeDayPost(day: NormalizedDayPost): NormalizedDayPost {
+  const sections = sortSections(day.sections);
+  const defaultCollapsedItemId =
+    day.defaultCollapsedItemId &&
+    sections.some((section) => section.id === day.defaultCollapsedItemId)
+      ? day.defaultCollapsedItemId
+      : (sections[0]?.id ?? null);
+  const hiddenItemCountWhenCollapsed =
+    sections.length > 1 && defaultCollapsedItemId ? sections.length - 1 : 0;
+  const hasExtraItems = hiddenItemCountWhenCollapsed > 0;
+
+  return {
+    ...day,
+    sections,
+    itemCount: sections.length,
+    hiddenItemCountWhenCollapsed,
+    defaultCollapsedItemId,
+    hasExtraItems,
+    expandedControlLabel: hasExtraItems
+      ? `+${hiddenItemCountWhenCollapsed} events \u00b7 Collapse post`
+      : null,
+    collapsedControlLabel: hasExtraItems
+      ? `+${hiddenItemCountWhenCollapsed} events \u00b7 Expand post`
+      : null,
+  };
+}
+
+function createContinuationDayPost(dateUtc: string): NormalizedDayPost {
+  return {
+    id: `day_${dateUtc}`,
+    dateUtc,
+    displayDate: formatDisplayDateUtc(dateUtc),
+    isCurrentUtcDay: isCurrentUtcDay(dateUtc),
+    itemCount: 0,
+    hiddenItemCountWhenCollapsed: 0,
+    defaultCollapsedItemId: null,
+    hasExtraItems: false,
+    expandedControlLabel: null,
+    collapsedControlLabel: null,
+    sections: [],
+  };
+}
+
+function addCrossDayMarketStoryContinuations(
+  dayPosts: NormalizedDayPost[],
+): NormalizedDayPost[] {
+  const postsByDate = new Map(
+    dayPosts.map((day) => [day.dateUtc, { ...day, sections: [...day.sections] }]),
+  );
+  const stories = dayPosts.flatMap((day) =>
+    day.sections.filter(
+      (section): section is NormalizedMarketStorySection =>
+        section.itemType === "market_story" && !section.isContinuation,
+    ),
+  );
+
+  for (const story of stories) {
+    const spanDates = marketStorySpanDates(story);
+    if (spanDates.length <= 1) {
+      continue;
+    }
+
+    for (const dateUtc of spanDates) {
+      if (dateUtc === story.dateUtc) {
+        continue;
+      }
+
+      const day = postsByDate.get(dateUtc) ?? createContinuationDayPost(dateUtc);
+      const alreadyPresent = day.sections.some(
+        (section) =>
+          section.itemType === "market_story" &&
+          section.originalId === story.originalId,
+      );
+
+      if (!alreadyPresent) {
+        day.sections.push(cloneMarketStoryContinuation(story, dateUtc));
+      }
+
+      postsByDate.set(dateUtc, day);
+    }
+  }
+
+  return [...postsByDate.values()]
+    .map(finalizeDayPost)
+    .sort((a, b) => b.dateUtc.localeCompare(a.dateUtc));
+}
+
 function normalizeSymbolEvidenceV02(
   row: SignalEventSymbolEvidenceV02,
 ): SignalEventSymbolEvidenceV02 {
@@ -211,6 +411,7 @@ function normalizeSymbolEvidenceV02(
     window_change_pct: nullableNumber(row.window_change_pct),
     peak_15m_label: "Peak 15m",
     peak_15m_change_pct: nullableNumber(row.peak_15m_change_pct),
+    range_pct: nullableNumber(row.range_pct),
     volume_ratio: nullableNumber(row.volume_ratio),
     range_position_label: "Range Position",
     range_position: nullableString(row.range_position),
@@ -310,16 +511,8 @@ function isPublicFeedItemV02(item: unknown): item is FeedItemV02 {
 export function normalizeFeedV02(
   response: FeedApiResponseV02,
 ): NormalizedFeedV02 {
-  return {
-    version: "v02",
-    ok: true,
-    updatedAt: response.updated_at ?? null,
-    rangeDays: response.range_days,
-    grouping: "utc_day",
-    daysExpandedDefault: response.days_expanded_default ?? true,
-    globalControlLabelWhenExpanded: "Collapse days",
-    globalControlLabelWhenCollapsed: "Expand days",
-    dayPosts: (response.day_groups ?? []).map((group) => ({
+  const dayPosts = addCrossDayMarketStoryContinuations(
+    (response.day_groups ?? []).map((group) => ({
       id: group.day_post_id,
       dateUtc: group.date_utc,
       displayDate: group.display_date,
@@ -334,6 +527,18 @@ export function normalizeFeedV02(
         .filter(isPublicFeedItemV02)
         .map(normalizeSection),
     })),
+  );
+
+  return {
+    version: "v02",
+    ok: true,
+    updatedAt: response.updated_at ?? null,
+    rangeDays: response.range_days,
+    grouping: "utc_day",
+    daysExpandedDefault: response.days_expanded_default ?? true,
+    globalControlLabelWhenExpanded: "Collapse days",
+    globalControlLabelWhenCollapsed: "Expand days",
+    dayPosts,
   };
 }
 

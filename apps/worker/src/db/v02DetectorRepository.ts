@@ -24,6 +24,29 @@ function boolInt(value: boolean): number {
   return value ? 1 : 0;
 }
 
+const SQLITE_BIND_CHUNK_SIZE = 50;
+const D1_BATCH_STATEMENT_CHUNK_SIZE = 25;
+
+async function runStatementBatches(
+  db: D1Database,
+  statements: D1PreparedStatement[],
+): Promise<number> {
+  let affected = 0;
+
+  for (
+    let index = 0;
+    index < statements.length;
+    index += D1_BATCH_STATEMENT_CHUNK_SIZE
+  ) {
+    const results = await db.batch(
+      statements.slice(index, index + D1_BATCH_STATEMENT_CHUNK_SIZE),
+    );
+    affected += results.reduce((sum, result) => sum + changedRows(result), 0);
+  }
+
+  return affected;
+}
+
 export async function upsertSignalEventsV02(
   db: D1Database,
   events: SignalEventV02[],
@@ -136,10 +159,7 @@ export async function upsertSignalEventsV02(
       ),
   );
 
-  let affected = 0;
-  const results = await db.batch(statements);
-  affected += results.reduce((sum, result) => sum + changedRows(result), 0);
-  return affected;
+  return runStatementBatches(db, statements);
 }
 
 export async function upsertSignalEventSymbolsV02(
@@ -218,8 +238,7 @@ export async function upsertSignalEventSymbolsV02(
       ),
   );
 
-  const results = await db.batch(statements);
-  return results.reduce((sum, result) => sum + changedRows(result), 0);
+  return runStatementBatches(db, statements);
 }
 
 export async function upsertAuditEventsV02(
@@ -295,14 +314,15 @@ export async function upsertAuditEventsV02(
       ),
   );
 
-  const results = await db.batch(statements);
-  return results.reduce((sum, result) => sum + changedRows(result), 0);
+  return runStatementBatches(db, statements);
 }
 
 export async function upsertDetectorV02Output(
   db: D1Database,
   output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
 ): Promise<DetectorV02WriteCounts> {
+  await pruneDetectorV02Output(db, output);
+
   const signalEvents = await upsertSignalEventsV02(db, output.signal_events);
   const signalSymbols = await upsertSignalEventSymbolsV02(
     db,
@@ -315,4 +335,52 @@ export async function upsertDetectorV02Output(
     signal_event_symbols: signalSymbols,
     audit_events: auditEvents,
   };
+}
+
+async function deleteRowsNotIn(
+  db: D1Database,
+  table: string,
+  idColumn: string,
+  keepIds: string[],
+): Promise<void> {
+  if (keepIds.length === 0) {
+    await db.prepare(`DELETE FROM ${table}`).run();
+    return;
+  }
+
+  const keep = new Set(keepIds);
+  const existing = await db
+    .prepare(`SELECT ${idColumn} AS id FROM ${table}`)
+    .all<{ id: string }>();
+  const staleIds = (existing.results ?? [])
+    .map((row) => row.id)
+    .filter((id) => !keep.has(id));
+
+  for (
+    let index = 0;
+    index < staleIds.length;
+    index += SQLITE_BIND_CHUNK_SIZE
+  ) {
+    const chunk = staleIds.slice(index, index + SQLITE_BIND_CHUNK_SIZE);
+    const placeholders = chunk.map(() => "?").join(", ");
+    await db
+      .prepare(`DELETE FROM ${table} WHERE ${idColumn} IN (${placeholders})`)
+      .bind(...chunk)
+      .run();
+  }
+}
+
+async function pruneDetectorV02Output(
+  db: D1Database,
+  output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
+): Promise<void> {
+  const signalIds = output.signal_events.map((event) => event.id);
+  const auditIds = output.audit_events.map((event) => event.id);
+  const symbolIds = output.signal_events.flatMap((event) =>
+    event.symbols.map((symbol) => symbol.id),
+  );
+
+  await deleteRowsNotIn(db, "signal_event_symbols_v02", "id", symbolIds);
+  await deleteRowsNotIn(db, "signal_events_v02", "id", signalIds);
+  await deleteRowsNotIn(db, "audit_events_v02", "id", auditIds);
 }

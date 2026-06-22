@@ -111,7 +111,14 @@ const v02Feed = {
           market_tone: "risk_on",
           market_range_pct: 4.2,
           notable_symbols: [{ symbol: "BTCUSDT", reason: "largest change" }],
-          top_symbol_moves: [{ symbol: "BTCUSDT", change_pct: 2.1 }],
+          top_symbol_moves: [
+            {
+              symbol: "BTCUSDT",
+              change_pct: 2.1,
+              range_pct: 4.2,
+              volatility_score: 33,
+            },
+          ],
           public_context_status: "brief_ready",
           sources: [
             {
@@ -146,12 +153,28 @@ const v02Feed = {
           date_utc: "2026-06-19",
           display_time: "10:00-18:00 UTC",
           story_window_label: "Story window",
-          swing_change_label: "Swing Change",
+          avg_change_label: "Avg Change",
+          avg_change_pct: 1.2,
+          swing_score_label: "Volatility Score",
+          swing_score: 42,
           story_label: "Range break sequence",
           story_family: "range_break",
           direction: "observed_up",
-          swing_change_pct: 3.4,
           chart_context_score: 86,
+          per_symbol_evidence: [
+            {
+              symbol: "BTCUSDT",
+              avg_change_label: "Avg Change",
+              avg_change_pct: 1.1,
+              range_pct: 3.4,
+              swing_score_label: "Volatility Score",
+              swing_score: 31,
+              volume_ratio: 1.2,
+              movement_status_label: "Movement Status",
+              movement_status: "Net up",
+              bar_count: 32,
+            },
+          ],
           range_context: { event_range_context: "broad_broke_high" },
           trend_context: { trend_context: "trend_up" },
           momentum_context: { momentum_type: "continuation" },
@@ -228,6 +251,7 @@ const v02Feed = {
               symbol: "BTCUSDT",
               window_change_label: "Window Change",
               window_change_pct: 2.2,
+              range_pct: 4.8,
               peak_15m_label: "Peak 15m",
               peak_15m_change_pct: 1.1,
               volume_ratio: 2.5,
@@ -309,6 +333,7 @@ test("v0.2 Daily Overview, Market Story, and Signal Event labels are preserved",
 
   assert.equal(daily.itemType, "daily_overview");
   assert.equal(daily.dailyChangeLabel, "24h Change");
+  assert.equal(daily.topSymbolMoves[0].volatility_score, 33);
   assert.equal(
     daily.sources[0].url,
     v02Feed.day_groups[0].items[0].sources[0].url,
@@ -316,7 +341,19 @@ test("v0.2 Daily Overview, Market Story, and Signal Event labels are preserved",
 
   assert.equal(story.itemType, "market_story");
   assert.equal(story.storyWindowLabel, "Story window");
-  assert.equal(story.swingChangeLabel, "Swing Change");
+  assert.equal(story.avgChangeLabel, "Avg Change");
+  assert.equal(story.avgChangePct, 1.2);
+  assert.equal(story.swingScoreLabel, "Volatility Score");
+  assert.equal(story.swingScore, 42);
+  assert.equal(story.perSymbolEvidence[0].range_pct, 3.4);
+  assert.equal(
+    story.perSymbolEvidence[0].swing_score_label,
+    "Volatility Score",
+  );
+  assert.equal(
+    story.perSymbolEvidence[0].movement_status_label,
+    "Movement Status",
+  );
 
   assert.equal(signal.itemType, "signal_event");
   assert.equal(signal.avgChangeLabel, "Avg Change");
@@ -324,6 +361,7 @@ test("v0.2 Daily Overview, Market Story, and Signal Event labels are preserved",
     signal.perSymbolEvidence[0].window_change_label,
     "Window Change",
   );
+  assert.equal(signal.perSymbolEvidence[0].range_pct, 4.8);
   assert.equal(
     signal.perSymbolEvidence[0].range_position_label,
     "Range Position",
@@ -348,6 +386,43 @@ test("Market Story normalized section strips accidental Claude and source fields
     false,
   );
   assert.equal(serialized.includes("Focused Cause"), false);
+});
+
+test("cross-day Market Stories are repeated as continuation cards", () => {
+  const crossDay = structuredClone(v02Feed);
+  const story = crossDay.day_groups[0].items[1];
+  story.display_time = "22:00-03:00 UTC";
+  story.chart.highlight_start = "2026-06-19T22:00:00.000Z";
+  story.chart.highlight_end = "2026-06-20T03:00:00.000Z";
+
+  const normalized = normalizeFeedV02(crossDay);
+  const originalDay = normalized.dayPosts.find(
+    (day) => day.dateUtc === "2026-06-19",
+  );
+  const continuationDay = normalized.dayPosts.find(
+    (day) => day.dateUtc === "2026-06-20",
+  );
+  const originalStory = originalDay.sections.find(
+    (section) => section.itemType === "market_story",
+  );
+  const continuationStory = continuationDay.sections.find(
+    (section) => section.itemType === "market_story",
+  );
+
+  assert.equal(originalStory.itemType, "market_story");
+  assert.equal(originalStory.id, "story_2026-06-19");
+  assert.equal(originalStory.originalId, "story_2026-06-19");
+  assert.equal(originalStory.isContinuation, false);
+
+  assert.equal(continuationStory.itemType, "market_story");
+  assert.equal(
+    continuationStory.id,
+    "story_2026-06-19__continue__2026-06-20",
+  );
+  assert.equal(continuationStory.originalId, "story_2026-06-19");
+  assert.equal(continuationStory.isContinuation, true);
+  assert.equal(continuationStory.storyLabel, originalStory.storyLabel);
+  assert.equal(Object.hasOwn(continuationStory, "sources"), false);
 });
 
 test("Signal Event table highlight metadata and source URLs survive exactly", () => {

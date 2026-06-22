@@ -30,9 +30,10 @@
     "Peak 15m",
     "Volume ×",
     "Range Position",
+    "Movement Status",
     "Chart context",
     "Story window",
-    "Swing Change"
+    "Volatility Score"
   ],
   "range_position_labels_v02": [
     "Inside range",

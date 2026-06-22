@@ -114,7 +114,7 @@ function marketStory() {
     direction: "observed_up",
     swing_change_pct: 3.4,
     chart_context_score: 86,
-    range_context_json: "{}",
+    range_context_json: JSON.stringify({ swing_score: 0.42 }),
     trend_context_json: "{}",
     momentum_context_json: "{}",
     volatility_context_json: "{}",
@@ -231,6 +231,7 @@ test("Daily Overview payload builder emits 24h Change and deterministic Market S
   assert.deepEqual(payloads[0].signal_event_ids_for_day, ["sig_public"]);
   assert.deepEqual(payloads[0].market_story_ids_for_day, ["story_public"]);
   assert.equal(payloads[0].market_stories_for_day[0].id, "story_public");
+  assert.equal(payloads[0].market_stories_for_day[0].swing_score, 0.42);
   assert.equal(payloads[0].no_trading_advice, true);
 });
 

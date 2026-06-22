@@ -141,13 +141,11 @@ export function sectionHasExpandableDetails(
 
   if (section.itemType === "market_story") {
     return (
-      section.decisionReasons.length > 0 ||
-      Boolean(section.publishReason) ||
+      section.perSymbolEvidence.length > 0 ||
       Object.keys(section.rangeContext).length > 0 ||
       Object.keys(section.trendContext).length > 0 ||
       Object.keys(section.momentumContext).length > 0 ||
-      Object.keys(section.volatilityContext).length > 0 ||
-      Object.keys(section.deterministicContext).length > 0
+      Object.keys(section.volatilityContext).length > 0
     );
   }
 
@@ -296,6 +294,20 @@ export function buildChartHighlightsV02(
       }
 
       if (
+        section.itemType === "market_story" &&
+        section.isContinuation &&
+        !selected &&
+        !(
+          hasSelection &&
+          selection.itemType === "daily_overview" &&
+          selectedDay &&
+          day.id === selectedDay.id
+        )
+      ) {
+        return [];
+      }
+
+      if (
         hasSelection &&
         selection.itemType === "daily_overview" &&
         selectedDay &&
@@ -383,17 +395,20 @@ export function buildChartSourceMarkersV02(
   feed: NormalizedFeedV02 | null,
   selection: FeedSelectionV02,
 ): ChartSourceMarkerViewV02[] {
-  if (!feed || !isFeedSelectionActiveV02(selection)) {
+  if (!feed) {
     return [];
   }
 
+  const hasSelection = isFeedSelectionActiveV02(selection);
+
   return feed.dayPosts.flatMap((day) =>
     day.sections.flatMap((section) => {
-      if (!isSectionSelectedV02(selection, section)) {
+      if (section.itemType === "market_story") {
         return [];
       }
 
-      if (section.itemType === "market_story") {
+      const selected = isSectionSelectedV02(selection, section);
+      if (hasSelection && !selected) {
         return [];
       }
 
@@ -418,7 +433,7 @@ export function buildChartSourceMarkersV02(
             label: sourceMarkerLabel(source.tag || source.used_for),
             publisher: source.publisher ?? source.title ?? null,
             url: source.url,
-            selected: true,
+            selected,
           } satisfies ChartSourceMarkerViewV02,
         ];
       });

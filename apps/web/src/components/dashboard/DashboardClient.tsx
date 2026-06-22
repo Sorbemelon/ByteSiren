@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Header from "../Header";
 import ChartPanel, { type ChartStatus } from "../ChartPanel";
 import IntelligenceFeed from "../IntelligenceFeed";
@@ -69,6 +69,7 @@ function isAbortError(error: unknown): boolean {
 }
 
 export default function DashboardClient() {
+  const leftSectionRef = useRef<HTMLDivElement>(null);
   const [selectedSymbol, setSelectedSymbol] = useState<Symbol>("BTC");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export default function DashboardClient() {
   const [apiError, setApiError] = useState<string | null>(
     API_BASE_CONFIGURED ? null : "Production API URL is not configured.",
   );
+  const [feedPanelHeight, setFeedPanelHeight] = useState<number | null>(null);
 
   const selectedIncident =
     feed.find((item) => item.incident_id === selectedId) ?? null;
@@ -328,6 +330,37 @@ export default function DashboardClient() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [feedVersion]);
 
+  useEffect(() => {
+    const leftSection = leftSectionRef.current;
+    if (!leftSection || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const desktopQuery = window.matchMedia("(min-width: 1024px)");
+    const updateHeight = () => {
+      if (!desktopQuery.matches) {
+        setFeedPanelHeight(null);
+        return;
+      }
+
+      const leftHeight = leftSection.getBoundingClientRect().height;
+      setFeedPanelHeight(leftHeight > 0 ? Math.ceil(leftHeight) : null);
+    };
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(leftSection);
+    updateHeight();
+
+    desktopQuery.addEventListener("change", updateHeight);
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      observer.disconnect();
+      desktopQuery.removeEventListener("change", updateHeight);
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
+
   return (
     <main
       className="flex min-h-screen w-full flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8 2xl:px-10"
@@ -350,32 +383,47 @@ export default function DashboardClient() {
       )}
 
       <section
-        className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.78fr)] lg:grid-rows-[auto_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.72fr)]"
+        className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.78fr)] lg:items-start 2xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.72fr)]"
         aria-label="AI Crypto Market Intelligence Monitor"
       >
-        <ChartPanel
-          selectedSymbol={selectedSymbol}
-          onSymbolChange={setSelectedSymbol}
-          market={market}
-          feed={feed}
-          selectedIncidentId={selectedIncident?.incident_id ?? null}
-          candles={candles}
-          chartStatus={chartStatus}
-          chartInterval={chartInterval}
-          onChartIntervalChange={setChartInterval}
-          v02Highlights={v02ChartHighlights}
-          v02SourceMarkers={v02ChartSourceMarkers}
-          onV02HighlightSelect={
-            feedVersion === "v02" ? handleSelectV02ChartHighlight : undefined
-          }
-          onV02SourceMarkerSelect={
-            feedVersion === "v02" ? handleSelectV02SourceMarker : undefined
-          }
-        />
+        <div
+          ref={leftSectionRef}
+          className="flex min-w-0 flex-col gap-4 lg:col-start-1"
+          data-testid="dashboard-left-section"
+        >
+          <ChartPanel
+            selectedSymbol={selectedSymbol}
+            onSymbolChange={setSelectedSymbol}
+            market={market}
+            feed={feed}
+            selectedIncidentId={selectedIncident?.incident_id ?? null}
+            candles={candles}
+            chartStatus={chartStatus}
+            chartInterval={chartInterval}
+            onChartIntervalChange={setChartInterval}
+            v02Highlights={v02ChartHighlights}
+            v02SourceMarkers={v02ChartSourceMarkers}
+            onV02HighlightSelect={
+              feedVersion === "v02" ? handleSelectV02ChartHighlight : undefined
+            }
+            onV02SourceMarkerSelect={
+              feedVersion === "v02" ? handleSelectV02SourceMarker : undefined
+            }
+          />
+
+          <BottomAccordions viewMetrics={viewMetrics} />
+        </div>
 
         <div
-          className="min-h-0 rounded-2xl lg:col-start-2 lg:row-span-2 lg:row-start-1"
-          style={{ scrollbarGutter: "stable" } as React.CSSProperties}
+          className="min-h-0 overflow-hidden rounded-2xl lg:col-start-2"
+          data-testid="dashboard-feed-panel"
+          style={
+            {
+              height: feedPanelHeight ?? undefined,
+              maxHeight: feedPanelHeight ?? undefined,
+              scrollbarGutter: "stable",
+            } as React.CSSProperties
+          }
         >
           {feedVersion === "v02" ? (
             <IntelligenceFeedV02
@@ -396,10 +444,6 @@ export default function DashboardClient() {
               loading={feedLoading}
             />
           )}
-        </div>
-
-        <div className="lg:col-start-1 lg:row-start-2">
-          <BottomAccordions viewMetrics={viewMetrics} />
         </div>
       </section>
 

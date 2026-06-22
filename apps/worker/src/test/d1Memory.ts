@@ -298,6 +298,8 @@ const TERMINAL_INCIDENT_STATUSES = new Set([
   "context_only",
   "none_found",
 ]);
+const PREPARED_STATEMENT_BIND_LIMIT = 100;
+const BATCH_BIND_LIMIT = 999;
 
 function incidentEventEnd(row: Pick<IncidentRow, "started_at" | "ended_at">) {
   return row.ended_at ?? row.started_at;
@@ -352,11 +354,50 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
     }
 
     bind(...values: unknown[]) {
+      if (values.length > PREPARED_STATEMENT_BIND_LIMIT) {
+        throw new Error("too many SQL variables");
+      }
       this.params = values;
       return this;
     }
 
+    bindCount() {
+      return this.params.length;
+    }
+
     async all<T>() {
+      if (this.sql.includes("SELECT id AS id FROM signal_events_v02")) {
+        return {
+          results: tables.signal_events_v02.map((row) => ({
+            id: row.id,
+          })) as T[],
+        };
+      }
+
+      if (this.sql.includes("SELECT id AS id FROM signal_event_symbols_v02")) {
+        return {
+          results: tables.signal_event_symbols_v02.map((row) => ({
+            id: row.id,
+          })) as T[],
+        };
+      }
+
+      if (this.sql.includes("SELECT id AS id FROM audit_events_v02")) {
+        return {
+          results: tables.audit_events_v02.map((row) => ({
+            id: row.id,
+          })) as T[],
+        };
+      }
+
+      if (this.sql.includes("SELECT id AS id FROM market_stories_v02")) {
+        return {
+          results: tables.market_stories_v02.map((row) => ({
+            id: row.id,
+          })) as T[],
+        };
+      }
+
       if (
         this.sql.includes("FROM market_candles") &&
         this.sql.includes("ORDER BY open_time DESC")
@@ -1622,6 +1663,47 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         return result(1);
       }
 
+      if (this.sql.includes("DELETE FROM signal_event_symbols_v02")) {
+        const before = tables.signal_event_symbols_v02.length;
+        if (this.sql.includes("WHERE id IN")) {
+          const ids = new Set(this.params as string[]);
+          tables.signal_event_symbols_v02 =
+            tables.signal_event_symbols_v02.filter((row) => !ids.has(row.id));
+        } else {
+          tables.signal_event_symbols_v02 = [];
+        }
+
+        return result(before - tables.signal_event_symbols_v02.length);
+      }
+
+      if (this.sql.includes("DELETE FROM signal_events_v02")) {
+        const before = tables.signal_events_v02.length;
+        if (this.sql.includes("WHERE id IN")) {
+          const ids = new Set(this.params as string[]);
+          tables.signal_events_v02 = tables.signal_events_v02.filter(
+            (row) => !ids.has(row.id),
+          );
+        } else {
+          tables.signal_events_v02 = [];
+        }
+
+        return result(before - tables.signal_events_v02.length);
+      }
+
+      if (this.sql.includes("DELETE FROM audit_events_v02")) {
+        const before = tables.audit_events_v02.length;
+        if (this.sql.includes("WHERE id IN")) {
+          const ids = new Set(this.params as string[]);
+          tables.audit_events_v02 = tables.audit_events_v02.filter(
+            (row) => !ids.has(row.id),
+          );
+        } else {
+          tables.audit_events_v02 = [];
+        }
+
+        return result(before - tables.audit_events_v02.length);
+      }
+
       if (this.sql.includes("INSERT INTO market_stories_v02")) {
         const [
           id,
@@ -1714,6 +1796,35 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           );
 
         return result(before - tables.market_story_members_v02.length);
+      }
+
+      if (this.sql.includes("DELETE FROM market_story_members_v02")) {
+        const before = tables.market_story_members_v02.length;
+        if (this.sql.includes("WHERE market_story_id IN")) {
+          const ids = new Set(this.params as string[]);
+          tables.market_story_members_v02 =
+            tables.market_story_members_v02.filter(
+              (row) => !ids.has(row.market_story_id),
+            );
+        } else {
+          tables.market_story_members_v02 = [];
+        }
+
+        return result(before - tables.market_story_members_v02.length);
+      }
+
+      if (this.sql.includes("DELETE FROM market_stories_v02")) {
+        const before = tables.market_stories_v02.length;
+        if (this.sql.includes("WHERE id IN")) {
+          const ids = new Set(this.params as string[]);
+          tables.market_stories_v02 = tables.market_stories_v02.filter(
+            (row) => !ids.has(row.id),
+          );
+        } else {
+          tables.market_stories_v02 = [];
+        }
+
+        return result(before - tables.market_stories_v02.length);
       }
 
       if (this.sql.includes("INSERT INTO market_story_members_v02")) {
@@ -1972,6 +2083,16 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       return new Prepared(sql);
     },
     async batch(statements: Array<{ run: () => Promise<D1Result<unknown>> }>) {
+      const totalVariables = statements.reduce(
+        (sum, statement) =>
+          sum + (statement instanceof Prepared ? statement.bindCount() : 0),
+        0,
+      );
+
+      if (totalVariables > BATCH_BIND_LIMIT) {
+        throw new Error("too many SQL variables");
+      }
+
       return Promise.all(statements.map((statement) => statement.run()));
     },
   } as unknown as D1Database;
