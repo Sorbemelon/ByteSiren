@@ -13,14 +13,16 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AuroraText } from "./ui/aurora-text";
 import {
   createInitialExpandedDayIds,
+  ensureSelectedDayExpandedV02,
   getDayPostControlLabel,
   getDayPostHiddenCountLabel,
   getGlobalDayControlLabel,
   getVisibleSectionsForDay,
+  isSectionSelectedV02,
   sectionHasExpandableDetails,
   toggleAllDayPosts,
   toggleDayPost,
@@ -29,6 +31,8 @@ import {
 import { safeFormatPercent } from "../lib/feedAdapters";
 import type {
   FeedSourceV02,
+  FeedSelectionItemTypeV02,
+  FeedSelectionV02,
   NormalizedDailyOverviewSection,
   NormalizedDayPost,
   NormalizedFeedSection,
@@ -41,6 +45,13 @@ import type {
 interface IntelligenceFeedV02Props {
   feed: NormalizedFeedV02 | null;
   loading: boolean;
+  selection: FeedSelectionV02;
+  onSelectSection: (
+    itemType: FeedSelectionItemTypeV02,
+    itemId: string,
+    dayPostId: string,
+  ) => void;
+  onClearSelection: () => void;
 }
 
 const SIGNAL_CAUSE_LABELS = new Set([
@@ -183,6 +194,18 @@ function sourceStyle(source: FeedSourceV02): React.CSSProperties {
   return SOURCE_STYLE.backdrop;
 }
 
+function sourceChipLabel(source: FeedSourceV02): string {
+  const role = `${source.used_for ?? source.tag ?? ""}`.toLowerCase();
+
+  if (role.includes("focused")) return "Catalyst";
+  if (role.includes("likely")) return "Likely";
+  if (role.includes("main")) return "Main";
+  if (role.includes("support")) return "Support";
+  if (role.includes("backdrop")) return "Backdrop";
+  if (role.includes("price")) return "Price";
+  return "Source";
+}
+
 function signalToneStyle(
   direction: string | null | undefined,
 ): React.CSSProperties {
@@ -230,7 +253,8 @@ function Chip({
 }
 
 function SourceChip({ source }: { source: FeedSourceV02 }) {
-  const label = source.publisher || source.title || "Source";
+  const publisher = source.publisher || source.title || "Source";
+  const label = sourceChipLabel(source);
   const sourceRole = source.tag || source.used_for || "Source";
 
   return (
@@ -238,15 +262,21 @@ function SourceChip({ source }: { source: FeedSourceV02 }) {
       href={source.url}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
       title={source.title ?? source.url}
-      aria-label={`${label}: ${source.title ?? sourceRole} (opens in new tab)`}
+      aria-label={`${publisher}: ${source.title ?? sourceRole} (opens in new tab)`}
       className="inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors hover:bg-white/5"
       style={{
         background: "var(--source-chip-bg)",
         ...sourceStyle(source),
       }}
     >
-      <span className="truncate">{label}</span>
+      <span className="shrink-0">{label}</span>
+      <span aria-hidden style={{ color: "var(--text-muted)" }}>
+        ·
+      </span>
+      <span className="truncate">{publisher}</span>
       <ExternalLink size={12} aria-hidden className="shrink-0" />
     </a>
   );
@@ -324,7 +354,11 @@ function SectionToggleButton({
   return (
     <button
       type="button"
-      onClick={onToggle}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+      onKeyDown={(event) => event.stopPropagation()}
       data-testid="feed-section-toggle-v02"
       data-section-id={sectionId}
       aria-expanded={isExpanded}
@@ -466,7 +500,11 @@ function DailyOverviewSection({
                 {overflowCount > 0 && (
                   <button
                     type="button"
-                    onClick={onToggle}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggle();
+                    }}
+                    onKeyDown={(event) => event.stopPropagation()}
                     aria-label={
                       "Show " +
                       overflowCount +
@@ -849,7 +887,11 @@ function SignalEventSection({
             <div className="mt-auto flex justify-start pt-2">
               <button
                 type="button"
-                onClick={onToggle}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggle();
+                }}
+                onKeyDown={(event) => event.stopPropagation()}
                 data-testid="feed-section-toggle-v02"
                 data-section-id={section.id}
                 aria-expanded={isExpanded}
@@ -912,7 +954,11 @@ function SignalEventSection({
                 {overflowCount > 0 && (
                   <button
                     type="button"
-                    onClick={onToggle}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggle();
+                    }}
+                    onKeyDown={(event) => event.stopPropagation()}
                     aria-label={
                       "Show " +
                       overflowCount +
@@ -1123,13 +1169,34 @@ function FeedSection({
   isExpanded,
   onToggle,
   isFirst,
+  dayPostId,
+  isSelected,
+  onSelect,
+  registerSectionRef,
 }: {
   section: NormalizedFeedSection;
   isExpanded: boolean;
   onToggle: () => void;
   isFirst: boolean;
+  dayPostId: string;
+  isSelected: boolean;
+  onSelect: () => void;
+  registerSectionRef: (id: string, element: HTMLElement | null) => void;
 }) {
   const hasDetails = sectionHasExpandableDetails(section);
+  const sectionStyle: React.CSSProperties = {
+    borderTop: isFirst ? "0" : "1px solid var(--border-row)",
+    background: isSelected ? "var(--accent-selected-bg)" : undefined,
+    boxShadow: isSelected
+      ? "inset 0 0 0 1px var(--accent-selected-border)"
+      : undefined,
+  };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onSelect();
+    }
+  };
 
   if (section.itemType === "signal_event") {
     return (
@@ -1138,9 +1205,13 @@ function FeedSection({
         data-testid="feed-section-v02"
         data-item-type={section.itemType}
         data-section-id={section.id}
-        style={{
-          borderTop: isFirst ? "0" : "1px solid var(--border-row)",
-        }}
+        data-day-post-id={dayPostId}
+        data-selected={String(isSelected)}
+        tabIndex={0}
+        onClick={onSelect}
+        onKeyDown={handleKeyDown}
+        ref={(element) => registerSectionRef(section.id, element)}
+        style={sectionStyle}
       >
         <SignalEventSection
           section={section}
@@ -1158,9 +1229,13 @@ function FeedSection({
       data-testid="feed-section-v02"
       data-item-type={section.itemType}
       data-section-id={section.id}
-      style={{
-        borderTop: isFirst ? "0" : "1px solid var(--border-row)",
-      }}
+      data-day-post-id={dayPostId}
+      data-selected={String(isSelected)}
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={handleKeyDown}
+      ref={(element) => registerSectionRef(section.id, element)}
+      style={sectionStyle}
     >
       {section.itemType === "daily_overview" && (
         <DailyOverviewSection
@@ -1186,14 +1261,24 @@ function DayPost({
   day,
   isExpanded,
   expandedSectionIds,
+  selection,
   onToggleDay,
+  onSelectSection,
   onToggleSection,
+  registerSectionRef,
 }: {
   day: NormalizedDayPost;
   isExpanded: boolean;
   expandedSectionIds: ReadonlySet<string>;
+  selection: FeedSelectionV02;
   onToggleDay: () => void;
+  onSelectSection: (
+    itemType: FeedSelectionItemTypeV02,
+    itemId: string,
+    dayPostId: string,
+  ) => void;
   onToggleSection: (id: string) => void;
+  registerSectionRef: (id: string, element: HTMLElement | null) => void;
 }) {
   const visibleSections = getVisibleSectionsForDay(day, isExpanded);
   const dayControlLabel = getDayPostControlLabel(day, isExpanded);
@@ -1244,7 +1329,10 @@ function DayPost({
             )}
             <button
               type="button"
-              onClick={onToggleDay}
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggleDay();
+              }}
               data-testid="day-post-toggle-v02"
               data-day-post-id={day.id}
               aria-expanded={isExpanded}
@@ -1273,6 +1361,12 @@ function DayPost({
             isExpanded={expandedSectionIds.has(section.id)}
             onToggle={() => onToggleSection(section.id)}
             isFirst={index === 0}
+            dayPostId={day.id}
+            isSelected={isSectionSelectedV02(selection, section)}
+            onSelect={() =>
+              onSelectSection(section.itemType, section.id, day.id)
+            }
+            registerSectionRef={registerSectionRef}
           />
         ))}
       </div>
@@ -1283,6 +1377,9 @@ function DayPost({
 export default function IntelligenceFeedV02({
   feed,
   loading,
+  selection,
+  onSelectSection,
+  onClearSelection,
 }: IntelligenceFeedV02Props) {
   const [expandedDayIds, setExpandedDayIds] = useState<Set<string>>(() =>
     createInitialExpandedDayIds(feed),
@@ -1290,11 +1387,30 @@ export default function IntelligenceFeedV02({
   const [expandedSectionIds, setExpandedSectionIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const sectionRefs = useRef(new Map<string, HTMLElement>());
 
   useEffect(() => {
     setExpandedDayIds(createInitialExpandedDayIds(feed));
     setExpandedSectionIds(new Set());
   }, [feed]);
+
+  useEffect(() => {
+    if (!selection.itemId || !selection.dayPostId) {
+      return;
+    }
+
+    setExpandedDayIds((current) =>
+      ensureSelectedDayExpandedV02(current, selection),
+    );
+
+    const frame = window.requestAnimationFrame(() => {
+      sectionRefs.current
+        .get(selection.itemId ?? "")
+        ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [selection]);
 
   const globalLabel = useMemo(() => {
     if (!feed) {
@@ -1390,7 +1506,14 @@ export default function IntelligenceFeedV02({
         </div>
       </div>
 
-      <div className="flex min-h-50 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">
+      <div
+        className="flex min-h-50 flex-1 flex-col gap-3 overflow-y-auto pr-0.5"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            onClearSelection();
+          }
+        }}
+      >
         {loading && (
           <div className="flex items-center justify-center py-8">
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -1429,14 +1552,23 @@ export default function IntelligenceFeedV02({
               day={day}
               isExpanded={expandedDayIds.has(day.id)}
               expandedSectionIds={expandedSectionIds}
+              selection={selection}
               onToggleDay={() =>
                 setExpandedDayIds((current) => toggleDayPost(current, day.id))
               }
+              onSelectSection={onSelectSection}
               onToggleSection={(id) =>
                 setExpandedSectionIds((current) =>
                   toggleSectionDetails(current, id),
                 )
               }
+              registerSectionRef={(id, element) => {
+                if (element) {
+                  sectionRefs.current.set(id, element);
+                } else {
+                  sectionRefs.current.delete(id);
+                }
+              }}
             />
           ))}
       </div>

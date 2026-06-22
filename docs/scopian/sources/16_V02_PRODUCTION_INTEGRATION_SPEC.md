@@ -3,8 +3,8 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I4C-daily-overview-generation-v1
-last_updated: 2026-06-21
+version: v0.2I5C-chart-feed-selection-v1
+last_updated: 2026-06-22
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
 change_policy: Any change to approved v0.2 integration decisions requires user approval before implementation.
@@ -271,7 +271,8 @@ If an existing Daily Overview row has a terminal Claude status, row generation s
 - v0.2I4B Claude enrichment jobs: wire bounded v0.2 Signal Event and Daily Overview analysis behind explicit feature flags, using `claude_briefs_v02`, `source_references_v02`, and `brief_v02_id`.
 - v0.2I4C Daily Overview row generation: create deterministic `daily_overviews_v02` rows from existing candles and v0.2 records behind `ENABLE_DAILY_OVERVIEWS`, without calling Claude or writing source rows.
 - v0.2I5A frontend API types/adapters: add v0.2 feed response types and normalized day-post adapter support without switching the active v0.1 UI rendering.
-- v0.2I5B frontend day-post rendering: use the v0.1 visual baseline with v0.2 grouping and chart interactions.
+- v0.2I5B frontend day-post rendering: use the v0.1 visual baseline with v0.2 grouping.
+- v0.2I5C frontend chart/feed selection: connect v0.2 feed sections to chart highlights, chart highlight clicks back to feed selection, and source chips for Claude-backed items only.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
 - v0.2I8 cleanup experiments: untrack local experiment artifacts after production integration is complete.
@@ -460,4 +461,26 @@ v0.2I5B does not:
 - invent Daily Overview summaries or sources
 - allow Market Story Claude status, Claude labels, or sources in rendered UI
 
-Future v0.2I5C should implement chart/feed selection, source markers, and chart highlight integration for the v0.2 feed.
+v0.2I5C does:
+
+- keep the v0.1 feed and chart path supported while adding v0.2-only selection state
+- let clicking a v0.2 Signal Event select or deselect its event-window chart highlight
+- let clicking a v0.2 Market Story select or deselect its story-window chart highlight
+- let clicking a v0.2 Daily Overview select or deselect its full UTC-day chart highlight
+- keep Daily Overview full-day chart highlights hidden until selected
+- let chart highlight clicks select the matching v0.2 feed section where the chart library supports practical hit testing
+- expand and scroll the matching day post when chart selection targets a hidden section
+- clear v0.2 selection on repeated selected-item clicks, Escape, neutral chart background clicks, and practical neutral feed-space clicks
+- render accepted source chips only for Claude-backed Daily Overview and Signal Event sections
+- preserve exact source URLs and avoid rejected-source details in the public UI
+- keep Market Story deterministic-only, source-free, and Claude-status-free in both feed rendering and chart markers
+
+v0.2I5C does not:
+
+- change Worker/backend behavior
+- change the v0.1 feed rendering path
+- change the public API contract
+- expose Audit Events as public feed sections
+- invent Daily Overview summaries or sources
+- add source chips, Claude status, or public cause labels to Market Story
+- call Claude, write remote D1, or deploy

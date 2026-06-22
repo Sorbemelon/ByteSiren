@@ -481,6 +481,41 @@ export type NormalizedFeedSection =
   | NormalizedMarketStorySection
   | NormalizedSignalEventSection;
 
+export type FeedSelectionItemTypeV02 = NormalizedFeedSection["itemType"];
+
+export interface FeedSelectionV02 {
+  itemType: FeedSelectionItemTypeV02 | null;
+  itemId: string | null;
+  dayPostId: string | null;
+}
+
+export interface ChartHighlightViewV02 {
+  id: string;
+  itemType: FeedSelectionItemTypeV02;
+  itemId: string;
+  dayPostId: string;
+  type: FeedChartHighlightTypeV02;
+  start: string;
+  end: string;
+  peakMarkerTime?: string | null;
+  label: string;
+  direction?: string | null;
+  selected: boolean;
+  dimmed: boolean;
+}
+
+export interface ChartSourceMarkerViewV02 {
+  id: string;
+  itemType: "daily_overview" | "signal_event";
+  itemId: string;
+  dayPostId: string;
+  time: string;
+  label: string;
+  publisher: string | null;
+  url: string;
+  selected: boolean;
+}
+
 export interface NormalizedDayPost {
   id: string;
   dateUtc: string;

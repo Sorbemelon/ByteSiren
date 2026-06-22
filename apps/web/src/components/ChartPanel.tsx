@@ -2,7 +2,14 @@
 
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import type { MarketLatest, FeedItem, CandleBar, Symbol } from "../lib/types";
+import type {
+  ChartHighlightViewV02,
+  ChartSourceMarkerViewV02,
+  MarketLatest,
+  FeedItem,
+  CandleBar,
+  Symbol,
+} from "../lib/types";
 import { SYMBOLS, SYMBOL_FULL } from "../lib/types";
 import { aggregateCandles, CHART_INTERVALS } from "../lib/candles";
 import type { ChartInterval } from "../lib/candles";
@@ -38,6 +45,10 @@ interface ChartPanelProps {
   chartStatus: ChartStatus;
   chartInterval: ChartInterval;
   onChartIntervalChange: (interval: ChartInterval) => void;
+  v02Highlights?: ChartHighlightViewV02[];
+  v02SourceMarkers?: ChartSourceMarkerViewV02[];
+  onV02HighlightSelect?: (highlight: ChartHighlightViewV02 | null) => void;
+  onV02SourceMarkerSelect?: (marker: ChartSourceMarkerViewV02) => void;
 }
 
 function fmtPrice(price: number, symbol: string): string {
@@ -62,6 +73,10 @@ export default function ChartPanel({
   chartStatus,
   chartInterval,
   onChartIntervalChange,
+  v02Highlights = [],
+  v02SourceMarkers = [],
+  onV02HighlightSelect,
+  onV02SourceMarkerSelect,
 }: ChartPanelProps) {
   const symbolFull = SYMBOL_FULL[selectedSymbol];
   const mkt = market[symbolFull];
@@ -200,6 +215,10 @@ export default function ChartPanel({
             feed={feed}
             selectedIncidentId={selectedIncidentId}
             theme={theme}
+            v02Highlights={v02Highlights}
+            v02SourceMarkers={v02SourceMarkers}
+            onV02HighlightSelect={onV02HighlightSelect}
+            onV02SourceMarkerSelect={onV02SourceMarkerSelect}
           />
         ) : (
           <div

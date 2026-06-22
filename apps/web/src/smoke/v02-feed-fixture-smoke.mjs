@@ -822,6 +822,115 @@ async function runBrowserSmoke() {
 
     await click(
       session,
+      '[data-testid="feed-section-v02"][data-item-type="signal_event"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-item-type="signal_event"]')?.getAttribute('data-selected') === 'true' && document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-selected-highlight-id')?.includes('sig_fixture')`,
+    );
+
+    const sourceClickState = await session.evaluate(`(() => {
+      const signal = document.querySelector('[data-testid="feed-section-v02"][data-item-type="signal_event"]');
+      const source = document.querySelector('a[href="https://www.reuters.com/markets/2026/06/20/crypto-market-update/"]');
+      source?.addEventListener('click', (event) => event.preventDefault(), { once: true });
+      source?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      return {
+        selected: signal?.getAttribute('data-selected'),
+        href: source?.getAttribute('href'),
+      };
+    })()`);
+    assert.equal(sourceClickState.selected, "true");
+    assert.equal(
+      sourceClickState.href,
+      "https://www.reuters.com/markets/2026/06/20/crypto-market-update/",
+    );
+
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-source-marker-count') === '3' && document.querySelectorAll('[data-testid="chart-v02-source-marker"][data-item-id="sig_fixture"]').length === 3`,
+    );
+    await click(
+      session,
+      '[data-testid="chart-v02-source-marker"][data-item-id="sig_fixture"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-item-type="signal_event"]')?.getAttribute('data-selected') === 'true'`,
+    );
+
+    await click(
+      session,
+      '[data-testid="feed-section-v02"][data-item-type="signal_event"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-item-type="signal_event"]')?.getAttribute('data-selected') === 'false' && document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-selected-highlight-id') === ''`,
+    );
+
+    await click(
+      session,
+      '[data-testid="feed-section-v02"][data-item-type="market_story"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-item-type="market_story"]')?.getAttribute('data-selected') === 'true' && document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-selected-highlight-id')?.includes('story_fixture')`,
+    );
+
+    await click(
+      session,
+      '[data-testid="feed-section-v02"][data-item-type="market_story"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-item-type="market_story"]')?.getAttribute('data-selected') === 'false'`,
+    );
+
+    await click(
+      session,
+      '[data-testid="feed-section-v02"][data-item-type="daily_overview"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-item-type="daily_overview"]')?.getAttribute('data-selected') === 'true' && document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-selected-highlight-id')?.includes('daily_2026-06-20')`,
+    );
+
+    await click(
+      session,
+      '[data-testid="feed-section-v02"][data-item-type="daily_overview"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-item-type="daily_overview"]')?.getAttribute('data-selected') === 'false'`,
+    );
+
+    await click(session, '[data-testid="feed-v02-global-toggle"]');
+    await waitForCondition(
+      session,
+      `document.querySelectorAll('[data-testid="feed-section-v02"]').length === 1`,
+    );
+
+    await click(
+      session,
+      '[data-testid="chart-v02-highlight"][data-item-id="sig_fixture"]',
+    );
+    await waitForCondition(
+      session,
+      `document.querySelectorAll('[data-testid="feed-section-v02"]').length === 3 && document.querySelector('[data-testid="feed-section-v02"][data-section-id="sig_fixture"]')?.getAttribute('data-selected') === 'true'`,
+    );
+
+    await session.send("Input.dispatchKeyEvent", {
+      type: "keyDown",
+      key: "Escape",
+      code: "Escape",
+      windowsVirtualKeyCode: 27,
+    });
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="feed-section-v02"][data-section-id="sig_fixture"]')?.getAttribute('data-selected') === 'false'`,
+    );
+
+    await click(
+      session,
       '[data-testid="feed-section-toggle-v02"][data-section-id="sig_fixture"]',
     );
     await waitForCondition(

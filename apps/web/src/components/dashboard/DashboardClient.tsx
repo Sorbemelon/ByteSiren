@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Header from "../Header";
 import ChartPanel, { type ChartStatus } from "../ChartPanel";
 import IntelligenceFeed from "../IntelligenceFeed";
@@ -16,12 +16,22 @@ import {
   recordViewMetric,
 } from "../../lib/api";
 import {
+  buildChartHighlightsV02,
+  buildChartSourceMarkersV02,
+  EMPTY_FEED_SELECTION_V02,
+  toggleFeedSelectionV02,
+} from "../../lib/feedV02ViewModel";
+import {
   getInitialFeed,
   getInitialMarket,
   generateCandles,
 } from "../../lib/mockData";
 import type {
+  ChartHighlightViewV02,
+  ChartSourceMarkerViewV02,
   CandleBar,
+  FeedSelectionItemTypeV02,
+  FeedSelectionV02,
   FeedItem,
   MarketLatest,
   NormalizedFeedV02,
@@ -66,6 +76,9 @@ export default function DashboardClient() {
   const [feed, setFeed] = useState<FeedItem[]>(getInitialFeed);
   const [feedV02, setFeedV02] = useState<NormalizedFeedV02 | null>(null);
   const [feedVersion, setFeedVersion] = useState<"v01" | "v02">("v01");
+  const [feedSelectionV02, setFeedSelectionV02] = useState<FeedSelectionV02>(
+    EMPTY_FEED_SELECTION_V02,
+  );
   const [market, setMarket] =
     useState<Record<string, MarketLatest>>(getInitialMarket);
   const [candles, setCandles] = useState<CandleBar[]>(() =>
@@ -83,6 +96,15 @@ export default function DashboardClient() {
 
   const selectedIncident =
     feed.find((item) => item.incident_id === selectedId) ?? null;
+
+  const v02ChartHighlights = useMemo(
+    () => buildChartHighlightsV02(feedV02, feedSelectionV02),
+    [feedSelectionV02, feedV02],
+  );
+  const v02ChartSourceMarkers = useMemo(
+    () => buildChartSourceMarkersV02(feedV02, feedSelectionV02),
+    [feedSelectionV02, feedV02],
+  );
 
   useEffect(() => {
     if (!API_BASE_CONFIGURED) {
@@ -113,9 +135,11 @@ export default function DashboardClient() {
           setFeedV02(envelope.v02);
           setSelectedId(null);
           setExpandedId(null);
+          setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
         } else {
           setFeed(envelope.items);
           setFeedV02(null);
+          setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
         }
       } else if (!isAbortError(feedResult.reason)) {
         setApiError("Intelligence Feed could not be loaded.");
@@ -237,6 +261,10 @@ export default function DashboardClient() {
     };
   }, []);
 
+  useEffect(() => {
+    setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
+  }, [feedVersion, selectedSymbol]);
+
   const handleToggle = useCallback(
     (id: string) => {
       const toggling = expandedId === id;
@@ -245,6 +273,60 @@ export default function DashboardClient() {
     },
     [expandedId],
   );
+
+  const handleSelectV02Section = useCallback(
+    (itemType: FeedSelectionItemTypeV02, itemId: string, dayPostId: string) => {
+      setFeedSelectionV02((current) =>
+        toggleFeedSelectionV02(current, itemType, itemId, dayPostId),
+      );
+    },
+    [],
+  );
+
+  const handleSelectV02ChartHighlight = useCallback(
+    (highlight: ChartHighlightViewV02 | null) => {
+      if (!highlight) {
+        setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
+        return;
+      }
+
+      setFeedSelectionV02((current) =>
+        toggleFeedSelectionV02(
+          current,
+          highlight.itemType,
+          highlight.itemId,
+          highlight.dayPostId,
+        ),
+      );
+    },
+    [],
+  );
+
+  const handleSelectV02SourceMarker = useCallback(
+    (marker: ChartSourceMarkerViewV02) => {
+      setFeedSelectionV02({
+        itemType: marker.itemType,
+        itemId: marker.itemId,
+        dayPostId: marker.dayPostId,
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (feedVersion !== "v02") {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [feedVersion]);
 
   return (
     <main
@@ -281,6 +363,14 @@ export default function DashboardClient() {
           chartStatus={chartStatus}
           chartInterval={chartInterval}
           onChartIntervalChange={setChartInterval}
+          v02Highlights={v02ChartHighlights}
+          v02SourceMarkers={v02ChartSourceMarkers}
+          onV02HighlightSelect={
+            feedVersion === "v02" ? handleSelectV02ChartHighlight : undefined
+          }
+          onV02SourceMarkerSelect={
+            feedVersion === "v02" ? handleSelectV02SourceMarker : undefined
+          }
         />
 
         <div
@@ -288,7 +378,15 @@ export default function DashboardClient() {
           style={{ scrollbarGutter: "stable" } as React.CSSProperties}
         >
           {feedVersion === "v02" ? (
-            <IntelligenceFeedV02 feed={feedV02} loading={feedLoading} />
+            <IntelligenceFeedV02
+              feed={feedV02}
+              loading={feedLoading}
+              selection={feedSelectionV02}
+              onSelectSection={handleSelectV02Section}
+              onClearSelection={() =>
+                setFeedSelectionV02(EMPTY_FEED_SELECTION_V02)
+              }
+            />
           ) : (
             <IntelligenceFeed
               items={feed}

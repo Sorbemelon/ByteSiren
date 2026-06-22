@@ -3,14 +3,21 @@ import test from "node:test";
 
 import { normalizeFeedResponse, normalizeFeedV02 } from "./feedAdapters.ts";
 import {
+  buildChartHighlightsV02,
+  buildChartSourceMarkersV02,
+  chooseChartHighlightAtTimeV02,
   createInitialExpandedDayIds,
+  EMPTY_FEED_SELECTION_V02,
+  ensureSelectedDayExpandedV02,
   getDayPostControlLabel,
   getDayPostHiddenCountLabel,
   getGlobalDayControlLabel,
   getVisibleSectionsForDay,
+  isSectionSelectedV02,
   sectionHasExpandableDetails,
   toggleAllDayPosts,
   toggleDayPost,
+  toggleFeedSelectionV02,
   toggleSectionDetails,
 } from "./feedV02ViewModel.ts";
 
@@ -107,6 +114,14 @@ const v02Feed = {
             public_label: "Daily Context",
             collapsed_summary: "Daily context summary.",
           },
+          chart: {
+            chart_highlight_type: "day_window",
+            highlight_start: "2026-06-20T00:00:00.000Z",
+            highlight_end: "2026-06-20T23:59:59.999Z",
+            included_signal_event_ids: ["sig_2026-06-20T15"],
+            included_market_story_ids: ["story_2026-06-20"],
+            hide_other_days_on_select: true,
+          },
         },
         {
           item_type: "market_story",
@@ -126,6 +141,13 @@ const v02Feed = {
           volatility_context: { volatility_context: "ordinary_volatility" },
           decision_reasons: ["opposite movement resolved into reversal"],
           publish_reason: "deterministic story criteria passed",
+          chart: {
+            chart_highlight_type: "story_window",
+            highlight_start: "2026-06-20T04:00:00.000Z",
+            highlight_end: "2026-06-20T16:00:00.000Z",
+            included_signal_event_ids: ["sig_2026-06-20T15"],
+            included_audit_event_ids: ["audit_2026-06-20T13"],
+          },
           public_context_status: "brief_ready",
           sources: [
             {
@@ -204,6 +226,13 @@ const v02Feed = {
               reason: "strongest_peak_15m",
             },
           ],
+          chart: {
+            chart_highlight_type: "event_window",
+            highlight_start: "2026-06-20T15:15:00.000Z",
+            highlight_end: "2026-06-20T16:00:00.000Z",
+            peak_marker_time: "2026-06-20T15:30:00.000Z",
+            feed_card_id: "sig_2026-06-20T15",
+          },
           brief: {
             id: "brief_signal",
             status: "brief_ready",
@@ -271,7 +300,7 @@ test("v0.2 day-post ordering and public item filtering are stable", () => {
   assert.equal(firstDay.sections[2].itemType, "signal_event");
   assert.equal(firstDay.sections.length, 3);
   assert.equal(serialized.includes("audit_should_not_render"), false);
-  assert.equal(serialized.includes("audit_event"), false);
+  assert.equal(serialized.includes('"itemType":"audit_event"'), false);
 });
 
 test("global day controls collapse and expand all day posts", () => {
@@ -382,6 +411,179 @@ test("Signal Event highlights and exact source URLs are preserved", () => {
     signal.sources[0].url,
     "https://www.reuters.com/markets/2026/06/20/signal-fixture/",
   );
+});
+
+test("v0.2 feed section selection toggles and expands the selected day", () => {
+  const feed = normalizedV02();
+  const day = feed.dayPosts[0];
+  const signal = day.sections[2];
+
+  const selected = toggleFeedSelectionV02(
+    EMPTY_FEED_SELECTION_V02,
+    signal.itemType,
+    signal.id,
+    day.id,
+  );
+
+  assert.equal(selected.itemType, "signal_event");
+  assert.equal(selected.itemId, signal.id);
+  assert.equal(selected.dayPostId, day.id);
+  assert.equal(isSectionSelectedV02(selected, signal), true);
+
+  const expanded = ensureSelectedDayExpandedV02(new Set(), selected);
+  assert.equal(expanded.has(day.id), true);
+
+  const cleared = toggleFeedSelectionV02(
+    selected,
+    signal.itemType,
+    signal.id,
+    day.id,
+  );
+  assert.deepEqual(cleared, EMPTY_FEED_SELECTION_V02);
+});
+
+test("v0.2 chart highlights follow default and selected item rules", () => {
+  const feed = normalizedV02();
+  const day = feed.dayPosts[0];
+  const [daily, story, signal] = day.sections;
+
+  const defaults = buildChartHighlightsV02(feed, EMPTY_FEED_SELECTION_V02);
+  assert.deepEqual(
+    defaults.map((highlight) => highlight.itemType),
+    ["market_story", "signal_event", "signal_event"],
+  );
+  assert.equal(
+    defaults.some((highlight) => highlight.type === "day_window"),
+    false,
+  );
+
+  const selectedSignal = toggleFeedSelectionV02(
+    EMPTY_FEED_SELECTION_V02,
+    signal.itemType,
+    signal.id,
+    day.id,
+  );
+  const signalHighlights = buildChartHighlightsV02(feed, selectedSignal);
+  const selectedEvent = signalHighlights.find(
+    (highlight) => highlight.itemId === signal.id,
+  );
+  assert.equal(selectedEvent?.type, "event_window");
+  assert.equal(selectedEvent?.selected, true);
+  assert.equal(selectedEvent?.peakMarkerTime, "2026-06-20T15:30:00.000Z");
+  assert.equal(
+    signalHighlights.some(
+      (highlight) => highlight.itemId !== signal.id && highlight.dimmed,
+    ),
+    true,
+  );
+
+  const selectedDaily = toggleFeedSelectionV02(
+    EMPTY_FEED_SELECTION_V02,
+    daily.itemType,
+    daily.id,
+    day.id,
+  );
+  const dailyHighlights = buildChartHighlightsV02(feed, selectedDaily);
+  assert.equal(
+    dailyHighlights.some(
+      (highlight) => highlight.itemId === daily.id && highlight.selected,
+    ),
+    true,
+  );
+  assert.equal(
+    dailyHighlights.some((highlight) => highlight.dayPostId !== day.id),
+    false,
+  );
+  assert.equal(
+    dailyHighlights.some((highlight) => highlight.itemId === story.id),
+    true,
+  );
+});
+
+test("chart highlight hit testing prefers selected, then narrower, then recent", () => {
+  const feed = normalizedV02();
+  const day = feed.dayPosts[0];
+  const signal = day.sections[2];
+  const selectedSignal = toggleFeedSelectionV02(
+    EMPTY_FEED_SELECTION_V02,
+    signal.itemType,
+    signal.id,
+    day.id,
+  );
+  const highlights = buildChartHighlightsV02(feed, selectedSignal);
+  const signalTime = Math.floor(
+    new Date("2026-06-20T15:30:00.000Z").getTime() / 1000,
+  );
+  const storyOnlyTime = Math.floor(
+    new Date("2026-06-20T09:00:00.000Z").getTime() / 1000,
+  );
+
+  assert.equal(
+    chooseChartHighlightAtTimeV02(highlights, signalTime)?.itemId,
+    signal.id,
+  );
+  assert.equal(
+    chooseChartHighlightAtTimeV02(highlights, storyOnlyTime)?.itemType,
+    "market_story",
+  );
+  assert.equal(
+    chooseChartHighlightAtTimeV02(
+      highlights,
+      Math.floor(new Date("2026-06-21T00:00:00.000Z").getTime() / 1000),
+    ),
+    null,
+  );
+});
+
+test("v0.2 chart source markers are only built for selected Claude-backed items", () => {
+  const feed = normalizedV02();
+  const day = feed.dayPosts[0];
+  const [daily, story, signal] = day.sections;
+
+  assert.deepEqual(
+    buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02),
+    [],
+  );
+
+  const signalMarkers = buildChartSourceMarkersV02(
+    feed,
+    toggleFeedSelectionV02(
+      EMPTY_FEED_SELECTION_V02,
+      signal.itemType,
+      signal.id,
+      day.id,
+    ),
+  );
+  assert.equal(signalMarkers.length, 1);
+  assert.equal(signalMarkers[0].itemType, "signal_event");
+  assert.equal(signalMarkers[0].label, "Likely");
+  assert.equal(
+    signalMarkers[0].url,
+    "https://www.reuters.com/markets/2026/06/20/signal-fixture/",
+  );
+
+  const dailyMarkers = buildChartSourceMarkersV02(
+    feed,
+    toggleFeedSelectionV02(
+      EMPTY_FEED_SELECTION_V02,
+      daily.itemType,
+      daily.id,
+      day.id,
+    ),
+  );
+  assert.equal(dailyMarkers[0].itemType, "daily_overview");
+  assert.equal(dailyMarkers[0].label, "Main");
+
+  const storyMarkers = buildChartSourceMarkersV02(
+    feed,
+    toggleFeedSelectionV02(
+      EMPTY_FEED_SELECTION_V02,
+      story.itemType,
+      story.id,
+      day.id,
+    ),
+  );
+  assert.deepEqual(storyMarkers, []);
 });
 
 test("Market Story normalized section strips Claude and source material", () => {
