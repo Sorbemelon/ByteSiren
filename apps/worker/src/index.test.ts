@@ -49,6 +49,37 @@ function seededRows(): MarketCandle[] {
   );
 }
 
+function seededDetectorRows(): MarketCandle[] {
+  const startMs = Date.parse("2026-06-14T00:00:00.000Z");
+
+  return symbols.flatMap((symbol) => {
+    let price = symbol === "BTCUSDT" ? 100 : 50;
+
+    return Array.from({ length: 98 }, (_, offset) => {
+      const open = new Date(startMs + offset * 15 * 60 * 1000);
+      const close = new Date(open.getTime() + 15 * 60 * 1000 - 1);
+      const isLast = offset === 97;
+      const change = isLast ? 0.02 : offset % 2 === 0 ? 0.001 : -0.0008;
+      const openPrice = price;
+      price *= 1 + change;
+
+      return {
+        symbol,
+        interval: "15m",
+        open_time: open.toISOString(),
+        close_time: close.toISOString(),
+        open: openPrice,
+        high: isLast ? price * 1.012 : price * 1.003,
+        low: isLast ? openPrice * 0.988 : price * 0.997,
+        close: price,
+        volume: 100,
+        quote_volume: isLast ? 5000 : 1000,
+        trade_count: 10,
+      };
+    });
+  });
+}
+
 function seededCompleteDayRows(dateUtc = "2026-06-15"): MarketCandle[] {
   const startMs = Date.parse(`${dateUtc}T00:00:00.000Z`);
   const changes: Record<(typeof symbols)[number], number> = {
@@ -195,6 +226,7 @@ function makeEnv(
     incidents?: IncidentRow[];
     publicWebOrigins?: string;
     adminEnabled?: boolean;
+    v02AdminToolsEnabled?: boolean;
     adminToken?: string;
     marketImportEnabled?: boolean;
     marketImportToken?: string;
@@ -212,6 +244,7 @@ function makeEnv(
     BUILD_PHASE: "phase-4a5-deployment-boundary",
     PUBLIC_WEB_ORIGINS: options.publicWebOrigins,
     ENABLE_ADMIN_MAINTENANCE: options.adminEnabled ? "true" : "false",
+    ENABLE_V02_ADMIN_TOOLS: options.v02AdminToolsEnabled ? "true" : "false",
     ADMIN_BACKFILL_TOKEN: options.adminToken,
     ENABLE_MARKET_IMPORT: options.marketImportEnabled ? "true" : "false",
     MARKET_IMPORT_TOKEN: options.marketImportToken,
@@ -1003,6 +1036,149 @@ test("admin claude catch-up respects limit and returns safe summary", async () =
   assert.equal(serialized.includes("analysis_count"), false);
   assert.equal(serialized.includes("web_search_requests"), false);
   assert.equal(serialized.includes("test-admin-token"), false);
+});
+
+test("admin v0.2 pipeline is hidden unless both admin gates are enabled", async () => {
+  const request = new Request("http://localhost/api/admin/v02/run-pipeline", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-bytesiren-admin-token": "test-admin-token",
+      origin: "http://localhost:3000",
+    },
+    body: JSON.stringify({ steps: ["daily_overviews"] }),
+  });
+  const maintenanceOff = await worker.fetch(
+    request.clone(),
+    makeEnv({
+      adminEnabled: false,
+      v02AdminToolsEnabled: true,
+      adminToken: "test-admin-token",
+    }),
+  );
+  const toolsOff = await worker.fetch(
+    request.clone(),
+    makeEnv({
+      adminEnabled: true,
+      v02AdminToolsEnabled: false,
+      adminToken: "test-admin-token",
+    }),
+  );
+  const wrongToken = await worker.fetch(
+    request.clone(),
+    makeEnv({
+      adminEnabled: true,
+      v02AdminToolsEnabled: true,
+      adminToken: "secret-admin-token",
+    }),
+  );
+  const wrongTokenBody = await wrongToken.text();
+
+  assert.equal(maintenanceOff.status, 404);
+  assert.equal(toolsOff.status, 404);
+  assert.equal(wrongToken.status, 404);
+  assert.equal(maintenanceOff.headers.get("access-control-allow-origin"), null);
+  assert.equal(toolsOff.headers.get("access-control-allow-origin"), null);
+  assert.equal(wrongTokenBody.includes("secret-admin-token"), false);
+  assert.equal(wrongTokenBody.includes("test-admin-token"), false);
+});
+
+test("admin v0.2 pipeline runs protected local steps without Claude or legacy writes", async () => {
+  const firstSignal = seededSignalEventV02();
+  const secondSignal = {
+    ...seededSignalEventV02(),
+    id: "sig_v02_route_later",
+    event_start: "2026-06-15T13:00:00.000Z",
+    event_end: "2026-06-15T13:45:00.000Z",
+    peak_time: "2026-06-15T13:15:00.000Z",
+    created_at: "2026-06-15T13:00:00.000Z",
+    updated_at: "2026-06-15T13:00:00.000Z",
+  };
+  const { db, tables } = createMemoryD1({
+    market_candles: [
+      ...seededCompleteDayRows("2026-06-15"),
+      ...seededDetectorRows(),
+    ],
+    signal_events_v02: [firstSignal, secondSignal],
+    incidents: [seededIncident()],
+  });
+  const env: Env = {
+    DB: db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "true",
+    ENABLE_DAILY_OVERVIEWS: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+  };
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-pipeline", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        steps: ["detector", "market_stories", "daily_overviews"],
+        include_fixture_claude: true,
+      }),
+    }),
+    env,
+  );
+  const body = await readJson(response);
+  const serialized = JSON.stringify(body);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.deepEqual(body.steps_run, [
+    "detector",
+    "market_stories",
+    "daily_overviews",
+  ]);
+  assert.equal(tables.signal_events_v02.length >= 1, true);
+  assert.equal(tables.signal_event_symbols_v02.length >= 5, true);
+  assert.equal(tables.market_stories_v02.length >= 1, true);
+  assert.equal(tables.market_story_members_v02.length >= 2, true);
+  assert.equal(tables.daily_overviews_v02.length >= 1, true);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(tables.claude_briefs.length, 0);
+  assert.equal(tables.source_references.length, 0);
+  assert.equal(tables.incidents.length, 1);
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector_v02"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_market_stories_v02"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_daily_overviews_v02"),
+    true,
+  );
+  assert.equal(serialized.includes("test-admin-token"), false);
+  assert.match(serialized, /Fixture Claude seeding is deferred/);
+});
+
+test("admin v0.2 pipeline validates requested steps", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-pipeline", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({ steps: ["claude"] }),
+    }),
+    makeEnv({
+      adminEnabled: true,
+      v02AdminToolsEnabled: true,
+      adminToken: "test-admin-token",
+    }),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 400);
+  assert.equal(body.error && typeof body.error === "object", true);
 });
 
 test("market candle import disabled returns not found without public CORS", async () => {

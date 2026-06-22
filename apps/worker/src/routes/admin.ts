@@ -3,18 +3,33 @@ import {
   BINANCE_KLINES_LIMIT,
   type MarketSymbol,
   parseMarketSymbol,
+  parseBooleanFlag,
 } from "../config.ts";
 import { enrichQueuedIncidents } from "../jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "../jobs/pollMarket.ts";
+import { runDailyOverviewsV02 } from "../jobs/runDailyOverviewsV02.ts";
+import { runDetectorV02 } from "../jobs/runDetectorV02.ts";
+import { runMarketStoriesV02 } from "../jobs/runMarketStoriesV02.ts";
 import { checkBinanceKlines } from "../services/binance.ts";
 import type { Env } from "../types/env.ts";
 import type { SymbolPollResult } from "../types/market.ts";
 import { json, jsonError, methodNotAllowed, notFound } from "../utils/http.ts";
 
 const ADMIN_TOKEN_HEADER = "x-bytesiren-admin-token";
+const V02_PIPELINE_STEPS = new Set([
+  "detector",
+  "market_stories",
+  "daily_overviews",
+] as const);
+
+type V02PipelineStep = "detector" | "market_stories" | "daily_overviews";
 
 function isMaintenanceEnabled(env: Env): boolean {
   return env.ENABLE_ADMIN_MAINTENANCE?.trim().toLowerCase() === "true";
+}
+
+function isV02AdminToolsEnabled(env: Env): boolean {
+  return parseBooleanFlag(env.ENABLE_V02_ADMIN_TOOLS);
 }
 
 function isAuthorized(request: Request, env: Env): boolean {
@@ -89,6 +104,57 @@ function parseCatchupLimit(value: unknown): number {
   }
 
   return Math.max(1, Math.min(10, Math.trunc(parsed)));
+}
+
+async function readV02PipelineOptions(request: Request): Promise<{
+  steps: V02PipelineStep[];
+  includeFixtureClaude: boolean;
+}> {
+  let body: Record<string, unknown> = {};
+
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    const parsed = (await request.json().catch(() => null)) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Request body must be a JSON object.");
+    }
+
+    body = parsed as Record<string, unknown>;
+  }
+
+  const rawSteps = body.steps;
+  const steps =
+    rawSteps === undefined
+      ? (["detector", "market_stories", "daily_overviews"] as V02PipelineStep[])
+      : Array.isArray(rawSteps)
+        ? rawSteps
+        : null;
+
+  if (!steps) {
+    throw new Error("steps must be an array.");
+  }
+
+  const parsedSteps: V02PipelineStep[] = [];
+
+  for (const step of steps) {
+    if (
+      typeof step !== "string" ||
+      !V02_PIPELINE_STEPS.has(step as V02PipelineStep)
+    ) {
+      throw new Error(
+        "steps must contain only detector, market_stories, or daily_overviews.",
+      );
+    }
+
+    if (!parsedSteps.includes(step as V02PipelineStep)) {
+      parsedSteps.push(step as V02PipelineStep);
+    }
+  }
+
+  return {
+    steps: parsedSteps,
+    includeFixtureClaude: parseBoolean(body.include_fixture_claude, false),
+  };
 }
 
 async function readCatchupOptions(request: Request): Promise<{
@@ -237,6 +303,68 @@ export async function adminResponse(
       newest_first: options.newestFirst,
       message: result.message,
     });
+  }
+
+  if (url.pathname === "/api/admin/v02/run-pipeline") {
+    if (request.method !== "POST") {
+      return methodNotAllowed();
+    }
+
+    if (!isV02AdminToolsEnabled(env)) {
+      return notFound();
+    }
+
+    let options: Awaited<ReturnType<typeof readV02PipelineOptions>>;
+
+    try {
+      options = await readV02PipelineOptions(request);
+    } catch {
+      return jsonError(
+        400,
+        "invalid_request",
+        "Request body must include valid v0.2 pipeline options.",
+      );
+    }
+
+    const stepsRun: V02PipelineStep[] = [];
+    const warnings: string[] = [];
+    const response: Record<string, unknown> = {
+      ok: true,
+      steps_run: stepsRun,
+      warnings,
+    };
+
+    if (options.steps.includes("detector")) {
+      const detector = await runDetectorV02(env.DB, {
+        enableMarketStories: false,
+      });
+      stepsRun.push("detector");
+      response.detector = detector;
+    }
+
+    if (options.steps.includes("market_stories")) {
+      const marketStories = await runMarketStoriesV02(env.DB);
+      stepsRun.push("market_stories");
+      response.market_stories = marketStories;
+    }
+
+    if (options.steps.includes("daily_overviews")) {
+      const dailyOverviews = await runDailyOverviewsV02(env.DB, env);
+      stepsRun.push("daily_overviews");
+      response.daily_overviews = dailyOverviews;
+    }
+
+    if (options.includeFixtureClaude) {
+      warnings.push(
+        "Fixture Claude seeding is deferred; no Claude or source rows were written.",
+      );
+      response.fixture_claude = {
+        status: "deferred",
+        written: 0,
+      };
+    }
+
+    return json(response);
   }
 
   return notFound();

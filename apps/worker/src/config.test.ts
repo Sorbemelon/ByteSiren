@@ -75,6 +75,15 @@ test("v0.2 Claude flags default false and accept explicit true values", () => {
   assert.equal(parseBooleanFlag("on"), true);
 });
 
+test("ENABLE_V02_ADMIN_TOOLS defaults false and accepts explicit true values", () => {
+  assert.equal(parseBooleanFlag(undefined), false);
+  assert.equal(parseBooleanFlag(""), false);
+  assert.equal(parseBooleanFlag("invalid"), false);
+  assert.equal(parseBooleanFlag("false"), false);
+  assert.equal(parseBooleanFlag("true"), true);
+  assert.equal(parseBooleanFlag("1"), true);
+});
+
 test("CLAUDE_CATCHUP_LIMIT uses a bounded safe default", () => {
   assert.equal(parseClaudeCatchupLimit(), DEFAULT_CLAUDE_CATCHUP_LIMIT);
   assert.equal(parseClaudeCatchupLimit(""), DEFAULT_CLAUDE_CATCHUP_LIMIT);

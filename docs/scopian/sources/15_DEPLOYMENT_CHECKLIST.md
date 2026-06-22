@@ -336,7 +336,90 @@ verify Claude Limited state appears when the daily analysis limit is reached
 verify accepted source links remain exact article/source URLs
 ```
 
-## H. SEO asset note
+## H. Local v0.2 smoke before cutover
+
+Production cutover remains deferred until v0.2 local/protected smoke is clean.
+Run these checks against local D1 and local Worker only.
+
+1. Configure `apps/worker/.dev.vars` with local-only throwaway values:
+
+```text
+ENABLE_MARKET_IMPORT=true
+MARKET_IMPORT_TOKEN=<local token>
+ENABLE_ADMIN_MAINTENANCE=true
+ADMIN_BACKFILL_TOKEN=<local token>
+ENABLE_V02_ADMIN_TOOLS=true
+DETECTOR_VERSION=v02
+ENABLE_MARKET_STORIES=true
+ENABLE_DAILY_OVERVIEWS=true
+FEED_VERSION=v02
+ENABLE_SIGNAL_CLAUDE_V02=false
+ENABLE_DAILY_CLAUDE=false
+```
+
+2. Apply local migrations:
+
+```bash
+corepack pnpm --filter @bytesiren/worker exec wrangler d1 migrations apply bytesiren-db --local
+```
+
+3. Start the local Worker:
+
+```bash
+corepack pnpm worker:dev
+```
+
+4. Run the local v0.2 backfill smoke from the repo root:
+
+```bash
+node scripts/v02-local-backfill-smoke.mjs \
+  --worker-url http://127.0.0.1:8787 \
+  --market-token <local token> \
+  --admin-token <local token> \
+  --days 31 \
+  --expect-v02-feed
+```
+
+The smoke report is written to:
+
+```text
+.tmp/v02-local-backfill-smoke-report.json
+.tmp/v02-local-backfill-smoke-report.md
+```
+
+5. Start the web app against the local Worker:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787 corepack pnpm --filter @bytesiren/web dev
+```
+
+On PowerShell, use:
+
+```powershell
+$env:NEXT_PUBLIC_API_BASE_URL='http://127.0.0.1:8787'
+corepack pnpm --filter @bytesiren/web dev
+```
+
+6. Run the real-API frontend smoke:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787 corepack pnpm --filter @bytesiren/web smoke:v02-real-api
+```
+
+Local screenshots are written under `.tmp/`.
+
+Do not use production tokens for this flow. Do not run live Claude for this smoke.
+
+Optional local reset before another smoke:
+
+```bash
+node scripts/v02-local-reset.mjs --confirm-local-reset --dry-run
+node scripts/v02-local-reset.mjs --confirm-local-reset
+```
+
+The reset script is local-only, refuses `--remote`, and clears only v0.2 tables by default.
+
+## I. SEO asset note
 
 Create these later using the ByteSiren full logo:
 

@@ -3,7 +3,7 @@ project: ByteSiren
 source_id: BS-SRC-16
 title: v0.2 Production Integration Spec
 status: active_source
-version: v0.2I5C-chart-feed-selection-v1
+version: v0.2I6A-local-backfill-smoke-v1
 last_updated: 2026-06-22
 intended_path: docs/scopian/sources/
 scopian_role: canonical_scope_source
@@ -182,6 +182,7 @@ Runtime flags should keep v0.1 as the default path until v0.2 is validated:
 - `ENABLE_MARKET_STORIES`
 - `ENABLE_SIGNAL_CLAUDE_V02`
 - `ENABLE_DAILY_CLAUDE`
+- `ENABLE_V02_ADMIN_TOOLS`
 - `ENABLE_AUDIT_FEED_LOCAL_ONLY`
 - `CLAUDE_DAILY_LIMIT`
 - `CLAUDE_CATCHUP_LIMIT`
@@ -219,6 +220,16 @@ This avoids accidental double-spending across v0.1 and v0.2 enrichment paths.
 v0.2 Claude job metadata may record safe counts, selected flags, model, tool type, max uses, source counts, and status counts. It must not store API keys, raw Claude tool traces, public token/budget/search counts, or raw hidden responses in public feed data.
 
 Protected admin catch-up for v0.2 Claude is deferred to v0.2I6 unless explicitly added later.
+
+`ENABLE_V02_ADMIN_TOOLS` controls protected local/admin v0.2 smoke tooling. It must default to `false`. The protected v0.2 pipeline endpoint also requires `ENABLE_ADMIN_MAINTENANCE=true` and a valid `x-bytesiren-admin-token`. It is not a public frontend API, must not expose public CORS, and must not run Claude.
+
+The protected local v0.2 pipeline endpoint may run these explicit steps:
+
+- `detector`: runs the v0.2 Signal/Audit detector write path only.
+- `market_stories`: runs deterministic Market Story generation only.
+- `daily_overviews`: runs deterministic Daily Overview row generation only.
+
+It must not clear data, write remote D1, deploy, call Claude, write legacy v0.1 incident/source/Claude rows, or write Market Story source/Claude rows.
 
 ## Deterministic Daily Overview Generation
 
@@ -273,6 +284,7 @@ If an existing Daily Overview row has a terminal Claude status, row generation s
 - v0.2I5A frontend API types/adapters: add v0.2 feed response types and normalized day-post adapter support without switching the active v0.1 UI rendering.
 - v0.2I5B frontend day-post rendering: use the v0.1 visual baseline with v0.2 grouping.
 - v0.2I5C frontend chart/feed selection: connect v0.2 feed sections to chart highlights, chart highlight clicks back to feed selection, and source chips for Claude-backed items only.
+- v0.2I6A local/protected backfill smoke tooling: run local candle import, protected v0.2 detector/story/daily pipeline, v0.2 feed read checks, and frontend real-API smoke against local Worker/D1 without remote writes or live Claude.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
 - v0.2I8 cleanup experiments: untrack local experiment artifacts after production integration is complete.
@@ -484,3 +496,25 @@ v0.2I5C does not:
 - invent Daily Overview summaries or sources
 - add source chips, Claude status, or public cause labels to Market Story
 - call Claude, write remote D1, or deploy
+
+v0.2I6A does:
+
+- add default-off `ENABLE_V02_ADMIN_TOOLS`
+- add a protected v0.2 pipeline endpoint for local/admin smoke only
+- let local smoke explicitly run v0.2 Signal/Audit detection, deterministic Market Story generation, and deterministic Daily Overview row generation
+- add local-only reset tooling for v0.2 tables guarded by `--confirm-local-reset`
+- add a local backfill smoke orchestrator that can import candles to a local Worker, run the protected v0.2 pipeline, fetch `/api/market/latest`, and validate `FEED_VERSION=v02`
+- add a frontend real-API smoke that renders the v0.2 day-post UI against a real local Worker API and saves local screenshots
+
+v0.2I6A does not:
+
+- deploy
+- write remote D1
+- call live Claude
+- clear remote data
+- enable v0.2 production defaults
+- change detector thresholds
+- change the production Claude prompt
+- expose Audit Events in the public feed
+- write Market Story Claude/source fields
+- expose secrets or real tokens in tracked files

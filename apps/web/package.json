@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test src/lib/eventTiming.test.mjs src/lib/feedAdapters.test.mjs src/lib/feedV02ViewModel.test.mjs",
     "smoke:v02-feed": "node src/smoke/v02-feed-fixture-smoke.mjs",
+    "smoke:v02-real-api": "node src/smoke/v02-real-api-smoke.mjs",
     "dev:v02-feed-fixture": "node src/smoke/v02-feed-fixture-smoke.mjs --serve"
   },
   "dependencies": {

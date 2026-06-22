@@ -1,81 +1,54 @@
-# ByteSiren Worker local environment example
-# Copy this file to apps/worker/.dev.vars for local development.
-# Never commit apps/worker/.dev.vars.
+# ByteSiren Worker local environment example.
+# Copy to apps/worker/.dev.vars for local development.
+# Never commit apps/worker/.dev.vars or real tokens.
 
+# Claude / Web Search. Leave ANTHROPIC_API_KEY blank unless you are explicitly
+# validating Claude locally.
 ANTHROPIC_API_KEY=
-
-# Claude model for market-intelligence briefs.
-# Current balanced default on the Claude API.
 CLAUDE_MODEL=claude-sonnet-4-6
-
-# Use the basic Web Search tool for Phase 4B.
-# The newer web_search_20260209 is for dynamic filtering and requires code execution support,
-# so keep Phase 4B simpler with web_search_20250305 first.
 CLAUDE_WEB_SEARCH_TOOL_TYPE=web_search_20250305
-
-# Default bounded search allowance per qualifying incident.
 CLAUDE_DEFAULT_MAX_USES=2
-
-# Allow a second search only for strict fallback cases:
-# none_found, context_only without focused cause, rejected-only first result,
-# severity 100 + breadth 5, or two-sided market_day.
 CLAUDE_SECOND_SEARCH_MAX_USES=3
-
-# Conservative free-public-demo daily cap.
-# Increase to 8 later if too many visible incidents remain queued/limited.
 CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT=5
-
-# Optional allow-list. Leave blank for local smoke because some reputable
-# domains may block Anthropic's web-search crawler and cause request rejection.
 CLAUDE_ALLOWED_DOMAINS=
-
-# Use blocked domains by default for local smoke.
-# Claude Web Search supports either allowed_domains or blocked_domains, not both.
 CLAUDE_BLOCKED_DOMAINS=coindcx.com,bitcoinfoundation.org,tradingkey.com,intellectia.ai,mexc.com,bitget.com,stealthex.io
 
-# Comma-separated frontend origins allowed to call public Worker API routes.
-# Keep local dev origins and add the deployed Cloudflare Pages origin before deploy.
+# Public API CORS origins. Add the deployed Pages origin before production use.
 PUBLIC_WEB_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://bytesiren.pages.dev
 
-# Detector version switch. v01 is the production default; v02 writes only to
-# additive v0.2 Signal/Audit tables while v0.2 feed integration is disabled.
+# v0.2 integration flags. Production-safe defaults stay on v0.1 and disabled.
 DETECTOR_VERSION=v01
-
-# Feed contract switch. v01 is the production default; v02 reads from additive
-# v0.2 feed tables only when explicitly enabled.
 FEED_VERSION=v01
-
-# Optional v0.2 deterministic Market Story write path. Public feed integration
-# remains disabled until a later phase.
 ENABLE_MARKET_STORIES=false
-
-# Optional v0.2 deterministic Daily Overview row generation. This creates or
-# updates daily_overviews_v02 rows only; Claude remains separately controlled.
 ENABLE_DAILY_OVERVIEWS=false
-
-# Optional v0.2 Claude enrichment switches. Keep disabled unless explicitly
-# validating v0.2 Signal Events or existing Daily Overview rows.
 ENABLE_SIGNAL_CLAUDE_V02=false
 ENABLE_DAILY_CLAUDE=false
 CLAUDE_CATCHUP_LIMIT=5
 
-# Protected maintenance diagnostics. Keep disabled except during controlled maintenance.
-# ADMIN_BACKFILL_TOKEN must be set as a Worker secret in production.
+# Protected admin/local tooling. Keep disabled unless running controlled local smoke.
 ENABLE_ADMIN_MAINTENANCE=false
+ENABLE_V02_ADMIN_TOOLS=false
 ADMIN_BACKFILL_TOKEN=
 
-# Protected external market import endpoint for GitHub Actions ingestion.
-# MARKET_IMPORT_TOKEN must be set as a Worker secret in production.
+# Local v0.2 smoke profile, using throwaway local tokens:
+# DETECTOR_VERSION=v02
+# FEED_VERSION=v02
+# ENABLE_MARKET_STORIES=true
+# ENABLE_DAILY_OVERVIEWS=true
+# ENABLE_MARKET_IMPORT=true
+# ENABLE_ADMIN_MAINTENANCE=true
+# ENABLE_V02_ADMIN_TOOLS=true
+# ENABLE_SIGNAL_CLAUDE_V02=false
+# ENABLE_DAILY_CLAUDE=false
+# MARKET_IMPORT_TOKEN=<local token>
+# ADMIN_BACKFILL_TOKEN=<local token>
+
+# Protected market import. Production uses GitHub Actions -> Worker import.
 ENABLE_MARKET_IMPORT=true
 MARKET_IMPORT_TOKEN=
-
-# Production market ingestion uses external_import because Binance may block
-# Cloudflare Worker egress. Use worker_fetch only for controlled local tests.
 MARKET_FETCH_MODE=external_import
 
-# Cloudflare Cron controls market ingestion by dispatching the GitHub Actions
-# workflow_dispatch endpoint. GITHUB_INGEST_DISPATCH_TOKEN must be set as a
-# Worker secret in production and must have Actions read/write for this repo.
+# GitHub ingestion dispatch. Token must be a Worker secret in production.
 ENABLE_GITHUB_INGEST_DISPATCH=true
 GITHUB_INGEST_OWNER=Sorbemelon
 GITHUB_INGEST_REPO=ByteSiren
