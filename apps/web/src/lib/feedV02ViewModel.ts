@@ -66,10 +66,23 @@ export function getDayPostControlLabel(
     return null;
   }
 
+  return isExpanded ? "Collapse post" : "Expand post";
+}
+
+export function getDayPostHiddenCountLabel(
+  day: NormalizedDayPost,
+  isExpanded: boolean,
+): string | null {
+  if (
+    isExpanded ||
+    !day.hasExtraItems ||
+    day.hiddenItemCountWhenCollapsed <= 0
+  ) {
+    return null;
+  }
+
   const hidden = day.hiddenItemCountWhenCollapsed;
-  return isExpanded
-    ? (day.expandedControlLabel ?? `+${hidden} events · Collapse post`)
-    : (day.collapsedControlLabel ?? `+${hidden} events · Expand post`);
+  return `+${hidden} event${hidden === 1 ? "" : "s"}`;
 }
 
 export function getVisibleSectionsForDay(
@@ -132,7 +145,6 @@ export function sectionHasExpandableDetails(
     section.perSymbolEvidence.length > 0 ||
     Boolean(section.brief?.context_details) ||
     Boolean(section.brief?.headline) ||
-    Object.keys(section.details).length > 0 ||
     section.sources.length > 0
   );
 }

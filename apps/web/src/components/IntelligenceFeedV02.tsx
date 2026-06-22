@@ -3,18 +3,22 @@
 import Image from "next/image";
 import {
   Activity,
+  ArrowLeftRight,
   BookOpen,
   CalendarDays,
   ChevronDown,
   ChevronUp,
   ExternalLink,
   Layers,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AuroraText } from "./ui/aurora-text";
 import {
   createInitialExpandedDayIds,
   getDayPostControlLabel,
+  getDayPostHiddenCountLabel,
   getGlobalDayControlLabel,
   getVisibleSectionsForDay,
   sectionHasExpandableDetails,
@@ -94,10 +98,16 @@ function formatUnknownValue(value: unknown): string {
   }
 
   if (typeof value === "object") {
-    return JSON.stringify(value);
+    return Object.entries(value)
+      .filter(([, entryValue]) => entryValue !== null && entryValue !== "")
+      .map(
+        ([key, entryValue]) =>
+          `${humanize(key)}: ${formatUnknownValue(entryValue)}`,
+      )
+      .join("; ");
   }
 
-  return String(value);
+  return humanize(String(value));
 }
 
 function humanize(value: string | null | undefined): string {
@@ -120,9 +130,22 @@ function formatDirection(value: string | null | undefined): string {
     return "Observed down";
   }
   if (value === "two_sided") {
-    return "Two-sided";
+    return "Mixed direction";
   }
   return humanize(value);
+}
+
+function chartContextLabel(score: number | null): string | null {
+  if (score === null) {
+    return null;
+  }
+  if (score >= 75) {
+    return "Strong chart context";
+  }
+  if (score >= 50) {
+    return "Moderate chart context";
+  }
+  return "Weak chart context";
 }
 
 function directionColor(value: string | null | undefined): string {
@@ -135,6 +158,20 @@ function directionColor(value: string | null | undefined): string {
   return "var(--two-sided)";
 }
 
+function DirectionIcon({
+  direction,
+}: {
+  direction: string | null | undefined;
+}) {
+  if (direction === "observed_up" || direction?.endsWith("_up")) {
+    return <TrendingUp size={12} aria-hidden />;
+  }
+  if (direction === "observed_down" || direction?.endsWith("_down")) {
+    return <TrendingDown size={12} aria-hidden />;
+  }
+  return <ArrowLeftRight size={12} aria-hidden />;
+}
+
 function sourceStyle(source: FeedSourceV02): React.CSSProperties {
   const role = `${source.used_for ?? source.tag ?? ""}`.toLowerCase();
 
@@ -144,6 +181,30 @@ function sourceStyle(source: FeedSourceV02): React.CSSProperties {
   if (role.includes("daily") || role.includes("main"))
     return SOURCE_STYLE.daily;
   return SOURCE_STYLE.backdrop;
+}
+
+function signalToneStyle(
+  direction: string | null | undefined,
+): React.CSSProperties {
+  if (direction === "observed_up" || direction?.endsWith("_up")) {
+    return {
+      color: "var(--up)",
+      borderColor: "rgba(16, 185, 129, 0.28)",
+      background: "rgba(16, 185, 129, 0.1)",
+    };
+  }
+  if (direction === "observed_down" || direction?.endsWith("_down")) {
+    return {
+      color: "var(--down)",
+      borderColor: "rgba(244, 63, 94, 0.3)",
+      background: "rgba(244, 63, 94, 0.1)",
+    };
+  }
+  return {
+    color: "var(--two-sided)",
+    borderColor: "rgba(167, 139, 250, 0.32)",
+    background: "rgba(167, 139, 250, 0.12)",
+  };
 }
 
 function Chip({
@@ -188,25 +249,6 @@ function SourceChip({ source }: { source: FeedSourceV02 }) {
       <span className="truncate">{label}</span>
       <ExternalLink size={12} aria-hidden className="shrink-0" />
     </a>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <p
-        className="text-[10px] font-medium uppercase"
-        style={{ color: "var(--text-muted)", letterSpacing: "0.02em" }}
-      >
-        {label}
-      </p>
-      <p
-        className="mt-0.5 truncate text-[13px] font-semibold"
-        style={{ color: "var(--text-primary)" }}
-      >
-        {value}
-      </p>
-    </div>
   );
 }
 
@@ -270,48 +312,131 @@ function SourceList({ sources }: { sources: FeedSourceV02[] }) {
   );
 }
 
+function SectionToggleButton({
+  isExpanded,
+  onToggle,
+  sectionId,
+}: {
+  isExpanded: boolean;
+  onToggle: () => void;
+  sectionId: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      data-testid="feed-section-toggle-v02"
+      data-section-id={sectionId}
+      aria-expanded={isExpanded}
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5 focus-visible:ring-2"
+      style={{ color: "var(--text-muted)" }}
+    >
+      {isExpanded ? "Hide" : "Show more"}
+      {isExpanded ? (
+        <ChevronUp size={13} aria-hidden />
+      ) : (
+        <ChevronDown size={13} aria-hidden />
+      )}
+    </button>
+  );
+}
+
 function DailyOverviewSection({
   section,
   isExpanded,
+  onToggle,
+  hasDetails,
 }: {
   section: NormalizedDailyOverviewSection;
   isExpanded: boolean;
+  onToggle: () => void;
+  hasDetails: boolean;
 }) {
   const dailyLabel =
     section.dailyLabel && !SIGNAL_CAUSE_LABELS.has(section.dailyLabel)
       ? section.dailyLabel
       : "Daily Overview";
-  const statusLabel = section.publicContextStatus
-    ? humanize(section.publicContextStatus)
-    : section.brief?.status
-      ? humanize(section.brief.status)
-      : null;
   const summary =
     textOrNull(section.brief?.collapsed_summary) ??
     textOrNull(section.brief?.headline);
+  const visibleSources = section.sources.slice(0, 2);
+  const overflowCount = section.sources.length - visibleSources.length;
 
   return (
-    <>
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip
-            style={{
-              color: "var(--accent-primary)",
-              borderColor: "rgba(139, 92, 246, 0.34)",
-            }}
-          >
-            Daily Overview
-          </Chip>
-          <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>
-            {section.displayTime}
-          </span>
-          {statusLabel && <Chip>{statusLabel}</Chip>}
-        </div>
-        <div>
-          <h3
-            className="text-[15px] font-semibold leading-snug"
+    <div className="min-w-0 flex-1">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <p
+            className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
             style={{ color: "var(--text-primary)" }}
           >
+            <BookOpen size={15} aria-hidden />
+            <span className="text-[15px] font-semibold">Daily Overview</span>
+          </p>
+        </div>
+        {section.displayTime && (
+          <p
+            className="text-right text-[14px] font-semibold tabular-nums"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {section.displayTime}
+          </p>
+        )}
+      </div>
+
+      <div className="feed-card-grid">
+        <div className="flex self-stretch flex-col">
+          <div>
+            <p
+              className="text-[12px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Tone: {humanize(section.marketTone)}
+            </p>
+            <p
+              className="mt-1 text-[11px] tabular-nums"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {section.dailyChangeLabel}{" "}
+              <span
+                style={{
+                  color:
+                    section.dailyChangePct == null
+                      ? "var(--text-muted)"
+                      : section.dailyChangePct >= 0
+                        ? "var(--up)"
+                        : "var(--down)",
+                  fontWeight: 600,
+                }}
+              >
+                {safeFormatPercent(section.dailyChangePct)}
+              </span>
+            </p>
+            <p
+              className="mt-1 text-[11px] tabular-nums"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Range {safeFormatPercent(section.marketRangePct)}
+            </p>
+          </div>
+
+          {hasDetails && (
+            <div className="mt-auto flex justify-start pt-2">
+              <SectionToggleButton
+                isExpanded={isExpanded}
+                onToggle={onToggle}
+                sectionId={section.id}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 space-y-1.5">
+          <h3
+            className="inline-flex items-center gap-1.5 text-[15px] font-semibold leading-snug"
+            style={{ color: "var(--text-primary)" }}
+          >
+            <BookOpen size={14} aria-hidden className="shrink-0" />
             {dailyLabel}
           </h3>
           {summary ? (
@@ -330,36 +455,83 @@ function DailyOverviewSection({
             </p>
           )}
         </div>
-        <SourceList sources={section.sources} />
-      </div>
 
-      <div className="grid min-w-[160px] grid-cols-2 gap-3 sm:min-w-[220px]">
-        <Metric
-          label={section.dailyChangeLabel}
-          value={safeFormatPercent(section.dailyChangePct)}
-        />
-        <Metric label="Tone" value={humanize(section.marketTone)} />
-        <Metric
-          label="Range"
-          value={safeFormatPercent(section.marketRangePct)}
-        />
+        <div className="flex self-stretch flex-col">
+          <div>
+            {section.sources.length > 0 ? (
+              <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
+                {visibleSources.map((source) => (
+                  <SourceChip key={source.url} source={source} />
+                ))}
+                {overflowCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={onToggle}
+                    aria-label={
+                      "Show " +
+                      overflowCount +
+                      " more accepted source" +
+                      (overflowCount === 1 ? "" : "s")
+                    }
+                    className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
+                    style={{
+                      borderColor: "var(--border-row)",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    +{overflowCount}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <span
+                className="text-[11px]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                -
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {isExpanded && (
-        <div className="feed-expand mt-3 space-y-4">
+        <div
+          className="feed-expand mt-3 space-y-4 pt-3"
+          style={{ borderTop: "1px solid var(--border-row)" }}
+        >
           {section.brief?.context_details && (
-            <p
-              className="text-[12px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {section.brief.context_details}
-            </p>
+            <div>
+              <p
+                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Context Details
+              </p>
+              <p
+                className="max-w-[70ch] text-[13px] leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {section.brief.context_details}
+              </p>
+            </div>
           )}
           <DailyOverviewLists section={section} />
           <ContextGrid title="Daily chart context" data={section.details} />
+          {section.sources.length > visibleSources.length && (
+            <div>
+              <p
+                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Sources
+              </p>
+              <SourceList sources={section.sources} />
+            </div>
+          )}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -414,53 +586,122 @@ function DailyOverviewLists({
 function MarketStorySection({
   section,
   isExpanded,
+  onToggle,
+  hasDetails,
 }: {
   section: NormalizedMarketStorySection;
   isExpanded: boolean;
+  onToggle: () => void;
+  hasDetails: boolean;
 }) {
+  const contextLabel = chartContextLabel(section.chartContextScore);
+
   return (
-    <>
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip
-            style={{
-              color: "var(--market-chip-text)",
-              borderColor: "var(--market-chip-border)",
-            }}
+    <div className="min-w-0 flex-1">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <p
+            className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
+            style={{ color: "var(--text-primary)" }}
           >
-            Market Story
-          </Chip>
-          <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>
-            {section.displayTime || "Story window"}
-          </span>
+            <Layers size={15} aria-hidden />
+            <span className="text-[15px] font-semibold">Market Story</span>
+          </p>
+          {section.direction && (
+            <Chip style={{ color: directionColor(section.direction) }}>
+              <span className="mr-1 inline-flex">
+                <DirectionIcon direction={section.direction} />
+              </span>
+              {formatDirection(section.direction)}
+            </Chip>
+          )}
         </div>
-        <div>
+        <p
+          className="text-right text-[14px] font-semibold tabular-nums"
+          style={{ color: "var(--text-primary)" }}
+        >
+          {section.displayTime || "Story window"}
+        </p>
+      </div>
+
+      <div className="feed-card-grid">
+        <div className="flex self-stretch flex-col">
+          <div>
+            <p
+              className="text-[12px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Pattern:{" "}
+              {section.storyFamily ? humanize(section.storyFamily) : "Context"}
+            </p>
+            <p
+              className="mt-1 text-[11px] tabular-nums"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {section.swingChangeLabel}{" "}
+              <span
+                style={{
+                  color:
+                    section.swingChangePct == null
+                      ? "var(--text-muted)"
+                      : section.swingChangePct >= 0
+                        ? "var(--up)"
+                        : "var(--down)",
+                  fontWeight: 600,
+                }}
+              >
+                {safeFormatPercent(section.swingChangePct)}
+              </span>
+            </p>
+          </div>
+
+          {hasDetails && (
+            <div className="mt-auto flex justify-start pt-2">
+              <SectionToggleButton
+                isExpanded={isExpanded}
+                onToggle={onToggle}
+                sectionId={section.id}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 space-y-1.5">
+          {contextLabel && (
+            <div className="flex items-center gap-1.5">
+              <Layers size={14} color="var(--market-chip-text)" aria-hidden />
+              <span
+                className="text-[12.5px] font-semibold"
+                style={{ color: "var(--market-chip-text)" }}
+              >
+                {contextLabel}
+              </span>
+            </div>
+          )}
           <h3
             className="text-[15px] font-semibold leading-snug"
             style={{ color: "var(--text-primary)" }}
           >
             {section.storyLabel}
           </h3>
-          <div className="mt-2 flex flex-wrap gap-2">
+        </div>
+
+        <div className="flex self-stretch flex-col">
+          <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
             <Chip>{section.storyWindowLabel}</Chip>
-            <Chip>
-              {section.swingChangeLabel}:{" "}
-              {safeFormatPercent(section.swingChangePct)}
-            </Chip>
-            {section.direction && (
-              <Chip style={{ color: directionColor(section.direction) }}>
-                {formatDirection(section.direction)}
-              </Chip>
+            {section.storyFamily && (
+              <Chip>{humanize(section.storyFamily)}</Chip>
             )}
-            {section.chartContextScore !== null && (
-              <Chip>Context {Math.round(section.chartContextScore)}</Chip>
-            )}
+            <Chip>Deterministic</Chip>
           </div>
         </div>
       </div>
 
       {isExpanded && (
-        <div className="feed-expand mt-3 space-y-4">
+        <div
+          className="feed-expand mt-3 space-y-4 pt-3"
+          style={{ borderTop: "1px solid var(--border-row)" }}
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <ContextGrid title="Range context" data={section.rangeContext} />
             <ContextGrid title="Trend context" data={section.trendContext} />
@@ -518,16 +759,20 @@ function MarketStorySection({
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
 function SignalEventSection({
   section,
   isExpanded,
+  onToggle,
+  hasDetails,
 }: {
   section: NormalizedSignalEventSection;
   isExpanded: boolean;
+  onToggle: () => void;
+  hasDetails: boolean;
 }) {
   const statusLabel =
     textOrNull(section.brief?.public_label) ??
@@ -538,96 +783,215 @@ function SignalEventSection({
   const summary =
     textOrNull(section.brief?.collapsed_summary) ??
     textOrNull(section.brief?.headline);
+  const visibleSources = section.sources.slice(0, 2);
+  const overflowCount = section.sources.length - visibleSources.length;
+  const windowLabel = section.displayWindow || section.displayTime;
 
   return (
-    <>
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip
-            style={{
-              color: "var(--source-chip-text)",
-              borderColor: "var(--source-chip-border)",
-            }}
-          >
-            Signal Event
-          </Chip>
-          <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>
-            {section.displayWindow || section.displayTime}
-          </span>
-          {statusLabel && <Chip>{statusLabel}</Chip>}
-        </div>
-        <div>
-          <h3
-            className="text-[15px] font-semibold leading-snug"
+    <div className="min-w-0 flex-1">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <p
+            className="inline-flex items-center gap-1.5 leading-tight tabular-nums"
             style={{ color: "var(--text-primary)" }}
           >
+            <Activity size={15} aria-hidden />
+            <span className="text-[15px] font-semibold">Signal Event</span>
+          </p>
+          <Chip style={signalToneStyle(section.direction)}>
+            <span className="mr-1 inline-flex">
+              <DirectionIcon direction={section.direction} />
+            </span>
             {formatDirection(section.direction)}
-          </h3>
+          </Chip>
+        </div>
+        {windowLabel && (
+          <p
+            className="text-right text-[14px] font-semibold tabular-nums"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {windowLabel}
+          </p>
+        )}
+      </div>
+
+      <div className="feed-card-grid">
+        <div className="flex self-stretch flex-col">
+          <div>
+            <p
+              className="text-[12px] font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Signals: {section.signalsCount} of {section.nTracked} symbols
+            </p>
+            <p
+              className="mt-1 text-[11px] tabular-nums"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {section.avgChangeLabel}{" "}
+              <span
+                style={{
+                  color:
+                    section.avgChangePct == null
+                      ? "var(--text-muted)"
+                      : section.avgChangePct >= 0
+                        ? "var(--up)"
+                        : "var(--down)",
+                  fontWeight: 600,
+                }}
+              >
+                {safeFormatPercent(section.avgChangePct)}
+              </span>
+            </p>
+          </div>
+
+          {hasDetails && (
+            <div className="mt-auto flex justify-start pt-2">
+              <button
+                type="button"
+                onClick={onToggle}
+                data-testid="feed-section-toggle-v02"
+                data-section-id={section.id}
+                aria-expanded={isExpanded}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5 focus-visible:ring-2"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {isExpanded ? "Hide" : "Show more"}
+                {isExpanded ? (
+                  <ChevronUp size={13} aria-hidden />
+                ) : (
+                  <ChevronDown size={13} aria-hidden />
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 space-y-1.5">
+          {statusLabel && (
+            <div className="flex items-center gap-1.5">
+              <Activity size={14} color="var(--accent-primary)" aria-hidden />
+              <span
+                className="text-[12.5px] font-semibold"
+                style={{ color: "var(--accent-primary)" }}
+              >
+                {statusLabel}
+              </span>
+            </div>
+          )}
           {summary ? (
             <p
-              className="mt-1 text-[12px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
+              className="text-[12.5px] leading-snug"
+              style={{
+                color: "var(--text-secondary)",
+                display: "-webkit-box",
+                WebkitLineClamp: isExpanded ? "unset" : 2,
+                WebkitBoxOrient: "vertical",
+                overflow: isExpanded ? "visible" : "hidden",
+              }}
             >
               {summary}
             </p>
           ) : (
             <p
-              className="mt-1 text-[12px] leading-relaxed"
-              style={{ color: "var(--text-muted)" }}
+              className="text-[12px] leading-snug"
+              style={{ color: "var(--text-secondary)" }}
             >
               Source-backed context has not been added yet.
             </p>
           )}
         </div>
-        <SourceList sources={section.sources} />
-      </div>
 
-      <div className="grid min-w-[160px] grid-cols-2 gap-3 sm:min-w-[220px]">
-        <Metric
-          label={section.avgChangeLabel}
-          value={safeFormatPercent(section.avgChangePct)}
-        />
-        <Metric
-          label="Signals"
-          value={`${section.signalsCount} of ${section.nTracked}`}
-        />
-        <Metric label="Impact" value={section.impactLabel ?? "—"} />
-        <Metric
-          label="Context"
-          value={
-            section.chartContextScore === null
-              ? "—"
-              : Math.round(section.chartContextScore)
-          }
-        />
+        <div className="flex self-stretch flex-col">
+          <div>
+            {section.sources.length > 0 ? (
+              <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
+                {visibleSources.map((source) => (
+                  <SourceChip key={source.url} source={source} />
+                ))}
+                {overflowCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={onToggle}
+                    aria-label={
+                      "Show " +
+                      overflowCount +
+                      " more accepted source" +
+                      (overflowCount === 1 ? "" : "s")
+                    }
+                    className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
+                    style={{
+                      borderColor: "var(--border-row)",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    +{overflowCount}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <span
+                className="text-[11px]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                -
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {isExpanded && (
-        <div className="feed-expand mt-3 space-y-4">
-          <SignalEvidenceTable section={section} />
-          {section.brief?.context_details && (
+        <div
+          className="feed-expand mt-3 space-y-4 pt-3"
+          style={{ borderTop: "1px solid var(--border-row)" }}
+        >
+          <div>
             <p
-              className="text-[12px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
+              className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
+              style={{ color: "var(--text-muted)" }}
             >
-              {section.brief.context_details}
+              Per-symbol evidence
             </p>
+            <SignalEvidenceTable section={section} />
+            <p
+              className="mt-1.5 text-[11px]"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Lead mover is highlighted in the Symbol column. Strongest Peak 15m
+              is highlighted in the Peak 15m column.
+            </p>
+          </div>
+          {section.brief?.context_details && (
+            <div>
+              <p
+                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Context Details
+              </p>
+              <p
+                className="max-w-[70ch] text-[13px] leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {section.brief.context_details}
+              </p>
+            </div>
           )}
-          <ContextGrid
-            title="Chart context"
-            data={{
-              chart_context_label: section.chartContextLabel,
-              event_story_type: section.eventStoryType,
-              trend_context: section.trendContext,
-              momentum_context: section.momentumContext,
-              volatility_context: section.volatilityContext,
-              event_range_context: section.eventRangeContext,
-              ...section.details,
-            }}
-          />
+          {section.sources.length > visibleSources.length && (
+            <div>
+              <p
+                className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Sources
+              </p>
+              <SourceList sources={section.sources} />
+            </div>
+          )}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -659,12 +1023,17 @@ function SignalEvidenceTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-[var(--border-row)]">
+    <div
+      className="overflow-x-auto rounded-lg"
+      style={{
+        background: "var(--bg-panel)",
+        border: "1px solid var(--border-row)",
+      }}
+    >
       <table className="min-w-[620px] w-full border-collapse text-left text-[12px]">
         <thead
           style={{
-            background:
-              "color-mix(in srgb, var(--bg-panel-soft) 82%, transparent)",
+            background: "var(--bg-panel)",
             color: "var(--text-muted)",
           }}
         >
@@ -694,7 +1063,7 @@ function SignalEvidenceTable({
                   borderTop: "1px solid var(--border-row)",
                   background: isLead
                     ? "color-mix(in srgb, var(--brand-orange) 8%, transparent)"
-                    : "transparent",
+                    : "var(--bg-panel)",
                 }}
               >
                 <td
@@ -749,36 +1118,6 @@ function SignalEvidenceTable({
   );
 }
 
-function SectionIcon({
-  itemType,
-}: {
-  itemType: NormalizedFeedSection["itemType"];
-}) {
-  const Icon =
-    itemType === "daily_overview"
-      ? BookOpen
-      : itemType === "market_story"
-        ? Layers
-        : Activity;
-
-  return (
-    <span
-      className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border"
-      style={{
-        borderColor: "var(--border-row)",
-        background: "var(--chip-bg)",
-        color:
-          itemType === "market_story"
-            ? "var(--market-chip-text)"
-            : "var(--accent-primary)",
-      }}
-      aria-hidden
-    >
-      <Icon size={16} />
-    </span>
-  );
-}
-
 function FeedSection({
   section,
   isExpanded,
@@ -792,45 +1131,53 @@ function FeedSection({
 }) {
   const hasDetails = sectionHasExpandableDetails(section);
 
+  if (section.itemType === "signal_event") {
+    return (
+      <section
+        className="px-3.5 py-3.5"
+        data-testid="feed-section-v02"
+        data-item-type={section.itemType}
+        data-section-id={section.id}
+        style={{
+          borderTop: isFirst ? "0" : "1px solid var(--border-row)",
+        }}
+      >
+        <SignalEventSection
+          section={section}
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          hasDetails={hasDetails}
+        />
+      </section>
+    );
+  }
+
   return (
     <section
       className="px-3.5 py-3.5"
+      data-testid="feed-section-v02"
+      data-item-type={section.itemType}
+      data-section-id={section.id}
       style={{
         borderTop: isFirst ? "0" : "1px solid var(--border-row)",
       }}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <SectionIcon itemType={section.itemType} />
-        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col">
-            {section.itemType === "daily_overview" && (
-              <DailyOverviewSection section={section} isExpanded={isExpanded} />
-            )}
-            {section.itemType === "market_story" && (
-              <MarketStorySection section={section} isExpanded={isExpanded} />
-            )}
-            {section.itemType === "signal_event" && (
-              <SignalEventSection section={section} isExpanded={isExpanded} />
-            )}
-          </div>
-          {hasDetails && (
-            <button
-              type="button"
-              onClick={onToggle}
-              aria-expanded={isExpanded}
-              className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-white/5"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {isExpanded ? "Hide" : "Show more"}
-              {isExpanded ? (
-                <ChevronUp size={14} aria-hidden />
-              ) : (
-                <ChevronDown size={14} aria-hidden />
-              )}
-            </button>
-          )}
-        </div>
-      </div>
+      {section.itemType === "daily_overview" && (
+        <DailyOverviewSection
+          section={section}
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          hasDetails={hasDetails}
+        />
+      )}
+      {section.itemType === "market_story" && (
+        <MarketStorySection
+          section={section}
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          hasDetails={hasDetails}
+        />
+      )}
     </section>
   );
 }
@@ -850,9 +1197,14 @@ function DayPost({
 }) {
   const visibleSections = getVisibleSectionsForDay(day, isExpanded);
   const dayControlLabel = getDayPostControlLabel(day, isExpanded);
+  const hiddenCountLabel = getDayPostHiddenCountLabel(day, isExpanded);
 
   return (
-    <article className="feed-row overflow-hidden rounded-2xl">
+    <article
+      className="feed-row overflow-hidden rounded-2xl"
+      data-testid="day-post-v02"
+      data-day-post-id={day.id}
+    >
       <header className="flex flex-col gap-3 px-3.5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span
@@ -874,32 +1226,42 @@ function DayPost({
               {day.displayDate}
             </h3>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <Chip>
-                {day.itemCount} item{day.itemCount === 1 ? "" : "s"}
-              </Chip>
               {day.isCurrentUtcDay && <Chip>Current UTC day</Chip>}
             </div>
           </div>
         </div>
 
         {dayControlLabel && (
-          <button
-            type="button"
-            onClick={onToggleDay}
-            aria-expanded={isExpanded}
-            className="inline-flex min-h-9 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[12px] font-medium transition-colors hover:bg-white/5"
-            style={{
-              borderColor: "var(--border-row)",
-              color: "var(--text-secondary)",
-            }}
-          >
-            {dayControlLabel}
-            {isExpanded ? (
-              <ChevronUp size={14} aria-hidden />
-            ) : (
-              <ChevronDown size={14} aria-hidden />
+          <div className="flex shrink-0 items-center gap-2">
+            {hiddenCountLabel && (
+              <span
+                data-testid="day-post-hidden-count-v02"
+                className="text-[12px] font-semibold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {hiddenCountLabel}
+              </span>
             )}
-          </button>
+            <button
+              type="button"
+              onClick={onToggleDay}
+              data-testid="day-post-toggle-v02"
+              data-day-post-id={day.id}
+              aria-expanded={isExpanded}
+              className="inline-flex min-h-9 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[12px] font-medium transition-colors hover:bg-white/5"
+              style={{
+                borderColor: "var(--border-row)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              {dayControlLabel}
+              {isExpanded ? (
+                <ChevronUp size={14} aria-hidden />
+              ) : (
+                <ChevronDown size={14} aria-hidden />
+              )}
+            </button>
+          </div>
         )}
       </header>
 
@@ -946,85 +1308,86 @@ export default function IntelligenceFeedV02({
     <section
       aria-label="Intelligence Feed"
       className="flex h-full min-h-0 flex-col rounded-2xl p-4"
+      data-testid="intelligence-feed-v02"
       style={{
         background: "var(--bg-panel)",
         border: "1px solid var(--border-panel)",
         boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
       }}
     >
-      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="text-[28px] font-semibold leading-tight sm:text-[30px]">
-              <AuroraText
-                colors={[
-                  "var(--brand-orange-deep)",
-                  "var(--brand-orange)",
-                  "var(--brand-orange-amber)",
-                  "var(--brand-orange-yellow)",
-                ]}
-                speed={0.7}
-              >
-                Intelligence Feed
-              </AuroraText>
-            </h2>
-          </div>
-          <div className="mt-1.5 space-y-1">
-            <p
-              className="flex items-center gap-1.5 text-[12px] leading-snug"
-              style={{ color: "var(--text-primary)" }}
+      <div className="mb-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="min-w-0 text-[28px] font-semibold leading-tight sm:text-[30px]">
+            <AuroraText
+              colors={[
+                "var(--brand-orange-deep)",
+                "var(--brand-orange)",
+                "var(--brand-orange-amber)",
+                "var(--brand-orange-yellow)",
+              ]}
+              speed={0.7}
             >
-              <Image
-                src="/brand/Binance_icon.png"
-                alt=""
-                aria-hidden
-                width={14}
-                height={14}
-                className="h-3.5 w-3.5 shrink-0"
-              />
-              <span>Binance public market data drives the detection.</span>
-            </p>
-            <p
-              className="flex items-start gap-1.5 text-[12px] leading-snug"
-              style={{ color: "var(--text-primary)" }}
+              Intelligence Feed
+            </AuroraText>
+          </h2>
+
+          {feed && feed.dayPosts.length > 0 && (
+            <button
+              type="button"
+              onClick={() =>
+                setExpandedDayIds((current) => toggleAllDayPosts(feed, current))
+              }
+              data-testid="feed-v02-global-toggle"
+              aria-expanded={isGlobalExpanded}
+              className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[12px] font-medium transition-colors hover:bg-white/5"
+              style={{
+                borderColor: "var(--border-row)",
+                color: "var(--text-secondary)",
+              }}
             >
-              <Image
-                src="/brand/Claude_AI_symbol.svg"
-                alt=""
-                aria-hidden
-                width={14}
-                height={14}
-                className="mt-0.5 h-3.5 w-3.5 shrink-0"
-              />
-              <span>
-                Claude context appears on Daily Overview and Signal Event
-                sections when source-backed analysis exists.
-              </span>
-            </p>
-          </div>
+              {globalLabel}
+              {isGlobalExpanded ? (
+                <ChevronUp size={14} aria-hidden />
+              ) : (
+                <ChevronDown size={14} aria-hidden />
+              )}
+            </button>
+          )}
         </div>
 
-        {feed && feed.dayPosts.length > 0 && (
-          <button
-            type="button"
-            onClick={() =>
-              setExpandedDayIds((current) => toggleAllDayPosts(feed, current))
-            }
-            aria-expanded={isGlobalExpanded}
-            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[12px] font-medium transition-colors hover:bg-white/5"
-            style={{
-              borderColor: "var(--border-row)",
-              color: "var(--text-secondary)",
-            }}
+        <div className="mt-1.5 space-y-1">
+          <p
+            className="flex items-center gap-1.5 text-[12px] leading-snug"
+            style={{ color: "var(--text-primary)" }}
           >
-            {globalLabel}
-            {isGlobalExpanded ? (
-              <ChevronUp size={14} aria-hidden />
-            ) : (
-              <ChevronDown size={14} aria-hidden />
-            )}
-          </button>
-        )}
+            <Image
+              src="/brand/Binance_icon.png"
+              alt=""
+              aria-hidden
+              width={14}
+              height={14}
+              className="h-3.5 w-3.5 shrink-0"
+            />
+            <span>Binance public market data drives the detection.</span>
+          </p>
+          <p
+            className="flex items-start gap-1.5 text-[12px] leading-snug"
+            style={{ color: "var(--text-primary)" }}
+          >
+            <Image
+              src="/brand/Claude_AI_symbol.svg"
+              alt=""
+              aria-hidden
+              width={14}
+              height={14}
+              className="mt-0.5 h-3.5 w-3.5 shrink-0"
+            />
+            <span>
+              Claude context appears on Daily Overview and Signal Event sections
+              when source-backed analysis exists.
+            </span>
+          </p>
+        </div>
       </div>
 
       <div className="flex min-h-50 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">

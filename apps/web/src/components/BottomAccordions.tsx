@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeftRight,
   BadgeCheck,
   ChevronDown,
   Clock,
@@ -224,36 +223,13 @@ function DefinitionCard({
   );
 }
 
-function MarketLabelChip({
-  children,
-  amber = false,
-}: {
-  children: ReactNode;
-  amber?: boolean;
-}) {
-  return (
-    <span
-      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium"
-      style={{
-        background: amber ? "rgba(245, 158, 11, 0.1)" : "var(--chip-bg)",
-        border: "1px solid transparent",
-        color: amber
-          ? "color-mix(in srgb, var(--market-chip-text) 70%, var(--brand-orange) 30%)"
-          : "var(--market-chip-text)",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
 function DirectionLabelChip({
   children,
   tone,
   Icon,
 }: {
   children: ReactNode;
-  tone: "up" | "down" | "twoSided";
+  tone: "up" | "down";
   Icon: LucideIcon;
 }) {
   const styles = {
@@ -267,11 +243,6 @@ function DirectionLabelChip({
       border: "1px solid rgba(244, 63, 94, 0.3)",
       color: "var(--down)",
     },
-    twoSided: {
-      background: "rgba(167, 139, 250, 0.12)",
-      border: "1px solid rgba(167, 139, 250, 0.32)",
-      color: "var(--two-sided)",
-    },
   }[tone];
 
   return (
@@ -281,21 +252,6 @@ function DirectionLabelChip({
     >
       <Icon size={12} aria-hidden />
       {children}
-    </span>
-  );
-}
-
-function ImpactScoreChip() {
-  return (
-    <span
-      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium"
-      style={{
-        background: "rgba(245, 158, 11, 0.1)",
-        border: "1px solid transparent",
-        color: "var(--text-primary)",
-      }}
-    >
-      Impact Score
     </span>
   );
 }
@@ -334,21 +290,6 @@ function SourceExampleChip({
     <span
       className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium"
       style={styles}
-    >
-      {children}
-    </span>
-  );
-}
-
-function TagExampleChip({ children }: { children: ReactNode }) {
-  return (
-    <span
-      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium"
-      style={{
-        background: "var(--chip-bg)",
-        border: "1px solid var(--chip-border)",
-        color: "var(--chip-text)",
-      }}
     >
       {children}
     </span>
@@ -394,15 +335,15 @@ export default function BottomAccordions({
           ByteSiren is a read-only AI crypto market intelligence dashboard and
           portfolio project. It watches BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, and
           XRPUSDT using Binance public market data, keeps the chart focused on
-          the selected symbol, and keeps the Intelligence Feed focused on broad
-          market events across the monitored set.
+          the selected symbol, and keeps the Intelligence Feed organized around
+          Daily Overviews, deterministic Market Stories, and compact Signal
+          Events.
         </p>
         <p className="mt-2" style={{ textIndent: "1.25rem" }}>
-          The backend stores recent 15-minute candle data, compares each move
-          against a recent baseline, and only promotes events when the movement
-          is broad enough across the monitored symbols. Claude reviews the
-          detected evidence, uses Claude Web Search to find date-relevant public
-          sources, and summarizes the public context with accepted citations.
+          The backend stores recent 15-minute candle data, detects compact
+          evidence-window movement, builds broader chart-pattern stories
+          deterministically, and uses Claude only for source-backed Signal Event
+          and Daily Overview context.
         </p>
         <p className="mt-2" style={{ textIndent: "1.25rem" }}>
           ByteSiren is designed for market awareness and engineering
@@ -412,37 +353,43 @@ export default function BottomAccordions({
 
       <Accordion id="how-to-read" title="How to read ByteSiren">
         <p>
-          ByteSiren detects unusual market-wide movement across BTCUSDT,
-          ETHUSDT, BNBUSDT, SOLUSDT, and XRPUSDT.
+          ByteSiren groups the public feed by UTC day. Each day can contain a
+          Daily Overview, one or more deterministic Market Stories, and compact
+          Signal Events.
         </p>
         <p className="mt-2">
           The chart symbol tabs and chart interval tabs only change the chart.
-          The Intelligence Feed shows all detected market events from the past
-          30 days.
+          The Intelligence Feed shows the past 30 days of v0.2 intelligence
+          items when v0.2 feed rows are available.
         </p>
 
         <GroupLabel>Card sections</GroupLabel>
         <DefinitionGrid>
-          <DefinitionCard term="Evidence">
-            The left side of a feed card shows the detected event facts:
-            evidence window, peak signal time, observed movement direction, how
-            many symbols signaled, average 15-minute movement, peak symbol, and
-            Impact Score.
+          <DefinitionCard term="Daily Overview">
+            Full UTC-day market context. It can use Claude when a Daily Overview
+            brief exists, and it uses the 24h Change metric.
           </DefinitionCard>
-          <DefinitionCard term="Public Context">
-            The middle section shows Claude&apos;s public-context label and
-            short summary. It separates source-backed causes from broader market
-            backdrop, and may show confidence plus a price-context check when a
-            brief is ready.
+          <DefinitionCard term="Market Story">
+            Deterministic chart-pattern context across a broader story window.
+            It has no Claude status, no source chips, and no nested Signal Event
+            cards.
+          </DefinitionCard>
+          <DefinitionCard term="Signal Event">
+            Compact evidence-window movement. It can use Claude for
+            source-backed public context and uses Avg Change in the collapsed
+            card.
+          </DefinitionCard>
+          <DefinitionCard term="Show more / Hide">
+            Expands or hides details for one section only. Day-post expansion is
+            controlled separately by the post control.
           </DefinitionCard>
           <DefinitionCard term="Sources" tone="cyan" Icon={ExternalLink}>
-            Accepted article links that open the exact source URL in a new tab.
+            Accepted article links for Claude-backed Daily Overview and Signal
+            Event sections only. Market Story does not show sources.
           </DefinitionCard>
           <DefinitionCard term="Context Details">
-            The expanded row can show the per-symbol evidence table, a longer
-            public-context explanation, tags, caveats, and the full accepted
-            source list. It is shown only when it adds detail beyond the
-            collapsed summary.
+            Expanded details can show per-symbol evidence, longer public
+            context, and the full accepted source list when available.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>
@@ -518,19 +465,8 @@ export default function BottomAccordions({
           </DefinitionCard>
         </DefinitionGrid>
 
-        <GroupLabel>Event labels</GroupLabel>
+        <GroupLabel>Signal labels</GroupLabel>
         <DefinitionGrid>
-          <DefinitionCard
-            term={<MarketLabelChip amber>Market-wide event</MarketLabelChip>}
-          >
-            An unusual move detected across several monitored symbols within the
-            same 15-minute window.
-          </DefinitionCard>
-          <DefinitionCard term={<MarketLabelChip>Market Day</MarketLabelChip>}>
-            A day-level grouping of multiple related sub-events on the same UTC
-            date. Public context applies to the day overall, not one exact
-            15-minute candle.
-          </DefinitionCard>
           <DefinitionCard
             term={
               <DirectionLabelChip tone="up" Icon={TrendingUp}>
@@ -549,60 +485,66 @@ export default function BottomAccordions({
           >
             The monitored symbols moved downward during the detected event.
           </DefinitionCard>
-          <DefinitionCard
-            term={
-              <DirectionLabelChip tone="twoSided" Icon={ArrowLeftRight}>
-                Two-sided
-              </DirectionLabelChip>
-            }
-          >
-            The day showed both unusual upward and downward movement.
-          </DefinitionCard>
           <DefinitionCard term="Signals">
             How many of the five monitored symbols passed ByteSiren&apos;s event
             rule during that detected event.
           </DefinitionCard>
+          <DefinitionCard term="Mixed direction">
+            Movement was not cleanly one-directional across the broader context.
+            It is descriptive only.
+          </DefinitionCard>
         </DefinitionGrid>
       </Accordion>
 
-      <Accordion title="What the impact values mean">
+      <Accordion title="What the evidence values mean">
         <GroupLabel>Evidence values</GroupLabel>
         <DefinitionGrid>
-          <DefinitionCard term={<ImpactScoreChip />}>
-            Higher means the detected move was more unusual, not better.
+          <DefinitionCard term="Avg Change">
+            Median or average change of participating symbols across the Signal
+            Event evidence window.
+          </DefinitionCard>
+          <DefinitionCard term="Window Change">
+            One symbol&apos;s change across the Signal Event evidence window.
           </DefinitionCard>
           <DefinitionCard term="Evidence window">
-            The candle window ByteSiren used as evidence for the feed item. A
-            single-candle event is shown as one 15-minute candle; grouped events
-            show a start-to-end window.
+            The candles used as Signal Event evidence, not a single publication
+            timestamp.
           </DefinitionCard>
-          <DefinitionCard term="Peak time">
-            The strongest representative 15-minute signal inside the evidence
-            window. The chart marker points to this time.
+          <DefinitionCard term="Peak 15m">
+            Strongest single 15-minute move inside the evidence window.
           </DefinitionCard>
-          <DefinitionCard term="Price Z">
-            Higher means a more unusual 15-minute price move compared with the
-            recent 24-hour baseline.
+          <DefinitionCard term="Lead mover highlight">
+            The highlighted symbol marks the strongest contributor in the event
+            window.
           </DefinitionCard>
           <DefinitionCard term="Volume ×">
-            Higher means larger quote volume than the recent 24-hour median
-            baseline.
+            One symbol&apos;s volume compared with its recent baseline.
           </DefinitionCard>
-          <DefinitionCard term="Range ×">
-            Higher means a larger high-low candle range than the recent 24-hour
-            median baseline.
+          <DefinitionCard term="Peak 15m highlight">
+            The highlighted Peak 15m cell marks the strongest 15-minute move
+            inside the window.
           </DefinitionCard>
-          <DefinitionCard term="15m Change">
-            Latest 15-minute candle close compared with the previous 15-minute
-            candle close.
+          <DefinitionCard term="Range Position">
+            Where the event sits relative to the recent 24h high-low range. It
+            is descriptive, not a trading signal.
+          </DefinitionCard>
+          <DefinitionCard term="Chart context">
+            Deterministic chart-pattern context for range, trend, momentum, and
+            volatility around a move. It is descriptive, not trading advice.
           </DefinitionCard>
           <DefinitionCard term="24h Change">
-            Latest available price compared with roughly 24 hours earlier.
+            Daily Overview metric for the UTC day&apos;s deterministic market
+            change.
           </DefinitionCard>
-          <DefinitionCard term="Price Context">
-            Compares any price or move references in the public context against
-            the Binance market data ByteSiren observed. A mismatch makes the
-            context more cautious; it does not create or upgrade a cause label.
+          <DefinitionCard term="Story window">
+            The broader deterministic Market Story window.
+          </DefinitionCard>
+          <DefinitionCard term="Swing Change">
+            Market Story movement across the broader story window.
+          </DefinitionCard>
+          <DefinitionCard term="Range Position labels">
+            Inside range, Near high, Near low, Broke high, and Broke low are
+            descriptive chart-location labels.
           </DefinitionCard>
         </DefinitionGrid>
 
@@ -613,11 +555,11 @@ export default function BottomAccordions({
         </p>
       </Accordion>
 
-      <Accordion title="Sources links and context tags">
+      <Accordion title="Source links">
         <p>
-          Source chip colors show how an accepted article was used. Tags explain
-          how ByteSiren framed the public context. Neither source colors nor
-          tags rank source quality or turn the source into a recommendation.
+          Source chip colors show how an accepted article was used for a
+          Claude-backed section. They do not rank source quality or turn the
+          source into a recommendation.
         </p>
 
         <GroupLabel>Sources</GroupLabel>
@@ -663,29 +605,6 @@ export default function BottomAccordions({
             The visible publisher name opens the exact article URL in a new tab.
           </DefinitionCard>
         </DefinitionGrid>
-
-        <GroupLabel>Tags</GroupLabel>
-        <DefinitionGrid>
-          <DefinitionCard term={<TagExampleChip>Relief rally</TagExampleChip>}>
-            A recovery move after a period of weakness or fear.
-          </DefinitionCard>
-          <DefinitionCard
-            term={<TagExampleChip>Oversold rebound</TagExampleChip>}
-          >
-            A bounce after prices fell unusually far below recent norms.
-          </DefinitionCard>
-          <DefinitionCard
-            term={<TagExampleChip>Same-day context</TagExampleChip>}
-          >
-            Supporting context is from the same calendar day, not proof of exact
-            15-minute causation.
-          </DefinitionCard>
-          <DefinitionCard
-            term={<TagExampleChip>No direct cause</TagExampleChip>}
-          >
-            No single clear public trigger was identified for the move.
-          </DefinitionCard>
-        </DefinitionGrid>
       </Accordion>
 
       <InfoCard title="Data sources and timing">
@@ -707,8 +626,8 @@ export default function BottomAccordions({
             time and public Binance data can be delayed.
           </li>
           <li>
-            Claude is called only after a qualifying event is detected. Public
-            sources are filtered before appearing in the feed.
+            Claude context is used only for Signal Event and Daily Overview
+            sections. Public sources are filtered before appearing in the feed.
           </li>
         </ul>
       </InfoCard>

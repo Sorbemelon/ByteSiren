@@ -5,6 +5,7 @@ import { normalizeFeedResponse, normalizeFeedV02 } from "./feedAdapters.ts";
 import {
   createInitialExpandedDayIds,
   getDayPostControlLabel,
+  getDayPostHiddenCountLabel,
   getGlobalDayControlLabel,
   getVisibleSectionsForDay,
   sectionHasExpandableDetails,
@@ -293,14 +294,10 @@ test("per-day controls show only the default collapsed item", () => {
   const feed = normalizedV02();
   const day = feed.dayPosts[0];
 
-  assert.equal(
-    getDayPostControlLabel(day, true),
-    "+2 events \u00b7 Collapse post",
-  );
-  assert.equal(
-    getDayPostControlLabel(day, false),
-    "+2 events \u00b7 Expand post",
-  );
+  assert.equal(getDayPostControlLabel(day, true), "Collapse post");
+  assert.equal(getDayPostControlLabel(day, false), "Expand post");
+  assert.equal(getDayPostHiddenCountLabel(day, true), null);
+  assert.equal(getDayPostHiddenCountLabel(day, false), "+2 events");
 
   const visibleCollapsed = getVisibleSectionsForDay(day, false);
   assert.equal(visibleCollapsed.length, 1);

@@ -6,11 +6,11 @@
     },
     "moving": {
       "label": "Moving",
-      "meaning": "Some unusual activity, but not a major event by itself."
+      "meaning": "Some unusual activity, but not a public feed item by itself."
     },
     "in_event": {
       "label": "In Event",
-      "meaning": "This coin is part of the selected market-wide detection."
+      "meaning": "This symbol is part of the selected v0.2 Signal Event."
     },
     "strong_move": {
       "label": "Strong Move",
@@ -21,12 +21,33 @@
       "meaning": "Latest market data may be delayed or incomplete."
     }
   },
-  "incident_labels": [
-    "Market-wide",
-    "Market Day",
-    "Observed Up",
-    "Observed Down",
-    "Two-sided"
+  "feed_item_labels_v02": ["Daily Overview", "Market Story", "Signal Event"],
+  "signal_labels_v02": ["Observed Up", "Observed Down", "Mixed direction"],
+  "metric_labels_v02": [
+    "Avg Change",
+    "24h Change",
+    "Window Change",
+    "Peak 15m",
+    "Volume ×",
+    "Range Position",
+    "Chart context",
+    "Story window",
+    "Swing Change"
+  ],
+  "range_position_labels_v02": [
+    "Inside range",
+    "Near high",
+    "Near low",
+    "Broke high",
+    "Broke low"
+  ],
+  "market_story_labels_v02": [
+    "Range break sequence",
+    "Reversal sequence",
+    "Momentum continuation sequence",
+    "Volatility expansion sequence",
+    "Inside-range impulse sequence",
+    "Mixed context sequence"
   ],
   "claude_labels": {
     "cause_supported": "Focused Cause",
@@ -36,10 +57,28 @@
     "analysis_limited": "Claude Limited",
     "queued_for_analysis": "Waiting for Claude"
   },
+  "daily_overview_labels_v02": [
+    "Daily Context",
+    "Quiet Day",
+    "Mixed Day",
+    "Volatile Day",
+    "Risk-on Day",
+    "Risk-off Day",
+    "No Major Driver",
+    "Claude Limited"
+  ],
+  "source_roles_v02": [
+    "Focused catalyst source",
+    "Likely cause source",
+    "Backdrop source",
+    "Price check source",
+    "Main daily context source",
+    "Supporting daily source"
+  ],
   "color_roles": {
     "observed_up": "emerald",
     "observed_down": "rose",
-    "two_sided": "violet",
+    "mixed_direction": "violet",
     "focused_cause": "emerald",
     "likely_cause": "teal",
     "market_backdrop": "blue-gray",
