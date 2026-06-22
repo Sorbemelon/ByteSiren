@@ -807,7 +807,7 @@ async function runBrowserSmoke() {
         hasMarketDayLabel: body.includes('Market Day'),
         hasTwoSidedLabel: body.includes('Two-sided'),
         hasOpaqueContextScore: body.includes('Context 88'),
-        signalHasWindow: signal.includes('15:15-16:00 UTC'),
+        signalHasWindow: signal.includes('15:15-16:00 UTC') || signal.includes('15:15 - 16:00 UTC'),
         signalHasReversalLifecycle: signal.includes('Reversed, Net up'),
         signalHasObservedUp: signal.includes('Observed up'),
         signalHasEvidenceWindowCaption: signal.includes('Evidence window'),

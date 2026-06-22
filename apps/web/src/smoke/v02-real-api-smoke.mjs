@@ -115,6 +115,50 @@ async function chooseCorsAllowedWebPort() {
   );
 }
 
+export function renderedUniqueCountsFromEntries(entries) {
+  const dayPostIds = new Set();
+  const sectionIds = new Set();
+  const byType = {
+    daily_overview: new Set(),
+    market_story: new Set(),
+    signal_event: new Set(),
+  };
+
+  for (const entry of entries) {
+    if (entry.dayPostId) {
+      dayPostIds.add(entry.dayPostId);
+    }
+
+    if (entry.sectionId) {
+      sectionIds.add(entry.sectionId);
+
+      if (byType[entry.sectionType]) {
+        byType[entry.sectionType].add(entry.sectionId);
+      }
+    }
+  }
+
+  return {
+    uniqueDayPosts: dayPostIds.size,
+    uniqueSections: sectionIds.size,
+    uniqueDailyOverviewSections: byType.daily_overview.size,
+    uniqueMarketStorySections: byType.market_story.size,
+    uniqueSignalEventSections: byType.signal_event.size,
+  };
+}
+
+export function webUrlUsageReport({ requestedWebUrl, actualWebUrl, started }) {
+  const parsed = new URL(actualWebUrl);
+
+  return {
+    requested_web_url: requestedWebUrl ?? null,
+    actual_web_url: actualWebUrl,
+    detected_port: Number(parsed.port),
+    server_mode: started ? "started_by_smoke" : "existing_server",
+    started_server: started,
+  };
+}
+
 async function waitForHttp(url, timeoutMs = 60000) {
   const start = Date.now();
   let lastError;
@@ -301,7 +345,7 @@ async function writeScreenshot(session, outputPath) {
   await writeFile(outputPath, Buffer.from(result.data, "base64"));
 }
 
-function countItems(feed) {
+export function countItems(feed) {
   const counts = {
     dayPosts: Array.isArray(feed.day_groups) ? feed.day_groups.length : 0,
     daily: 0,
@@ -340,6 +384,11 @@ export async function runRealApiSmoke(options) {
         web = startNextDev(options.apiBase, webPort);
         return web.url;
       })();
+    const webUrlReport = webUrlUsageReport({
+      requestedWebUrl: options.webUrl,
+      actualWebUrl: webUrl,
+      started: Boolean(web),
+    });
 
     if (web) {
       try {
@@ -427,6 +476,27 @@ export async function runRealApiSmoke(options) {
       const firstDay = document.querySelector('[data-testid="day-post-v02"]');
       const leftHeight = leftSection ? Math.round(leftSection.getBoundingClientRect().height) : 0;
       const feedPanelHeight = feedPanel ? Math.round(feedPanel.getBoundingClientRect().height) : 0;
+      const renderedEntries = [
+        ...Array.from(document.querySelectorAll('[data-v02-day-post-id]')).map((element) => ({
+          dayPostId: element.getAttribute('data-v02-day-post-id'),
+          sectionId: null,
+          sectionType: null,
+        })),
+        ...Array.from(document.querySelectorAll('[data-v02-section-id]')).map((element) => ({
+          dayPostId: element.getAttribute('data-day-post-id'),
+          sectionId: element.getAttribute('data-v02-section-id'),
+          sectionType: element.getAttribute('data-v02-section-type'),
+        })),
+      ];
+      const unique = (values) => new Set(values.filter(Boolean)).size;
+      const sectionEntries = renderedEntries.filter((entry) => entry.sectionId);
+      const uniqueCounts = {
+        uniqueDayPosts: unique(renderedEntries.map((entry) => entry.dayPostId)),
+        uniqueSections: unique(sectionEntries.map((entry) => entry.sectionId)),
+        uniqueDailyOverviewSections: unique(sectionEntries.filter((entry) => entry.sectionType === 'daily_overview').map((entry) => entry.sectionId)),
+        uniqueMarketStorySections: unique(sectionEntries.filter((entry) => entry.sectionType === 'market_story').map((entry) => entry.sectionId)),
+        uniqueSignalEventSections: unique(sectionEntries.filter((entry) => entry.sectionType === 'signal_event').map((entry) => entry.sectionId)),
+      };
       const scrollMetrics = scroller ? {
         clientHeight: Math.round(scroller.clientHeight),
         scrollHeight: Math.round(scroller.scrollHeight),
@@ -434,11 +504,19 @@ export async function runRealApiSmoke(options) {
         overflowY: getComputedStyle(scroller).overflowY,
       } : null;
       return {
-        dayPosts: document.querySelectorAll('[data-testid="day-post-v02"]').length,
-        sections: document.querySelectorAll('[data-testid="feed-section-v02"]').length,
-        daily: document.querySelectorAll('[data-item-type="daily_overview"]').length,
-        story: document.querySelectorAll('[data-item-type="market_story"]').length,
-        signal: document.querySelectorAll('[data-item-type="signal_event"]').length,
+        dayPosts: uniqueCounts.uniqueDayPosts,
+        sections: uniqueCounts.uniqueSections,
+        daily: uniqueCounts.uniqueDailyOverviewSections,
+        story: uniqueCounts.uniqueMarketStorySections,
+        signal: uniqueCounts.uniqueSignalEventSections,
+        renderedUniqueCounts: uniqueCounts,
+        rawDomOccurrences: {
+          dayPosts: document.querySelectorAll('[data-testid="day-post-v02"]').length,
+          feedSections: document.querySelectorAll('[data-testid="feed-section-v02"]').length,
+          dataItemTypeDailyOverview: document.querySelectorAll('[data-item-type="daily_overview"]').length,
+          dataItemTypeMarketStory: document.querySelectorAll('[data-item-type="market_story"]').length,
+          dataItemTypeSignalEvent: document.querySelectorAll('[data-item-type="signal_event"]').length,
+        },
         leftHeight,
         feedPanelHeight,
         heightDelta: Math.abs(leftHeight - feedPanelHeight),
@@ -604,7 +682,9 @@ export async function runRealApiSmoke(options) {
         {
           ok: true,
           api_base: options.apiBase,
+          requested_web_url: options.webUrl ?? null,
           web_url: webUrl,
+          web_url_report: webUrlReport,
           feed_counts: feedCounts,
           rendered: initial,
           selected_scroll: selectedScroll,
@@ -633,7 +713,10 @@ async function main() {
   await runRealApiSmoke(parseRealApiSmokeArgs());
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main().catch((error) => {
     console.error(error);
     process.exitCode = 1;

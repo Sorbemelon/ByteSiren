@@ -2437,6 +2437,8 @@ function FeedSection({
       <section
         className="px-3.5 py-3.5"
         data-testid="feed-section-v02"
+        data-v02-section-id={section.id}
+        data-v02-section-type={section.itemType}
         data-item-type={section.itemType}
         data-section-id={section.id}
         data-day-post-id={dayPostId}
@@ -2461,6 +2463,8 @@ function FeedSection({
     <section
       className="px-3.5 py-3.5"
       data-testid="feed-section-v02"
+      data-v02-section-id={section.id}
+      data-v02-section-type={section.itemType}
       data-item-type={section.itemType}
       data-section-id={section.id}
       data-day-post-id={dayPostId}
@@ -2522,6 +2526,7 @@ function DayPost({
     <article
       className="feed-row shrink-0 overflow-hidden rounded-2xl"
       data-testid="day-post-v02"
+      data-v02-day-post-id={day.id}
       data-day-post-id={day.id}
     >
       <header

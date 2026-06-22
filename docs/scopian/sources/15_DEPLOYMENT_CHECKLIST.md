@@ -387,6 +387,15 @@ The smoke report is written to:
 .tmp/v02-local-backfill-smoke-report.md
 ```
 
+Interpret the report counts by source:
+
+- `apiFeedCounts` are the public `/api/intelligence/feed` item counts and are the source of truth for public feed contents.
+- `dbCounts`, when available, are local D1 table counts from `bytesiren-db --local`.
+- `renderedUniqueCounts`, in the frontend smoke, count unique rendered day posts and sections by stable `data-v02-*` IDs.
+- `rawDomOccurrences`, if present, are diagnostic text/selector occurrences only and must not be treated as feed item counts.
+
+If `daily_overviews_v02` table count differs from the API Daily Overview count, read `dailyOverviewMismatchAnalysis`. A mismatch can be expected when the extra row is the current/incomplete UTC day or outside the visible feed range. A mismatch without that explanation should block production cutover rehearsal until diagnosed.
+
 5. Start the web app against the local Worker:
 
 ```bash
@@ -406,7 +415,7 @@ corepack pnpm --filter @bytesiren/web dev
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787 corepack pnpm --filter @bytesiren/web smoke:v02-real-api
 ```
 
-Local screenshots are written under `.tmp/`.
+Local screenshots are written under `.tmp/`. The smoke report prints the requested web URL, actual web URL, detected port, and whether the smoke started its own server or attached to an existing server. If it starts a server, it may stop only the process it started. If it attaches to an existing local web server, do not stop that server from the smoke.
 
 Do not use production tokens for this flow. Do not run live Claude for this smoke.
 
@@ -418,6 +427,9 @@ node scripts/v02-local-reset.mjs --confirm-local-reset
 ```
 
 The reset script is local-only, refuses `--remote`, and clears only v0.2 tables by default.
+It writes reset SQL to a temporary `.sql` file and runs Wrangler with `d1 execute bytesiren-db --local --file <temp-file>` so Windows, PowerShell, and Git Bash do not split multi-line SQL as command arguments.
+
+Do not enable v0.2 production flags until the local smoke report counts and any Daily Overview mismatch analysis are understood.
 
 ## I. SEO asset note
 

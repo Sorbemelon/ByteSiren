@@ -506,6 +506,14 @@ v0.2I6A does:
 - add a local backfill smoke orchestrator that can import candles to a local Worker, run the protected v0.2 pipeline, fetch `/api/market/latest`, and validate `FEED_VERSION=v02`
 - add a frontend real-API smoke that renders the v0.2 day-post UI against a real local Worker API and saves local screenshots
 
+v0.2I6B1 hardens the local smoke tooling:
+
+- the reset script remains local-only, refuses any `--remote` usage, requires `--confirm-local-reset`, writes SQL to a temporary `.sql` file, and invokes Wrangler with `d1 execute bytesiren-db --local --file <temp-file>` for Windows-safe execution
+- the backfill smoke report separates public API feed counts, local D1 table counts when available, Market Story boundary checks, public Audit Event checks, and Daily Overview mismatch analysis
+- the frontend real-API smoke counts unique rendered v0.2 day posts and feed sections by stable `data-v02-*` attributes; raw DOM occurrence counts are diagnostics only
+- the frontend real-API smoke reports requested web URL, actual web URL, detected port, and whether it used an existing server or started its own server
+- Daily Overview table/feed count mismatches must be explained as current/incomplete-day visibility, outside visible feed range, or an issue needing review before production cutover rehearsal
+
 v0.2I6A does not:
 
 - deploy

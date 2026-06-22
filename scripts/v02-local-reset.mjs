@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const DEFAULT_DATABASE = "bytesiren-db";
@@ -36,7 +39,7 @@ export function parseResetArgs(argv = process.argv.slice(2)) {
     dryRun: argv.includes("--dry-run"),
   };
 
-  if (argv.includes("--remote")) {
+  if (argv.some((arg) => arg === "--remote" || arg.startsWith("--remote="))) {
     throw new Error("Refusing to run: v02-local-reset never accepts --remote.");
   }
 
@@ -63,12 +66,42 @@ export function buildResetSql(options) {
   return `${tables.map((table) => `DELETE FROM ${table};`).join("\n")}\n`;
 }
 
+export function buildWranglerResetArgs(options, sqlFilePath) {
+  return [
+    "pnpm",
+    "--filter",
+    "@bytesiren/worker",
+    "exec",
+    "wrangler",
+    "d1",
+    "execute",
+    options.database,
+    "--local",
+    "--file",
+    sqlFilePath,
+  ];
+}
+
+export function buildCorepackCommand(
+  platform = process.platform,
+  comSpec = process.env.ComSpec,
+) {
+  if (platform === "win32") {
+    return {
+      command: comSpec || "cmd.exe",
+      argsPrefix: ["/d", "/s", "/c", "corepack"],
+    };
+  }
+
+  return { command: "corepack", argsPrefix: [] };
+}
+
 function runCommand(command, args, { cwd = process.cwd() } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
       stdio: "inherit",
-      shell: process.platform === "win32",
+      shell: false,
     });
 
     child.once("exit", (code) => {
@@ -81,34 +114,53 @@ function runCommand(command, args, { cwd = process.cwd() } = {}) {
   });
 }
 
-export async function runLocalReset(options, { runner = runCommand } = {}) {
-  const sql = buildResetSql(options);
-  const args = [
-    "pnpm",
-    "--filter",
-    "@bytesiren/worker",
-    "exec",
-    "wrangler",
-    "d1",
-    "execute",
-    options.database,
-    "--local",
-    "--command",
-    sql,
-  ];
+async function writeResetSqlTempFile(sql, tempRoot = os.tmpdir()) {
+  const tempDir = await mkdtemp(path.join(tempRoot, "bytesiren-v02-reset-"));
+  const sqlFile = path.join(tempDir, "v02-local-reset.sql");
+  await writeFile(sqlFile, sql, "utf8");
+  return { tempDir, sqlFile };
+}
 
-  console.log("WARNING: local-only v0.2 reset requested.");
-  console.log(`Database: ${options.database}`);
-  console.log("Tables:");
-  console.log(sql.trim());
+export async function runLocalReset(
+  options,
+  {
+    runner = runCommand,
+    logger = console,
+    tempRoot = os.tmpdir(),
+    commandSpec = buildCorepackCommand(),
+    command = commandSpec.command,
+    commandArgsPrefix = commandSpec.argsPrefix,
+  } = {},
+) {
+  const sql = buildResetSql(options);
+
+  logger.log("WARNING: local-only v0.2 reset requested.");
+  logger.log(`Database: ${options.database}`);
+  logger.log("Tables:");
+  logger.log(sql.trim());
 
   if (options.dryRun) {
-    console.log("Dry-run: wrangler command skipped.");
-    return { ok: true, dry_run: true, sql };
+    logger.log(
+      "Dry-run: Wrangler command skipped. Live reset will use a temporary .sql file and --file.",
+    );
+    return { ok: true, dry_run: true, sql, command_strategy: "file" };
   }
 
-  await runner("corepack", args);
-  return { ok: true, dry_run: false, sql };
+  const { tempDir, sqlFile } = await writeResetSqlTempFile(sql, tempRoot);
+  const args = buildWranglerResetArgs(options, sqlFile);
+
+  try {
+    await runner(command, [...commandArgsPrefix, ...args]);
+    return {
+      ok: true,
+      dry_run: false,
+      sql,
+      command_strategy: "file",
+      sql_file: sqlFile,
+    };
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 async function main() {
@@ -116,7 +168,10 @@ async function main() {
   await runLocalReset(options);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main().catch((error) => {
     console.error(
       error instanceof Error ? error.message : "Local reset failed.",
