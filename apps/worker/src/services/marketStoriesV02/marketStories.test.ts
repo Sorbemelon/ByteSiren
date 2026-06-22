@@ -275,3 +275,27 @@ test("deterministic story IDs are stable across repeated generation", () => {
 
   assert.equal(first.market_stories[0].id, second.market_stories[0].id);
 });
+
+test("Market Story identity survives later extension of the same anchored story", () => {
+  const initial = generateMarketStoriesV02([
+    event("signal_a", { startHour: 0, endHour: 1 }),
+    event("signal_b", { startHour: 4, endHour: 5 }),
+  ]);
+  const extended = generateMarketStoriesV02([
+    event("signal_a", { startHour: 0, endHour: 1 }),
+    event("signal_b", { startHour: 4, endHour: 5 }),
+    event("signal_c", { startHour: 8, endHour: 9 }),
+  ]);
+
+  assert.equal(initial.summary.story_count, 1);
+  assert.equal(extended.summary.story_count, 1);
+  assert.equal(initial.market_stories[0].id, extended.market_stories[0].id);
+  assert.equal(
+    initial.market_stories[0].story_end < extended.market_stories[0].story_end,
+    true,
+  );
+  assert.deepEqual(
+    JSON.parse(extended.market_stories[0].included_signal_event_ids_json),
+    ["signal_a", "signal_b", "signal_c"],
+  );
+});

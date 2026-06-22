@@ -27,6 +27,32 @@ function boolInt(value: boolean): number {
 const SQLITE_BIND_CHUNK_SIZE = 50;
 const D1_BATCH_STATEMENT_CHUNK_SIZE = 25;
 
+export function signalEventStorageIdV02(
+  event: Pick<SignalEventV02, "event_start" | "direction">,
+): string {
+  const stamp = event.event_start
+    .replace(/[^0-9]/g, "")
+    .slice(0, 14)
+    .toLowerCase();
+  const direction = event.direction === "observed_down" ? "down" : "up";
+
+  return `signal_v02_${stamp}_${direction}`;
+}
+
+function signalEventForStorage(event: SignalEventV02): SignalEventV02 {
+  const id = signalEventStorageIdV02(event);
+
+  return {
+    ...event,
+    id,
+    symbols: event.symbols.map((symbol) => ({
+      ...symbol,
+      id: `${id}_${symbol.symbol}`,
+      signal_event_id: id,
+    })),
+  };
+}
+
 async function runStatementBatches(
   db: D1Database,
   statements: D1PreparedStatement[],
@@ -321,12 +347,18 @@ export async function upsertDetectorV02Output(
   db: D1Database,
   output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
 ): Promise<DetectorV02WriteCounts> {
-  await pruneDetectorV02Output(db, output);
+  const signalEventsForStorage = output.signal_events.map(signalEventForStorage);
+  const storageOutput = {
+    signal_events: signalEventsForStorage,
+    audit_events: output.audit_events,
+  };
 
-  const signalEvents = await upsertSignalEventsV02(db, output.signal_events);
+  await pruneDetectorV02Output(db, storageOutput);
+
+  const signalEvents = await upsertSignalEventsV02(db, signalEventsForStorage);
   const signalSymbols = await upsertSignalEventSymbolsV02(
     db,
-    output.signal_events.flatMap((event) => event.symbols),
+    signalEventsForStorage.flatMap((event) => event.symbols),
   );
   const auditEvents = await upsertAuditEventsV02(db, output.audit_events);
 

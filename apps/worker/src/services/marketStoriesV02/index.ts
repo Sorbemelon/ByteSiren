@@ -1078,11 +1078,11 @@ function storyFromCluster(
   const auditIds = events
     .filter((event) => event.member_type === "audit_event_v02")
     .map((event) => event.id);
+  const anchor = events[0];
   const id = `story_v02_${stableHash([
+    anchor.member_type,
+    anchor.id,
     range.storyStart,
-    range.storyEnd,
-    label.label,
-    ...events.map((event) => event.id),
   ])}_${range.storyStart.replace(/[-:]/g, "").slice(0, 13).toLowerCase()}`;
   const decisionReasons = [
     MARKET_STORY_V02_MODEL_VERSION,

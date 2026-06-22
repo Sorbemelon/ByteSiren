@@ -9,7 +9,10 @@ import {
 import { runDetector } from "./runDetector.ts";
 import type { MarketCandle } from "../types/market.ts";
 import { createMemoryD1 } from "../test/d1Memory.ts";
-import { upsertDetectorV02Output } from "../db/v02DetectorRepository.ts";
+import {
+  signalEventStorageIdV02,
+  upsertDetectorV02Output,
+} from "../db/v02DetectorRepository.ts";
 import type { SignalEventV02 } from "../services/detectorV02/index.ts";
 
 const baseTimeMs = Date.parse("2026-06-14T00:00:00.000Z");
@@ -389,6 +392,48 @@ test("runDetector v0.2 writes detector rows and is idempotent", async () => {
   assert.equal(tables.claude_briefs_v02.length, 0);
   assert.equal(tables.source_references_v02.length, 0);
   assert.equal(tables.incidents.length, 0);
+});
+
+test("v0.2 Signal Event storage identity survives a later window extension", async () => {
+  const { db, tables } = createMemoryD1();
+  const first = detectorSignalEvent(0);
+  const extendedId = "vnext_fixture_0_extended";
+  const extended: SignalEventV02 = {
+    ...first,
+    id: extendedId,
+    event_end: closeIsoAt(101),
+    duration_min: 90,
+    avg_change_pct: 2.5,
+    symbols: first.symbols.map((symbol) => ({
+      ...symbol,
+      id: `${extendedId}_${symbol.symbol}`,
+      signal_event_id: extendedId,
+      window_change_pct: 2.5,
+    })),
+  };
+  const stableId = signalEventStorageIdV02(first);
+
+  await upsertDetectorV02Output(db, {
+    signal_events: [first],
+    audit_events: [],
+  });
+  await upsertDetectorV02Output(db, {
+    signal_events: [extended],
+    audit_events: [],
+  });
+
+  assert.equal(tables.signal_events_v02.length, 1);
+  assert.equal(tables.signal_events_v02[0].id, stableId);
+  assert.equal(tables.signal_events_v02[0].event_end, extended.event_end);
+  assert.equal(tables.signal_events_v02[0].duration_min, 90);
+  assert.equal(tables.signal_events_v02[0].avg_change_pct, 2.5);
+  assert.equal(tables.signal_event_symbols_v02.length, ALLOWED_SYMBOLS.length);
+  assert.equal(
+    tables.signal_event_symbols_v02.every(
+      (symbol) => symbol.signal_event_id === stableId,
+    ),
+    true,
+  );
 });
 
 test("v0.2 detector output pruning handles more than SQLite bind limit", async () => {
