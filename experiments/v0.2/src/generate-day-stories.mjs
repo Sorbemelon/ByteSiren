@@ -637,7 +637,7 @@ function storyLabelFromFamily(family) {
   if (family === "inside_range_impulse") {
     return "Inside-range impulse sequence";
   }
-  return "Mixed context sequence";
+  return "Mixed sequence";
 }
 
 function storySummaryFocus(label, dominantFamily) {
@@ -656,7 +656,7 @@ function storySummaryFocus(label, dominantFamily) {
   if (label === "Inside-range impulse sequence") {
     return "story-window path shows an impulse that mostly remains inside the prior range";
   }
-  if (label === "Mixed context sequence") {
+  if (label === "Mixed sequence") {
     return `market moved through a mixed story window; primary member context is ${dominantFamily.replace(/_/g, " ")}`;
   }
   return "nearby signals form a broader market context window";
@@ -754,7 +754,7 @@ function chooseStoryLabel({ direction, dominant, twoSidedSwing, windowContext, o
       : "mixed_context_fallback",
   ];
   return {
-    label: "Mixed context sequence",
+    label: "Mixed sequence",
     family: "mixed_context",
     storyType: directionalStoryType("mixed_context", direction),
     reasons,
@@ -1560,7 +1560,7 @@ function storyFromCluster(
         Math.abs(Number(a.window_move_pct ?? 0)),
     )[0]?.event_id,
     dominant_chart_context_label:
-      chartContextLabels[0] ?? "Mixed context sequence",
+      chartContextLabels[0] ?? "Mixed sequence",
     event_range_contexts: eventRangeContexts,
     summary_hint: `${publicEvents.length} Signal Events and ${includedAuditEvents.length} audit-only events from ${dateTimeLabel(storyStart)}; ${context.summary_focus}.`,
     included_signal_events: publicEvents.map(eventBrief),

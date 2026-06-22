@@ -207,6 +207,140 @@ test("two_sided direction does not produce a Two-sided sequence label", () => {
   assert.notEqual(output.market_stories[0].story_label, "Two-sided sequence");
 });
 
+test("story-level label scoring can emit Momentum continuation sequence", () => {
+  const output = generateMarketStoriesV02([
+    event("signal_a", {
+      startHour: 0,
+      endHour: 1,
+      event_story_type: "momentum_continuation_up",
+      chart_context_label: "Momentum continuation",
+      event_range_context: "mostly_inside_range",
+    }),
+    event("signal_b", {
+      startHour: 4,
+      endHour: 5,
+      event_story_type: "momentum_continuation_up",
+      chart_context_label: "Momentum continuation",
+      event_range_context: "mostly_inside_range",
+    }),
+  ]);
+
+  assert.equal(output.summary.story_count, 1);
+  assert.equal(
+    output.market_stories[0].story_label,
+    "Momentum continuation sequence",
+  );
+  assert.equal(output.market_stories[0].story_family, "momentum_continuation");
+});
+
+test("story-level label scoring lets reversal beat range priority when reversal evidence is explicit", () => {
+  const output = generateMarketStoriesV02([
+    event("signal_a", {
+      startHour: 0,
+      endHour: 1,
+      direction: "observed_up",
+      event_story_type: "range_break_relief_reversal_up",
+      chart_context_label: "Relief / reversal",
+      event_range_context: "mostly_inside_range",
+    }),
+    event("signal_b", {
+      startHour: 5,
+      endHour: 6,
+      direction: "observed_down",
+      event_story_type: "range_break_relief_reversal_down",
+      chart_context_label: "Relief / reversal",
+      event_range_context: "mostly_inside_range",
+    }),
+  ]);
+
+  assert.equal(output.summary.story_count, 1);
+  assert.equal(output.market_stories[0].story_label, "Reversal sequence");
+  assert.equal(output.market_stories[0].story_family, "relief_reversal");
+});
+
+test("story-level label scoring can emit Volatility expansion sequence", () => {
+  const output = generateMarketStoriesV02([
+    event("signal_a", {
+      startHour: 0,
+      endHour: 1,
+      event_story_type: "volatility_expansion_up",
+      chart_context_label: "Volatility expansion",
+      event_range_context: "mostly_inside_range",
+      volatility_context: "volatility_expansion",
+    }),
+    event("signal_b", {
+      startHour: 4,
+      endHour: 5,
+      event_story_type: "volatility_expansion_up",
+      chart_context_label: "Volatility expansion",
+      event_range_context: "mostly_inside_range",
+      volatility_context: "volatility_expansion",
+    }),
+  ]);
+
+  assert.equal(output.summary.story_count, 1);
+  assert.equal(
+    output.market_stories[0].story_label,
+    "Volatility expansion sequence",
+  );
+  assert.equal(output.market_stories[0].story_family, "volatility_expansion");
+});
+
+test("story-level label scoring can emit Inside-range impulse sequence", () => {
+  const output = generateMarketStoriesV02([
+    event("signal_a", {
+      startHour: 0,
+      endHour: 1,
+      event_story_type: "inside_range_impulse_up",
+      chart_context_label: "Inside-range impulse",
+      event_range_context: "mostly_inside_range",
+    }),
+    event("signal_b", {
+      startHour: 4,
+      endHour: 5,
+      event_story_type: "inside_range_impulse_up",
+      chart_context_label: "Inside-range impulse",
+      event_range_context: "mostly_inside_range",
+    }),
+  ]);
+
+  assert.equal(output.summary.story_count, 1);
+  assert.equal(
+    output.market_stories[0].story_label,
+    "Inside-range impulse sequence",
+  );
+  assert.equal(output.market_stories[0].story_family, "inside_range_impulse");
+});
+
+test("story-level label scoring keeps ambiguous context as Mixed sequence", () => {
+  const output = generateMarketStoriesV02([
+    event("signal_a", {
+      startHour: 0,
+      endHour: 1,
+      chart_context_label: "Strong chart context",
+      event_story_type: "",
+      event_range_context: "",
+      trend_context: "",
+      momentum_context: "",
+      volatility_context: "ordinary_volatility",
+    }),
+    event("signal_b", {
+      startHour: 4,
+      endHour: 5,
+      chart_context_label: "Strong chart context",
+      event_story_type: "",
+      event_range_context: "",
+      trend_context: "",
+      momentum_context: "",
+      volatility_context: "ordinary_volatility",
+    }),
+  ]);
+
+  assert.equal(output.summary.story_count, 1);
+  assert.equal(output.market_stories[0].story_label, "Mixed sequence");
+  assert.equal(output.market_stories[0].story_family, "mixed_context");
+});
+
 test("story duration and swing thresholds are respected", () => {
   const output = generateMarketStoriesV02([
     event("signal_a", { startHour: 0, endHour: 1, avg_change_pct: 0.4 }),

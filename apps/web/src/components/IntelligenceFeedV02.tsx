@@ -10,13 +10,19 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  CornerUpLeft,
   ExternalLink,
   HelpCircle,
   Info,
+  Gauge,
   Layers,
   LocateFixed,
   Lock,
+  Route,
+  ScissorsLineDashed,
+  ScanLine,
   SearchCheck,
+  Shuffle,
   TrendingDown,
   TrendingUp,
   type LucideIcon,
@@ -178,23 +184,58 @@ const STATUS_META: Record<
 const SOURCE_STYLE: Record<string, React.CSSProperties> = {
   focused: {
     color: "var(--source-focused-text)",
-    borderColor: "rgba(59, 130, 246, 0.32)",
+    borderColor: "rgba(30, 64, 175, 0.46)",
+    background: "rgba(30, 64, 175, 0.16)",
   },
   likely: {
     color: "var(--source-likely-text)",
-    borderColor: "rgba(125, 211, 252, 0.32)",
+    borderColor: "rgba(14, 165, 233, 0.34)",
+    background: "rgba(14, 165, 233, 0.1)",
   },
   backdrop: {
     color: "var(--source-backdrop-text)",
-    borderColor: "var(--chip-border)",
+    borderColor: "rgba(148, 163, 184, 0.3)",
+    background: "rgba(148, 163, 184, 0.08)",
   },
   price: {
     color: "var(--source-price-text)",
-    borderColor: "rgba(252, 211, 77, 0.32)",
+    borderColor: "rgba(245, 158, 11, 0.32)",
+    background: "rgba(245, 158, 11, 0.07)",
   },
   daily: {
     color: "var(--source-chip-text)",
     borderColor: "var(--source-chip-border)",
+    background: "var(--source-chip-bg)",
+  },
+};
+
+const MARKET_STORY_STATUS_META: Record<
+  string,
+  { Icon: LucideIcon; color: string }
+> = {
+  "Range break sequence": {
+    Icon: ScissorsLineDashed,
+    color: "var(--market-story-range-text)",
+  },
+  "Reversal sequence": {
+    Icon: CornerUpLeft,
+    color: "var(--market-story-reversal-text)",
+  },
+  "Momentum continuation sequence": {
+    Icon: Route,
+    color: "var(--market-story-momentum-text)",
+  },
+  "Volatility expansion sequence": {
+    Icon: Gauge,
+    color: "var(--market-story-volatility-text)",
+  },
+  "Inside-range impulse sequence": {
+    Icon: ScanLine,
+    color: "var(--market-story-inside-text)",
+  },
+  "Mixed sequence": {
+    Icon: Shuffle,
+    color: "var(--market-story-mixed-text)",
   },
 };
 
@@ -563,7 +604,7 @@ function formatDirection(value: string | null | undefined): string {
     return "Observed down";
   }
   if (value === "two_sided") {
-    return "Mixed direction";
+    return "Multi-swing";
   }
   return humanize(value);
 }
@@ -628,7 +669,9 @@ function spaceTimeRangeSeparator(value: string): string {
   return value.replace(/(\d{1,2}:\d{2})\s*-\s*/g, "$1 - ");
 }
 
-function formatMarketStoryWindow(section: NormalizedMarketStorySection): string {
+function formatMarketStoryWindow(
+  section: NormalizedMarketStorySection,
+): string {
   const start = utcParts(section.chart?.highlight_start);
   const end = utcParts(section.chart?.highlight_end);
 
@@ -695,6 +738,29 @@ function signalToneStyle(
   };
 }
 
+function signalStatusLabel(section: NormalizedSignalEventSection): string {
+  if (!section.directionChanged) {
+    return formatDirection(section.direction);
+  }
+
+  return section.direction === "observed_down" ||
+    section.direction?.endsWith("_down")
+    ? "Reversed, Net down"
+    : "Reversed, Net up";
+}
+
+function SignalStatusIcon({
+  section,
+}: {
+  section: NormalizedSignalEventSection;
+}) {
+  if (section.directionChanged) {
+    return <ArrowLeftRight size={12} aria-hidden />;
+  }
+
+  return <DirectionIcon direction={section.direction} />;
+}
+
 function Chip({
   children,
   style,
@@ -731,7 +797,6 @@ function SourceChip({ source }: { source: FeedSourceV02 }) {
       aria-label={`${publisher}: ${source.title ?? source.url} (opens in new tab)`}
       className="inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-px text-[10px] font-medium transition-colors hover:bg-white/5 hover:brightness-110 focus-visible:ring-2"
       style={{
-        background: "var(--source-chip-bg)",
         ...sourceStyle(source),
         textDecoration: "none",
       }}
@@ -1693,6 +1758,10 @@ function MarketStorySection({
   };
   const rangeContext = marketStoryPublicRangeContext(section.rangeContext);
   const storyWindow = formatMarketStoryWindow(section);
+  const storyStatusMeta =
+    MARKET_STORY_STATUS_META[section.storyLabel] ??
+    MARKET_STORY_STATUS_META["Mixed sequence"];
+  const StoryStatusIcon = storyStatusMeta.Icon;
 
   return (
     <div className="min-w-0 flex-1">
@@ -1713,13 +1782,12 @@ function MarketStorySection({
           </p>
           <Chip
             style={{
-              background:
-                "color-mix(in srgb, var(--two-sided) 10%, transparent)",
-              borderColor:
-                "color-mix(in srgb, var(--two-sided) 38%, transparent)",
-              color: SECTION_ICON_COLOR.marketStory,
+              background: `color-mix(in srgb, ${storyStatusMeta.color} 10%, transparent)`,
+              borderColor: `color-mix(in srgb, ${storyStatusMeta.color} 38%, transparent)`,
+              color: storyStatusMeta.color,
             }}
           >
+            <StoryStatusIcon size={12} aria-hidden className="mr-1" />
             {section.storyLabel}
           </Chip>
         </div>
@@ -1852,6 +1920,7 @@ function SignalEventSection({
     (section.publicContextStatus
       ? humanize(section.publicContextStatus)
       : null);
+  const signalStatusLabelText = signalStatusLabel(section);
 
   return (
     <div className="min-w-0 flex-1">
@@ -1870,9 +1939,9 @@ function SignalEventSection({
           </p>
           <Chip style={signalToneStyle(section.direction)}>
             <span className="mr-1 inline-flex">
-              <DirectionIcon direction={section.direction} />
+              <SignalStatusIcon section={section} />
             </span>
-            {formatDirection(section.direction)}
+            {signalStatusLabelText}
           </Chip>
         </div>
         {windowLabel && (
@@ -2143,7 +2212,7 @@ function MarketStoryEvidenceTable({
               <th className="px-3 py-2 font-medium">Change</th>
               <th className="px-3 py-2 font-medium">Range</th>
               <th className="px-3 py-2 font-medium">Volatility Score</th>
-              <th className="px-3 py-2 font-medium">Volume ×</th>
+              <th className="px-3 py-2 font-medium">Volume x</th>
               <th className="px-3 py-2 font-medium">Movement Status</th>
             </tr>
           </thead>
@@ -2239,7 +2308,7 @@ function SignalEvidenceTable({
             <th className="px-3 py-2 font-medium">Change</th>
             <th className="px-3 py-2 font-medium">Range</th>
             <th className="px-3 py-2 font-medium">Peak 15m</th>
-            <th className="px-3 py-2 font-medium">Volume ×</th>
+            <th className="px-3 py-2 font-medium">Volume x</th>
             <th className="px-3 py-2 font-medium">Range Position</th>
           </tr>
         </thead>

@@ -368,6 +368,8 @@ export interface SignalEventItemV02 {
   chart_context_score?: number | null;
   chart_context_label?: string | null;
   event_story_type?: string | null;
+  direction_changed?: boolean;
+  direction_history?: unknown[];
   trend_context?: string | null;
   momentum_context?: string | null;
   volatility_context?: string | null;
@@ -482,6 +484,8 @@ export interface NormalizedSignalEventSection {
   chartContextScore: number | null;
   chartContextLabel: string | null;
   eventStoryType: string | null;
+  directionChanged: boolean;
+  directionHistory: unknown[];
   trendContext: string | null;
   momentumContext: string | null;
   volatilityContext: string | null;

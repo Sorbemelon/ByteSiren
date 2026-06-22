@@ -1,14 +1,22 @@
 "use client";
 
 import {
+  Activity,
+  ArrowLeftRight,
   BadgeCheck,
   ChevronDown,
   Clock,
+  CornerUpLeft,
   ExternalLink,
+  Gauge,
   HelpCircle,
   Info,
   Lock,
+  Route,
+  ScissorsLineDashed,
+  ScanLine,
   SearchCheck,
+  Shuffle,
   TrendingDown,
   TrendingUp,
   type LucideIcon,
@@ -34,7 +42,8 @@ type Tone =
   | "cyan"
   | "deepBlue"
   | "sky"
-  | "blueGray";
+  | "blueGray"
+  | "brown";
 
 const TONE_COLOR: Record<Tone, string> = {
   violet: "var(--accent-primary)",
@@ -48,6 +57,37 @@ const TONE_COLOR: Record<Tone, string> = {
   deepBlue: "var(--source-focused-text)",
   sky: "var(--source-likely-text)",
   blueGray: "var(--source-backdrop-text)",
+  brown: "var(--context-backdrop)",
+};
+
+const MARKET_STORY_STATUS_META: Record<
+  string,
+  { Icon: LucideIcon; color: string }
+> = {
+  "Range break sequence": {
+    Icon: ScissorsLineDashed,
+    color: "var(--market-story-range-text)",
+  },
+  "Reversal sequence": {
+    Icon: CornerUpLeft,
+    color: "var(--market-story-reversal-text)",
+  },
+  "Momentum continuation sequence": {
+    Icon: Route,
+    color: "var(--market-story-momentum-text)",
+  },
+  "Volatility expansion sequence": {
+    Icon: Gauge,
+    color: "var(--market-story-volatility-text)",
+  },
+  "Inside-range impulse sequence": {
+    Icon: ScanLine,
+    color: "var(--market-story-inside-text)",
+  },
+  "Mixed sequence": {
+    Icon: Shuffle,
+    color: "var(--market-story-mixed-text)",
+  },
 };
 
 function StatusTextLabel({
@@ -229,7 +269,7 @@ function DirectionLabelChip({
   Icon,
 }: {
   children: ReactNode;
-  tone: "up" | "down";
+  tone: "up" | "down" | "amber";
   Icon: LucideIcon;
 }) {
   const styles = {
@@ -242,6 +282,11 @@ function DirectionLabelChip({
       background: "rgba(244, 63, 94, 0.1)",
       border: "1px solid rgba(244, 63, 94, 0.3)",
       color: "var(--down)",
+    },
+    amber: {
+      background: "rgba(245, 158, 11, 0.1)",
+      border: "1px solid rgba(245, 158, 11, 0.32)",
+      color: "var(--status-strong)",
     },
   }[tone];
 
@@ -256,12 +301,57 @@ function DirectionLabelChip({
   );
 }
 
+function DailyToneChip({
+  children,
+  color,
+  Icon,
+}: {
+  children: ReactNode;
+  color: string;
+  Icon: LucideIcon;
+}) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[13px] font-semibold leading-none"
+      style={{
+        color,
+        borderColor: "var(--chip-border)",
+        background: "var(--chip-bg)",
+      }}
+    >
+      <Icon size={14} aria-hidden />
+      {children}
+    </span>
+  );
+}
+
+function MarketStoryStatusChip({ label }: { label: string }) {
+  const meta =
+    MARKET_STORY_STATUS_META[label] ??
+    MARKET_STORY_STATUS_META["Mixed sequence"];
+  const Icon = meta.Icon;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-medium leading-none"
+      style={{
+        background: `color-mix(in srgb, ${meta.color} 10%, transparent)`,
+        borderColor: `color-mix(in srgb, ${meta.color} 38%, transparent)`,
+        color: meta.color,
+      }}
+    >
+      <Icon size={12} aria-hidden />
+      {label}
+    </span>
+  );
+}
+
 function SourceExampleChip({
   children,
   role,
 }: {
   children: ReactNode;
-  role: "focused" | "likely" | "backdrop" | "price";
+  role: "focused" | "likely" | "backdrop" | "price" | "daily";
 }) {
   const styles = {
     focused: {
@@ -284,6 +374,11 @@ function SourceExampleChip({
       background: "rgba(245, 158, 11, 0.07)",
       color: "var(--source-price-text)",
     },
+    daily: {
+      borderColor: "var(--source-chip-border)",
+      background: "var(--source-chip-bg)",
+      color: "var(--source-chip-text)",
+    },
   }[role];
 
   return (
@@ -304,6 +399,36 @@ function GroupLabel({ children }: { children: ReactNode }) {
     >
       {children}
     </p>
+  );
+}
+
+function EvidenceValueGroup({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mt-4 first:mt-0">
+      <div className="mb-2">
+        <h3
+          className="text-[13px] font-semibold"
+          style={{ color: "var(--text-primary)" }}
+        >
+          {title}
+        </h3>
+        <p
+          className="mt-0.5 text-[12px]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          {description}
+        </p>
+      </div>
+      <DefinitionGrid>{children}</DefinitionGrid>
+    </section>
   );
 }
 
@@ -461,7 +586,7 @@ export default function BottomAccordions({
           <DefinitionCard
             term={
               <DirectionLabelChip tone="up" Icon={TrendingUp}>
-                Observed Up
+                Observed up
               </DirectionLabelChip>
             }
           >
@@ -470,128 +595,278 @@ export default function BottomAccordions({
           <DefinitionCard
             term={
               <DirectionLabelChip tone="down" Icon={TrendingDown}>
-                Observed Down
+                Observed down
               </DirectionLabelChip>
             }
           >
             The monitored symbols moved downward during the detected event.
           </DefinitionCard>
+          <DefinitionCard
+            term={
+              <DirectionLabelChip tone="up" Icon={ArrowLeftRight}>
+                Reversed, Net up
+              </DirectionLabelChip>
+            }
+          >
+            The Signal Event updated through a reversal, and its net movement
+            finished upward.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <DirectionLabelChip tone="down" Icon={ArrowLeftRight}>
+                Reversed, Net down
+              </DirectionLabelChip>
+            }
+          >
+            The Signal Event updated through a reversal, and its net movement
+            finished downward.
+          </DefinitionCard>
           <DefinitionCard term="Signals">
             How many of the five monitored symbols passed ByteSiren&apos;s event
             rule during that detected event.
           </DefinitionCard>
-          <DefinitionCard term="Mixed direction">
-            Movement was not cleanly one-directional across the broader context.
-            It is descriptive only.
+        </DefinitionGrid>
+
+        <GroupLabel>Daily tone labels</GroupLabel>
+        <DefinitionGrid>
+          <DefinitionCard
+            term={
+              <DailyToneChip color="var(--status-calm)" Icon={Info}>
+                Quiet Day
+              </DailyToneChip>
+            }
+          >
+            The UTC day had relatively muted movement across the tracked
+            symbols.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <DailyToneChip color="var(--status-moving)" Icon={ArrowLeftRight}>
+                Mixed Day
+              </DailyToneChip>
+            }
+          >
+            The UTC day had split or unclear direction across the tracked
+            symbols.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <DailyToneChip color="var(--status-severe)" Icon={Activity}>
+                Volatile Day
+              </DailyToneChip>
+            }
+          >
+            The UTC day had unusually wide movement ranges.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <DailyToneChip color="var(--up)" Icon={TrendingUp}>
+                Risk-on Day
+              </DailyToneChip>
+            }
+          >
+            The tracked market moved broadly upward for the UTC day.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <DailyToneChip color="var(--down)" Icon={TrendingDown}>
+                Risk-off Day
+              </DailyToneChip>
+            }
+          >
+            The tracked market moved broadly downward for the UTC day.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <DailyToneChip color="var(--up)" Icon={TrendingUp}>
+                Relief
+              </DailyToneChip>
+            }
+          >
+            The UTC day showed recovery after a prior down move or stress
+            context.
+          </DefinitionCard>
+        </DefinitionGrid>
+
+        <GroupLabel>Market Story status labels</GroupLabel>
+        <DefinitionGrid>
+          <DefinitionCard
+            term={<MarketStoryStatusChip label="Range break sequence" />}
+          >
+            The broader story window repeatedly moved through a recent range
+            boundary.
+          </DefinitionCard>
+          <DefinitionCard
+            term={<MarketStoryStatusChip label="Reversal sequence" />}
+          >
+            The broader story window changed direction enough to form a reversal
+            structure.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <MarketStoryStatusChip label="Momentum continuation sequence" />
+            }
+          >
+            The broader story window mainly extended in one direction.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <MarketStoryStatusChip label="Volatility expansion sequence" />
+            }
+          >
+            The broader story window had unusually active movement compared with
+            recent candles.
+          </DefinitionCard>
+          <DefinitionCard
+            term={
+              <MarketStoryStatusChip label="Inside-range impulse sequence" />
+            }
+          >
+            The broader story window showed a coordinated impulse that stayed
+            mostly inside the recent range.
+          </DefinitionCard>
+          <DefinitionCard
+            term={<MarketStoryStatusChip label="Mixed sequence" />}
+          >
+            The broader story window had useful chart context, but no single
+            structure dominated.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>
 
       <Accordion title="What the evidence values mean">
         <GroupLabel>Evidence values</GroupLabel>
-        <DefinitionGrid>
+
+        <EvidenceValueGroup
+          title="Card and window values"
+          description="Values shown in card headers or summary rows. They describe the selected time window, not advice."
+        >
           <DefinitionCard term="Avg Change">
-            Median or average change of participating symbols across the Signal
-            Event evidence window.
+            Average window change across participating symbols in a Signal Event
+            or Market Story.
           </DefinitionCard>
-          <DefinitionCard term="Window Change">
-            One symbol&apos;s change across the Signal Event evidence window.
+          <DefinitionCard term="24h Change">
+            Daily Overview range of UTC-day percentage changes across the five
+            tracked symbols.
+          </DefinitionCard>
+          <DefinitionCard term="Range">
+            High-low movement span inside the same window. It is always shown
+            without a plus sign.
+          </DefinitionCard>
+          <DefinitionCard term="Volatility Score">
+            Movement score from the RMS of 15m bar changes inside the window,
+            scaled by 100 and rounded.
           </DefinitionCard>
           <DefinitionCard term="Evidence window">
             The candles used as Signal Event evidence, not a single publication
             timestamp.
           </DefinitionCard>
+          <DefinitionCard term="Market Story range">
+            The broader deterministic Market Story date and time range shown in
+            the card header.
+          </DefinitionCard>
+        </EvidenceValueGroup>
+
+        <EvidenceValueGroup
+          title="Per-symbol table values"
+          description="Values shown in expanded evidence tables for Daily Overview, Market Story, and Signal Event cards."
+        >
+          <DefinitionCard term="Change">
+            One symbol&apos;s percentage change across the relevant Signal
+            Event, Market Story, or Daily Overview window.
+          </DefinitionCard>
+          <DefinitionCard term="Peak">
+            Daily Overview value for one symbol&apos;s strongest 15-minute move
+            during the UTC day.
+          </DefinitionCard>
           <DefinitionCard term="Peak 15m">
-            Strongest single 15-minute move inside the evidence window.
+            Signal Event value for one symbol&apos;s strongest 15-minute move
+            inside the evidence window.
           </DefinitionCard>
-          <DefinitionCard term="Lead mover highlight">
-            The highlighted symbol marks the strongest contributor in the event
-            window.
-          </DefinitionCard>
-          <DefinitionCard term="Volume ×">
-            One symbol&apos;s volume compared with its recent baseline.
-          </DefinitionCard>
-          <DefinitionCard term="Peak 15m highlight">
-            The highlighted Peak 15m cell marks the strongest 15-minute move
-            inside the window.
+          <DefinitionCard term="Volume x">
+            One symbol&apos;s average volume in the window compared with its
+            recent baseline.
           </DefinitionCard>
           <DefinitionCard term="Range Position">
-            Where the event sits relative to the recent 24h high-low range. It
-            is descriptive, not a trading signal.
+            Where the movement sits relative to the recent 24h high-low range.
+            It is descriptive, not a trading signal.
           </DefinitionCard>
-          <DefinitionCard term="Chart context">
-            Deterministic chart-pattern context for range, trend, momentum, and
-            volatility around a move. It is descriptive, not trading advice.
+          <DefinitionCard term="Movement Status">
+            Per-symbol Market Story movement summary: Mostly up, Mostly down,
+            Mostly flat, or Mixed.
           </DefinitionCard>
-          <DefinitionCard term="24h Change">
-            Daily Overview metric for the UTC day&apos;s deterministic market
-            change.
+        </EvidenceValueGroup>
+
+        <EvidenceValueGroup
+          title="Highlights and label sets"
+          description="Visual emphasis used inside evidence tables. The highlight points to the row or cell driving the comparison."
+        >
+          <DefinitionCard term="Lead mover highlight">
+            The highlighted symbol marks the strongest contributor in the
+            window.
           </DefinitionCard>
-          <DefinitionCard term="Story window">
-            The broader deterministic Market Story window.
+          <DefinitionCard term="Peak highlight">
+            The highlighted Peak or Peak 15m cell marks the strongest 15-minute
+            move in that table.
           </DefinitionCard>
-          <DefinitionCard term="Volatility Score">
-            Market Story movement score from the RMS of 15m bar changes inside
-            the broader story window, scaled by 100.
+          <DefinitionCard term="Movement Profile">
+            Deterministic Market Story context for range position, trend,
+            momentum, and volatility.
           </DefinitionCard>
           <DefinitionCard term="Range Position labels">
             Inside range, Near high, Near low, Broke high, and Broke low are
             descriptive chart-location labels.
           </DefinitionCard>
-        </DefinitionGrid>
-
-        <p className="mt-3">
-          Lower values usually mean closer to normal recent behavior. These
-          values describe unusual conditions; they are not recommendations or
-          predictions.
-        </p>
+        </EvidenceValueGroup>
       </Accordion>
 
       <Accordion title="Source links">
         <p>
-          Source chip colors show how an accepted article was used for a
-          Claude-backed section. They do not rank source quality or turn the
-          source into a recommendation.
+          Source chips show the publisher name. Their color follows how the
+          accepted article was used for a Claude-backed Daily Overview or Signal
+          Event. They do not rank source quality or turn the source into a
+          recommendation.
         </p>
 
-        <GroupLabel>Sources</GroupLabel>
+        <GroupLabel>Source color roles</GroupLabel>
         <DefinitionGrid>
           <DefinitionCard
             term={
-              <SourceExampleChip role="focused">
-                Focused catalyst source
-              </SourceExampleChip>
+              <SourceExampleChip role="focused">Catalyst</SourceExampleChip>
             }
           >
-            Dark blue label. A source used for a source-backed Focused Cause.
+            A focused catalyst source for a Signal Event. The card chip shows
+            the publisher name in this color.
+          </DefinitionCard>
+          <DefinitionCard
+            term={<SourceExampleChip role="likely">Likely</SourceExampleChip>}
+          >
+            A likely-cause source for a Signal Event. It supports context with
+            less certainty than a focused catalyst.
+          </DefinitionCard>
+          <DefinitionCard
+            term={<SourceExampleChip role="daily">Main</SourceExampleChip>}
+          >
+            A main daily context source for a Daily Overview.
+          </DefinitionCard>
+          <DefinitionCard
+            term={<SourceExampleChip role="daily">Support</SourceExampleChip>}
+          >
+            A supporting daily source for a Daily Overview.
           </DefinitionCard>
           <DefinitionCard
             term={
-              <SourceExampleChip role="likely">
-                Likely cause source
-              </SourceExampleChip>
+              <SourceExampleChip role="backdrop">Backdrop</SourceExampleChip>
             }
           >
-            Sky blue label. A source used for a probable public driver.
+            A broader context source that should not be promoted into a direct
+            cause.
           </DefinitionCard>
           <DefinitionCard
-            term={
-              <SourceExampleChip role="backdrop">
-                Backdrop source
-              </SourceExampleChip>
-            }
+            term={<SourceExampleChip role="price">Price</SourceExampleChip>}
           >
-            Blue-gray label. A source used for broader day-level market context.
-          </DefinitionCard>
-          <DefinitionCard
-            term={
-              <SourceExampleChip role="price">
-                Price check source
-              </SourceExampleChip>
-            }
-          >
-            Amber label. A source used to compare public price references with
-            ByteSiren market data.
+            A source used to compare public price references with ByteSiren
+            market data.
           </DefinitionCard>
           <DefinitionCard term="Clickable source link" Icon={ExternalLink}>
             The visible publisher name opens the exact article URL in a new tab.

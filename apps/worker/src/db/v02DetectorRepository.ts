@@ -111,13 +111,15 @@ export async function upsertSignalEventsV02(
           nearest_macro_event,
           macro_delta_min,
           source_route_hint,
+          direction_changed,
+          direction_history_json,
           publish_candidate,
           publish_reason,
           suppress_reason,
           detector_version,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(id)
         DO UPDATE SET
           date_utc = excluded.date_utc,
@@ -145,6 +147,8 @@ export async function upsertSignalEventsV02(
           nearest_macro_event = excluded.nearest_macro_event,
           macro_delta_min = excluded.macro_delta_min,
           source_route_hint = excluded.source_route_hint,
+          direction_changed = excluded.direction_changed,
+          direction_history_json = excluded.direction_history_json,
           publish_candidate = excluded.publish_candidate,
           publish_reason = excluded.publish_reason,
           suppress_reason = excluded.suppress_reason,
@@ -178,6 +182,8 @@ export async function upsertSignalEventsV02(
         event.nearest_macro_event,
         event.macro_delta_min,
         event.source_route_hint,
+        boolInt(event.direction_changed),
+        event.direction_history_json,
         boolInt(event.publish_candidate),
         event.publish_reason,
         event.suppress_reason,
@@ -347,7 +353,9 @@ export async function upsertDetectorV02Output(
   db: D1Database,
   output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
 ): Promise<DetectorV02WriteCounts> {
-  const signalEventsForStorage = output.signal_events.map(signalEventForStorage);
+  const signalEventsForStorage = output.signal_events.map(
+    signalEventForStorage,
+  );
   const storageOutput = {
     signal_events: signalEventsForStorage,
     audit_events: output.audit_events,

@@ -318,6 +318,11 @@ const fixtureFeed = {
           chart_context_score: 88,
           chart_context_label: "Strong chart context",
           event_story_type: "range_break_up",
+          direction_changed: true,
+          direction_history: [
+            { direction: "observed_down", at: "2026-06-20T15:30:00.000Z" },
+            { direction: "observed_up", at: "2026-06-20T16:00:00.000Z" },
+          ],
           trend_context: "trend_up",
           momentum_context: "impulse",
           volatility_context: "expansion_after_compression",
@@ -776,7 +781,7 @@ async function runBrowserSmoke() {
 
     await waitForCondition(
       session,
-      `document.querySelector('[data-testid="intelligence-feed-v02"]') && document.body.innerText.includes('Daily Overview') && document.body.innerText.includes('Market Story') && document.body.innerText.includes('Signal Event')`,
+      `document.querySelector('[data-testid="intelligence-feed-v02"]') && document.body.innerText.includes('Daily Overview') && document.body.innerText.includes('Market Story') && document.body.innerText.includes('Signal Event') && document.body.innerText.includes('Reversed, Net up')`,
       30000,
     );
 
@@ -803,6 +808,8 @@ async function runBrowserSmoke() {
         hasTwoSidedLabel: body.includes('Two-sided'),
         hasOpaqueContextScore: body.includes('Context 88'),
         signalHasWindow: signal.includes('15:15-16:00 UTC'),
+        signalHasReversalLifecycle: signal.includes('Reversed, Net up'),
+        signalHasObservedUp: signal.includes('Observed up'),
         signalHasEvidenceWindowCaption: signal.includes('Evidence window'),
         dailySource: Boolean(document.querySelector('a[href="https://www.coindesk.com/markets/2026/06/20/daily-crypto-market-context/"]')),
         signalSource: Boolean(document.querySelector('a[href="https://www.reuters.com/markets/2026/06/20/crypto-market-update/"]')),
@@ -833,6 +840,8 @@ async function runBrowserSmoke() {
     assert.equal(initial.hasTwoSidedLabel, false);
     assert.equal(initial.hasOpaqueContextScore, false);
     assert.equal(initial.signalHasWindow, true);
+    assert.equal(initial.signalHasReversalLifecycle, true);
+    assert.equal(initial.signalHasObservedUp, false);
     assert.equal(initial.signalHasEvidenceWindowCaption, false);
 
     await click(session, '[data-testid="feed-v02-global-toggle"]');
@@ -974,7 +983,7 @@ async function runBrowserSmoke() {
     );
     await waitForCondition(
       session,
-      `document.querySelector('[data-testid="feed-section-toggle-v02"][data-section-id="sig_fixture"]')?.textContent.includes('Hide') && document.body.innerText.includes('Change') && document.body.innerText.includes('Peak 15m') && document.body.innerText.includes('Volume ×') && document.body.innerText.includes('Range Position')`,
+      `document.querySelector('[data-testid="feed-section-toggle-v02"][data-section-id="sig_fixture"]')?.textContent.includes('Hide') && document.body.innerText.includes('Change') && document.body.innerText.includes('Peak 15m') && document.body.innerText.includes('Volume x') && document.body.innerText.includes('Range Position')`,
     );
 
     await session.send("Emulation.setDeviceMetricsOverride", {

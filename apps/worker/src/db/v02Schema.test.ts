@@ -18,13 +18,21 @@ const sourceReferenceLinkMigrationPath = resolve(
   repoRoot,
   "apps/worker/migrations/0009_source_references_v02_brief_link.sql",
 );
+const signalLifecycleMigrationPath = resolve(
+  repoRoot,
+  "apps/worker/migrations/0010_signal_event_lifecycle_v02.sql",
+);
 const feedMigrationSql = readFileSync(feedMigrationPath, "utf8");
 const claudeMigrationSql = readFileSync(claudeMigrationPath, "utf8");
 const sourceReferenceLinkMigrationSql = readFileSync(
   sourceReferenceLinkMigrationPath,
   "utf8",
 );
-const migrationSql = `${feedMigrationSql}\n${claudeMigrationSql}\n${sourceReferenceLinkMigrationSql}`;
+const signalLifecycleMigrationSql = readFileSync(
+  signalLifecycleMigrationPath,
+  "utf8",
+);
+const migrationSql = `${feedMigrationSql}\n${claudeMigrationSql}\n${sourceReferenceLinkMigrationSql}\n${signalLifecycleMigrationSql}`;
 
 function tableBlock(tableName: string): string {
   const match = migrationSql.match(
@@ -125,6 +133,17 @@ test("daily overviews and signal events can be associated with Claude briefs", (
   assert.match(migrationSql, /target_type TEXT/);
   assert.match(migrationSql, /target_id TEXT/);
   assert.match(migrationSql, /prompt_mode TEXT/);
+});
+
+test("signal events store lifecycle reversal context additively", () => {
+  assert.match(
+    migrationSql,
+    /ALTER TABLE signal_events_v02\s+ADD COLUMN direction_changed INTEGER NOT NULL DEFAULT 0;/,
+  );
+  assert.match(
+    migrationSql,
+    /ALTER TABLE signal_events_v02\s+ADD COLUMN direction_history_json TEXT NOT NULL DEFAULT '\[\]';/,
+  );
 });
 
 test("v0.2 migration adds expected indexes", () => {

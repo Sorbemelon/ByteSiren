@@ -74,6 +74,8 @@ interface SignalEventV02FeedRow {
   chart_context_warnings_json: string;
   publish_reason: string | null;
   source_route_hint: string | null;
+  direction_changed: number;
+  direction_history_json: string;
   created_at: string;
   updated_at: string;
 }
@@ -288,6 +290,8 @@ export interface SignalEventFeedItemV02 extends BaseFeedItemV02 {
   chart_context_score: number | null;
   chart_context_label: string | null;
   event_story_type: string | null;
+  direction_changed: boolean;
+  direction_history: unknown[];
   trend_context: string | null;
   momentum_context: string | null;
   volatility_context: string | null;
@@ -857,6 +861,8 @@ async function getSignalEventItems(
         chart_context_warnings_json,
         publish_reason,
         source_route_hint,
+        direction_changed,
+        direction_history_json,
         created_at,
         updated_at
        FROM signal_events_v02
@@ -915,6 +921,8 @@ async function getSignalEventItems(
       chart_context_score: row.chart_context_score,
       chart_context_label: row.chart_context_label,
       event_story_type: row.event_story_type,
+      direction_changed: row.direction_changed === 1,
+      direction_history: parseJsonArray(row.direction_history_json),
       trend_context: row.trend_context,
       momentum_context: row.momentum_context,
       volatility_context: row.volatility_context,

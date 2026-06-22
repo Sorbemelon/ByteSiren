@@ -224,6 +224,11 @@ const v02Feed = {
           chart_context_score: 88,
           chart_context_label: "Strong chart context",
           event_story_type: "range_break_up",
+          direction_changed: true,
+          direction_history: [
+            { direction: "observed_down", at: "2026-06-19T14:15:00.000Z" },
+            { direction: "observed_up", at: "2026-06-19T14:45:00.000Z" },
+          ],
           trend_context: "trend_up",
           momentum_context: "impulse",
           volatility_context: "expansion_after_compression",
@@ -357,6 +362,11 @@ test("v0.2 Daily Overview, Market Story, and Signal Event labels are preserved",
 
   assert.equal(signal.itemType, "signal_event");
   assert.equal(signal.avgChangeLabel, "Avg Change");
+  assert.equal(signal.directionChanged, true);
+  assert.deepEqual(signal.directionHistory, [
+    { direction: "observed_down", at: "2026-06-19T14:15:00.000Z" },
+    { direction: "observed_up", at: "2026-06-19T14:45:00.000Z" },
+  ]);
   assert.equal(
     signal.perSymbolEvidence[0].window_change_label,
     "Window Change",
@@ -415,10 +425,7 @@ test("cross-day Market Stories are repeated as continuation cards", () => {
   assert.equal(originalStory.isContinuation, false);
 
   assert.equal(continuationStory.itemType, "market_story");
-  assert.equal(
-    continuationStory.id,
-    "story_2026-06-19__continue__2026-06-20",
-  );
+  assert.equal(continuationStory.id, "story_2026-06-19__continue__2026-06-20");
   assert.equal(continuationStory.originalId, "story_2026-06-19");
   assert.equal(continuationStory.isContinuation, true);
   assert.equal(continuationStory.storyLabel, originalStory.storyLabel);

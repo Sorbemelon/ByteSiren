@@ -36,6 +36,12 @@
   --source-price-text: #fcd34d;
   --market-chip-text: #fbbf24;
   --market-chip-border: rgba(251, 191, 36, 0.28);
+  --market-story-range-text: #22d3ee;
+  --market-story-reversal-text: #c084fc;
+  --market-story-momentum-text: #facc15;
+  --market-story-volatility-text: #60a5fa;
+  --market-story-inside-text: #818cf8;
+  --market-story-mixed-text: #94a3b8;
 
   /* ── Interface accent (violet) ── */
   --accent-primary: #8b5cf6;
@@ -124,6 +130,12 @@
   --source-price-text: #a16207;
   --market-chip-text: #b45309;
   --market-chip-border: rgba(180, 83, 9, 0.24);
+  --market-story-range-text: #0e7490;
+  --market-story-reversal-text: #7e22ce;
+  --market-story-momentum-text: #a16207;
+  --market-story-volatility-text: #2563eb;
+  --market-story-inside-text: #4338ca;
+  --market-story-mixed-text: #475569;
 
   --accent-selected-bg: rgba(139, 92, 246, 0.12);
   --accent-selected-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25);

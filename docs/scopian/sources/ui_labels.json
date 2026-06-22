@@ -18,21 +18,26 @@
     },
     "data_delay": {
       "label": "Data Delay",
-      "meaning": "Latest market data may be delayed or incomplete."
+      "meaning": "Latest market data may be delayed or incomplete. This is no longer shown as a v0.2 feed-card chip."
     }
   },
   "feed_item_labels_v02": ["Daily Overview", "Market Story", "Signal Event"],
-  "signal_labels_v02": ["Observed Up", "Observed Down", "Mixed direction"],
+  "signal_labels_v02": [
+    "Observed up",
+    "Observed down",
+    "Reversed, Net up",
+    "Reversed, Net down"
+  ],
   "metric_labels_v02": [
     "Avg Change",
     "24h Change",
-    "Window Change",
+    "Change",
+    "Range",
+    "Peak",
     "Peak 15m",
-    "Volume ×",
+    "Volume x",
     "Range Position",
     "Movement Status",
-    "Chart context",
-    "Story window",
     "Volatility Score"
   ],
   "range_position_labels_v02": [
@@ -48,7 +53,26 @@
     "Momentum continuation sequence",
     "Volatility expansion sequence",
     "Inside-range impulse sequence",
-    "Mixed context sequence"
+    "Mixed sequence"
+  ],
+  "market_story_movement_labels_v02": [
+    "Upward movement",
+    "Downward movement",
+    "Multi-swing movement"
+  ],
+  "market_story_movement_status_v02": [
+    "Mostly up",
+    "Mostly down",
+    "Mostly flat",
+    "Mixed"
+  ],
+  "daily_tone_labels_v02": [
+    "Quiet Day",
+    "Mixed Day",
+    "Volatile Day",
+    "Risk-on Day",
+    "Risk-off Day",
+    "Relief"
   ],
   "claude_labels": {
     "cause_supported": "Focused Cause",
@@ -59,7 +83,6 @@
     "queued_for_analysis": "Waiting for Claude"
   },
   "daily_overview_labels_v02": [
-    "Daily Context",
     "Quiet Day",
     "Mixed Day",
     "Volatile Day",
@@ -68,22 +91,67 @@
     "No Major Driver",
     "Claude Limited"
   ],
-  "source_roles_v02": [
-    "Focused catalyst source",
-    "Likely cause source",
-    "Backdrop source",
-    "Price check source",
-    "Main daily context source",
-    "Supporting daily source"
-  ],
+  "source_roles_v02": {
+    "signal_event": {
+      "focused_catalyst_source": {
+        "prompt_tag": "Focused catalyst source",
+        "chip_label": "Catalyst",
+        "meaning": "Accepted source directly supporting a focused event cause."
+      },
+      "likely_cause_source": {
+        "prompt_tag": "Likely cause source",
+        "chip_label": "Likely",
+        "meaning": "Accepted source supporting a likely event cause."
+      },
+      "backdrop_source": {
+        "prompt_tag": "Backdrop source",
+        "chip_label": "Backdrop",
+        "meaning": "Accepted source for broader context, not a direct cause."
+      },
+      "price_check_source": {
+        "prompt_tag": "Price check source",
+        "chip_label": "Price",
+        "meaning": "Accepted price-context source, not a cause by itself."
+      }
+    },
+    "daily_overview": {
+      "main_daily_context_source": {
+        "prompt_tag": "Main daily context source",
+        "chip_label": "Main",
+        "meaning": "Accepted main source for the UTC-day context."
+      },
+      "supporting_daily_source": {
+        "prompt_tag": "Supporting daily source",
+        "chip_label": "Support",
+        "meaning": "Accepted supporting source for the UTC-day context."
+      },
+      "backdrop_source": {
+        "prompt_tag": "Backdrop source",
+        "chip_label": "Backdrop",
+        "meaning": "Accepted broader daily backdrop source."
+      },
+      "price_check_source": {
+        "prompt_tag": "Price check source",
+        "chip_label": "Price",
+        "meaning": "Accepted daily price-context source."
+      }
+    },
+    "market_story": {
+      "allowed": false,
+      "meaning": "Market Story is deterministic-only and must not render source chips or Claude source tags."
+    }
+  },
   "color_roles": {
     "observed_up": "emerald",
     "observed_down": "rose",
-    "mixed_direction": "violet",
     "focused_cause": "emerald",
-    "likely_cause": "teal",
-    "market_backdrop": "blue-gray",
+    "likely_cause": "light lime",
+    "market_backdrop": "brown",
     "claude_limited": "muted violet",
+    "daily_overview": "brown",
+    "market_story": "violet",
+    "signal_event": "orange",
+    "mixed_day": "blue",
     "brand": "subtle orange"
   }
 }

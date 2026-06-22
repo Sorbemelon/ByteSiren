@@ -68,6 +68,8 @@ export interface SignalEventV02 {
     | "no_clear_route"
     | "possible_relief_rally"
     | "possible_liquidation_context";
+  direction_changed: boolean;
+  direction_history_json: string;
   publish_candidate: boolean;
   publish_reason: string | null;
   suppress_reason: string | null;
@@ -287,6 +289,8 @@ function signalEventFromExperiment(event: ExperimentEvent): SignalEventV02 {
     nearest_macro_event: stringOrNull(event.nearest_macro_event),
     macro_delta_min: nullableNumber(event.macro_delta_min),
     source_route_hint: normalizeSourceRouteHint(event.source_route_hint),
+    direction_changed: Boolean(event.direction_changed),
+    direction_history_json: json(event.direction_history ?? []),
     publish_candidate: true,
     publish_reason: stringOrNull(event.publish_reason),
     suppress_reason: null,

@@ -120,6 +120,8 @@ interface SignalEventV02Row {
   nearest_macro_event: string | null;
   macro_delta_min: number | null;
   source_route_hint: string | null;
+  direction_changed?: number;
+  direction_history_json?: string;
   publish_candidate: number;
   publish_reason: string | null;
   suppress_reason: string | null;
@@ -1434,6 +1436,8 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           nearestMacroEvent,
           macroDeltaMin,
           sourceRouteHint,
+          directionChanged,
+          directionHistoryJson,
           publishCandidate,
           publishReason,
           suppressReason,
@@ -1465,6 +1469,8 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           string | null,
           number | null,
           string | null,
+          number,
+          string,
           number,
           string | null,
           string | null,
@@ -1499,6 +1505,8 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           nearest_macro_event: nearestMacroEvent,
           macro_delta_min: macroDeltaMin,
           source_route_hint: sourceRouteHint,
+          direction_changed: directionChanged,
+          direction_history_json: directionHistoryJson,
           publish_candidate: publishCandidate,
           publish_reason: publishReason,
           suppress_reason: suppressReason,

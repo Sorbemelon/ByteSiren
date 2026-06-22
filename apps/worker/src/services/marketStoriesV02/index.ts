@@ -40,7 +40,7 @@ export type MarketStoryLabelV02 =
   | "Momentum continuation sequence"
   | "Volatility expansion sequence"
   | "Inside-range impulse sequence"
-  | "Mixed context sequence";
+  | "Mixed sequence";
 
 export type MarketStoryFamilyV02 =
   | "range_break"
@@ -516,26 +516,68 @@ function familyScores(events: MarketStorySourceEventV02[]) {
   for (const event of events) {
     const family = storyFamily(event);
     counts[family] += 1;
-    scores[family] += family === "mixed_context" ? 1 : 3;
+    const type = event.event_story_type ?? "";
+    const label = event.chart_context_label ?? "";
+    const rangeContext = event.event_range_context ?? "";
+    let matchedSpecificFamily = false;
 
-    if (event.chart_context_label === "Range break") scores.range_break += 2;
-    if (event.chart_context_label === "Relief / reversal") {
-      scores.relief_reversal += 2;
-    }
-    if (event.chart_context_label === "Momentum continuation") {
-      scores.momentum_continuation += 2;
-    }
-    if (event.chart_context_label === "Volatility expansion") {
-      scores.volatility_expansion += 2;
-    }
-    if (event.chart_context_label === "Inside-range impulse") {
-      scores.inside_range_impulse += 1.5;
+    if (type.includes("range_break") || label === "Range break") {
+      scores.range_break += 4;
+      matchedSpecificFamily = true;
     }
     if (
-      event.event_range_context === "broad_broke_high" ||
-      event.event_range_context === "broad_broke_low"
+      rangeContext === "broad_broke_high" ||
+      rangeContext === "broad_broke_low"
     ) {
-      scores.range_break += 1.5;
+      scores.range_break += 2;
+    }
+
+    if (
+      type.includes("relief_reversal") ||
+      type.includes("reversal") ||
+      label === "Relief / reversal" ||
+      label === "Reversal sequence"
+    ) {
+      scores.relief_reversal += 4;
+      matchedSpecificFamily = true;
+    }
+
+    if (type.includes("momentum") || label === "Momentum continuation") {
+      scores.momentum_continuation += 4;
+      matchedSpecificFamily = true;
+    }
+    if (event.momentum_context === "continuation") {
+      scores.momentum_continuation += 1;
+    }
+
+    if (
+      type.includes("volatility_expansion") ||
+      label === "Volatility expansion" ||
+      event.volatility_context === "volatility_expansion"
+    ) {
+      scores.volatility_expansion += 4;
+      matchedSpecificFamily = true;
+    }
+    if (event.volatility_context === "high_volatility_continuation") {
+      scores.volatility_expansion += 0.5;
+    }
+
+    if (
+      type.includes("inside_range_impulse") ||
+      label === "Inside-range impulse" ||
+      rangeContext === "mostly_inside_range" ||
+      rangeContext === "weak_range_context"
+    ) {
+      scores.inside_range_impulse +=
+        type.includes("inside_range_impulse") ||
+        label === "Inside-range impulse"
+          ? 4
+          : 2;
+      matchedSpecificFamily = true;
+    }
+
+    if (!matchedSpecificFamily) {
+      scores.mixed_context += 1;
     }
   }
 
@@ -549,12 +591,27 @@ function familyScores(events: MarketStorySourceEventV02[]) {
 
 function dominantFamily(events: MarketStorySourceEventV02[]) {
   const { scores, counts } = familyScores(events);
+  const direction = storyDirection(events);
+  const directionalStats = directionalSwingStats(events);
+  const twoSidedEligible =
+    direction === "two_sided" &&
+    directionalStats.up_swing_pct >=
+      MARKET_STORY_V02_DEFAULT_OPTIONS.minTwoSidedLegSwingPct &&
+    directionalStats.down_swing_pct >=
+      MARKET_STORY_V02_DEFAULT_OPTIONS.minTwoSidedLegSwingPct;
+
+  if (twoSidedEligible) {
+    const hasReversalEvidence =
+      (counts.relief_reversal ?? 0) > 0 || scores.relief_reversal >= 4;
+    scores.relief_reversal += hasReversalEvidence ? 2 : 1;
+  }
+
   const priority: MarketStoryFamilyV02[] = [
-    "range_break",
     "relief_reversal",
-    "momentum_continuation",
     "volatility_expansion",
     "inside_range_impulse",
+    "range_break",
+    "momentum_continuation",
     "mixed_context",
   ];
   const ranked = priority
@@ -566,9 +623,20 @@ function dominantFamily(events: MarketStorySourceEventV02[]) {
     }))
     .sort((a, b) => b.score - a.score || a.priority - b.priority);
   const winner = ranked[0];
+  const runnerUp = ranked[1];
+  const lowConfidenceWinner = winner.score < 2;
+  const ambiguousSpecificWinner =
+    winner.family !== "mixed_context" &&
+    runnerUp &&
+    runnerUp.family !== "mixed_context" &&
+    runnerUp.score >= 2 &&
+    winner.score - runnerUp.score < 1;
 
   return {
-    family: winner.score >= 2 ? winner.family : "mixed_context",
+    family:
+      lowConfidenceWinner || ambiguousSpecificWinner
+        ? "mixed_context"
+        : winner.family,
     score: winner.score,
     scores,
     counts,
@@ -587,7 +655,7 @@ function labelForFamily(family: MarketStoryFamilyV02): MarketStoryLabelV02 {
   if (family === "inside_range_impulse") {
     return "Inside-range impulse sequence";
   }
-  return "Mixed context sequence";
+  return "Mixed sequence";
 }
 
 function hasSharedStructure(
@@ -1024,17 +1092,20 @@ function normalizedStoryLabel(events: MarketStorySourceEventV02[]): {
     return {
       label: labelForFamily(dominant.family),
       family: dominant.family,
-      reasons: ["dominant_story_family"],
+      reasons: ["story_label_score", `story_label_${dominant.family}`],
     };
   }
 
   return {
-    label: "Mixed context sequence",
+    label: "Mixed sequence",
     family: "mixed_context",
     reasons: [
       twoSidedEligible
         ? "two_sided_direction_without_specific_story_label"
         : "mixed_context_fallback",
+      dominant.score >= 2
+        ? "ambiguous_story_label_scores"
+        : "low_confidence_story_label_scores",
     ],
   };
 }

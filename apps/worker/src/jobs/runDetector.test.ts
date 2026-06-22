@@ -189,6 +189,8 @@ function detectorSignalEvent(index: number): SignalEventV02 {
     nearest_macro_event: null,
     macro_delta_min: null,
     source_route_hint: "broad_market",
+    direction_changed: false,
+    direction_history_json: "[]",
     publish_candidate: true,
     publish_reason: "broad_confirmed_break",
     suppress_reason: null,

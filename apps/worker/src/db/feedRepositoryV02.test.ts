@@ -63,6 +63,8 @@ function signalEvent(id: string, start: string, overrides = {}) {
     nearest_macro_event: null,
     macro_delta_min: null,
     source_route_hint: "broad_market",
+    direction_changed: 0,
+    direction_history_json: "[]",
     publish_candidate: 1,
     publish_reason: "strong chart context",
     suppress_reason: null,
@@ -374,7 +376,15 @@ test("Market Story feed item stays deterministic with no Claude or sources field
 
 test("Signal Event feed item exposes evidence labels, highlights, brief, and accepted sources", async () => {
   const { db } = createMemoryD1({
-    signal_events_v02: [signalEvent("sig_late", "2026-06-19T14:00:00.000Z")],
+    signal_events_v02: [
+      signalEvent("sig_late", "2026-06-19T14:00:00.000Z", {
+        direction_changed: 1,
+        direction_history_json: JSON.stringify([
+          { direction: "observed_down", at: "2026-06-19T14:15:00.000Z" },
+          { direction: "observed_up", at: "2026-06-19T14:45:00.000Z" },
+        ]),
+      }),
+    ],
     signal_event_symbols_v02: [
       signalSymbol("sig_late", "BTCUSDT"),
       signalSymbol("sig_late", "ETHUSDT"),
@@ -400,6 +410,11 @@ test("Signal Event feed item exposes evidence labels, highlights, brief, and acc
   }
 
   assert.equal(signal.avg_change_label, "Avg Change");
+  assert.equal(signal.direction_changed, true);
+  assert.deepEqual(signal.direction_history, [
+    { direction: "observed_down", at: "2026-06-19T14:15:00.000Z" },
+    { direction: "observed_up", at: "2026-06-19T14:45:00.000Z" },
+  ]);
   assert.equal(
     signal.per_symbol_evidence[0].window_change_label,
     "Window Change",

@@ -107,6 +107,8 @@ test("v0.2 detector produces compact Signal Event output from fixture candles", 
   assert.equal(event.publish_candidate, true);
   assert.equal(event.direction, "observed_up");
   assert.equal(event.detector_version, "v02");
+  assert.equal(typeof event.direction_changed, "boolean");
+  assert.equal(typeof event.direction_history_json, "string");
   assert.equal(event.avg_change_method, "median_participating_symbols");
   assert.ok(event.signals_count >= 3);
   assert.ok(event.duration_min >= 45);

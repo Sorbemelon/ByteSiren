@@ -242,12 +242,14 @@ function formatDisplayDateUtc(dateUtc: string): string {
     return `${dateUtc} UTC`;
   }
 
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }) + " UTC";
+  return (
+    date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    }) + " UTC"
+  );
 }
 
 function isCurrentUtcDay(dateUtc: string): boolean {
@@ -305,7 +307,9 @@ function sectionOrder(section: NormalizedFeedSection): number {
   return 2;
 }
 
-function sortSections(sections: NormalizedFeedSection[]): NormalizedFeedSection[] {
+function sortSections(
+  sections: NormalizedFeedSection[],
+): NormalizedFeedSection[] {
   return sections
     .map((section, index) => ({ section, index }))
     .sort((a, b) => {
@@ -362,7 +366,10 @@ function addCrossDayMarketStoryContinuations(
   dayPosts: NormalizedDayPost[],
 ): NormalizedDayPost[] {
   const postsByDate = new Map(
-    dayPosts.map((day) => [day.dateUtc, { ...day, sections: [...day.sections] }]),
+    dayPosts.map((day) => [
+      day.dateUtc,
+      { ...day, sections: [...day.sections] },
+    ]),
   );
   const stories = dayPosts.flatMap((day) =>
     day.sections.filter(
@@ -382,7 +389,8 @@ function addCrossDayMarketStoryContinuations(
         continue;
       }
 
-      const day = postsByDate.get(dateUtc) ?? createContinuationDayPost(dateUtc);
+      const day =
+        postsByDate.get(dateUtc) ?? createContinuationDayPost(dateUtc);
       const alreadyPresent = day.sections.some(
         (section) =>
           section.itemType === "market_story" &&
@@ -459,6 +467,8 @@ function normalizeSignalEventSection(
     chartContextScore: nullableNumber(item.chart_context_score),
     chartContextLabel: nullableString(item.chart_context_label),
     eventStoryType: nullableString(item.event_story_type),
+    directionChanged: item.direction_changed === true,
+    directionHistory: arrayOrEmpty(item.direction_history),
     trendContext: nullableString(item.trend_context),
     momentumContext: nullableString(item.momentum_context),
     volatilityContext: nullableString(item.volatility_context),
