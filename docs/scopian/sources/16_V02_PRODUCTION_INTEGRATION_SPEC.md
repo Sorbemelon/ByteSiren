@@ -155,6 +155,7 @@ v0.2 Claude status mapping should remain honest:
 - Missing API key skips v0.2 enrichment safely and must not mark v0.2 items terminal.
 - Validation failure uses retryable or terminal failure status and must not fake a brief.
 - Public v0.2 queued/not-yet-enriched copy is `No context yet`, not `Waiting for Claude`.
+- Terminal v0.2 brief statuses such as `brief_ready`, `context_only`, `no_clear_cause`, `no_major_driver`, `claude_limited`, and `failed_terminal` must not be overwritten by later retry/failure results unless an explicit admin/debug force path is used.
 
 If source policy removes focused/likely cause support, Signal Event results must not remain `Focused Cause` or `Likely Cause`. They should downgrade to `Market Backdrop` when accepted backdrop sources remain, otherwise `No Clear Cause`.
 
@@ -212,6 +213,7 @@ Runtime flags should keep v0.1 as the default path until v0.2 is validated:
 - `ENABLE_SIGNAL_CLAUDE_V02`
 - `ENABLE_DAILY_CLAUDE`
 - `ENABLE_V02_ADMIN_TOOLS`
+- `ENABLE_V02_CLAUDE_SAMPLE_TOOLS`
 - `ENABLE_AUDIT_FEED_LOCAL_ONLY`
 - `CLAUDE_DAILY_LIMIT`
 - `CLAUDE_CATCHUP_LIMIT`
@@ -235,6 +237,8 @@ Rollback behavior should be feature-flag/config based:
 
 `ENABLE_DAILY_CLAUDE` controls Daily Overview v0.2 Claude enrichment for existing `daily_overviews_v02` rows. It must default to `false` and must not create missing Daily Overview rows.
 
+`ENABLE_V02_CLAUDE_SAMPLE_TOOLS` controls only protected one-shot v0.2 Claude sample tooling. It must default to `false`. It does not enable scheduled v0.2 Claude enrichment and does not replace `ENABLE_SIGNAL_CLAUDE_V02` or `ENABLE_DAILY_CLAUDE` for cron/catch-up runs.
+
 `CLAUDE_CATCHUP_LIMIT` bounds v0.2 enrichment work per run. The initial safe default is `5`, with an implementation cap of `10` unless explicitly revisited.
 
 When both Signal Event and Daily Overview v0.2 Claude flags are enabled, selection is Signal Events first, then Daily Overviews, newest first within each category, up to `CLAUDE_CATCHUP_LIMIT`.
@@ -243,12 +247,13 @@ Scheduled Claude behavior uses Strategy A during integration:
 
 - v0.2 Claude flags false: run the existing v0.1 Claude enrichment path.
 - either v0.2 Claude flag true: run v0.2 Claude enrichment only.
+- `ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true` alone must not make scheduled v0.2 enrichment run.
 
 This avoids accidental double-spending across v0.1 and v0.2 enrichment paths.
 
 v0.2 Claude job metadata may record safe counts, selected flags, model, tool type, max uses, source counts, and status counts. It must not store API keys, raw Claude tool traces, public token/budget/search counts, or raw hidden responses in public feed data.
 
-Protected admin catch-up for v0.2 Claude is deferred to v0.2I6 unless explicitly added later.
+Protected broad admin catch-up for v0.2 Claude remains separate from the one-shot sample endpoint and must stay owner-approved.
 
 `ENABLE_V02_ADMIN_TOOLS` controls protected local/admin v0.2 smoke tooling. It must default to `false`. The protected v0.2 pipeline endpoint also requires `ENABLE_ADMIN_MAINTENANCE=true` and a valid `x-bytesiren-admin-token`. It is not a public frontend API, must not expose public CORS, and must not run Claude.
 
@@ -578,15 +583,24 @@ v0.2I7A adds `17_V02_PRODUCTION_CUTOVER_REHEARSAL_PLAN.md` as the tracked source
 
 v0.2I7B1 adds local/protected v0.2 Claude sample tooling:
 
-- `/api/admin/v02/run-claude-sample` is protected by `ENABLE_ADMIN_MAINTENANCE=true`, `ENABLE_V02_ADMIN_TOOLS=true`, and `x-bytesiren-admin-token`
+- `/api/admin/v02/run-claude-sample` is protected by `ENABLE_ADMIN_MAINTENANCE=true`, `ENABLE_V02_ADMIN_TOOLS=true`, `ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true`, and `x-bytesiren-admin-token`
 - `scripts/v02-local-claude-sample.mjs` defaults to dry-run and requires `--live` for a real Claude call
 - Signal sample should run first with `--mode signal --limit 2`
 - Daily Overview sample should run second with `--mode daily --limit 1`
+- admin samples use request `mode` plus the sample gate and should keep scheduler-visible `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE` false unless the owner is intentionally running scheduled/catch-up enrichment
 - Market Story and Audit Event are never selected
 - v0.2 writes go only to `claude_briefs_v02` and `source_references_v02`
 - old `claude_briefs` and old `source_references` remain v0.1/legacy and must not be written by the v0.2 sample
 - reports are written to `.tmp/v02-claude-sample-report.json` and `.tmp/v02-claude-sample-report.md`
-- if sample output is poor, disable `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE`, keep production `FEED_VERSION=v01`, and leave rows for inspection
+- if sample output is poor, disable `ENABLE_V02_CLAUDE_SAMPLE_TOOLS`, keep scheduled Claude flags false, keep production `FEED_VERSION=v01`, and leave rows for inspection
+
+v0.2I7B1A hardens the sample path after a remote Signal sample collision:
+
+- protected admin samples bypass scheduled flags only inside the admin sample endpoint
+- scheduled enrichment still obeys only `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE`
+- `processing` and terminal v0.2 brief rows are not selected for another run
+- later `failed_retryable` or `claude_limited` results cannot overwrite terminal v0.2 brief statuses without an explicit force path
+- the overwritten remote sample row should be recovered only by owner-approved force rerun, alternate target sampling, or manual inspection
 
 v0.2I7B2 refines v0.2 Claude context and source display after the controlled sample:
 

@@ -252,6 +252,7 @@ function makeEnv(
     publicWebOrigins?: string;
     adminEnabled?: boolean;
     v02AdminToolsEnabled?: boolean;
+    v02ClaudeSampleToolsEnabled?: boolean;
     adminToken?: string;
     marketImportEnabled?: boolean;
     marketImportToken?: string;
@@ -270,6 +271,9 @@ function makeEnv(
     PUBLIC_WEB_ORIGINS: options.publicWebOrigins,
     ENABLE_ADMIN_MAINTENANCE: options.adminEnabled ? "true" : "false",
     ENABLE_V02_ADMIN_TOOLS: options.v02AdminToolsEnabled ? "true" : "false",
+    ENABLE_V02_CLAUDE_SAMPLE_TOOLS: options.v02ClaudeSampleToolsEnabled
+      ? "true"
+      : "false",
     ADMIN_BACKFILL_TOKEN: options.adminToken,
     ENABLE_MARKET_IMPORT: options.marketImportEnabled ? "true" : "false",
     MARKET_IMPORT_TOKEN: options.marketImportToken,
@@ -663,6 +667,33 @@ test("scheduled Claude cron uses v0.2 enrichment only when v0.2 Claude flags are
   assert.equal(
     tables.job_runs.some((row) => row.job_name === "claude_enrichment"),
     false,
+  );
+});
+
+test("scheduled Claude cron ignores v0.2 sample tools flag alone", async () => {
+  const incident = seededIncident();
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [incident],
+    signal_events_v02: [seededSignalEventV02()],
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+    ENABLE_V02_CLAUDE_SAMPLE_TOOLS: "true",
+    ANTHROPIC_API_KEY: "",
+  };
+
+  await worker.scheduled(scheduledController(CLAUDE_ENRICHMENT_CRON), env);
+
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "claude_enrichment_v02"),
+    false,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "claude_enrichment"),
+    true,
   );
 });
 
@@ -1571,7 +1602,7 @@ test("admin v0.2 pipeline validates requested steps", async () => {
   assert.equal(body.error && typeof body.error === "object", true);
 });
 
-test("admin v0.2 Claude sample is hidden unless both admin gates are enabled", async () => {
+test("admin v0.2 Claude sample is hidden unless admin and sample gates are enabled", async () => {
   const request = new Request(
     "http://localhost/api/admin/v02/run-claude-sample",
     {
@@ -1605,16 +1636,28 @@ test("admin v0.2 Claude sample is hidden unless both admin gates are enabled", a
     makeEnv({
       adminEnabled: true,
       v02AdminToolsEnabled: true,
+      v02ClaudeSampleToolsEnabled: true,
       adminToken: "secret-admin-token",
+    }),
+  );
+  const sampleToolsOff = await worker.fetch(
+    request.clone(),
+    makeEnv({
+      adminEnabled: true,
+      v02AdminToolsEnabled: true,
+      v02ClaudeSampleToolsEnabled: false,
+      adminToken: "test-admin-token",
     }),
   );
   const wrongTokenBody = await wrongToken.text();
 
   assert.equal(maintenanceOff.status, 404);
   assert.equal(toolsOff.status, 404);
+  assert.equal(sampleToolsOff.status, 404);
   assert.equal(wrongToken.status, 404);
   assert.equal(maintenanceOff.headers.get("access-control-allow-origin"), null);
   assert.equal(toolsOff.headers.get("access-control-allow-origin"), null);
+  assert.equal(sampleToolsOff.headers.get("access-control-allow-origin"), null);
   assert.equal(wrongTokenBody.includes("secret-admin-token"), false);
   assert.equal(wrongTokenBody.includes("test-admin-token"), false);
 });
@@ -1643,7 +1686,8 @@ test("admin v0.2 Claude sample dry-run selects Signal targets without writing", 
       DB: db,
       ENABLE_ADMIN_MAINTENANCE: "true",
       ENABLE_V02_ADMIN_TOOLS: "true",
-      ENABLE_SIGNAL_CLAUDE_V02: "true",
+      ENABLE_V02_CLAUDE_SAMPLE_TOOLS: "true",
+      ENABLE_SIGNAL_CLAUDE_V02: "false",
       ENABLE_DAILY_CLAUDE: "false",
       ADMIN_BACKFILL_TOKEN: "test-admin-token",
     },
@@ -1657,6 +1701,16 @@ test("admin v0.2 Claude sample dry-run selects Signal targets without writing", 
   assert.equal(body.dry_run, true);
   assert.equal(body.limit, 5);
   assert.equal(body.processed, 0);
+  assert.equal(
+    (body.scheduler_flags_state as Record<string, unknown>)
+      .enable_signal_claude_v02,
+    false,
+  );
+  assert.equal(
+    (body.sample_tools_flag_state as Record<string, unknown>)
+      .enable_v02_claude_sample_tools,
+    true,
+  );
   assert.equal(Array.isArray(body.selected), true);
   assert.equal(selected.length, 1);
   assert.equal(selected[0].target_type, "signal_event_v02");
@@ -1670,7 +1724,7 @@ test("admin v0.2 Claude sample dry-run selects Signal targets without writing", 
   assert.equal(tables.source_references.length, 0);
 });
 
-test("admin v0.2 Claude sample requires target-specific flags", async () => {
+test("admin v0.2 Claude sample requires sample tools flag", async () => {
   const response = await worker.fetch(
     new Request("http://localhost/api/admin/v02/run-claude-sample", {
       method: "POST",
@@ -1687,16 +1741,13 @@ test("admin v0.2 Claude sample requires target-specific flags", async () => {
       DB: createMemoryD1().db,
       ENABLE_ADMIN_MAINTENANCE: "true",
       ENABLE_V02_ADMIN_TOOLS: "true",
+      ENABLE_V02_CLAUDE_SAMPLE_TOOLS: "false",
       ENABLE_DAILY_CLAUDE: "false",
       ADMIN_BACKFILL_TOKEN: "test-admin-token",
     },
   );
-  const body = await readJson(response);
-  const error = body.error as { code: string; message: string };
 
-  assert.equal(response.status, 400);
-  assert.equal(error.code, "invalid_request");
-  assert.match(error.message, /ENABLE_DAILY_CLAUDE=true/);
+  assert.equal(response.status, 404);
 });
 
 test("admin v0.2 Claude sample live path skips safely without API key", async () => {
@@ -1743,7 +1794,9 @@ test("admin v0.2 Claude sample live path skips safely without API key", async ()
       ANTHROPIC_API_KEY: "",
       ENABLE_ADMIN_MAINTENANCE: "true",
       ENABLE_V02_ADMIN_TOOLS: "true",
-      ENABLE_DAILY_CLAUDE: "true",
+      ENABLE_V02_CLAUDE_SAMPLE_TOOLS: "true",
+      ENABLE_DAILY_CLAUDE: "false",
+      ENABLE_SIGNAL_CLAUDE_V02: "false",
       ADMIN_BACKFILL_TOKEN: "test-admin-token",
     },
   );

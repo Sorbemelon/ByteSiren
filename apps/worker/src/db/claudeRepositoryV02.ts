@@ -26,6 +26,7 @@ export interface ClaudeBriefV02Input {
   error_message?: string | null;
   created_at?: string;
   updated_at?: string;
+  force?: boolean;
 }
 
 export interface ClaudeBriefV02Row {
@@ -71,6 +72,32 @@ export interface SourceReferenceV02Row {
   created_at: string;
 }
 
+export const TERMINAL_CLAUDE_BRIEF_STATUSES_V02 = new Set([
+  "brief_ready",
+  "context_only",
+  "no_clear_cause",
+  "no_major_driver",
+  "claude_limited",
+  "failed_terminal",
+]);
+
+export const RETRYABLE_CLAUDE_BRIEF_STATUSES_V02 = new Set([
+  "queued_for_analysis",
+  "failed_retryable",
+]);
+
+export type ClaudeBriefClaimV02Result =
+  | {
+      claimed: true;
+      row: ClaudeBriefV02Row;
+      skipped_reason: null;
+    }
+  | {
+      claimed: false;
+      row: ClaudeBriefV02Row;
+      skipped_reason: "terminal_status" | "processing";
+    };
+
 function assertClaudeTarget(
   targetType: string,
 ): asserts targetType is ClaudeTargetTypeV02 {
@@ -98,6 +125,16 @@ function assertPromptMatchesTarget(
 
 function safeJson(value: Record<string, unknown> | undefined): string {
   return JSON.stringify(value ?? {});
+}
+
+export function isTerminalClaudeBriefStatusV02(status: string): boolean {
+  return TERMINAL_CLAUDE_BRIEF_STATUSES_V02.has(status);
+}
+
+export function isSelectableClaudeBriefV02(
+  row: ClaudeBriefV02Row | null,
+): boolean {
+  return !row || RETRYABLE_CLAUDE_BRIEF_STATUSES_V02.has(row.status);
 }
 
 function idSafe(value: string): string {
@@ -272,6 +309,15 @@ export async function upsertClaudeBriefV02(
       target_id: input.target_id,
       prompt_mode: input.prompt_mode,
     });
+
+  if (
+    existing &&
+    !input.force &&
+    isTerminalClaudeBriefStatusV02(existing.status)
+  ) {
+    return existing;
+  }
+
   const row = rowFromBriefInput(input, id, existing);
 
   await db
@@ -348,6 +394,57 @@ export async function upsertClaudeBriefV02(
     .run();
 
   return row;
+}
+
+export async function claimClaudeBriefV02Target(
+  db: D1Database,
+  input: {
+    target_type: ClaudeTargetTypeV02;
+    target_id: string;
+    prompt_mode: ClaudePromptModeV02;
+    prompt_version?: string | null;
+    model?: string | null;
+    updated_at?: string;
+  },
+): Promise<ClaudeBriefClaimV02Result> {
+  const existing = await getClaudeBriefV02ByTarget(
+    db,
+    input.target_type,
+    input.target_id,
+    input.prompt_mode,
+  );
+
+  if (existing && isTerminalClaudeBriefStatusV02(existing.status)) {
+    return {
+      claimed: false,
+      row: existing,
+      skipped_reason: "terminal_status",
+    };
+  }
+
+  if (existing?.status === "processing") {
+    return {
+      claimed: false,
+      row: existing,
+      skipped_reason: "processing",
+    };
+  }
+
+  const row = await upsertClaudeBriefV02(db, {
+    target_type: input.target_type,
+    target_id: input.target_id,
+    prompt_mode: input.prompt_mode,
+    status: "processing",
+    prompt_version: input.prompt_version,
+    model: input.model,
+    updated_at: input.updated_at,
+  });
+
+  return {
+    claimed: true,
+    row,
+    skipped_reason: null,
+  };
 }
 
 export async function updateClaudeBriefV02Status(

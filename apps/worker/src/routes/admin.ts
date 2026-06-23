@@ -103,6 +103,10 @@ function isV02AdminToolsEnabled(env: Env): boolean {
   return parseBooleanFlag(env.ENABLE_V02_ADMIN_TOOLS);
 }
 
+function isV02ClaudeSampleToolsEnabled(env: Env): boolean {
+  return parseBooleanFlag(env.ENABLE_V02_CLAUDE_SAMPLE_TOOLS);
+}
+
 function isAuthorized(request: Request, env: Env): boolean {
   const expected = env.ADMIN_BACKFILL_TOKEN?.trim();
   const provided = request.headers.get(ADMIN_TOKEN_HEADER)?.trim();
@@ -365,19 +369,6 @@ function parseSampleIds(value: unknown): string[] {
   }
 
   return [...new Set(ids)].slice(0, 5);
-}
-
-function requireSampleFlags(env: Env, mode: V02ClaudeSampleMode) {
-  const signalEnabled = parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02);
-  const dailyEnabled = parseBooleanFlag(env.ENABLE_DAILY_CLAUDE);
-
-  if ((mode === "signal" || mode === "both") && !signalEnabled) {
-    throw new Error("ENABLE_SIGNAL_CLAUDE_V02=true is required.");
-  }
-
-  if ((mode === "daily" || mode === "both") && !dailyEnabled) {
-    throw new Error("ENABLE_DAILY_CLAUDE=true is required.");
-  }
 }
 
 async function readV02ClaudeSampleOptions(
@@ -723,6 +714,7 @@ async function diagnosticsResponse(env: Env): Promise<Response> {
       enable_daily_claude: parseBooleanFlag(env.ENABLE_DAILY_CLAUDE),
       enable_admin_maintenance: isMaintenanceEnabled(env),
       enable_v02_admin_tools: isV02AdminToolsEnabled(env),
+      enable_v02_claude_sample_tools: isV02ClaudeSampleToolsEnabled(env),
     },
     candles: {
       by_symbol: candleBounds,
@@ -1194,11 +1186,14 @@ export async function adminResponse(
       return notFound();
     }
 
+    if (!isV02ClaudeSampleToolsEnabled(env)) {
+      return notFound();
+    }
+
     let options: V02ClaudeSampleOptions;
 
     try {
       options = await readV02ClaudeSampleOptions(request);
-      requireSampleFlags(env, options.mode);
     } catch (error) {
       return jsonError(400, "invalid_request", safeSampleError(error));
     }
@@ -1208,6 +1203,7 @@ export async function adminResponse(
       limit: options.limit,
       targetKinds: options.targetKinds,
       targetIds: options.ids,
+      bypassScheduleFlags: true,
     });
     const response: Record<string, unknown> = {
       ok: true,
@@ -1219,6 +1215,15 @@ export async function adminResponse(
       results: [],
       counts_before: countsBefore,
       counts_after: countsBefore,
+      scheduler_flags_state: {
+        enable_signal_claude_v02: parseBooleanFlag(
+          env.ENABLE_SIGNAL_CLAUDE_V02,
+        ),
+        enable_daily_claude: parseBooleanFlag(env.ENABLE_DAILY_CLAUDE),
+      },
+      sample_tools_flag_state: {
+        enable_v02_claude_sample_tools: isV02ClaudeSampleToolsEnabled(env),
+      },
       warnings: [],
     };
 
@@ -1226,10 +1231,16 @@ export async function adminResponse(
       return json(response);
     }
 
+    if (selected.length === 0) {
+      return json(response);
+    }
+
     const result = await runClaudeEnrichmentV02(env.DB, env, {
       limit: options.limit,
       targetKinds: options.targetKinds,
       targetIds: selected.map((target) => target.target_id),
+      bypassScheduleFlags: true,
+      runSource: "admin_sample",
     });
     const countsAfter = await getV02ClaudeCounts(env.DB);
 
@@ -1250,6 +1261,9 @@ export async function adminResponse(
       failed_terminal: result.failed_terminal_count,
       sources_written: result.sources_written,
       rejected_sources: result.rejected_sources_count,
+      claimed: result.claimed_count,
+      skipped_terminal: result.skipped_terminal_count,
+      skipped_processing: result.skipped_processing_count,
       limit: result.limit,
     };
     response.counts_after = countsAfter;

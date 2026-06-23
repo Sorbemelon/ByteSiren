@@ -124,6 +124,7 @@ ENABLE_MARKET_STORIES=false
 ENABLE_DAILY_OVERVIEWS=false
 ENABLE_SIGNAL_CLAUDE_V02=false
 ENABLE_DAILY_CLAUDE=false
+ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false
 ENABLE_V02_ADMIN_TOOLS=false
 ENABLE_ADMIN_MAINTENANCE=false
 ```
@@ -135,8 +136,9 @@ DETECTOR_VERSION=v02
 ENABLE_MARKET_STORIES=true
 ENABLE_DAILY_OVERVIEWS=true
 FEED_VERSION=v02 only after v0.2 data is ready
-ENABLE_SIGNAL_CLAUDE_V02=true only during controlled Claude enrichment
-ENABLE_DAILY_CLAUDE=true only during controlled Claude enrichment
+ENABLE_SIGNAL_CLAUDE_V02=true only during scheduled Signal Claude enrichment or bounded catch-up
+ENABLE_DAILY_CLAUDE=true only during scheduled Daily Claude enrichment or bounded catch-up
+ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true only during protected one-shot admin Claude samples
 ENABLE_V02_ADMIN_TOOLS=true only during protected rehearsal
 ENABLE_ADMIN_MAINTENANCE=true only during protected admin actions
 ```
@@ -366,27 +368,35 @@ Therefore live v0.2 Claude should be rehearsed in a controlled sample before bro
 Recommended first sample:
 
 1. Keep `FEED_VERSION=v01` if public users should not see v0.2 yet.
-2. Set `CLAUDE_CATCHUP_LIMIT=2` to `5`.
-3. Enable one Claude target class at a time.
+2. Set `CLAUDE_CATCHUP_LIMIT=1` to `2`.
+3. Enable the admin sample gate, not the scheduler-visible Signal/Daily Claude flags.
 4. Start with Signal Event or Daily Overview based on owner decision.
-5. Run one scheduled/admin enrichment pass.
-6. Disable the Claude flag after the sample if no immediate second pass is planned.
+5. Run one protected admin sample pass.
+6. Disable the admin sample gate after the sample if no immediate second pass is planned.
 
-Signal-first sample:
-
-```text
-ENABLE_SIGNAL_CLAUDE_V02=true
-ENABLE_DAILY_CLAUDE=false
-CLAUDE_CATCHUP_LIMIT=2
-```
-
-Daily-first sample:
+Signal-first admin sample window:
 
 ```text
+ENABLE_ADMIN_MAINTENANCE=true
+ENABLE_V02_ADMIN_TOOLS=true
+ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true
 ENABLE_SIGNAL_CLAUDE_V02=false
-ENABLE_DAILY_CLAUDE=true
-CLAUDE_CATCHUP_LIMIT=2
+ENABLE_DAILY_CLAUDE=false
+CLAUDE_CATCHUP_LIMIT=1
 ```
+
+Daily admin sample window:
+
+```text
+ENABLE_ADMIN_MAINTENANCE=true
+ENABLE_V02_ADMIN_TOOLS=true
+ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true
+ENABLE_SIGNAL_CLAUDE_V02=false
+ENABLE_DAILY_CLAUDE=false
+CLAUDE_CATCHUP_LIMIT=1
+```
+
+`/api/admin/v02/run-claude-sample` uses the request `mode` to select Signal or Daily targets when the sample gate is enabled. Scheduled cron still uses only `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE`; `ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true` by itself must not make scheduled v0.2 enrichment run.
 
 v0.2I7B1 local controlled-sample tooling:
 
@@ -433,7 +443,7 @@ The local sample script writes:
 - `.tmp/v02-claude-sample-report.json`
 - `.tmp/v02-claude-sample-report.md`
 
-The script defaults to dry-run and requires `--live` for any real Claude call. It must not print the admin token or `ANTHROPIC_API_KEY`. The protected Worker endpoint behind the script is `/api/admin/v02/run-claude-sample`, gated by `ENABLE_ADMIN_MAINTENANCE=true`, `ENABLE_V02_ADMIN_TOOLS=true`, and `x-bytesiren-admin-token`.
+The script defaults to dry-run and requires `--live` for any real Claude call. It must not print the admin token or `ANTHROPIC_API_KEY`. The protected Worker endpoint behind the script is `/api/admin/v02/run-claude-sample`, gated by `ENABLE_ADMIN_MAINTENANCE=true`, `ENABLE_V02_ADMIN_TOOLS=true`, `ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true`, and `x-bytesiren-admin-token`.
 
 Verify after sample:
 
@@ -451,6 +461,8 @@ Verify after sample:
 - No public budget/search/token counts are public.
 - Old `claude_briefs` and old `source_references` counts do not increase.
 - `source_references_v02.brief_v02_id` links sources to the v0.2 brief.
+- Terminal v0.2 brief statuses are not overwritten by later retry/failure results unless an explicit owner-approved force path is used.
+- A claimed/processing target is not selected by a concurrent scheduled/admin run.
 
 If the sample is good, optionally run a Daily Overview sample, then a bounded catch-up. Full 30-day Claude catch-up should happen only after sample source quality is accepted.
 
@@ -458,8 +470,15 @@ Rollback if Claude output is poor:
 
 - Set `ENABLE_SIGNAL_CLAUDE_V02=false`.
 - Set `ENABLE_DAILY_CLAUDE=false`.
+- Set `ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false`.
 - Keep or restore `FEED_VERSION=v01`.
 - Leave `claude_briefs_v02` and `source_references_v02` rows for inspection unless the owner approves cleanup.
+
+v0.2I7B1A remote sample hardening note:
+
+- The first remote Signal sample selected `signal_event_v02 signal_v02_20260622220000_down`; a first no-source `no_clear_cause` result was later overwritten to `failed_retryable` while the scheduler-visible Signal flag was still true.
+- Follow-up remote samples must use the scheduler-isolated admin sample gate above.
+- Recovery options for the current overwritten row are owner-approved only: force re-run that same target after the fix, leave it as `failed_retryable` and sample another Signal Event, or manually inspect the row before deciding. Do not clean or rewrite remote rows without a separate approval.
 
 ## 10. Frontend Cutover Plan
 
@@ -537,6 +556,7 @@ ENABLE_MARKET_STORIES=false
 ENABLE_DAILY_OVERVIEWS=false
 ENABLE_SIGNAL_CLAUDE_V02=false
 ENABLE_DAILY_CLAUDE=false
+ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false
 ENABLE_V02_ADMIN_TOOLS=false
 ENABLE_ADMIN_MAINTENANCE=false
 ```

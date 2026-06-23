@@ -3,7 +3,9 @@ import test from "node:test";
 
 import { createMemoryD1 } from "../test/d1Memory.ts";
 import {
+  claimClaudeBriefV02Target,
   getClaudeBriefV02ByTarget,
+  isSelectableClaudeBriefV02,
   listAcceptedSourceReferencesV02ByTarget,
   listClaudeBriefsV02ByStatus,
   updateClaudeBriefV02Status,
@@ -109,6 +111,156 @@ test("claude_briefs_v02 repository lists and updates status", async () => {
   );
   assert.equal(updated?.status, "analysis_limited");
   assert.equal(updated?.error_code, "source_timeout");
+});
+
+test("claude_briefs_v02 protects terminal rows from retryable overwrites", async () => {
+  const { db } = createMemoryD1();
+  await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_terminal",
+    prompt_mode: "signal_event",
+    status: "no_clear_cause",
+    public_label: "No Clear Cause",
+    headline: "No source",
+    collapsed_summary: "No clear source.",
+    updated_at: "2026-06-19T15:00:00.000Z",
+  });
+
+  const blocked = await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_terminal",
+    prompt_mode: "signal_event",
+    status: "failed_retryable",
+    public_label: null,
+    error_code: "validation_error",
+    error_message: "late failure",
+    updated_at: "2026-06-19T15:10:00.000Z",
+  });
+
+  assert.equal(blocked.status, "no_clear_cause");
+  assert.equal(blocked.public_label, "No Clear Cause");
+  assert.equal(blocked.error_code, null);
+
+  const stored = await getClaudeBriefV02ByTarget(
+    db,
+    "signal_event_v02",
+    "sig_terminal",
+    "signal_event",
+  );
+  assert.equal(stored?.status, "no_clear_cause");
+  assert.equal(stored?.updated_at, "2026-06-19T15:00:00.000Z");
+});
+
+test("claude_briefs_v02 protects strong terminal statuses from weaker later statuses", async () => {
+  const { db } = createMemoryD1();
+  await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_ready",
+    prompt_mode: "signal_event",
+    status: "brief_ready",
+    public_label: "Likely Cause",
+    updated_at: "2026-06-19T15:00:00.000Z",
+  });
+  await upsertClaudeBriefV02(db, {
+    target_type: "daily_overview_v02",
+    target_id: "daily_context",
+    prompt_mode: "daily_overview",
+    status: "context_only",
+    updated_at: "2026-06-19T15:00:00.000Z",
+  });
+
+  const ready = await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_ready",
+    prompt_mode: "signal_event",
+    status: "failed_retryable",
+    error_code: "late_failure",
+    updated_at: "2026-06-19T15:10:00.000Z",
+  });
+  const context = await upsertClaudeBriefV02(db, {
+    target_type: "daily_overview_v02",
+    target_id: "daily_context",
+    prompt_mode: "daily_overview",
+    status: "claude_limited",
+    error_code: "late_limit",
+    updated_at: "2026-06-19T15:10:00.000Z",
+  });
+
+  assert.equal(ready.status, "brief_ready");
+  assert.equal(ready.error_code, null);
+  assert.equal(context.status, "context_only");
+  assert.equal(context.error_code, null);
+});
+
+test("claude_briefs_v02 retryable statuses can update", async () => {
+  const { db } = createMemoryD1();
+  await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_retry",
+    prompt_mode: "signal_event",
+    status: "queued_for_analysis",
+  });
+
+  const updated = await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_retry",
+    prompt_mode: "signal_event",
+    status: "failed_retryable",
+    error_code: "validation_error",
+  });
+
+  assert.equal(updated.status, "failed_retryable");
+  assert.equal(updated.error_code, "validation_error");
+});
+
+test("claude_briefs_v02 force can explicitly overwrite terminal rows", async () => {
+  const { db } = createMemoryD1();
+  await upsertClaudeBriefV02(db, {
+    target_type: "daily_overview_v02",
+    target_id: "daily_terminal",
+    prompt_mode: "daily_overview",
+    status: "context_only",
+    updated_at: "2026-06-19T15:00:00.000Z",
+  });
+
+  const forced = await upsertClaudeBriefV02(db, {
+    target_type: "daily_overview_v02",
+    target_id: "daily_terminal",
+    prompt_mode: "daily_overview",
+    status: "claude_limited",
+    error_code: "manual_force",
+    updated_at: "2026-06-19T15:10:00.000Z",
+    force: true,
+  });
+
+  assert.equal(forced.status, "claude_limited");
+  assert.equal(forced.error_code, "manual_force");
+});
+
+test("claude_briefs_v02 claim skips terminal and processing targets", async () => {
+  const { db } = createMemoryD1();
+  const first = await claimClaudeBriefV02Target(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_claim",
+    prompt_mode: "signal_event",
+    prompt_version: "v02-test",
+    model: "claude-test",
+    updated_at: "2026-06-19T15:00:00.000Z",
+  });
+  const second = await claimClaudeBriefV02Target(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_claim",
+    prompt_mode: "signal_event",
+    prompt_version: "v02-test",
+    model: "claude-test",
+    updated_at: "2026-06-19T15:01:00.000Z",
+  });
+
+  assert.equal(first.claimed, true);
+  assert.equal(first.row.status, "processing");
+  assert.equal(second.claimed, false);
+  assert.equal(second.skipped_reason, "processing");
+  assert.equal(isSelectableClaudeBriefV02(second.row), false);
 });
 
 test("source_references_v02 repository writes accepted and rejected v0.2 sources idempotently", async () => {

@@ -188,6 +188,9 @@ function reportBase(options) {
     classification_counts: {},
     counts_before: null,
     counts_after: null,
+    scheduler_flags_state: null,
+    sample_tools_flag_state: null,
+    claim_summary: null,
     feed_summary: null,
     marketStoryBoundaryCheck: null,
     auditExclusionCheck: null,
@@ -238,6 +241,14 @@ async function writeReport(report, reportDir) {
       `- source_references_v02 before/after: ${report.counts_before?.source_references_v02 ?? "n/a"} -> ${report.counts_after?.source_references_v02 ?? "n/a"}`,
       `- accepted v0.2 sources: ${report.counts_after?.accepted_source_references_v02 ?? "n/a"}`,
       `- rejected v0.2 sources: ${report.counts_after?.rejected_source_references_v02 ?? "n/a"}`,
+      "",
+      "## Sample Isolation",
+      `- scheduled Signal flag: ${report.scheduler_flags_state?.enable_signal_claude_v02 ?? "n/a"}`,
+      `- scheduled Daily flag: ${report.scheduler_flags_state?.enable_daily_claude ?? "n/a"}`,
+      `- sample tools flag: ${report.sample_tools_flag_state?.enable_v02_claude_sample_tools ?? "n/a"}`,
+      `- claimed: ${report.claim_summary?.claimed ?? "n/a"}`,
+      `- skipped terminal: ${report.claim_summary?.skipped_terminal ?? "n/a"}`,
+      `- skipped processing: ${report.claim_summary?.skipped_processing ?? "n/a"}`,
       "",
       "## Classification Counts",
       ...Object.entries(report.classification_counts).map(
@@ -305,7 +316,22 @@ export async function runClaudeSample(
     report.processed = sample.processed ?? 0;
     report.counts_before = sample.counts_before ?? null;
     report.counts_after = sample.counts_after ?? null;
+    report.scheduler_flags_state = sample.scheduler_flags_state ?? null;
+    report.sample_tools_flag_state = sample.sample_tools_flag_state ?? null;
     report.classification_counts = classificationCounts(sample.result);
+    report.claim_summary = sample.result
+      ? {
+          claimed: sample.result.claimed ?? 0,
+          skipped_terminal: sample.result.skipped_terminal ?? 0,
+          skipped_processing: sample.result.skipped_processing ?? 0,
+        }
+      : null;
+
+    if (!report.sample_tools_flag_state) {
+      report.warnings.push(
+        "Endpoint did not report ENABLE_V02_CLAUDE_SAMPLE_TOOLS state; verify the deployed Worker has sample isolation support before live remote use.",
+      );
+    }
 
     if (options.expectV02Feed) {
       const feed = await fetchJson(

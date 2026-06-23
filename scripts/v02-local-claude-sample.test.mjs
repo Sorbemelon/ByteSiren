@@ -116,6 +116,18 @@ test("v0.2 Claude sample dry-run writes report and checks v02 feed", async () =>
             accepted_source_references_v02: 0,
             rejected_source_references_v02: 0,
           },
+          scheduler_flags_state: {
+            enable_signal_claude_v02: false,
+            enable_daily_claude: false,
+          },
+          sample_tools_flag_state: {
+            enable_v02_claude_sample_tools: true,
+          },
+          result: {
+            claimed: 0,
+            skipped_terminal: 0,
+            skipped_processing: 0,
+          },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       );
@@ -158,6 +170,12 @@ test("v0.2 Claude sample dry-run writes report and checks v02 feed", async () =>
 
     assert.equal(report.ok, true);
     assert.equal(report.selected.length, 1);
+    assert.equal(report.scheduler_flags_state.enable_signal_claude_v02, false);
+    assert.equal(
+      report.sample_tools_flag_state.enable_v02_claude_sample_tools,
+      true,
+    );
+    assert.equal(report.claim_summary.claimed, 0);
     assert.equal(report.feed_summary.version, "v02");
     assert.equal(report.auditExclusionCheck.publicAuditEventCount, 0);
     assert.equal(

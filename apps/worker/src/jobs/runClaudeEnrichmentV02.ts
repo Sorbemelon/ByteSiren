@@ -5,7 +5,10 @@ import {
   parseClaudeCatchupLimit,
 } from "../config.ts";
 import {
+  claimClaudeBriefV02Target,
   getClaudeBriefV02ByTarget,
+  isSelectableClaudeBriefV02,
+  isTerminalClaudeBriefStatusV02,
   upsertClaudeBriefV02,
   upsertSourceReferencesV02,
   type ClaudeBriefV02Row,
@@ -86,6 +89,9 @@ export interface RunClaudeEnrichmentV02Result {
   sources_written: number;
   rejected_sources_count: number;
   searches_used: number;
+  claimed_count: number;
+  skipped_terminal_count: number;
+  skipped_processing_count: number;
   limit: number;
 }
 
@@ -95,16 +101,9 @@ interface RunOptions {
   limit?: number;
   targetKinds?: TargetKindV02[];
   targetIds?: string[];
+  bypassScheduleFlags?: boolean;
+  runSource?: "scheduled" | "admin_sample";
 }
-
-const TERMINAL_STATUSES = new Set<string>([
-  "brief_ready",
-  "context_only",
-  "no_clear_cause",
-  "no_major_driver",
-  "claude_limited",
-  "failed_terminal",
-]);
 
 export function isClaudeEnrichmentV02Enabled(env: Partial<Env>): boolean {
   return (
@@ -114,11 +113,7 @@ export function isClaudeEnrichmentV02Enabled(env: Partial<Env>): boolean {
 }
 
 function isRetryableOrMissing(row: ClaudeBriefV02Row | null): boolean {
-  if (!row) {
-    return true;
-  }
-
-  return !TERMINAL_STATUSES.has(row.status);
+  return isSelectableClaudeBriefV02(row);
 }
 
 function promptModeFor(payload: ClaudePayloadV02): ClaudePromptModeV02 {
@@ -169,6 +164,7 @@ export async function selectClaudeEnrichmentTargetsV02(
     limit?: number;
     targetKinds?: TargetKindV02[];
     targetIds?: string[];
+    bypassScheduleFlags?: boolean;
   } = {},
 ): Promise<ClaudeEnrichmentTargetV02[]> {
   const now = options.now ?? new Date();
@@ -189,7 +185,8 @@ export async function selectClaudeEnrichmentTargetsV02(
 
   if (
     (!allowedKinds || allowedKinds.has("signal")) &&
-    parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02)
+    (parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02) ||
+      options.bypassScheduleFlags)
   ) {
     const signalPayloads = await buildSignalEventClaudePayloadsV02(db, {
       now,
@@ -228,7 +225,7 @@ export async function selectClaudeEnrichmentTargetsV02(
 
   if (
     (!allowedKinds || allowedKinds.has("daily")) &&
-    parseBooleanFlag(env.ENABLE_DAILY_CLAUDE)
+    (parseBooleanFlag(env.ENABLE_DAILY_CLAUDE) || options.bypassScheduleFlags)
   ) {
     const dailyPayloads = await buildDailyOverviewClaudePayloadsV02(db, {
       now,
@@ -461,6 +458,17 @@ async function persistClientFailure(input: {
   model: string;
   now: Date;
 }) {
+  const existing = await getClaudeBriefV02ByTarget(
+    input.db,
+    input.target.target_type,
+    input.target.target_id,
+    input.target.prompt_mode,
+  );
+
+  if (existing && isTerminalClaudeBriefStatusV02(existing.status)) {
+    return existing.status as ClaudeBriefStatusV02;
+  }
+
   const errorCode = input.clientResult.parsed.metadata.error_code;
   const status: ClaudeBriefStatusV02 = input.clientResult.parsed.retryable
     ? "failed_retryable"
@@ -496,7 +504,18 @@ async function persistValidationFailure(input: {
   error: unknown;
   model: string;
   now: Date;
-}) {
+}): Promise<ClaudeBriefStatusV02> {
+  const existing = await getClaudeBriefV02ByTarget(
+    input.db,
+    input.target.target_type,
+    input.target.target_id,
+    input.target.prompt_mode,
+  );
+
+  if (existing && isTerminalClaudeBriefStatusV02(existing.status)) {
+    return existing.status as ClaudeBriefStatusV02;
+  }
+
   await upsertClaudeBriefV02(input.db, {
     target_type: input.target.target_type,
     target_id: input.target.target_id,
@@ -511,6 +530,8 @@ async function persistValidationFailure(input: {
     error_message: safeErrorMessage(input.error),
     updated_at: input.now.toISOString(),
   });
+
+  return "failed_retryable";
 }
 
 async function persistValidatedResult(input: {
@@ -525,6 +546,21 @@ async function persistValidatedResult(input: {
   sourcesWritten: number;
   rejectedSources: number;
 }> {
+  const existing = await getClaudeBriefV02ByTarget(
+    input.db,
+    input.target.target_type,
+    input.target.target_id,
+    input.target.prompt_mode,
+  );
+
+  if (existing && isTerminalClaudeBriefStatusV02(existing.status)) {
+    return {
+      status: existing.status as ClaudeBriefStatusV02,
+      sourcesWritten: 0,
+      rejectedSources: 0,
+    };
+  }
+
   if (input.target.kind === "signal") {
     const result = validateSignalEventClaudeResultV02(input.rawJson);
     const initialSources = toSourceReferenceInputsV02({
@@ -638,6 +674,9 @@ function emptyResult(input: {
     sources_written: 0,
     rejected_sources_count: 0,
     searches_used: 0,
+    claimed_count: 0,
+    skipped_terminal_count: 0,
+    skipped_processing_count: 0,
     limit: input.limit,
   };
 }
@@ -678,8 +717,10 @@ export async function runClaudeEnrichmentV02(
   );
   const signalEnabled = parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02);
   const dailyEnabled = parseBooleanFlag(env.ENABLE_DAILY_CLAUDE);
+  const bypassScheduleFlags = options.bypassScheduleFlags === true;
+  const runSource = options.runSource ?? "scheduled";
 
-  if (!signalEnabled && !dailyEnabled) {
+  if (!signalEnabled && !dailyEnabled && !bypassScheduleFlags) {
     const result = emptyResult({
       status: "skipped",
       message: "Claude v0.2 enrichment skipped: no v0.2 Claude flags enabled.",
@@ -694,6 +735,8 @@ export async function runClaudeEnrichmentV02(
         ...result,
         enable_signal_claude_v02: signalEnabled,
         enable_daily_claude: dailyEnabled,
+        bypass_schedule_flags: false,
+        run_source: runSource,
       },
       startedAt,
       new Date(),
@@ -706,6 +749,7 @@ export async function runClaudeEnrichmentV02(
     limit,
     targetKinds: options.targetKinds,
     targetIds: options.targetIds,
+    bypassScheduleFlags,
   });
 
   if (targets.length === 0) {
@@ -723,6 +767,8 @@ export async function runClaudeEnrichmentV02(
         ...result,
         enable_signal_claude_v02: signalEnabled,
         enable_daily_claude: dailyEnabled,
+        bypass_schedule_flags: bypassScheduleFlags,
+        run_source: runSource,
       },
       startedAt,
       new Date(),
@@ -748,6 +794,8 @@ export async function runClaudeEnrichmentV02(
         eligible_targets: targets.length,
         enable_signal_claude_v02: signalEnabled,
         enable_daily_claude: dailyEnabled,
+        bypass_schedule_flags: bypassScheduleFlags,
+        run_source: runSource,
       },
       startedAt,
       new Date(),
@@ -769,16 +817,27 @@ export async function runClaudeEnrichmentV02(
   });
 
   for (const target of targets) {
-    await upsertClaudeBriefV02(db, {
+    const claim = await claimClaudeBriefV02Target(db, {
       target_type: targetTypeFor(target.payload),
       target_id: target.target_id,
       prompt_mode: promptModeFor(target.payload),
-      status: "processing",
       prompt_version:
         target.kind === "signal" ? SIGNAL_PROMPT_VERSION : DAILY_PROMPT_VERSION,
       model,
       updated_at: startedAt.toISOString(),
     });
+
+    if (!claim.claimed) {
+      if (claim.skipped_reason === "terminal_status") {
+        result.skipped_terminal_count += 1;
+      } else if (claim.skipped_reason === "processing") {
+        result.skipped_processing_count += 1;
+      }
+
+      continue;
+    }
+
+    result.claimed_count += 1;
 
     const clientResult = await client.createIncidentBrief(
       requestForPrompt({
@@ -825,36 +884,42 @@ export async function runClaudeEnrichmentV02(
       result.sources_written += persisted.sourcesWritten;
       result.rejected_sources_count += persisted.rejectedSources;
     } catch (error) {
-      await persistValidationFailure({
+      const status = await persistValidationFailure({
         db,
         target,
         error,
         model,
         now: startedAt,
       });
-      incrementStatusCount(result, "failed_retryable");
+      incrementStatusCount(result, status);
     }
   }
 
   result.status =
-    result.failed_terminal_count + result.failed_retryable_count ===
-    result.processed
-      ? "failed"
-      : "success";
+    result.processed === 0
+      ? "skipped"
+      : result.failed_terminal_count + result.failed_retryable_count ===
+          result.processed
+        ? "failed"
+        : "success";
   result.message =
-    result.status === "success"
-      ? `Claude v0.2 enrichment processed ${result.processed} item(s).`
-      : "Claude v0.2 enrichment could not validate any item.";
+    result.status === "skipped"
+      ? "No claimable v0.2 Claude targets."
+      : result.status === "success"
+        ? `Claude v0.2 enrichment processed ${result.processed} item(s).`
+        : "Claude v0.2 enrichment could not validate any item.";
 
   await recordJobRun(
     db,
     JOB_NAME,
-    result.status === "success" ? "success" : "failed",
+    result.status,
     result.message,
     {
       ...result,
       enable_signal_claude_v02: signalEnabled,
       enable_daily_claude: dailyEnabled,
+      bypass_schedule_flags: bypassScheduleFlags,
+      run_source: runSource,
       claude_model: model,
       tool_type: policy.tool_type,
       max_uses: policy.default_max_uses,

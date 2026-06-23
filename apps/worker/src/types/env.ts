@@ -20,6 +20,7 @@ export interface Env {
   CLAUDE_CATCHUP_LIMIT?: string;
   ENABLE_ADMIN_MAINTENANCE?: string;
   ENABLE_V02_ADMIN_TOOLS?: string;
+  ENABLE_V02_CLAUDE_SAMPLE_TOOLS?: string;
   ADMIN_BACKFILL_TOKEN?: string;
   ENABLE_MARKET_IMPORT?: string;
   MARKET_IMPORT_TOKEN?: string;

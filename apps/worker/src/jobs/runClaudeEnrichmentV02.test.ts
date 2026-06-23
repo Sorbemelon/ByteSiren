@@ -444,6 +444,80 @@ test("v0.2 target selection can be bounded by sample kind and IDs", async () => 
   );
 });
 
+test("v0.2 sample target selection can bypass scheduled flags", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_sample", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_sample")],
+    daily_overviews_v02: [dailyOverview()],
+  });
+  const testEnv = env({
+    DB: db,
+    ENABLE_SIGNAL_CLAUDE_V02: "false",
+    ENABLE_DAILY_CLAUDE: "false",
+  });
+  const scheduledTargets = await selectClaudeEnrichmentTargetsV02(db, testEnv, {
+    now,
+    limit: 5,
+    targetKinds: ["signal"],
+  });
+  const sampleTargets = await selectClaudeEnrichmentTargetsV02(db, testEnv, {
+    now,
+    limit: 5,
+    targetKinds: ["signal"],
+    bypassScheduleFlags: true,
+  });
+
+  assert.equal(scheduledTargets.length, 0);
+  assert.deepEqual(
+    sampleTargets.map((target) => target.target_id),
+    ["sig_sample"],
+  );
+});
+
+test("v0.2 target selection skips processing targets", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [
+      signalEvent("sig_processing", "2026-06-19T14:00:00.000Z"),
+    ],
+    signal_event_symbols_v02: [signalSymbol("sig_processing")],
+    claude_briefs_v02: [
+      {
+        id: "brief_processing",
+        target_type: "signal_event_v02",
+        target_id: "sig_processing",
+        prompt_mode: "signal_event",
+        status: "processing",
+        public_label: null,
+        classification: null,
+        confidence: null,
+        headline: null,
+        collapsed_summary: null,
+        context_details: null,
+        source_support: null,
+        source_timing_alignment: null,
+        validation_flags_json: "{}",
+        detector_feedback_json: "{}",
+        prompt_version: "v02-test",
+        model: "claude-test",
+        error_code: null,
+        error_message: null,
+        created_at: "2026-06-19T14:01:00.000Z",
+        updated_at: "2026-06-19T14:01:00.000Z",
+      },
+    ],
+  });
+  const targets = await selectClaudeEnrichmentTargetsV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+    }),
+    { now, limit: 5 },
+  );
+
+  assert.equal(targets.length, 0);
+});
+
 test("v0.2 enrichment writes Signal Event brief and sources only to v0.2 tables", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
@@ -488,6 +562,131 @@ test("v0.2 enrichment writes Signal Event brief and sources only to v0.2 tables"
   assert.match(request.system_prompt, /Required output shape/);
   assert.match(request.user_prompt, /Signal Event payload:/);
   assert.doesNotMatch(request.user_prompt, /Allowed classifications/);
+});
+
+test("v0.2 admin sample run works with scheduled flags disabled", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_sample", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_sample")],
+  });
+  const mock = new MockClaudeClient([okResult(signalResult())]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "false",
+      ENABLE_DAILY_CLAUDE: "false",
+    }),
+    {
+      now,
+      client: mock,
+      targetKinds: ["signal"],
+      bypassScheduleFlags: true,
+      runSource: "admin_sample",
+    },
+  );
+
+  assert.equal(result.status, "success");
+  assert.equal(result.claimed_count, 1);
+  assert.equal(result.signal_processed, 1);
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  assert.equal(tables.claude_briefs_v02[0].target_type, "signal_event_v02");
+  assert.equal(
+    tables.job_runs[0].metadata_json.includes('"bypass_schedule_flags":true'),
+    true,
+  );
+  assert.equal(
+    tables.job_runs[0].metadata_json.includes('"run_source":"admin_sample"'),
+    true,
+  );
+});
+
+test("v0.2 admin Daily sample works with scheduled flags disabled", async () => {
+  const { db, tables } = createMemoryD1({
+    daily_overviews_v02: [dailyOverview()],
+  });
+  const mock = new MockClaudeClient([okResult(dailyResult())]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "false",
+      ENABLE_DAILY_CLAUDE: "false",
+    }),
+    {
+      now,
+      client: mock,
+      targetKinds: ["daily"],
+      bypassScheduleFlags: true,
+      runSource: "admin_sample",
+    },
+  );
+
+  assert.equal(result.status, "success");
+  assert.equal(result.claimed_count, 1);
+  assert.equal(result.daily_processed, 1);
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  assert.equal(tables.claude_briefs_v02[0].target_type, "daily_overview_v02");
+  assert.equal(
+    tables.job_runs[0].metadata_json.includes('"bypass_schedule_flags":true'),
+    true,
+  );
+  assert.equal(
+    tables.job_runs[0].metadata_json.includes('"run_source":"admin_sample"'),
+    true,
+  );
+});
+
+test("v0.2 enrichment claim prevents duplicate processing windows", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_claimed", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_claimed")],
+    claude_briefs_v02: [
+      {
+        id: "brief_claimed",
+        target_type: "signal_event_v02",
+        target_id: "sig_claimed",
+        prompt_mode: "signal_event",
+        status: "processing",
+        public_label: null,
+        classification: null,
+        confidence: null,
+        headline: null,
+        collapsed_summary: null,
+        context_details: null,
+        source_support: null,
+        source_timing_alignment: null,
+        validation_flags_json: "{}",
+        detector_feedback_json: "{}",
+        prompt_version: "v02-test",
+        model: "claude-test",
+        error_code: null,
+        error_message: null,
+        created_at: "2026-06-19T14:01:00.000Z",
+        updated_at: "2026-06-19T14:01:00.000Z",
+      },
+    ],
+  });
+  const mock = new MockClaudeClient([okResult(signalResult())]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+    }),
+    {
+      now,
+      client: mock,
+      targetIds: ["sig_claimed"],
+      targetKinds: ["signal"],
+    },
+  );
+
+  assert.equal(result.status, "skipped");
+  assert.equal(result.processed, 0);
+  assert.equal(result.skipped_processing_count, 0);
+  assert.equal(mock.requests.length, 0);
+  assert.equal(tables.claude_briefs_v02[0].status, "processing");
 });
 
 test("v0.2 enrichment sample filters prevent accidental other-mode processing", async () => {

@@ -28,6 +28,7 @@ CLAUDE_CATCHUP_LIMIT=5
 # Protected admin/local tooling. Keep disabled unless running controlled local smoke.
 ENABLE_ADMIN_MAINTENANCE=false
 ENABLE_V02_ADMIN_TOOLS=false
+ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false
 ADMIN_BACKFILL_TOKEN=
 
 # Local v0.2 smoke profile, using throwaway local tokens:
@@ -38,10 +39,19 @@ ADMIN_BACKFILL_TOKEN=
 # ENABLE_MARKET_IMPORT=true
 # ENABLE_ADMIN_MAINTENANCE=true
 # ENABLE_V02_ADMIN_TOOLS=true
+# ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false
 # ENABLE_SIGNAL_CLAUDE_V02=false
 # ENABLE_DAILY_CLAUDE=false
 # MARKET_IMPORT_TOKEN=<local token>
 # ADMIN_BACKFILL_TOKEN=<local token>
+
+# Controlled v0.2 Claude sample profile:
+# ENABLE_ADMIN_MAINTENANCE=true
+# ENABLE_V02_ADMIN_TOOLS=true
+# ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true
+# ENABLE_SIGNAL_CLAUDE_V02=false
+# ENABLE_DAILY_CLAUDE=false
+# CLAUDE_CATCHUP_LIMIT=1
 
 # Protected market import. Production uses GitHub Actions -> Worker import.
 ENABLE_MARKET_IMPORT=true
