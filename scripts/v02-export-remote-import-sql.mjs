@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 const DEFAULT_INPUT_JSON = ".tmp/v02-phase-b2-offline-rebuild-data.json";
 const DEFAULT_OUTPUT_DIR = ".tmp/v02-phase-b2-import";
 
-const TABLES = [
+export const TABLES = [
   {
     filename: "001_signal_events_v02.sql",
     name: "signal_events_v02",
@@ -171,7 +171,7 @@ const TABLES = [
   },
 ];
 
-const RESET_SQL = [
+export const RESET_SQL = [
   "DELETE FROM source_references_v02;",
   "DELETE FROM claude_briefs_v02;",
   "DELETE FROM market_story_members_v02;",
@@ -219,7 +219,7 @@ function rowsForTable(data, table) {
   return Array.isArray(data.rows?.[table.name]) ? data.rows[table.name] : [];
 }
 
-function insertSql(table, rows) {
+export function insertSql(table, rows) {
   if (rows.length === 0) {
     return `-- ${table.name}: 0 rows\n`;
   }
@@ -236,7 +236,7 @@ function insertSql(table, rows) {
   return `${statements.join("\n")}\n`;
 }
 
-async function fileSha256(filePath) {
+export async function fileSha256(filePath) {
   return createHash("sha256")
     .update(await readFile(filePath))
     .digest("hex")

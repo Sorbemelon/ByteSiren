@@ -306,6 +306,29 @@ Live chunk execution requires both `--live` and `--confirm-remote-v02-pipeline`.
 
 During owner-approved fresh remote v0.2 rebuilds, set `ENABLE_SCHEDULED_JOBS=false` before the v0.2 reset and keep it false until after the short smoke window is complete and the intended public feed version is verified. This freezes scheduled write paths while leaving public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` before ending the maintenance window.
 
+Phase D ongoing refresh uses the Phase B2 offline rebuild/import path instead of the production Worker historical detector path. The refresh command is:
+
+```bash
+node scripts/v02-snapshot-refresh.mjs --dry-run
+
+node scripts/v02-snapshot-refresh.mjs \
+  --manual-refresh \
+  --live \
+  --confirm-remote-v02-refresh \
+  --rollback-on-fail
+```
+
+The refresh must:
+
+- export current deterministic v0.2 rows to `.tmp/v02-refresh-rollback/<UTC_TIMESTAMP>/` before reset/import
+- import only `signal_events_v02`, `signal_event_symbols_v02`, `audit_events_v02`, `market_stories_v02`, `market_story_members_v02`, and `daily_overviews_v02`
+- exclude `claude_briefs_v02` and `source_references_v02`
+- exclude all v0.1 tables, candles/features, public view counts, and `job_runs`
+- temporarily use `FEED_VERSION=v01` during the reset/import window to avoid exposing an empty v02 feed
+- restore `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true` after a clean v02 API smoke
+
+`.github/workflows/v02-snapshot-refresh.yml` is available for manual `workflow_dispatch`. Daily schedule remains pending until the manual refresh and GitHub secret setup are confirmed. Claude remains disabled and separate.
+
 Verify counts after pipeline:
 
 - `signal_events_v02`

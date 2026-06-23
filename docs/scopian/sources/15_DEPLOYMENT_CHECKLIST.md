@@ -537,7 +537,47 @@ node scripts/v02-remote-pipeline-smoke.mjs \
 
 Only if the resumed day fails again and the owner approves continuing, add `--fallback-hours 12` to split the failed detector day into UTC half-day target windows. If a half-day window itself exceeds Worker limits, use adaptive smaller windows such as `--fallback-hours 6,3,1` so the script can split failed detector windows recursively before stopping. Do not run Market Stories, Daily Overviews, `FEED_VERSION=v02`, or Claude until detector chunks complete and counts are reviewed.
 
-## J. SEO asset note
+## J. Ongoing v0.2 snapshot refresh
+
+Phase D moves ongoing deterministic v0.2 refresh out of the production Worker. The Worker-side historical detector rebuild exceeded Cloudflare resource limits, so normal refresh uses the offline rebuild/import path:
+
+```bash
+# Plan only. Reads remote candle coverage, exports a candle window, rebuilds local
+# deterministic v0.2 rows, and prepares v0.2-only import SQL.
+node scripts/v02-snapshot-refresh.mjs --dry-run
+
+# Owner-approved manual live refresh. Temporarily freezes scheduled jobs and
+# switches the public feed to v01 during reset/import, then restores v02 after
+# v02 API smoke passes.
+node scripts/v02-snapshot-refresh.mjs \
+  --manual-refresh \
+  --live \
+  --confirm-remote-v02-refresh \
+  --rollback-on-fail
+```
+
+The refresh imports only deterministic v0.2 tables:
+
+- `signal_events_v02`
+- `signal_event_symbols_v02`
+- `audit_events_v02`
+- `market_stories_v02`
+- `market_story_members_v02`
+- `daily_overviews_v02`
+
+It must not import `claude_briefs_v02`, `source_references_v02`, legacy Claude/source tables, candles/features, incidents, public view counts, or `job_runs`.
+
+Before every live import, create rollback artifacts under `.tmp/v02-refresh-rollback/<UTC_TIMESTAMP>/`. If rollback export fails, do not import the new snapshot. The simple live-feed safety model is:
+
+1. Export rollback artifacts.
+2. Deploy a temporary Worker config with `FEED_VERSION=v01` and `ENABLE_SCHEDULED_JOBS=false`.
+3. Reset/import deterministic v0.2 tables only.
+4. Deploy the normal tracked Worker config with `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true`.
+5. Smoke the v02 API and confirm public Audit Events and source count are both zero.
+
+`.github/workflows/v02-snapshot-refresh.yml` is the manual workflow-dispatch wrapper. Keep it manual-only until the first manual refresh proves clean and required Cloudflare repository secrets are confirmed. Do not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase.
+
+## K. SEO asset note
 
 Create these later using the ByteSiren full logo:
 

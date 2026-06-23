@@ -261,6 +261,36 @@ Protected broad admin catch-up for v0.2 Claude remains separate from the one-sho
 
 `ENABLE_SCHEDULED_JOBS` controls the Worker `scheduled()` handler only. It must default to `true`. During an owner-approved maintenance/rebuild window it may be set to `false` to freeze scheduled write paths while public HTTP reads remain available. The freeze covers scheduled GitHub ingest dispatch, scheduled Worker market polling, detector cron, cleanup/Daily Overview cron, and Claude enrichment cron. It must be restored to `true` after the rebuild/smoke window unless the owner explicitly extends maintenance.
 
+## Ongoing v0.2 Snapshot Refresh
+
+After Phase C/C1, public production reads `FEED_VERSION=v02`, but ongoing deterministic v0.2 snapshot refresh must not use the production Worker for historical rebuilds. Remote Worker detector rebuilds exceeded Cloudflare resource limits even with small chunks, so Phase D uses an offline rebuild/import architecture:
+
+1. Export a bounded remote `market_candles` window for the tracked symbols.
+2. Rebuild deterministic v0.2 Signal Events, Audit Events, Market Stories, and Daily Overviews locally/offline.
+3. Generate dependency-ordered SQL for deterministic v0.2 tables only.
+4. Export current remote deterministic v0.2 rows as rollback artifacts.
+5. Temporarily deploy a Worker config with `FEED_VERSION=v01` and `ENABLE_SCHEDULED_JOBS=false`.
+6. Reset/import deterministic v0.2 tables only.
+7. Restore the tracked production Worker config with `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true`.
+8. Smoke the v02 API.
+
+The refresh path must keep these tables empty until a separate Claude phase is approved:
+
+- `claude_briefs_v02`
+- `source_references_v02`
+
+The refresh path must never touch:
+
+- `market_candles`
+- `market_features`
+- `incidents`
+- old `claude_briefs`
+- old `source_references`
+- `public_view_counts`
+- `job_runs`
+
+The manual workflow is `.github/workflows/v02-snapshot-refresh.yml`. It is `workflow_dispatch` only until a clean manual proof and repository secret review justify enabling a daily cron. No Claude secrets are required or allowed for deterministic snapshot refresh.
+
 The protected local v0.2 pipeline endpoint may run these explicit steps:
 
 - `detector`: runs the v0.2 Signal/Audit detector write path only.
