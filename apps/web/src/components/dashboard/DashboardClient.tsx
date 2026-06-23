@@ -6,6 +6,7 @@ import ChartPanel, { type ChartStatus } from "../ChartPanel";
 import IntelligenceFeed from "../IntelligenceFeed";
 import IntelligenceFeedV02 from "../IntelligenceFeedV02";
 import BottomAccordions from "../BottomAccordions";
+import { ArrowUp } from "lucide-react";
 import {
   API_BASE_CONFIGURED,
   API_BASE_URL,
@@ -44,6 +45,12 @@ import type { ChartInterval } from "../../lib/candles";
 const VIEW_COUNT_STORAGE_KEY = "bytesiren:view:last-counted-at";
 const VIEW_COUNT_INTERVAL_MS = 30 * 60 * 1000;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+function preferredScrollBehavior(): ScrollBehavior {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : "smooth";
+}
 
 function shouldRecordView(now = Date.now()): boolean {
   try {
@@ -98,6 +105,21 @@ export default function DashboardClient() {
 
   const selectedIncident =
     feed.find((item) => item.incident_id === selectedId) ?? null;
+
+  const handleScrollToTop = useCallback(() => {
+    const behavior = preferredScrollBehavior();
+    window.scrollTo({ top: 0, behavior });
+    document.documentElement.scrollTo({ top: 0, behavior });
+    document.body.scrollTo({ top: 0, behavior });
+
+    document
+      .querySelectorAll<HTMLElement>(
+        '[data-testid="feed-scroll-v01"], [data-testid="feed-scroll-v02"]',
+      )
+      .forEach((element) => {
+        element.scrollTo({ top: 0, behavior });
+      });
+  }, []);
 
   const v02ChartHighlights = useMemo(
     () => buildChartHighlightsV02(feedV02, feedSelectionV02),
@@ -459,6 +481,22 @@ export default function DashboardClient() {
         {Object.values(SYMBOL_FULL).join(", ")} using Binance public market
         data. This is read-only market intelligence and not financial advice.
       </p>
+
+      <button
+        type="button"
+        onClick={handleScrollToTop}
+        className="fixed bottom-4 right-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-lg border transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 sm:bottom-5 sm:right-5"
+        data-testid="scroll-to-top-button"
+        aria-label="Scroll to top"
+        style={{
+          background: "var(--bg-panel)",
+          borderColor: "var(--border-panel)",
+          color: "var(--text-primary)",
+          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.22)",
+        }}
+      >
+        <ArrowUp size={18} aria-hidden />
+      </button>
     </main>
   );
 }

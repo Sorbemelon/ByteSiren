@@ -1013,12 +1013,26 @@ async function runBrowserSmoke() {
     );
     const mobile = await session.evaluate(`(() => ({
       viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
       scrollWidth: document.documentElement.scrollWidth,
+      feedHeight: document.querySelector('[data-testid="intelligence-feed-v02"]')?.getBoundingClientRect().height ?? 0,
+      globalToggleBelowExplainer: (() => {
+        const explainer = document.querySelector('[data-testid="feed-v02-explainer"]')?.getBoundingClientRect();
+        const button = document.querySelector('[data-testid="feed-v02-global-toggle"]')?.getBoundingClientRect();
+        return Boolean(explainer && button && button.top >= explainer.bottom - 1);
+      })(),
+      hasInternalTableScroll: Array.from(document.querySelectorAll('.v02-table-scroll')).some((element) => element.scrollWidth > element.clientWidth + 8),
       hasDayPost: Boolean(document.querySelector('[data-testid="day-post-v02"]')),
       hasTable: document.body.innerText.includes('Range Position'),
     }))()`);
     assert.equal(mobile.hasDayPost, true);
     assert.equal(mobile.hasTable, true);
+    assert.equal(mobile.globalToggleBelowExplainer, true);
+    assert.equal(mobile.hasInternalTableScroll, true);
+    assert.ok(
+      Math.abs(mobile.feedHeight - mobile.viewportHeight) <= 24,
+      `mobile feed height should be 100dvh: ${JSON.stringify(mobile)}`,
+    );
     assert.ok(
       mobile.scrollWidth <= mobile.viewportWidth + 24,
       `mobile layout overflowed page width: ${JSON.stringify(mobile)}`,
@@ -1035,6 +1049,8 @@ async function runBrowserSmoke() {
           collapsed_sections: collapsed.sectionCount,
           mobile_scroll_width: mobile.scrollWidth,
           mobile_viewport_width: mobile.viewportWidth,
+          mobile_feed_height: mobile.feedHeight,
+          mobile_has_internal_table_scroll: mobile.hasInternalTableScroll,
         },
         null,
         2,

@@ -630,6 +630,46 @@ function spaceTimeRangeSeparator(value: string): string {
   return value.replace(/(\d{1,2}:\d{2})\s*-\s*/g, "$1 - ");
 }
 
+function preferredScrollBehavior(): ScrollBehavior {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : "smooth";
+}
+
+function scrollSelectedSectionIntoView(
+  section: HTMLElement,
+  scroller: HTMLElement,
+) {
+  const behavior = preferredScrollBehavior();
+  const isMobileLayout = window.matchMedia("(max-width: 1023px)").matches;
+  const canScrollFeed = scroller.scrollHeight > scroller.clientHeight + 12;
+
+  if (canScrollFeed) {
+    const sectionTop = section.getBoundingClientRect().top;
+    const scrollerTop = scroller.getBoundingClientRect().top;
+    scroller.scrollTo({
+      top: scroller.scrollTop + sectionTop - scrollerTop,
+      behavior,
+    });
+
+    if (isMobileLayout) {
+      scroller.scrollIntoView({
+        behavior,
+        block: "start",
+        inline: "nearest",
+      });
+    }
+
+    return;
+  }
+
+  section.scrollIntoView({
+    behavior,
+    block: "start",
+    inline: "nearest",
+  });
+}
+
 function formatMarketStoryWindow(
   section: NormalizedMarketStorySection,
 ): string {
@@ -1063,6 +1103,26 @@ function SectionToggleButton({
   );
 }
 
+function MobileSectionToggle({
+  isExpanded,
+  onToggle,
+  sectionId,
+}: {
+  isExpanded: boolean;
+  onToggle: () => void;
+  sectionId: string;
+}) {
+  return (
+    <div className="mt-3 flex justify-start sm:hidden">
+      <SectionToggleButton
+        isExpanded={isExpanded}
+        onToggle={onToggle}
+        sectionId={sectionId}
+      />
+    </div>
+  );
+}
+
 function DailyOverviewSection({
   section,
   isExpanded,
@@ -1150,7 +1210,7 @@ function DailyOverviewSection({
         </div>
 
         <div className="grid min-w-0 gap-y-1 sm:justify-self-center">
-          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+          <div className="flex min-w-0 items-baseline gap-1.5 sm:whitespace-nowrap">
             <p
               className="shrink-0 text-[13px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
@@ -1158,7 +1218,7 @@ function DailyOverviewSection({
               {section.dailyChangeLabel}:
             </p>
             <p
-              className="min-w-0 whitespace-nowrap text-[13px] font-normal leading-tight tabular-nums"
+              className="min-w-0 text-[13px] font-normal leading-tight tabular-nums sm:whitespace-nowrap"
               style={dailyChangeStyle}
             >
               {formatPercentValueRange({
@@ -1169,7 +1229,7 @@ function DailyOverviewSection({
             </p>
           </div>
 
-          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+          <div className="flex min-w-0 items-baseline gap-1.5 sm:whitespace-nowrap">
             <p
               className="shrink-0 text-[13px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
@@ -1177,7 +1237,7 @@ function DailyOverviewSection({
               Range:
             </p>
             <p
-              className="min-w-0 whitespace-nowrap text-[13px] font-normal leading-tight tabular-nums"
+              className="min-w-0 text-[13px] font-normal leading-tight tabular-nums sm:whitespace-nowrap"
               style={{ color: "var(--text-primary)" }}
             >
               {formatPercentValueRange({
@@ -1190,7 +1250,7 @@ function DailyOverviewSection({
         </div>
 
         <div className="grid min-w-0 gap-y-1 sm:min-w-[164px] sm:justify-self-end">
-          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap sm:justify-end">
+          <div className="flex min-w-0 items-baseline gap-1.5 sm:justify-end sm:whitespace-nowrap">
             <p
               className="shrink-0 text-[13px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
@@ -1198,7 +1258,7 @@ function DailyOverviewSection({
               Top daily mover:
             </p>
             <p
-              className="min-w-0 truncate text-[13px] font-normal leading-tight tabular-nums"
+              className="min-w-0 text-[13px] font-normal leading-tight tabular-nums sm:truncate"
               style={{
                 color: leadMove ? "var(--text-primary)" : "var(--text-muted)",
               }}
@@ -1206,7 +1266,7 @@ function DailyOverviewSection({
               {leadMove?.symbol ?? "—"}
             </p>
           </div>
-          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap sm:justify-end">
+          <div className="flex min-w-0 items-baseline gap-1.5 sm:justify-end sm:whitespace-nowrap">
             <p
               className="shrink-0 text-[13px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
@@ -1214,7 +1274,7 @@ function DailyOverviewSection({
               Widest range:
             </p>
             <p
-              className="min-w-0 truncate text-[13px] font-normal leading-tight tabular-nums"
+              className="min-w-0 text-[13px] font-normal leading-tight tabular-nums sm:truncate"
               style={{
                 color: widestRangeSymbol
                   ? "var(--text-primary)"
@@ -1252,7 +1312,7 @@ function DailyOverviewSection({
               </p>
             )}
             {hasDetails && (
-              <div className="pt-0.5">
+              <div className="hidden pt-0.5 sm:block">
                 <SectionToggleButton
                   isExpanded={isExpanded}
                   onToggle={onToggle}
@@ -1313,6 +1373,14 @@ function DailyOverviewSection({
         </div>
       </div>
 
+      {hasDetails && !isExpanded && (
+        <MobileSectionToggle
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          sectionId={section.id}
+        />
+      )}
+
       {isExpanded && (
         <div
           className="feed-expand mt-3 space-y-4 pt-3"
@@ -1333,6 +1401,14 @@ function DailyOverviewSection({
           <DailyOverviewEvidenceTable section={section} />
           <DailyOverviewSources sources={section.sources} />
         </div>
+      )}
+
+      {hasDetails && isExpanded && (
+        <MobileSectionToggle
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          sectionId={section.id}
+        />
       )}
     </div>
   );
@@ -1486,13 +1562,13 @@ function DailyOverviewEvidenceTable({
     <div>
       <ExpandedSectionHeader>Per-symbol evidence</ExpandedSectionHeader>
       <div
-        className="overflow-x-auto rounded-lg"
+        className="v02-table-scroll rounded-lg"
         style={{
           background: "var(--bg-panel)",
           border: "1px solid var(--border-row)",
         }}
       >
-        <table className="min-w-[680px] w-full border-collapse text-left text-[12px]">
+        <table className="v02-evidence-table min-w-[680px] w-full border-collapse text-left text-[12px]">
           <thead
             style={{
               background: "var(--bg-panel)",
@@ -1758,7 +1834,7 @@ function MarketStorySection({
         </div>
         {storyWindow && (
           <p
-            className="text-right text-[14px] font-semibold tabular-nums"
+            className="w-full text-left text-[13px] font-semibold tabular-nums sm:w-auto sm:text-right sm:text-[14px]"
             style={{ color: "var(--text-primary)" }}
           >
             {storyWindow}
@@ -1766,13 +1842,7 @@ function MarketStorySection({
         )}
       </div>
 
-      <div
-        className="grid items-start gap-2"
-        style={{
-          gridTemplateColumns:
-            "minmax(136px, 0.9fr) minmax(118px, 0.8fr) minmax(0, 1.35fr)",
-        }}
-      >
+      <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-[minmax(136px,0.9fr)_minmax(118px,0.8fr)_minmax(0,1.35fr)]">
         <div className="flex self-stretch flex-col">
           <div className="flex min-w-0 items-baseline gap-1.5">
             <p
@@ -1790,7 +1860,7 @@ function MarketStorySection({
           </div>
 
           {hasDetails && (
-            <div className="mt-auto flex justify-start pt-2">
+            <div className="mt-auto hidden justify-start pt-2 sm:flex">
               <SectionToggleButton
                 isExpanded={isExpanded}
                 onToggle={onToggle}
@@ -1837,6 +1907,14 @@ function MarketStorySection({
         </div>
       </div>
 
+      {hasDetails && !isExpanded && (
+        <MobileSectionToggle
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          sectionId={section.id}
+        />
+      )}
+
       {isExpanded && (
         <div
           className="feed-expand mt-3 space-y-3 pt-3"
@@ -1845,6 +1923,14 @@ function MarketStorySection({
           <MarketStoryEvidenceTable rows={section.perSymbolEvidence} />
           <StoryStructureList section={section} rangeContext={rangeContext} />
         </div>
+      )}
+
+      {hasDetails && isExpanded && (
+        <MobileSectionToggle
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          sectionId={section.id}
+        />
       )}
     </div>
   );
@@ -1911,7 +1997,7 @@ function SignalEventSection({
         </div>
         {windowLabel && (
           <p
-            className="text-right text-[14px] font-semibold tabular-nums"
+            className="w-full text-left text-[13px] font-semibold tabular-nums sm:w-auto sm:text-right sm:text-[14px]"
             style={{ color: "var(--text-primary)" }}
           >
             {windowLabel}
@@ -1950,27 +2036,12 @@ function SignalEventSection({
           </div>
 
           {hasDetails && (
-            <div className="mt-auto flex justify-start pt-2">
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggle();
-                }}
-                onKeyDown={(event) => event.stopPropagation()}
-                data-testid="feed-section-toggle-v02"
-                data-section-id={section.id}
-                aria-expanded={isExpanded}
-                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5 focus-visible:ring-2"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {isExpanded ? "Hide" : "Show more"}
-                {isExpanded ? (
-                  <ChevronUp size={13} aria-hidden />
-                ) : (
-                  <ChevronDown size={13} aria-hidden />
-                )}
-              </button>
+            <div className="mt-auto hidden justify-start pt-2 sm:flex">
+              <SectionToggleButton
+                isExpanded={isExpanded}
+                onToggle={onToggle}
+                sectionId={section.id}
+              />
             </div>
           )}
         </div>
@@ -2057,6 +2128,14 @@ function SignalEventSection({
         </div>
       </div>
 
+      {hasDetails && !isExpanded && (
+        <MobileSectionToggle
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          sectionId={section.id}
+        />
+      )}
+
       {isExpanded && (
         <div
           className="feed-expand mt-3 space-y-4 pt-3"
@@ -2086,6 +2165,14 @@ function SignalEventSection({
           )}
           <SignalEventSources sources={section.sources} />
         </div>
+      )}
+
+      {hasDetails && isExpanded && (
+        <MobileSectionToggle
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          sectionId={section.id}
+        />
       )}
     </div>
   );
@@ -2159,13 +2246,13 @@ function MarketStoryEvidenceTable({
     <div>
       <ExpandedSectionHeader>Per-symbol evidence</ExpandedSectionHeader>
       <div
-        className="overflow-x-auto rounded-lg"
+        className="v02-table-scroll rounded-lg"
         style={{
           background: "var(--bg-panel)",
           border: "1px solid var(--border-row)",
         }}
       >
-        <table className="min-w-[720px] w-full border-collapse text-left text-[12px]">
+        <table className="v02-evidence-table min-w-[720px] w-full border-collapse text-left text-[12px]">
           <thead
             style={{
               background: "var(--bg-panel)",
@@ -2255,13 +2342,13 @@ function SignalEvidenceTable({
 
   return (
     <div
-      className="overflow-x-auto rounded-lg"
+      className="v02-table-scroll rounded-lg"
       style={{
         background: "var(--bg-panel)",
         border: "1px solid var(--border-row)",
       }}
     >
-      <table className="min-w-[720px] w-full border-collapse text-left text-[12px]">
+      <table className="v02-evidence-table min-w-[720px] w-full border-collapse text-left text-[12px]">
         <thead
           style={{
             background: "var(--bg-panel)",
@@ -2604,12 +2691,7 @@ export default function IntelligenceFeedV02({
           return;
         }
 
-        const sectionTop = section.getBoundingClientRect().top;
-        const scrollerTop = scroller.getBoundingClientRect().top;
-        scroller.scrollTo({
-          top: scroller.scrollTop + sectionTop - scrollerTop,
-          behavior: "smooth",
-        });
+        scrollSelectedSectionIntoView(section, scroller);
       });
     });
 
@@ -2632,7 +2714,7 @@ export default function IntelligenceFeedV02({
   return (
     <section
       aria-label="Intelligence Feed"
-      className="flex h-full min-h-0 flex-col rounded-2xl p-4"
+      className="flex h-[100dvh] min-h-0 flex-col rounded-2xl p-4 lg:h-full"
       data-testid="intelligence-feed-v02"
       style={{
         background: "var(--bg-panel)",
@@ -2640,9 +2722,9 @@ export default function IntelligenceFeedV02({
         boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
       }}
     >
-      <div className="mb-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="min-w-0 text-[28px] font-semibold leading-tight sm:text-[30px]">
+      <div className="relative mb-3">
+        <div>
+          <h2 className="min-w-0 text-[28px] font-semibold leading-tight sm:pr-40 sm:text-[30px]">
             <AuroraText
               colors={[
                 "var(--brand-orange-deep)",
@@ -2655,32 +2737,9 @@ export default function IntelligenceFeedV02({
               Intelligence Feed
             </AuroraText>
           </h2>
-
-          {feed && feed.dayPosts.length > 0 && (
-            <button
-              type="button"
-              onClick={() =>
-                setExpandedDayIds((current) => toggleAllDayPosts(feed, current))
-              }
-              data-testid="feed-v02-global-toggle"
-              aria-expanded={isGlobalExpanded}
-              className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[12px] font-medium transition-colors hover:bg-white/5"
-              style={{
-                borderColor: "var(--border-row)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              {globalLabel}
-              {isGlobalExpanded ? (
-                <ChevronUp size={14} aria-hidden />
-              ) : (
-                <ChevronDown size={14} aria-hidden />
-              )}
-            </button>
-          )}
         </div>
 
-        <div className="mt-1.5 space-y-1">
+        <div className="mt-1.5 space-y-1" data-testid="feed-v02-explainer">
           <p
             className="flex items-center gap-1.5 text-[12px] leading-snug"
             style={{ color: "var(--text-primary)" }}
@@ -2713,6 +2772,31 @@ export default function IntelligenceFeedV02({
             </span>
           </p>
         </div>
+
+        {feed && feed.dayPosts.length > 0 && (
+          <div className="mt-2 flex justify-end sm:absolute sm:right-0 sm:top-0 sm:mt-0">
+            <button
+              type="button"
+              onClick={() =>
+                setExpandedDayIds((current) => toggleAllDayPosts(feed, current))
+              }
+              data-testid="feed-v02-global-toggle"
+              aria-expanded={isGlobalExpanded}
+              className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[12px] font-medium transition-colors hover:bg-white/5"
+              style={{
+                borderColor: "var(--border-row)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              {globalLabel}
+              {isGlobalExpanded ? (
+                <ChevronUp size={14} aria-hidden />
+              ) : (
+                <ChevronDown size={14} aria-hidden />
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       <div

@@ -329,6 +329,35 @@ details > summary::-webkit-details-marker {
   gap: 0.75rem;
 }
 
+.v02-evidence-table th,
+.v02-evidence-table td {
+  white-space: nowrap;
+}
+
+.v02-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 639px) {
+  .v02-evidence-table {
+    min-width: 640px;
+    font-size: 10.5px;
+  }
+
+  .v02-evidence-table th,
+  .v02-evidence-table td {
+    padding: 0.4rem 0.45rem;
+    line-height: 1.15;
+  }
+
+  .v02-evidence-table th {
+    white-space: normal;
+  }
+}
+
 @media (min-width: 640px) {
   .feed-card-grid {
     grid-template-columns: minmax(0, 30%) minmax(0, 1fr) minmax(112px, 22%);
