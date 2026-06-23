@@ -40,6 +40,8 @@ export interface RunDetectorV02Result {
   bounded?: boolean;
   date_from?: string;
   date_to?: string;
+  time_from?: string;
+  time_to?: string;
   candles_loaded?: number;
   market_story_count?: number;
   market_story_publish_candidate_count?: number;
@@ -54,6 +56,8 @@ export interface RunDetectorV02Options {
   dryRun?: boolean;
   dateFrom?: string;
   dateTo?: string;
+  timeFrom?: string;
+  timeTo?: string;
   requestId?: string;
 }
 
@@ -99,23 +103,32 @@ function dateRangeFromOptions(options: RunDetectorV02Options): {
   dateTo: string;
   startIso: string;
   endIso: string;
+  timeFrom?: string;
+  timeTo?: string;
 } | null {
-  if (!options.dateFrom && !options.dateTo) {
+  if (!options.dateFrom && !options.dateTo && !options.timeFrom) {
     return null;
   }
 
-  const dateFrom = options.dateFrom ?? options.dateTo;
-  const dateTo = options.dateTo ?? options.dateFrom;
+  const dateFrom =
+    options.dateFrom ?? options.dateTo ?? options.timeFrom?.slice(0, 10);
+  const dateTo =
+    options.dateTo ?? options.dateFrom ?? options.timeTo?.slice(0, 10);
 
   if (!dateFrom || !dateTo) {
     return null;
   }
 
+  const startIso = options.timeFrom ?? dateStartIso(dateFrom);
+  const endIso = options.timeTo ?? dateEndIso(dateTo);
+
   return {
     dateFrom,
     dateTo,
-    startIso: dateStartIso(dateFrom),
-    endIso: dateEndIso(dateTo),
+    startIso,
+    endIso,
+    timeFrom: options.timeFrom,
+    timeTo: options.timeTo,
   };
 }
 
@@ -230,6 +243,8 @@ export async function runDetectorV02(
             bounded,
             date_from: range?.dateFrom ?? null,
             date_to: range?.dateTo ?? null,
+            time_from: range?.timeFrom ?? null,
+            time_to: range?.timeTo ?? null,
             request_id: options.requestId ?? null,
           },
           startedAt,
@@ -253,6 +268,8 @@ export async function runDetectorV02(
         bounded,
         date_from: range?.dateFrom,
         date_to: range?.dateTo,
+        time_from: range?.timeFrom,
+        time_to: range?.timeTo,
         candles_loaded: candlesLoaded,
       };
     }
@@ -306,6 +323,8 @@ export async function runDetectorV02(
           bounded,
           date_from: range?.dateFrom ?? null,
           date_to: range?.dateTo ?? null,
+          time_from: range?.timeFrom ?? null,
+          time_to: range?.timeTo ?? null,
           candles_loaded: candlesLoaded,
           request_id: options.requestId ?? null,
         },
@@ -335,6 +354,8 @@ export async function runDetectorV02(
       bounded,
       date_from: range?.dateFrom,
       date_to: range?.dateTo,
+      time_from: range?.timeFrom,
+      time_to: range?.timeTo,
       candles_loaded: candlesLoaded,
     };
   } catch (error) {
@@ -351,6 +372,8 @@ export async function runDetectorV02(
           bounded,
           date_from: range?.dateFrom ?? null,
           date_to: range?.dateTo ?? null,
+          time_from: range?.timeFrom ?? null,
+          time_to: range?.timeTo ?? null,
           request_id: options.requestId ?? null,
         },
         startedAt,
@@ -374,6 +397,8 @@ export async function runDetectorV02(
       bounded,
       date_from: range?.dateFrom,
       date_to: range?.dateTo,
+      time_from: range?.timeFrom,
+      time_to: range?.timeTo,
       candles_loaded: 0,
     };
   }

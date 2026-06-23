@@ -322,6 +322,38 @@ corepack pnpm --filter @bytesiren/worker exec wrangler tail bytesiren-api
 
 Record the request path, timestamp, Ray ID if available, started breadcrumb row, last completed chunk, and safe error message. Do not capture or paste secrets.
 
+v0.2I7B0-R2A records the first live bounded detector run failure pattern:
+
+- Canary `2026-06-18` completed successfully.
+- The full detector run completed through `2026-06-11`.
+- The `2026-06-12` detector chunk returned Cloudflare HTML/non-JSON instead of a JSON admin response.
+- `FEED_VERSION=v02`, Market Stories, Daily Overviews, and Claude remained blocked.
+
+The next remote attempt must be diagnostics-first and resume-first:
+
+```bash
+# Local/report-only failed-date diagnostic.
+node scripts/v02-remote-pipeline-smoke.mjs \
+  --dry-run \
+  --diagnose-date 2026-06-12 \
+  --fallback-hours 12
+
+# Owner-approved live resume should start at the failed date.
+node scripts/v02-remote-pipeline-smoke.mjs \
+  --worker-url "$BYTESIREN_WORKER_URL" \
+  --admin-token "<redacted-admin-token>" \
+  --steps detector \
+  --date-from 2026-06-12 \
+  --date-to YYYY-MM-DD \
+  --max-days-per-call 1 \
+  --remote-rehearsal \
+  --live \
+  --confirm-remote-v02-pipeline \
+  --retry-failed-once
+```
+
+If `2026-06-12` fails again, retry with `--fallback-hours 12` to split the failed detector date into UTC half-day target windows. The fallback still requires the same live confirmation and must not be used for unbounded remote detector execution.
+
 ## 9. Controlled v0.2 Claude Rehearsal Plan
 
 Local smoke ended with:

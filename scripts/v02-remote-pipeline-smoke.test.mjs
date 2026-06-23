@@ -105,6 +105,178 @@ test("v0.2 remote pipeline smoke redacts token and stops on first failed chunk",
   assert.equal(report.feed_version_switch, false);
 });
 
+test("v0.2 remote pipeline smoke captures non-JSON responses with a safe excerpt", async () => {
+  const options = parseRemotePipelineSmokeArgs(
+    [
+      "--live",
+      "--confirm-remote-v02-pipeline",
+      "--admin-token",
+      "secret-admin-token",
+      "--date-from",
+      "2026-06-12",
+      "--date-to",
+      "2026-06-12",
+      "--steps",
+      "detector",
+    ],
+    {},
+  );
+  const report = await runRemotePipelineSmoke(options, {
+    fetchImpl: async () =>
+      new Response("temporary failure secret-admin-token sk-ant-test", {
+        status: 503,
+        headers: { "content-type": "text/plain" },
+      }),
+    logger: { log() {} },
+  });
+  const failure = report.failures[0];
+  const serialized = JSON.stringify(report);
+
+  assert.equal(report.ok, false);
+  assert.equal(failure.classification, "non_json_response");
+  assert.equal(failure.http_status, 503);
+  assert.equal(failure.content_type, "text/plain");
+  assert.equal(failure.body_excerpt.includes("[redacted]"), true);
+  assert.equal(serialized.includes("secret-admin-token"), false);
+  assert.equal(serialized.includes("sk-ant-test"), false);
+});
+
+test("v0.2 remote pipeline smoke classifies Cloudflare HTML errors", async () => {
+  const options = parseRemotePipelineSmokeArgs(
+    [
+      "--live",
+      "--confirm-remote-v02-pipeline",
+      "--admin-token",
+      "secret-admin-token",
+      "--date-from",
+      "2026-06-12",
+      "--date-to",
+      "2026-06-12",
+      "--steps",
+      "detector",
+    ],
+    {},
+  );
+  const report = await runRemotePipelineSmoke(options, {
+    fetchImpl: async () =>
+      new Response(
+        "<!DOCTYPE html><title>Cloudflare</title><h1>Error 1102</h1><p>Ray ID: abc123</p>",
+        {
+          status: 503,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        },
+      ),
+    logger: { log() {} },
+  });
+  const failure = report.failures[0];
+
+  assert.equal(report.ok, false);
+  assert.equal(failure.classification, "cloudflare_html_error");
+  assert.equal(failure.cloudflare_error_code, "1102");
+  assert.equal(failure.ray_id, "abc123");
+  assert.match(failure.body_excerpt, /Error 1102/);
+});
+
+test("v0.2 remote pipeline smoke retries a failed chunk once when requested", async () => {
+  const options = parseRemotePipelineSmokeArgs(
+    [
+      "--live",
+      "--confirm-remote-v02-pipeline",
+      "--admin-token",
+      "secret-admin-token",
+      "--date-from",
+      "2026-06-12",
+      "--date-to",
+      "2026-06-12",
+      "--steps",
+      "detector",
+      "--retry-failed-once",
+    ],
+    {},
+  );
+  let attempts = 0;
+  const report = await runRemotePipelineSmoke(options, {
+    fetchImpl: async () => {
+      attempts += 1;
+      return attempts === 1
+        ? new Response(JSON.stringify({ ok: false }), {
+            status: 503,
+            headers: { "content-type": "application/json" },
+          })
+        : new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+    },
+    logger: { log() {} },
+  });
+
+  assert.equal(report.ok, true);
+  assert.equal(attempts, 2);
+  assert.equal(report.completed_calls.length, 1);
+  assert.equal(report.completed_calls[0].attempts, 2);
+});
+
+test("v0.2 remote pipeline smoke resume-from starts at requested date", async () => {
+  const options = parseRemotePipelineSmokeArgs(
+    [
+      "--dry-run",
+      "--date-from",
+      "2026-06-10",
+      "--date-to",
+      "2026-06-12",
+      "--steps",
+      "detector",
+      "--resume-from",
+      "2026-06-12",
+    ],
+    {},
+  );
+  const report = await runRemotePipelineSmoke(options, {
+    fetchImpl: async () => {
+      throw new Error("fetch should not be called in dry-run");
+    },
+    logger: { log() {} },
+  });
+
+  assert.deepEqual(
+    report.planned_calls.map((call) => call.date_from),
+    ["2026-06-12"],
+  );
+});
+
+test("v0.2 remote pipeline smoke failed-date diagnostic shows half-day fallback plan without network", async () => {
+  const options = parseRemotePipelineSmokeArgs(
+    [
+      "--dry-run",
+      "--diagnose-date",
+      "2026-06-12",
+      "--steps",
+      "detector",
+      "--fallback-hours",
+      "12",
+    ],
+    {},
+  );
+  const report = await runRemotePipelineSmoke(options, {
+    fetchImpl: async () => {
+      throw new Error("fetch should not be called in date diagnostic dry-run");
+    },
+    logger: { log() {} },
+  });
+
+  assert.equal(report.diagnose_date, "2026-06-12");
+  assert.equal(report.fallback_preview.length, 2);
+  assert.equal(
+    report.fallback_preview[0].time_from,
+    "2026-06-12T00:00:00.000Z",
+  );
+  assert.equal(
+    report.fallback_preview[1].time_from,
+    "2026-06-12T12:00:00.000Z",
+  );
+});
+
 test("v0.2 remote pipeline chunk helper supports capped multi-day chunks", () => {
   assert.deepEqual(buildDateChunks("2026-06-20", "2026-06-24", 2), [
     { date_from: "2026-06-20", date_to: "2026-06-21" },

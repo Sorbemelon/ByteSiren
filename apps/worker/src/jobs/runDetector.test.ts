@@ -472,6 +472,61 @@ test("runDetectorV02 bounded live run writes only overlapping target range", asy
   );
 });
 
+test("runDetectorV02 half-day bounded chunks include lookback and stay idempotent", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols({ count: 192, spikeBars: 3 }),
+  });
+
+  const morning = await runDetectorV02(db, {
+    now: detectorNow,
+    dateFrom: "2026-06-15",
+    dateTo: "2026-06-15",
+    timeFrom: "2026-06-15T00:00:00.000Z",
+    timeTo: "2026-06-15T11:59:59.999Z",
+  });
+  const afternoon = await runDetectorV02(db, {
+    now: detectorNow,
+    dateFrom: "2026-06-15",
+    dateTo: "2026-06-15",
+    timeFrom: "2026-06-15T12:00:00.000Z",
+    timeTo: "2026-06-15T23:59:59.999Z",
+  });
+  const countAfterAfternoon = tables.signal_events_v02.length;
+  const afternoonAgain = await runDetectorV02(db, {
+    now: detectorNow,
+    dateFrom: "2026-06-15",
+    dateTo: "2026-06-15",
+    timeFrom: "2026-06-15T12:00:00.000Z",
+    timeTo: "2026-06-15T23:59:59.999Z",
+  });
+  const metadata = tables.job_runs
+    .filter((row) => row.job_name === "run_detector_v02")
+    .map((row) => JSON.parse(row.metadata_json));
+
+  assert.equal(morning.status, "success");
+  assert.equal(afternoon.status, "success");
+  assert.equal(afternoonAgain.status, "success");
+  assert.equal(morning.time_from, "2026-06-15T00:00:00.000Z");
+  assert.equal(afternoon.time_to, "2026-06-15T23:59:59.999Z");
+  assert.equal(tables.signal_events_v02.length, countAfterAfternoon);
+  assert.equal(
+    tables.signal_events_v02.every(
+      (row) =>
+        row.event_end >= "2026-06-15T00:00:00.000Z" &&
+        row.event_start <= "2026-06-15T23:59:59.999Z",
+    ),
+    true,
+  );
+  assert.equal(
+    metadata.some(
+      (row) =>
+        row.time_from === "2026-06-15T12:00:00.000Z" &&
+        row.time_to === "2026-06-15T23:59:59.999Z",
+    ),
+    true,
+  );
+});
+
 test("v0.2 Signal Event storage identity survives a later window extension", async () => {
   const { db, tables } = createMemoryD1();
   const first = detectorSignalEvent(0);

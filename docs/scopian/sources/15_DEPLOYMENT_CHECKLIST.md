@@ -500,6 +500,31 @@ Live remote chunk execution additionally requires:
 
 Do not use a full unbounded remote v0.2 detector call as the default production rehearsal path. If Cloudflare `1102` or HTTP `503` repeats, capture `wrangler tail bytesiren-api` or dashboard logs with request path, timestamp, Ray ID if available, the started `job_runs` breadcrumb, last completed chunk, and safe error message. Do not paste tokens or secrets into reports.
 
+If a bounded detector chunk returns HTML/non-JSON, stop the live run and keep `FEED_VERSION=v01`. The R2 failure pattern stopped at `2026-06-12` after completing `2026-06-11`; the hardened R2A recovery path is:
+
+```bash
+# Local/report-only diagnostic; no remote writes.
+node scripts/v02-remote-pipeline-smoke.mjs \
+  --dry-run \
+  --diagnose-date 2026-06-12 \
+  --fallback-hours 12
+
+# Owner-approved live resume from the failed date.
+node scripts/v02-remote-pipeline-smoke.mjs \
+  --worker-url "$BYTESIREN_WORKER_URL" \
+  --admin-token "<redacted-admin-token>" \
+  --steps detector \
+  --date-from 2026-06-12 \
+  --date-to YYYY-MM-DD \
+  --max-days-per-call 1 \
+  --remote-rehearsal \
+  --live \
+  --confirm-remote-v02-pipeline \
+  --retry-failed-once
+```
+
+Only if the resumed day fails again and the owner approves continuing, add `--fallback-hours 12` to split the failed detector day into UTC half-day target windows. Do not run Market Stories, Daily Overviews, `FEED_VERSION=v02`, or Claude until detector chunks complete and counts are reviewed.
+
 ## J. SEO asset note
 
 Create these later using the ByteSiren full logo:

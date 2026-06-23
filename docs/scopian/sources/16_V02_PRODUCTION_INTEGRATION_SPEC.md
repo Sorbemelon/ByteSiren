@@ -261,10 +261,20 @@ The protected local v0.2 pipeline endpoint may run these explicit steps:
 v0.2I7B0 adds remote-safe pipeline diagnostics and bounded execution after a remote rehearsal failure. The protected admin surface includes:
 
 - `GET /api/admin/v02/diagnostics`: read-only candle/table/job/flag diagnostics, protected by `ENABLE_ADMIN_MAINTENANCE=true`, `ENABLE_V02_ADMIN_TOOLS=true`, and `x-bytesiren-admin-token`.
+- stale started `job_runs` diagnostics so an interrupted protected pipeline request can be found without mutating rows.
 - early `job_runs` breadcrumbs for protected pipeline steps so remote failures leave a safe started/failed trail.
 - bounded `POST /api/admin/v02/run-pipeline` mode with `mode: "bounded"`, `date_utc` or `date_from`/`date_to`, `max_days`, `max_symbols`, and `dry_run`.
 - one-day or explicitly small date chunks for remote detector and Daily Overview generation.
 - `scripts/v02-remote-pipeline-smoke.mjs` for dry-run-first chunk planning and owner-confirmed live remote pipeline execution.
+
+v0.2I7B0-R2A hardens the failed-chunk path:
+
+- normal thrown protected pipeline errors return structured JSON with `step`, `date_from`, `date_to`, optional `time_from`/`time_to`, and safe details.
+- Cloudflare/runtime HTML or other non-JSON responses are classified by the remote pipeline script with HTTP status, content type, safe redacted body excerpt, and Ray/error code when visible.
+- `--resume-from` / `--start-after` can resume a chunk plan after the last successful date.
+- `--retry-failed-once` retries a failed chunk once before stopping.
+- `--diagnose-date YYYY-MM-DD` writes a local/report-only failed-date diagnostic.
+- `--fallback-hours 12` can split a failed detector day into UTC half-day target windows after an owner-approved live retry.
 
 Unbounded v0.2 detector execution is no longer the protected admin default. It requires an explicit manual override and should not be used for remote production rehearsal unless the owner separately approves it. Remote rehearsal should use diagnostics first, then detector chunks, then Market Stories, then Daily Overview chunks.
 

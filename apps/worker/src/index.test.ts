@@ -1159,6 +1159,58 @@ test("admin v0.2 diagnostics is protected, read-only, and has no public CORS", a
   assert.equal(serialized.includes("test-admin-token"), false);
 });
 
+test("admin v0.2 diagnostics reports stale started breadcrumbs without mutating", async () => {
+  const { db, tables } = createMemoryD1({
+    job_runs: [
+      {
+        id: "stale_started_detector",
+        job_name: "admin_v02_pipeline",
+        status: "started",
+        started_at: "2026-06-12T00:00:00.000Z",
+        finished_at: "2026-06-12T00:00:00.000Z",
+        message: "v0.2 admin pipeline step started: detector.",
+        metadata_json: JSON.stringify({
+          step: "detector",
+          date_from: "2026-06-12",
+          date_to: "2026-06-12",
+        }),
+      },
+      {
+        id: "successful_detector",
+        job_name: "run_detector_v02",
+        status: "success",
+        started_at: "2026-06-11T00:00:00.000Z",
+        finished_at: "2026-06-11T00:00:01.000Z",
+        message: "completed",
+        metadata_json: "{}",
+      },
+    ],
+  });
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/diagnostics", {
+      headers: {
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+    }),
+    {
+      DB: db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+  const staleRows = body.stale_started_job_runs as Record<string, unknown>[];
+  const serialized = JSON.stringify(body);
+
+  assert.equal(response.status, 200);
+  assert.equal(staleRows.length, 1);
+  assert.equal(staleRows[0].job_name, "admin_v02_pipeline");
+  assert.equal(staleRows[0].status, "started");
+  assert.equal(tables.job_runs.length, 2);
+  assert.equal(serialized.includes("test-admin-token"), false);
+});
+
 test("admin v0.2 pipeline rejects unbounded detector by default", async () => {
   const response = await worker.fetch(
     new Request("http://localhost/api/admin/v02/run-pipeline", {
@@ -1271,6 +1323,118 @@ test("admin v0.2 bounded pipeline live run writes breadcrumbs without Claude or 
   assert.equal(startedMetadata.date_to, "2026-06-15");
   assert.equal(
     adminRows.some((row) => row.status === "success"),
+    true,
+  );
+  assert.equal(serialized.includes("test-admin-token"), false);
+});
+
+test("admin v0.2 bounded pipeline step failure returns structured JSON and failed breadcrumb", async () => {
+  const jobRows: Array<{
+    id: string;
+    job_name: string;
+    status: string;
+    started_at: string;
+    finished_at: string | null;
+    message: string;
+    metadata_json: string;
+  }> = [];
+  const db = {
+    prepare(sql: string) {
+      const statement = {
+        params: [] as unknown[],
+        bind(...params: unknown[]) {
+          this.params = params;
+          return this;
+        },
+        async run() {
+          if (sql.includes("INSERT INTO job_runs")) {
+            const [
+              id,
+              jobName,
+              status,
+              startedAt,
+              finishedAt,
+              message,
+              metadataJson,
+            ] = this.params as [
+              string,
+              string,
+              string,
+              string,
+              string | null,
+              string,
+              string,
+            ];
+            jobRows.push({
+              id,
+              job_name: jobName,
+              status,
+              started_at: startedAt,
+              finished_at: finishedAt,
+              message,
+              metadata_json: metadataJson,
+            });
+            return { success: true, meta: { changes: 1 } };
+          }
+
+          return { success: true, meta: { changes: 0 } };
+        },
+        async all() {
+          if (sql.includes("FROM market_candles")) {
+            throw new Error("forced detector candle read failure");
+          }
+
+          return { results: [] };
+        },
+        async first() {
+          return null;
+        },
+      };
+
+      return statement;
+    },
+  } as unknown as D1Database;
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-pipeline", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        steps: ["detector"],
+        mode: "bounded",
+        date_utc: "2026-06-12",
+        dry_run: false,
+      }),
+    }),
+    {
+      DB: db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+  const error = body.error as Record<string, unknown>;
+  const serialized = JSON.stringify(body);
+
+  assert.equal(response.status, 503);
+  assert.equal(body.ok, false);
+  assert.equal(error.code, "v02_pipeline_step_failed");
+  assert.equal(error.step, "detector");
+  assert.equal(error.date_utc, "2026-06-12");
+  assert.equal(
+    jobRows.some(
+      (row) =>
+        row.job_name === "admin_v02_pipeline" && row.status === "started",
+    ),
+    true,
+  );
+  assert.equal(
+    jobRows.some(
+      (row) => row.job_name === "admin_v02_pipeline" && row.status === "failed",
+    ),
     true,
   );
   assert.equal(serialized.includes("test-admin-token"), false);

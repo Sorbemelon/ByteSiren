@@ -744,6 +744,16 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         this.sql.includes("FROM job_runs") &&
         this.sql.includes("job_name IN")
       ) {
+        const limit = this.sql.includes("LIMIT 100")
+          ? 100
+          : this.sql.includes("LIMIT 50")
+            ? 50
+            : 20;
+        const threshold =
+          this.sql.includes("status = 'started'") &&
+          typeof this.params[0] === "string"
+            ? this.params[0]
+            : null;
         return {
           results: [...tables.job_runs]
             .filter((row) =>
@@ -754,8 +764,13 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
                 "run_daily_overviews_v02",
               ].includes(row.job_name),
             )
+            .filter((row) =>
+              threshold
+                ? row.status === "started" && row.started_at <= threshold
+                : true,
+            )
             .sort((a, b) => b.started_at.localeCompare(a.started_at))
-            .slice(0, 20) as T[],
+            .slice(0, limit) as T[],
         };
       }
 

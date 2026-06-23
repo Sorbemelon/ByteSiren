@@ -71,6 +71,8 @@ interface V02PipelineOptions {
   dryRun: boolean;
   dateFrom: string | null;
   dateTo: string | null;
+  timeFrom: string | null;
+  timeTo: string | null;
   maxDays: number;
   maxSymbols: number;
   allowUnboundedDetector: boolean;
@@ -184,6 +186,25 @@ function dateUtc(value: unknown): string | null {
   return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
 }
 
+function isoUtc(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  const parsed = Date.parse(trimmed);
+
+  if (
+    !Number.isFinite(parsed) ||
+    !trimmed.endsWith("Z") ||
+    new Date(parsed).toISOString() !== trimmed
+  ) {
+    return null;
+  }
+
+  return trimmed;
+}
+
 function parseMaxDays(value: unknown): number {
   const parsed =
     typeof value === "number"
@@ -228,10 +249,14 @@ function inclusiveDayCount(dateFrom: string, dateTo: string): number {
 function resolvePipelineDateRange(body: Record<string, unknown>): {
   dateFrom: string | null;
   dateTo: string | null;
+  timeFrom: string | null;
+  timeTo: string | null;
 } {
   const singleDate = dateUtc(body.date_utc);
   const dateFrom = dateUtc(body.date_from) ?? singleDate;
   const dateTo = dateUtc(body.date_to) ?? singleDate ?? dateFrom;
+  const timeFrom = isoUtc(body.time_from);
+  const timeTo = isoUtc(body.time_to);
 
   if ((body.date_from && !dateFrom) || (body.date_to && !dateTo)) {
     throw new Error("date_from and date_to must use YYYY-MM-DD.");
@@ -245,9 +270,41 @@ function resolvePipelineDateRange(body: Record<string, unknown>): {
     throw new Error("date_to must be on or after date_from.");
   }
 
+  if ((body.time_from && !timeFrom) || (body.time_to && !timeTo)) {
+    throw new Error("time_from and time_to must use UTC ISO timestamps.");
+  }
+
+  if ((timeFrom && !timeTo) || (!timeFrom && timeTo)) {
+    throw new Error("time_from and time_to must be provided together.");
+  }
+
+  if (timeFrom && timeTo) {
+    if (!dateFrom || !dateTo) {
+      throw new Error("time windows require date_utc or date_from/date_to.");
+    }
+
+    const fromMs = Date.parse(timeFrom);
+    const toMs = Date.parse(timeTo);
+    const maxWindowMs = 12 * 60 * 60 * 1000;
+
+    if (toMs <= fromMs) {
+      throw new Error("time_to must be after time_from.");
+    }
+
+    if (toMs - fromMs > maxWindowMs) {
+      throw new Error("bounded detector time window exceeds 12 hours.");
+    }
+
+    if (timeFrom.slice(0, 10) < dateFrom || timeTo.slice(0, 10) > dateTo) {
+      throw new Error("time window must stay inside date_from/date_to.");
+    }
+  }
+
   return {
     dateFrom,
     dateTo,
+    timeFrom,
+    timeTo,
   };
 }
 
@@ -389,17 +446,9 @@ async function getV02ClaudeCounts(db: D1Database): Promise<V02ClaudeCounts> {
   };
 }
 
-async function readV02PipelineOptions(request: Request): Promise<{
-  steps: V02PipelineStep[];
-  includeFixtureClaude: boolean;
-  mode: "legacy_unbounded" | "bounded";
-  dryRun: boolean;
-  dateFrom: string | null;
-  dateTo: string | null;
-  maxDays: number;
-  maxSymbols: number;
-  allowUnboundedDetector: boolean;
-}> {
+async function readV02PipelineOptions(
+  request: Request,
+): Promise<V02PipelineOptions> {
   let body: Record<string, unknown> = {};
 
   if (request.headers.get("content-type")?.includes("application/json")) {
@@ -442,7 +491,7 @@ async function readV02PipelineOptions(request: Request): Promise<{
   }
 
   const mode = body.mode === "bounded" ? "bounded" : "legacy_unbounded";
-  const { dateFrom, dateTo } = resolvePipelineDateRange(body);
+  const { dateFrom, dateTo, timeFrom, timeTo } = resolvePipelineDateRange(body);
   const maxDays = parseMaxDays(body.max_days);
   const maxSymbols = parseMaxSymbols(body.max_symbols);
   const allowUnboundedDetector = parseBoolean(
@@ -478,6 +527,8 @@ async function readV02PipelineOptions(request: Request): Promise<{
     dryRun: parseBoolean(body.dry_run, mode === "bounded"),
     dateFrom,
     dateTo,
+    timeFrom,
+    timeTo,
     maxDays,
     maxSymbols,
     allowUnboundedDetector,
@@ -607,22 +658,45 @@ async function lastV02JobRuns(db: D1Database) {
        FROM job_runs
        WHERE job_name IN ('admin_v02_pipeline', 'run_detector_v02', 'run_market_stories_v02', 'run_daily_overviews_v02')
        ORDER BY started_at DESC
-       LIMIT 20`,
+       LIMIT 100`,
     )
     .all<Record<string, unknown>>();
 
   return result.results;
 }
 
+async function staleStartedV02JobRuns(
+  db: D1Database,
+  now = new Date(),
+): Promise<Record<string, unknown>[]> {
+  const thresholdIso = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+  const result = await db
+    .prepare(
+      `SELECT job_name, status, started_at, finished_at, message, metadata_json
+       FROM job_runs
+       WHERE job_name IN ('admin_v02_pipeline', 'run_detector_v02', 'run_market_stories_v02', 'run_daily_overviews_v02')
+         AND status = 'started'
+         AND started_at <= ?
+       ORDER BY started_at DESC
+       LIMIT 50`,
+    )
+    .bind(thresholdIso)
+    .all<Record<string, unknown>>();
+
+  return result.results;
+}
+
 async function diagnosticsResponse(env: Env): Promise<Response> {
-  const [candleBounds, coverageRows, tableCounts, jobRuns] = await Promise.all([
-    Promise.all(
-      ALLOWED_SYMBOLS.map((symbol) => getCandleHistoryBounds(env.DB, symbol)),
-    ),
-    listCandleCoverageRows(env.DB),
-    getV02TableCounts(env.DB),
-    lastV02JobRuns(env.DB),
-  ]);
+  const [candleBounds, coverageRows, tableCounts, jobRuns, staleJobRuns] =
+    await Promise.all([
+      Promise.all(
+        ALLOWED_SYMBOLS.map((symbol) => getCandleHistoryBounds(env.DB, symbol)),
+      ),
+      listCandleCoverageRows(env.DB),
+      getV02TableCounts(env.DB),
+      lastV02JobRuns(env.DB),
+      staleStartedV02JobRuns(env.DB),
+    ]);
   const completeDays = completeUtcDaysFromCoverage(coverageRows);
   const totalCandles = candleBounds.reduce((sum, row) => sum + row.count, 0);
   const oldest =
@@ -658,6 +732,7 @@ async function diagnosticsResponse(env: Env): Promise<Response> {
     },
     v02_table_counts: tableCounts,
     last_job_runs: jobRuns,
+    stale_started_job_runs: staleJobRuns,
     estimated_work_size: {
       symbol_count: ALLOWED_SYMBOLS.length,
       candle_count: totalCandles,
@@ -696,7 +771,14 @@ async function recordPipelineBreadcrumb(
 function safePipelineOptionsForMetadata(
   options: Pick<
     V02PipelineOptions,
-    "mode" | "dryRun" | "dateFrom" | "dateTo" | "maxDays" | "maxSymbols"
+    | "mode"
+    | "dryRun"
+    | "dateFrom"
+    | "dateTo"
+    | "timeFrom"
+    | "timeTo"
+    | "maxDays"
+    | "maxSymbols"
   >,
 ) {
   return {
@@ -704,9 +786,30 @@ function safePipelineOptionsForMetadata(
     dry_run: options.dryRun,
     date_from: options.dateFrom,
     date_to: options.dateTo,
+    time_from: options.timeFrom,
+    time_to: options.timeTo,
     max_days: options.maxDays,
     max_symbols: options.maxSymbols,
   };
+}
+
+function pipelineResultFailed(result: unknown): boolean {
+  return (
+    Boolean(result) &&
+    typeof result === "object" &&
+    (result as { status?: unknown }).status === "failed"
+  );
+}
+
+function pipelineResultMessage(result: unknown): string {
+  if (!result || typeof result !== "object") {
+    return "v0.2 admin pipeline step failed.";
+  }
+
+  const message = (result as { message?: unknown }).message;
+  return typeof message === "string"
+    ? message
+    : "v0.2 admin pipeline step failed.";
 }
 
 async function runPipelineStepWithBreadcrumb<T>(
@@ -731,6 +834,10 @@ async function runPipelineStepWithBreadcrumb<T>(
 
   try {
     const result = await run();
+
+    if (pipelineResultFailed(result)) {
+      throw new Error(pipelineResultMessage(result));
+    }
 
     if (!options.dryRun) {
       await recordPipelineBreadcrumb(
@@ -780,6 +887,8 @@ function boundedDetectorOptions(
     ? {
         dateFrom: options.dateFrom ?? undefined,
         dateTo: options.dateTo ?? undefined,
+        timeFrom: options.timeFrom ?? undefined,
+        timeTo: options.timeTo ?? undefined,
         dryRun: options.dryRun,
         requestId,
         enableMarketStories: false,
@@ -803,6 +912,41 @@ function boundedDailyOptions(options: V02PipelineOptions, requestId: string) {
         dryRun: false,
         requestId,
       };
+}
+
+function pipelineJsonError(
+  status: number,
+  code: string,
+  message: string,
+  step: V02PipelineStep | null,
+  requestId: string,
+  options: V02PipelineOptions,
+  safeDetails: Record<string, unknown> = {},
+): Response {
+  return json(
+    {
+      ok: false,
+      error: {
+        code,
+        message,
+        step,
+        date_utc:
+          options.dateFrom && options.dateFrom === options.dateTo
+            ? options.dateFrom
+            : null,
+        date_from: options.dateFrom,
+        date_to: options.dateTo,
+        time_from: options.timeFrom,
+        time_to: options.timeTo,
+        request_id: requestId,
+        safe_details: {
+          ...safePipelineOptionsForMetadata(options),
+          ...safeDetails,
+        },
+      },
+    },
+    { status },
+  );
 }
 
 export async function adminResponse(
@@ -947,66 +1091,84 @@ export async function adminResponse(
       request_id: requestId,
       date_from: options.dateFrom,
       date_to: options.dateTo,
+      time_from: options.timeFrom,
+      time_to: options.timeTo,
       steps_run: stepsRun,
       warnings,
     };
+    let activeStep: V02PipelineStep | null = null;
 
-    if (options.steps.includes("detector")) {
-      const detector = await runPipelineStepWithBreadcrumb(
-        env,
-        "detector",
+    try {
+      if (options.steps.includes("detector")) {
+        activeStep = "detector";
+        const detector = await runPipelineStepWithBreadcrumb(
+          env,
+          "detector",
+          requestId,
+          options,
+          () =>
+            runDetectorV02(env.DB, boundedDetectorOptions(options, requestId)),
+        );
+        stepsRun.push("detector");
+        response.detector = detector;
+      }
+
+      if (options.steps.includes("market_stories")) {
+        activeStep = "market_stories";
+        const marketStories = await runPipelineStepWithBreadcrumb(
+          env,
+          "market_stories",
+          requestId,
+          options,
+          () =>
+            options.dryRun
+              ? Promise.resolve({
+                  status: "success" as const,
+                  message:
+                    "v0.2 Market Story generation dry-run: existing Signal/Audit rows would be used.",
+                  story_model_version: MARKET_STORY_V02_MODEL_VERSION,
+                  story_count: 0,
+                  publish_candidate_count: 0,
+                  suppressed_count: 0,
+                  audit_only_story_count: 0,
+                  signal_story_count: 0,
+                  signal_audit_story_count: 0,
+                  market_stories_written: 0,
+                  market_story_members_written: 0,
+                } satisfies RunMarketStoriesV02Result)
+              : runMarketStoriesV02(env.DB),
+        );
+        stepsRun.push("market_stories");
+        response.market_stories = marketStories;
+      }
+
+      if (options.steps.includes("daily_overviews")) {
+        activeStep = "daily_overviews";
+        const dailyOverviews = await runPipelineStepWithBreadcrumb(
+          env,
+          "daily_overviews",
+          requestId,
+          options,
+          () =>
+            runDailyOverviewsV02(
+              env.DB,
+              env,
+              boundedDailyOptions(options, requestId),
+            ),
+        );
+        stepsRun.push("daily_overviews");
+        response.daily_overviews = dailyOverviews;
+      }
+    } catch (error) {
+      return pipelineJsonError(
+        503,
+        "v02_pipeline_step_failed",
+        safeErrorMessage(error),
+        activeStep,
         requestId,
         options,
-        () =>
-          runDetectorV02(env.DB, boundedDetectorOptions(options, requestId)),
+        { steps_run: stepsRun },
       );
-      stepsRun.push("detector");
-      response.detector = detector;
-    }
-
-    if (options.steps.includes("market_stories")) {
-      const marketStories = await runPipelineStepWithBreadcrumb(
-        env,
-        "market_stories",
-        requestId,
-        options,
-        () =>
-          options.dryRun
-            ? Promise.resolve({
-                status: "success" as const,
-                message:
-                  "v0.2 Market Story generation dry-run: existing Signal/Audit rows would be used.",
-                story_model_version: MARKET_STORY_V02_MODEL_VERSION,
-                story_count: 0,
-                publish_candidate_count: 0,
-                suppressed_count: 0,
-                audit_only_story_count: 0,
-                signal_story_count: 0,
-                signal_audit_story_count: 0,
-                market_stories_written: 0,
-                market_story_members_written: 0,
-              } satisfies RunMarketStoriesV02Result)
-            : runMarketStoriesV02(env.DB),
-      );
-      stepsRun.push("market_stories");
-      response.market_stories = marketStories;
-    }
-
-    if (options.steps.includes("daily_overviews")) {
-      const dailyOverviews = await runPipelineStepWithBreadcrumb(
-        env,
-        "daily_overviews",
-        requestId,
-        options,
-        () =>
-          runDailyOverviewsV02(
-            env.DB,
-            env,
-            boundedDailyOptions(options, requestId),
-          ),
-      );
-      stepsRun.push("daily_overviews");
-      response.daily_overviews = dailyOverviews;
     }
 
     if (options.includeFixtureClaude && !options.dryRun) {
