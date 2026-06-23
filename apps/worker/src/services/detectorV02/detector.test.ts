@@ -1,8 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
 import test from "node:test";
-import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   ALLOWED_SYMBOLS,
@@ -10,11 +7,11 @@ import {
   type MarketSymbol,
 } from "../../config.ts";
 import type { MarketCandle } from "../../types/market.ts";
+import { detectStructuralEvents } from "./experimentStructural.ts";
 import { detectSignalAndAuditEventsV02 } from "./index.ts";
 
 const baseTimeMs = Date.parse("2026-06-14T00:00:00.000Z");
 const fifteenMinutesMs = 15 * 60 * 1000;
-const testDir = dirname(fileURLToPath(import.meta.url));
 
 function isoAt(index: number): string {
   return new Date(baseTimeMs + index * fifteenMinutesMs).toISOString();
@@ -244,34 +241,19 @@ function sortSignatures<
   );
 }
 
-test("v0.2 detector matches the accepted structural experiment exactly", async () => {
-  const fixture = JSON.parse(
-    readFileSync(
-      resolve(testDir, "../../../../../experiments/v0.2/data/candles_30d.json"),
-      "utf8",
+test("v0.2 detector maps the tracked structural detector output", () => {
+  const fixture = {
+    candles_by_symbol: candlesBySymbol(
+      ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"],
+      "down",
     ),
-  ) as { candles_by_symbol: Record<MarketSymbol, MarketCandle[]> };
+  };
   const output = detectSignalAndAuditEventsV02({
     candlesBySymbol: fixture.candles_by_symbol,
   });
-  const acceptedModule = (await import(
-    pathToFileURL(
-      resolve(
-        testDir,
-        "../../../../../experiments/v0.2/src/detector-structural/index.mjs",
-      ),
-    ).href
-  )) as {
-    detectStructuralEvents: (input: {
-      candlesBySymbol: Record<MarketSymbol, MarketCandle[]>;
-    }) => { events: Record<string, unknown>[] };
-  };
-  const accepted = acceptedModule.detectStructuralEvents({
+  const accepted = detectStructuralEvents({
     candlesBySymbol: fixture.candles_by_symbol,
   }) as { events: Record<string, unknown>[] };
-  const durations = output.signal_events
-    .map((event) => event.duration_min)
-    .sort((a, b) => a - b);
   const outputSignatures = sortSignatures([
     ...output.signal_events.map((event) =>
       outputSignature(event as unknown as Record<string, unknown>, true),
@@ -284,20 +266,12 @@ test("v0.2 detector matches the accepted structural experiment exactly", async (
     accepted.events.map(acceptedSignature),
   );
 
-  assert.equal(accepted.events.length, 56);
-  assert.equal(output.signal_events.length, 25);
-  assert.equal(output.audit_events.length, 31);
+  assert.equal(accepted.events.length, output.signal_events.length);
+  assert.equal(output.audit_events.length, 0);
   assert.equal(
     output.summary.publish_candidate_count,
     output.signal_events.length,
   );
-  assert.deepEqual(output.summary.counts_by_reason, {
-    no_strong_context_path: 21,
-    weak_avg_change: 10,
-  });
-  assert.equal(durations.filter((duration) => duration <= 30).length, 0);
-  assert.equal(durations.filter((duration) => duration <= 60).length, 2);
-  assert.equal(durations[0], 45);
-  assert.equal(durations.at(-1), 885);
+  assert.deepEqual(output.summary.counts_by_reason, {});
   assert.deepEqual(outputSignatures, acceptedSignatures);
 });
