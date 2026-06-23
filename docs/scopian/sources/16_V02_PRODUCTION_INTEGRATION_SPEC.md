@@ -127,12 +127,16 @@ Signal Event payloads must include:
 - source route hints and bounded suggested search queries
 - `no_trading_advice: true`
 
+Market Story public display uses `Avg Change` and `Volatility Score`.
+Cross-day continuation copy is `Market Story continues`.
+
 Daily Overview payloads must include:
 
 - `mode: "daily_overview"`
 - `target_type: "daily_overview_v02"`
 - UTC day start/end
 - `24h Change`
+- `Top daily mover` and `Widest range`
 - market tone, range, notable symbols, and top symbol moves
 - Signal Event IDs for the day
 - deterministic Market Story IDs/context for the day when useful
@@ -459,8 +463,9 @@ v0.2I5B does:
 - support the feed-level `Collapse days` / `Expand days` control
 - support per-day `+N events · Collapse post` / `+N events · Expand post` controls
 - support section-level `Show more` / `Hide` controls independent from day-post collapse state
-- render Daily Overview `24h Change`, Signal Event `Avg Change`, and Signal Event per-symbol `Window Change`, `Peak 15m`, `Volume ×`, and `Range Position`
+- render Daily Overview `24h Change`, `Top daily mover`, and `Widest range`; render Signal Event `Avg Change` and Signal Event per-symbol `Window Change`, `Peak 15m`, `Volume ×`, and `Range Position`
 - render Lead mover and strongest `Peak 15m` as table highlights, not headline metrics
+- render Market Story `Avg Change` and `Volatility Score`
 - render accepted source chips only for Claude-backed Daily Overview and Signal Event sections
 - keep Market Story deterministic-only in the frontend with no Claude status, source chips, source labels, or nested Signal Event cards
 
@@ -513,6 +518,13 @@ v0.2I6B1 hardens the local smoke tooling:
 - the frontend real-API smoke counts unique rendered v0.2 day posts and feed sections by stable `data-v02-*` attributes; raw DOM occurrence counts are diagnostics only
 - the frontend real-API smoke reports requested web URL, actual web URL, detected port, and whether it used an existing server or started its own server
 - Daily Overview table/feed count mismatches must be explained as current/incomplete-day visibility, outside visible feed range, or an issue needing review before production cutover rehearsal
+
+v0.2I6B2 aligns real-smoke UI labels:
+
+- Market Story displays `Avg Change` and `Volatility Score`, not `Swing Change`
+- Daily Overview displays `Top daily mover` and `Widest range` as day-level labels
+- cross-day Market Story continuation copy is `Market Story continues`
+- chart band opacity, density, ordering, and selection behavior remain unchanged in this label pass
 
 v0.2I6A does not:
 

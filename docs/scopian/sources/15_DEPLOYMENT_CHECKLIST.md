@@ -417,6 +417,14 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787 corepack pnpm --filter @bytesiren
 
 Local screenshots are written under `.tmp/`. The smoke report prints the requested web URL, actual web URL, detected port, and whether the smoke started its own server or attached to an existing server. If it starts a server, it may stop only the process it started. If it attaches to an existing local web server, do not stop that server from the smoke.
 
+The v0.2 real-API smoke should confirm:
+
+- Market Story displays `Avg Change` and `Volatility Score`, not `Swing Change`.
+- Daily Overview displays `Top daily mover` and `Widest range`, not `Lead` or standalone `Peak` as day-level labels.
+- Cross-day story continuation copy is `Market Story continues`.
+- Market Story remains deterministic-only with no Claude status, Public Context status, source chips, or source markers.
+- Chart band behavior remains unchanged by the v0.2I6B2 label pass.
+
 Do not use production tokens for this flow. Do not run live Claude for this smoke.
 
 Optional local reset before another smoke:

@@ -787,12 +787,20 @@ async function runBrowserSmoke() {
 
     const initial = await session.evaluate(`(() => {
       const body = document.body.innerText;
+      const daily = document.querySelector('[data-item-type="daily_overview"]')?.innerText ?? "";
       const story = document.querySelector('[data-item-type="market_story"]')?.innerText ?? "";
       const signal = document.querySelector('[data-item-type="signal_event"]')?.innerText ?? "";
       return {
         hasEmptyState: body.includes('No v0.2 intelligence items'),
         has24hChange: body.includes('24h Change'),
         hasAvgChange: body.toLowerCase().includes('avg change'),
+        storyHasVolatilityScore: story.includes('Volatility Score'),
+        storyHasSwingChange: story.includes('Swing Change'),
+        dailyHasTopDailyMover: daily.includes('Top daily mover'),
+        dailyHasWidestRange: daily.includes('Widest range'),
+        dailyHasLeadLabel: /(^|\\n)\\s*Lead\\s*:/.test(daily),
+        dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(daily),
+        hasOldMarketStoryContinue: body.includes('Market Story (Continue)'),
         sectionCount: document.querySelectorAll('[data-testid="feed-section-v02"]').length,
         dayPostCount: document.querySelectorAll('[data-testid="day-post-v02"]').length,
         globalLabel: document.querySelector('[data-testid="feed-v02-global-toggle"]')?.textContent.trim(),
@@ -822,6 +830,13 @@ async function runBrowserSmoke() {
     assert.equal(initial.hasEmptyState, false);
     assert.equal(initial.has24hChange, true);
     assert.equal(initial.hasAvgChange, true);
+    assert.equal(initial.storyHasVolatilityScore, true);
+    assert.equal(initial.storyHasSwingChange, false);
+    assert.equal(initial.dailyHasTopDailyMover, true);
+    assert.equal(initial.dailyHasWidestRange, true);
+    assert.equal(initial.dailyHasLeadLabel, false);
+    assert.equal(initial.dailyHasStandalonePeakLabel, false);
+    assert.equal(initial.hasOldMarketStoryContinue, false);
     assert.equal(initial.dailySource, true, "Daily source chip should render");
     assert.equal(
       initial.signalSource,

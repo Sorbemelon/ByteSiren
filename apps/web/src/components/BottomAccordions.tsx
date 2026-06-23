@@ -742,8 +742,8 @@ export default function BottomAccordions({
           description="Values shown in card headers or summary rows. They describe the selected time window, not advice."
         >
           <DefinitionCard term="Avg Change">
-            Average window change across participating symbols in a Signal Event
-            or Market Story.
+            Average or median change across participating symbols for the
+            relevant Signal Event or Market Story window.
           </DefinitionCard>
           <DefinitionCard term="24h Change">
             Daily Overview range of UTC-day percentage changes across the five
@@ -753,10 +753,6 @@ export default function BottomAccordions({
             High-low movement span inside the same window. It is always shown
             without a plus sign.
           </DefinitionCard>
-          <DefinitionCard term="Volatility Score">
-            Movement score from the RMS of 15m bar changes inside the window,
-            scaled by 100 and rounded.
-          </DefinitionCard>
           <DefinitionCard term="Evidence window">
             The candles used as Signal Event evidence, not a single publication
             timestamp.
@@ -764,6 +760,10 @@ export default function BottomAccordions({
           <DefinitionCard term="Market Story range">
             The broader deterministic Market Story date and time range shown in
             the card header.
+          </DefinitionCard>
+          <DefinitionCard term="Market Story continues">
+            A Market Story that started on an earlier UTC day and continues into
+            this day.
           </DefinitionCard>
         </EvidenceValueGroup>
 
@@ -775,7 +775,15 @@ export default function BottomAccordions({
             One symbol&apos;s percentage change across the relevant Signal
             Event, Market Story, or Daily Overview window.
           </DefinitionCard>
-          <DefinitionCard term="Peak">
+          <DefinitionCard term="Top daily mover">
+            The symbol with the largest daily percentage change in the Daily
+            Overview period.
+          </DefinitionCard>
+          <DefinitionCard term="Widest range">
+            The symbol with the widest high-low range during the Daily Overview
+            period.
+          </DefinitionCard>
+          <DefinitionCard term="Strongest 15m">
             Daily Overview value for one symbol&apos;s strongest 15-minute move
             during the UTC day.
           </DefinitionCard>
@@ -806,8 +814,8 @@ export default function BottomAccordions({
             window.
           </DefinitionCard>
           <DefinitionCard term="Peak highlight">
-            The highlighted Peak or Peak 15m cell marks the strongest 15-minute
-            move in that table.
+            The highlighted Strongest 15m or Peak 15m cell marks the strongest
+            15-minute move in that table.
           </DefinitionCard>
           <DefinitionCard term="Movement Profile">
             Deterministic Market Story context for range position, trend,

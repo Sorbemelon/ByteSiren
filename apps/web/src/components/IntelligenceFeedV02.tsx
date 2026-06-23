@@ -73,7 +73,6 @@ interface DailySymbolEvidenceRow {
   symbol: string;
   changePct: number | null;
   rangePct: number | null;
-  volatilityScore: number | null;
   peakPct: number | null;
   volumeRatio: number | null;
   rangePosition: string | null;
@@ -496,41 +495,6 @@ function percentRangeColor(
   return "var(--text-primary)";
 }
 
-function medianNumber(values: number[]): number | null {
-  const finiteValues = values.filter(Number.isFinite).sort((a, b) => a - b);
-  if (finiteValues.length === 0) {
-    return null;
-  }
-
-  const middle = Math.floor(finiteValues.length / 2);
-  if (finiteValues.length % 2 === 1) {
-    return finiteValues[middle];
-  }
-
-  return (finiteValues[middle - 1] + finiteValues[middle]) / 2;
-}
-
-function dailyVolatilityScore(
-  section: NormalizedDailyOverviewSection,
-): number | null {
-  const chartSummary = valueRecord(section.details.daily_chart_context_summary);
-  const summaryScore = chartSummary
-    ? recordNumber(chartSummary, ["daily_volatility_score", "volatility_score"])
-    : null;
-
-  if (summaryScore !== null) {
-    return summaryScore;
-  }
-
-  const rowScores = numberValuesFromRecords(section.topSymbolMoves, [
-    "volatility_score",
-    "swing_score",
-  ]);
-  const medianScore = medianNumber(rowScores);
-
-  return medianScore === null ? null : Math.round(medianScore);
-}
-
 function leadDailyMove(
   section: NormalizedDailyOverviewSection,
 ): { symbol: string; change: number | null } | null {
@@ -567,8 +531,10 @@ function leadDailyMove(
   return lead ? { symbol: lead.symbol, change: lead.change } : null;
 }
 
-function peakDailyMove(section: NormalizedDailyOverviewSection): string | null {
-  let peak: { symbol: string; value: number } | null = null;
+function widestDailyRangeMove(
+  section: NormalizedDailyOverviewSection,
+): string | null {
+  let widest: { symbol: string; value: number } | null = null;
 
   for (const move of section.topSymbolMoves) {
     const record = valueRecord(move);
@@ -577,23 +543,18 @@ function peakDailyMove(section: NormalizedDailyOverviewSection): string | null {
     }
 
     const symbol = recordString(record, ["symbol", "asset", "name"]);
-    const value = recordNumber(record, [
-      "peak_change_pct",
-      "peak_24h_change_pct",
-      "range_pct",
-      "daily_range_pct",
-    ]);
+    const value = recordNumber(record, ["range_pct", "daily_range_pct"]);
 
     if (!symbol || value === null) {
       continue;
     }
 
-    if (!peak || Math.abs(value) > Math.abs(peak.value)) {
-      peak = { symbol, value };
+    if (!widest || value > widest.value) {
+      widest = { symbol, value };
     }
   }
 
-  return peak?.symbol ?? null;
+  return widest?.symbol ?? null;
 }
 
 function formatDirection(value: string | null | undefined): string {
@@ -1137,15 +1098,14 @@ function DailyOverviewSection({
     ? (toneMeta.label ?? humanize(section.marketTone))
     : null;
   const leadMove = leadDailyMove(section);
-  const peakSymbol = peakDailyMove(section);
-  const volatilityScore = dailyVolatilityScore(section);
+  const widestRangeSymbol = widestDailyRangeMove(section);
   const dailyChangeStyle = {
     color: percentRangeColor(dailyChangeValues, section.dailyChangePct),
   };
 
   return (
     <div className="min-w-0 flex-1">
-      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(118px,0.8fr)_minmax(220px,1.35fr)_minmax(74px,0.65fr)] sm:items-start sm:gap-x-3">
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(112px,0.72fr)_minmax(176px,1fr)_minmax(164px,0.88fr)] sm:items-start sm:gap-x-3">
         <div className="min-w-0 space-y-2">
           {toneLabel ? (
             <>
@@ -1229,13 +1189,13 @@ function DailyOverviewSection({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-y-1 sm:min-w-[74px] sm:justify-self-end">
+        <div className="grid min-w-0 gap-y-1 sm:min-w-[164px] sm:justify-self-end">
           <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap sm:justify-end">
             <p
               className="shrink-0 text-[13px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
             >
-              Lead:
+              Top daily mover:
             </p>
             <p
               className="min-w-0 truncate text-[13px] font-normal leading-tight tabular-nums"
@@ -1251,22 +1211,24 @@ function DailyOverviewSection({
               className="shrink-0 text-[13px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
             >
-              Peak:
+              Widest range:
             </p>
             <p
               className="min-w-0 truncate text-[13px] font-normal leading-tight tabular-nums"
               style={{
-                color: peakSymbol ? "var(--text-primary)" : "var(--text-muted)",
+                color: widestRangeSymbol
+                  ? "var(--text-primary)"
+                  : "var(--text-muted)",
               }}
             >
-              {peakSymbol ?? "—"}
+              {widestRangeSymbol ?? "—"}
             </p>
           </div>
         </div>
       </div>
 
       <div className="grid gap-2.5">
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(108px,16%)_minmax(126px,22%)]">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(132px,22%)]">
           <div className="min-w-0 space-y-1.5">
             {summary ? (
               <p
@@ -1298,21 +1260,6 @@ function DailyOverviewSection({
                 />
               </div>
             )}
-          </div>
-
-          <div className="min-w-0 space-y-1.5">
-            <p
-              className="text-[12px] font-semibold"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Volatility Score
-            </p>
-            <p
-              className="text-[13px] font-normal leading-tight tabular-nums"
-              style={{ color: "var(--text-primary)" }}
-            >
-              {safeFormatScore(volatilityScore)}
-            </p>
           </div>
 
           <div className="min-w-0 space-y-1.5">
@@ -1421,9 +1368,6 @@ function dailySymbolEvidenceRows(
       rangePct:
         existing?.rangePct ??
         recordNumber(record, ["range_pct", "daily_range_pct"]),
-      volatilityScore:
-        existing?.volatilityScore ??
-        recordNumber(record, ["volatility_score", "swing_score"]),
       peakPct:
         existing?.peakPct ??
         recordNumber(record, [
@@ -1504,6 +1448,22 @@ function strongestDailyPeakSymbol(
   return strongest?.symbol ?? null;
 }
 
+function widestDailyRangeSymbol(rows: DailySymbolEvidenceRow[]): string | null {
+  let widest: { symbol: string; value: number } | null = null;
+
+  for (const row of rows) {
+    if (row.rangePct === null) {
+      continue;
+    }
+
+    if (!widest || row.rangePct > widest.value) {
+      widest = { symbol: row.symbol, value: row.rangePct };
+    }
+  }
+
+  return widest?.symbol ?? null;
+}
+
 function dailyRangePositionDisplay(row: DailySymbolEvidenceRow): string {
   return textOrNull(row.rangePositionDisplay) ?? humanize(row.rangePosition);
 }
@@ -1516,6 +1476,7 @@ function DailyOverviewEvidenceTable({
   const rows = dailySymbolEvidenceRows(section);
   const leadSymbol = strongestDailyChangeSymbol(rows);
   const peakSymbol = strongestDailyPeakSymbol(rows);
+  const widestRangeSymbol = widestDailyRangeSymbol(rows);
 
   if (rows.length === 0) {
     return null;
@@ -1531,7 +1492,7 @@ function DailyOverviewEvidenceTable({
           border: "1px solid var(--border-row)",
         }}
       >
-        <table className="min-w-[760px] w-full border-collapse text-left text-[12px]">
+        <table className="min-w-[680px] w-full border-collapse text-left text-[12px]">
           <thead
             style={{
               background: "var(--bg-panel)",
@@ -1542,8 +1503,7 @@ function DailyOverviewEvidenceTable({
               <th className="px-3 py-2 font-medium">Symbol</th>
               <th className="px-3 py-2 font-medium">24h Change</th>
               <th className="px-3 py-2 font-medium">Range</th>
-              <th className="px-3 py-2 font-medium">Volatility Score</th>
-              <th className="px-3 py-2 font-medium">Peak</th>
+              <th className="px-3 py-2 font-medium">Strongest 15m</th>
               <th className="px-3 py-2 font-medium">Volume x</th>
               <th className="px-3 py-2 font-medium">Range Position</th>
             </tr>
@@ -1552,6 +1512,7 @@ function DailyOverviewEvidenceTable({
             {rows.map((row) => {
               const isLead = row.symbol === leadSymbol;
               const isPeak = row.symbol === peakSymbol;
+              const isWidestRange = row.symbol === widestRangeSymbol;
 
               return (
                 <tr
@@ -1588,15 +1549,16 @@ function DailyOverviewEvidenceTable({
                   </td>
                   <td
                     className="px-3 py-2"
-                    style={{ color: "var(--text-secondary)" }}
+                    style={{
+                      background: isWidestRange
+                        ? "color-mix(in srgb, var(--status-strong) 10%, transparent)"
+                        : "transparent",
+                      color: isWidestRange
+                        ? "var(--status-strong)"
+                        : "var(--text-secondary)",
+                    }}
                   >
                     {safeFormatUnsignedPercent(row.rangePct)}
-                  </td>
-                  <td
-                    className="px-3 py-2"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {safeFormatScore(row.volatilityScore)}
                   </td>
                   <td
                     className="px-3 py-2 font-medium"
@@ -1632,9 +1594,10 @@ function DailyOverviewEvidenceTable({
         </table>
       </div>
       <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
-        Lead symbol is highlighted in the Symbol column. Strongest Peak is
-        highlighted in the Peak column. Volume x compares the day&apos;s average
-        15m volume with the prior 24h average.
+        Top daily mover is highlighted in the Symbol column. Widest range is
+        highlighted in the Range column. Strongest 15m move is highlighted in
+        the Strongest 15m column. Volume x compares the day&apos;s average 15m
+        volume with the prior 24h average.
       </p>
     </div>
   );
@@ -1777,7 +1740,9 @@ function MarketStorySection({
               style={{ color: SECTION_ICON_COLOR.marketStory }}
             />
             <span className="text-[15px] font-semibold">
-              Market Story{section.isContinuation ? " (Continue)" : ""}
+              {section.isContinuation
+                ? "Market Story continues"
+                : "Market Story"}
             </span>
           </p>
           <Chip

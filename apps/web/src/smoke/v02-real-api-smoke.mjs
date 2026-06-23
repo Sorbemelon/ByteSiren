@@ -469,6 +469,8 @@ export async function runRealApiSmoke(options) {
     const initial = await session.evaluate(`(() => {
       const body = document.body.innerText;
       const story = document.querySelector('[data-item-type="market_story"]')?.innerText ?? "";
+      const stories = Array.from(document.querySelectorAll('[data-item-type="market_story"]')).map((section) => section.innerText).join("\\n");
+      const daily = document.querySelector('[data-item-type="daily_overview"]')?.innerText ?? "";
       const feed = document.querySelector('[data-testid="intelligence-feed-v02"]');
       const leftSection = document.querySelector('[data-testid="dashboard-left-section"]');
       const feedPanel = document.querySelector('[data-testid="dashboard-feed-panel"]');
@@ -526,14 +528,41 @@ export async function runRealApiSmoke(options) {
         hasCollapseDays: body.includes('Collapse days'),
         hasShowMore: body.includes('Show more'),
         hasChart: Boolean(document.querySelector('[data-testid="trading-view-chart"]')),
+        storyHasVolatilityScore: story.includes('Volatility Score'),
+        storyHasSwingChange: story.includes('Swing Change'),
+        storyHasAvgChange: story.includes('Avg Change'),
+        storiesHaveVolatilityScore: stories.includes('Volatility Score'),
+        storiesHaveSwingChange: stories.includes('Swing Change'),
+        storiesHaveAvgChange: stories.includes('Avg Change'),
+        dailyHasTopDailyMover: daily.includes('Top daily mover'),
+        dailyHasWidestRange: daily.includes('Widest range'),
+        dailyHasLeadLabel: /(^|\\n)\\s*Lead\\s*:/.test(daily),
+        dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(daily),
+        hasMarketStoryContinues: stories.includes('Market Story continues'),
+        hasOldMarketStoryContinue: stories.includes('Market Story (Continue)'),
         storyHasSources: story.includes('Sources') || story.includes('Public Context') || story.includes('Focused Cause') || story.includes('Likely Cause') || story.includes('Market Backdrop') || story.includes('No Clear Cause') || story.includes('Claude Limited'),
+        storiesHaveSources: stories.includes('Sources') || stories.includes('Public Context') || stories.includes('Focused Cause') || stories.includes('Likely Cause') || stories.includes('Market Backdrop') || stories.includes('No Clear Cause') || stories.includes('Claude Limited'),
         feedEntries: performance.getEntriesByType('resource').map((entry) => entry.name).filter((name) => name.includes('/api/intelligence/feed')).length,
       };
     })()`);
 
     assert.equal(initial.hasChart, true);
     assert.equal(initial.dayPosts > 0, feedCounts.dayPosts > 0);
-    assert.equal(initial.storyHasSources, false);
+    if (feedCounts.story > 0) {
+      assert.equal(initial.story > 0, true);
+      assert.equal(initial.storiesHaveVolatilityScore, true);
+      assert.equal(initial.storiesHaveAvgChange, true);
+    }
+    assert.equal(initial.storiesHaveSwingChange, false);
+    assert.equal(initial.dailyHasTopDailyMover, true);
+    assert.equal(initial.dailyHasWidestRange, true);
+    assert.equal(initial.dailyHasLeadLabel, false);
+    assert.equal(initial.dailyHasStandalonePeakLabel, false);
+    assert.equal(initial.hasOldMarketStoryContinue, false);
+    if (initial.story > feedCounts.story) {
+      assert.equal(initial.hasMarketStoryContinues, true);
+    }
+    assert.equal(initial.storiesHaveSources, false);
     assert.equal(initial.feedEntries >= 1, true);
     if (feedCounts.dayPosts > 1) {
       assert.equal(
