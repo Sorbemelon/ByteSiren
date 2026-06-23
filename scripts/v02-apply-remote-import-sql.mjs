@@ -105,14 +105,13 @@ async function loadPlan(dir) {
 
 function runWranglerStatement({ database, statement }) {
   return new Promise((resolve) => {
-    const executable =
-      process.platform === "win32" ? "corepack.cmd" : "corepack";
+    const workerDir = path.resolve("apps/worker");
+    const wranglerScript = path.join(
+      workerDir,
+      "node_modules/wrangler/bin/wrangler.js",
+    );
     const args = [
-      "pnpm",
-      "--filter",
-      "@bytesiren/worker",
-      "exec",
-      "wrangler",
+      wranglerScript,
       "d1",
       "execute",
       database,
@@ -122,8 +121,8 @@ function runWranglerStatement({ database, statement }) {
       statement,
     ];
 
-    const child = spawn(executable, args, {
-      cwd: process.cwd(),
+    const child = spawn(process.execPath, args, {
+      cwd: workerDir,
       shell: false,
       windowsHide: true,
     });
