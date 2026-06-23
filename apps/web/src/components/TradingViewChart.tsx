@@ -338,6 +338,31 @@ function colorForV02Highlight(highlight: ChartHighlightViewV02): string {
   return highlight.selected ? "#67e8f9" : "#22d3ee";
 }
 
+function isDirectionalSignalHighlight(
+  highlight: ChartHighlightViewV02,
+): boolean {
+  if (highlight.itemType !== "signal_event") return false;
+
+  return (
+    highlight.direction === "observed_down" ||
+    highlight.direction === "observed_up" ||
+    highlight.direction?.endsWith("_down") === true ||
+    highlight.direction?.endsWith("_up") === true
+  );
+}
+
+function alphaForV02Highlight(highlight: ChartHighlightViewV02): number {
+  if (isDirectionalSignalHighlight(highlight)) {
+    if (highlight.selected) return 0.38;
+    if (highlight.dimmed) return 0.075;
+    return 0.18;
+  }
+
+  if (highlight.selected) return 0.26;
+  if (highlight.dimmed) return 0.045;
+  return 0.1;
+}
+
 function v02HighlightLayer(highlight: ChartHighlightViewV02): number {
   if (highlight.itemType === "signal_event") return 30;
   if (highlight.itemType === "daily_overview") return 20;
@@ -399,7 +424,7 @@ function v02WindowOverlays(
         left,
         width,
         color,
-        alpha: highlight.selected ? 0.26 : highlight.dimmed ? 0.045 : 0.1,
+        alpha: alphaForV02Highlight(highlight),
         selected: highlight.selected,
         highlight,
       } satisfies V02WindowOverlay;
