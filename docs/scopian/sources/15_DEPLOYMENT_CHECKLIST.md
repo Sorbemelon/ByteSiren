@@ -439,7 +439,13 @@ It writes reset SQL to a temporary `.sql` file and runs Wrangler with `d1 execut
 
 Do not enable v0.2 production flags until the local smoke report counts and any Daily Overview mismatch analysis are understood.
 
-## I. SEO asset note
+## I. v0.2 production cutover rehearsal
+
+Before any remote v0.2 migration, production D1 write, production backfill, live v0.2 Claude run, Pages cutover, or public `FEED_VERSION=v02` switch, use `17_V02_PRODUCTION_CUTOVER_REHEARSAL_PLAN.md` as the tracked owner-review checklist.
+
+That plan preserves v0.1 as the rollback path, requires backup/snapshot evidence before remote mutation, keeps Market Story deterministic-only, keeps Audit Events hidden from the public feed, and separates rehearsal/no-public-switch, temporary smoke window, and full cutover modes.
+
+## J. SEO asset note
 
 Create these later using the ByteSiren full logo:
 

@@ -290,6 +290,7 @@ If an existing Daily Overview row has a terminal Claude status, row generation s
 - v0.2I5C frontend chart/feed selection: connect v0.2 feed sections to chart highlights, chart highlight clicks back to feed selection, and source chips for Claude-backed items only.
 - v0.2I6A local/protected backfill smoke tooling: run local candle import, protected v0.2 detector/story/daily pipeline, v0.2 feed read checks, and frontend real-API smoke against local Worker/D1 without remote writes or live Claude.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
+- v0.2I7A production cutover rehearsal plan: create the tracked remote rehearsal and execution plan only, preserving v0.1 rollback and avoiding remote writes, deploys, live Claude, and production flag changes.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
 - v0.2I8 cleanup experiments: untrack local experiment artifacts after production integration is complete.
 
@@ -525,6 +526,8 @@ v0.2I6B2 aligns real-smoke UI labels:
 - Daily Overview displays `Top daily mover` and `Widest range` as day-level labels
 - cross-day Market Story continuation copy is `Market Story continues`
 - chart band opacity, density, ordering, and selection behavior remain unchanged in this label pass
+
+v0.2I7A adds `17_V02_PRODUCTION_CUTOVER_REHEARSAL_PLAN.md` as the tracked source for production rehearsal and future owner-approved execution. It documents backup/snapshot strategy, remote migration order, v0.2 data refresh, controlled v0.2 Claude sampling, frontend cutover, rollback, go/no-go criteria, monitoring, risks, and open questions. The phase does not execute remote D1 writes, deploys, live Claude calls, production flag changes, or data clearing.
 
 v0.2I6A does not:
 
