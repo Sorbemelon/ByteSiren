@@ -650,12 +650,8 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
     ["daily_overview", "signal_event"],
   );
   assert.equal(
-    defaultMarkers.some((marker) => marker.selected),
-    false,
-  );
-  assert.equal(
-    defaultMarkers.some((marker) => marker.itemId === story.id),
-    false,
+    defaultMarkers.every((marker) => marker.selected === false),
+    true,
   );
 
   const signalMarkers = buildChartSourceMarkersV02(
@@ -667,12 +663,15 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
       day.id,
     ),
   );
-  assert.equal(signalMarkers.length, 1);
-  assert.equal(signalMarkers[0].itemType, "signal_event");
-  assert.equal(signalMarkers[0].label, "Likely");
-  assert.equal(signalMarkers[0].selected, true);
+  const selectedSignalMarker = signalMarkers.find(
+    (marker) => marker.itemId === signal.id,
+  );
+  assert.equal(signalMarkers.length, 2);
+  assert.equal(selectedSignalMarker?.itemType, "signal_event");
+  assert.equal(selectedSignalMarker?.label, "Likely");
+  assert.equal(selectedSignalMarker?.selected, true);
   assert.equal(
-    signalMarkers[0].url,
+    selectedSignalMarker?.url,
     "https://www.reuters.com/markets/2026/06/20/signal-fixture/",
   );
 
@@ -685,9 +684,13 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
       day.id,
     ),
   );
-  assert.equal(dailyMarkers[0].itemType, "daily_overview");
-  assert.equal(dailyMarkers[0].label, "Main");
-  assert.equal(dailyMarkers[0].selected, true);
+  const selectedDailyMarker = dailyMarkers.find(
+    (marker) => marker.itemId === daily.id,
+  );
+  assert.equal(dailyMarkers.length, 2);
+  assert.equal(selectedDailyMarker?.itemType, "daily_overview");
+  assert.equal(selectedDailyMarker?.label, "Main");
+  assert.equal(selectedDailyMarker?.selected, true);
 
   const storyMarkers = buildChartSourceMarkersV02(
     feed,
@@ -698,7 +701,203 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
       day.id,
     ),
   );
-  assert.deepEqual(storyMarkers, []);
+  assert.equal(storyMarkers.length, 2);
+  assert.equal(
+    storyMarkers.some((marker) => marker.itemType === "market_story"),
+    false,
+  );
+  assert.equal(
+    storyMarkers.every((marker) => marker.selected === false),
+    true,
+  );
+});
+
+test("v0.2 chart source markers de-duplicate exact URLs across Claude-backed sections", () => {
+  const duplicateFeed = structuredClone(v02Feed);
+  const signal = duplicateFeed.day_groups[0].items.find(
+    (item) => item.item_type === "signal_event",
+  );
+  const daily = duplicateFeed.day_groups[0].items.find(
+    (item) => item.item_type === "daily_overview",
+  );
+
+  signal.sources = [
+    ...signal.sources,
+    {
+      publisher: "Reuters",
+      title: "Signal fixture duplicate",
+      url: "https://www.reuters.com/markets/2026/06/20/signal-fixture/",
+      published_at: "2026-06-20T15:45:00.000Z",
+      tag: "Likely cause source",
+      used_for: "likely_cause",
+    },
+    {
+      publisher: "CoinDesk",
+      title: "Signal backdrop",
+      url: "https://www.coindesk.com/markets/2026/06/20/signal-backdrop/",
+      published_at: "2026-06-20T14:30:00.000Z",
+      tag: "Backdrop source",
+      used_for: "backdrop",
+    },
+    {
+      publisher: "Cointelegraph",
+      title: "Signal price check",
+      url: "https://cointelegraph.com/news/signal-price-check",
+      published_at: "2026-06-20T16:05:00.000Z",
+      tag: "Price check source",
+      used_for: "price_check",
+    },
+  ];
+  daily.sources = [
+    ...daily.sources,
+    {
+      publisher: "CoinDesk",
+      title: "Daily fixture duplicate",
+      url: "https://www.coindesk.com/markets/2026/06/20/daily-fixture/",
+      published_at: "2026-06-20T21:00:00.000Z",
+      tag: "Main daily context source",
+      used_for: "daily_context",
+    },
+    {
+      publisher: "Reuters",
+      title: "Daily references the signal article",
+      url: "https://www.reuters.com/markets/2026/06/20/signal-fixture/",
+      published_at: "2026-06-20T15:45:00.000Z",
+      tag: "Supporting daily source",
+      used_for: "supporting_daily",
+    },
+    {
+      publisher: "The Block",
+      title: "Daily support",
+      url: "https://www.theblock.co/post/daily-fixture-support",
+      published_at: "2026-06-20T18:30:00.000Z",
+      tag: "Supporting daily source",
+      used_for: "supporting_daily",
+    },
+  ];
+
+  const feed = normalizeFeedV02(duplicateFeed);
+  const day = feed.dayPosts[0];
+  const [dailySection, , signalSection] = day.sections;
+  const defaultMarkers = buildChartSourceMarkersV02(
+    feed,
+    EMPTY_FEED_SELECTION_V02,
+  );
+  const signalMarkers = buildChartSourceMarkersV02(
+    feed,
+    toggleFeedSelectionV02(
+      EMPTY_FEED_SELECTION_V02,
+      signalSection.itemType,
+      signalSection.id,
+      day.id,
+    ),
+  );
+
+  assert.equal(defaultMarkers.length, 5);
+  assert.equal(new Set(defaultMarkers.map((marker) => marker.url)).size, 5);
+  assert.equal(
+    defaultMarkers.find((marker) => marker.url.endsWith("/signal-fixture/"))
+      ?.itemType,
+    "signal_event",
+  );
+  assert.equal(signalMarkers.length, 5);
+  assert.deepEqual(
+    signalMarkers
+      .filter((marker) => marker.itemId === signalSection.id)
+      .map((marker) => marker.label),
+    ["Likely", "Backdrop", "Price"],
+  );
+  assert.equal(new Set(signalMarkers.map((marker) => marker.url)).size, 5);
+  assert.equal(
+    signalMarkers.filter((marker) => marker.itemId === signalSection.id).length,
+    3,
+  );
+  assert.equal(
+    signalMarkers.filter((marker) => marker.itemId === dailySection.id).length,
+    2,
+  );
+});
+
+test("v0.2 chart source markers keep source timestamps stable when available", () => {
+  const timestampFeed = structuredClone(v02Feed);
+  const signal = timestampFeed.day_groups[0].items.find(
+    (item) => item.item_type === "signal_event",
+  );
+  const daily = timestampFeed.day_groups[0].items.find(
+    (item) => item.item_type === "daily_overview",
+  );
+
+  signal.sources = [
+    {
+      publisher: "Reuters",
+      title: "Post-window signal article",
+      url: "https://www.reuters.com/markets/2026/06/20/post-window-signal/",
+      published_at: "2026-06-20T18:15:00.000Z",
+      tag: "Likely cause source",
+      used_for: "likely_cause",
+    },
+  ];
+  daily.sources = [
+    {
+      publisher: "CoinDesk",
+      title: "Daily article",
+      url: "https://www.coindesk.com/markets/2026/06/20/daily-fixture/",
+      published_at: "2026-06-20T21:00:00.000Z",
+      tag: "Main daily context source",
+      used_for: "daily_context",
+    },
+    {
+      publisher: "Reuters",
+      title: "Daily references same post-window article",
+      url: "https://www.reuters.com/markets/2026/06/20/post-window-signal/",
+      published_at: "2026-06-20T19:30:00.000Z",
+      tag: "Supporting daily source",
+      used_for: "supporting_daily",
+    },
+  ];
+
+  const feed = normalizeFeedV02(timestampFeed);
+  const day = feed.dayPosts[0];
+  const [dailySection, , signalSection] = day.sections;
+  const defaultMarkers = buildChartSourceMarkersV02(
+    feed,
+    EMPTY_FEED_SELECTION_V02,
+  );
+  const dailySelectedMarkers = buildChartSourceMarkersV02(
+    feed,
+    toggleFeedSelectionV02(
+      EMPTY_FEED_SELECTION_V02,
+      dailySection.itemType,
+      dailySection.id,
+      day.id,
+    ),
+  );
+  const signalSelectedMarkers = buildChartSourceMarkersV02(
+    feed,
+    toggleFeedSelectionV02(
+      EMPTY_FEED_SELECTION_V02,
+      signalSection.itemType,
+      signalSection.id,
+      day.id,
+    ),
+  );
+  const signalArticleUrl =
+    "https://www.reuters.com/markets/2026/06/20/post-window-signal/";
+
+  assert.equal(
+    defaultMarkers.find((marker) => marker.url === signalArticleUrl)?.time,
+    "2026-06-20T18:15:00.000Z",
+  );
+  assert.equal(
+    dailySelectedMarkers.find((marker) => marker.url === signalArticleUrl)
+      ?.time,
+    "2026-06-20T18:15:00.000Z",
+  );
+  assert.equal(
+    signalSelectedMarkers.find((marker) => marker.url === signalArticleUrl)
+      ?.time,
+    "2026-06-20T18:15:00.000Z",
+  );
 });
 
 test("Market Story normalized section strips Claude and source material", () => {

@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-23T14:03:35+07:00
+generated_at: 2026-06-23T15:52:52+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -13,10 +13,10 @@ canonical_inputs:
   - source_registry.yml
 input_hashes:
   view: sha256:8c6b400b796c
-  sources: sha256:8e64b12fe565
+  sources: sha256:a2f39e5aca8f
   buffer: sha256:11e7a1a3d36e
   context: sha256:5ef45bc1a5d7
-  registry: sha256:96268507c30c
+  registry: sha256:4262924275b7
 ---
 
 # Generated Scope View
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-23T14:03:35+07:00
+- generated_at: 2026-06-23T15:52:52+07:00
 
 ## Selected Sources
 
@@ -51,8 +51,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md (sha256:f59fa372b1951fe6b9d256070b31d84f906321a750a31e6a428918fe3eee6803)
 - docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5)
 - PRODUCT.md (sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd)
-- docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:1000b32461b419fd321537987a9d618c466ac58e4e259d43ca6133fbd3c074e7)
-- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:cc346f8fdb0f115aa003d5ceb9d5e7e86f97214c10f09f7fa96ffe8f05b9f2c0)
+- docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:d87d0914f4930381fdb2164dc3b1dd0d77294e10233c583fbc33c30540426ee4)
+- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:304b7a42dbf65b00dee636a7a102ff8d71fed729d02914327c401fcb4b18d556)
 
 ## Approved Buffer Summary
 
@@ -193,15 +193,17 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-likely-out-of-scope-public-data-exposure-20bf8dc1 | likely_out_of_scope | Public data exposure | docs/scopian/sources/05_DATA_MODEL_D1_RETENTION.md#public-data-exposure | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-purpose-52ad4e11 | likely_out_of_scope | Purpose | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#purpose | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-signal-event-cfe1fb19 | likely_out_of_scope | Signal Event | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#signal-event | none | not_checked_in_generated_view |
+| ITEM-likely-out-of-scope-source-display-and-chart-markers-7a05a4b2 | likely_out_of_scope | Source Display and Chart Markers | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#source-display-and-chart-markers | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-ui-gate-a5794ac8 | likely_out_of_scope | UI gate | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#ui-gate | none | not_checked_in_generated_view |
+| ITEM-conflict-detected-signal-event-source-timing-catal-da7c626e | conflict_detected | Signal Event Source Timing: catalyst window start = Signal Event evidence window start minus 6 hours; catalyst window end = Signal Event evidence window end ... | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#signal-event-source-timing | none | not_checked_in_generated_view |
 
 ## Coverage Snapshot
 
 - likely_in_scope: 24
 - allowed_with_limits: 82
-- likely_out_of_scope: 23
+- likely_out_of_scope: 24
 - decision_required: 0
-- conflict_detected: 0
+- conflict_detected: 1
 - insufficient_evidence: 0
 
 ## PM Summary
@@ -210,21 +212,21 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - template_only: true
 - correctness_claim: false
 - decision_required_items: 0
-- out_of_scope_items: 23
+- out_of_scope_items: 24
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-23T14:03:35+07:00
+- generated_refresh: 2026-06-23T15:52:52+07:00
 - selected_sources: 18
 - approved_buffer_records: 4
 
 ## Freshness Metadata
 
 - view: sha256:8c6b400b796c
-- sources: sha256:8e64b12fe565
+- sources: sha256:a2f39e5aca8f
 - buffer: sha256:11e7a1a3d36e
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:96268507c30c
+- registry: sha256:4262924275b7
 
 ## Refresh Instructions
 

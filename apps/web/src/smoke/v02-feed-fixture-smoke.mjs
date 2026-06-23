@@ -341,7 +341,7 @@ const fixtureFeed = {
               publisher: "Cointelegraph",
               title: "Crypto price check",
               url: "https://cointelegraph.com/news/crypto-price-check",
-              published_at: "2026-06-20T16:05:00.000Z",
+              published_at: "2026-06-20T15:40:00.000Z",
               tag: "Price check source",
               used_for: "price_check",
             },
@@ -801,6 +801,7 @@ async function runBrowserSmoke() {
         dailyHasLeadLabel: /(^|\\n)\\s*Lead\\s*:/.test(daily),
         dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(daily),
         hasOldMarketStoryContinue: body.includes('Market Story (Continue)'),
+        hasWaitingForClaude: body.includes('Waiting for Claude'),
         sectionCount: document.querySelectorAll('[data-testid="feed-section-v02"]').length,
         dayPostCount: document.querySelectorAll('[data-testid="day-post-v02"]').length,
         globalLabel: document.querySelector('[data-testid="feed-v02-global-toggle"]')?.textContent.trim(),
@@ -837,6 +838,7 @@ async function runBrowserSmoke() {
     assert.equal(initial.dailyHasLeadLabel, false);
     assert.equal(initial.dailyHasStandalonePeakLabel, false);
     assert.equal(initial.hasOldMarketStoryContinue, false);
+    assert.equal(initial.hasWaitingForClaude, false);
     assert.equal(initial.dailySource, true, "Daily source chip should render");
     assert.equal(
       initial.signalSource,
@@ -908,9 +910,48 @@ async function runBrowserSmoke() {
       "https://www.reuters.com/markets/2026/06/20/crypto-market-update/",
     );
 
+    await click(
+      session,
+      '[data-testid="source-chip-overflow-v02"][data-source-row-item-id="sig_fixture"]',
+    );
     await waitForCondition(
       session,
-      `document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-source-marker-count') === '3' && document.querySelectorAll('[data-testid="chart-v02-source-marker"][data-item-id="sig_fixture"]').length === 3`,
+      `(() => {
+        const signal = document.querySelector('[data-testid="feed-section-v02"][data-section-id="sig_fixture"]');
+        return signal?.getAttribute('data-selected') === 'true' && signal.querySelectorAll('a[href]').length === 3;
+      })()`,
+    );
+
+    await waitForCondition(
+      session,
+      `document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-source-marker-count') === '5' && document.querySelectorAll('[data-testid="chart-v02-source-marker"][data-item-id="sig_fixture"]').length === 3`,
+    );
+    const sourceMarkerLayout = await session.evaluate(`(() => {
+      const markers = [...document.querySelectorAll('[data-testid="chart-v02-source-marker"]')];
+      return markers.map((marker) => ({
+        left: marker.getAttribute('data-marker-left'),
+        top: marker.getAttribute('data-marker-top'),
+        url: marker.getAttribute('data-source-url'),
+        selected: marker.getAttribute('data-selected'),
+        muted: marker.getAttribute('data-muted'),
+      }));
+    })()`);
+    assert.equal(sourceMarkerLayout.length, 5);
+    const sameTimeReuters = sourceMarkerLayout.find((marker) =>
+      marker.url.includes("crypto-market-update"),
+    );
+    const sameTimePrice = sourceMarkerLayout.find((marker) =>
+      marker.url.includes("crypto-price-check"),
+    );
+    assert.equal(sameTimeReuters?.left, sameTimePrice?.left);
+    assert.notEqual(sameTimeReuters?.top, sameTimePrice?.top);
+    assert.equal(sameTimeReuters?.selected, "true");
+    assert.equal(sameTimeReuters?.muted, "false");
+    assert.equal(
+      sourceMarkerLayout
+        .filter((marker) => marker.selected === "false")
+        .every((marker) => marker.muted === "true"),
+      true,
     );
     await click(
       session,
@@ -1000,6 +1041,18 @@ async function runBrowserSmoke() {
       session,
       `document.querySelector('[data-testid="feed-section-toggle-v02"][data-section-id="sig_fixture"]')?.textContent.includes('Hide') && document.body.innerText.includes('Change') && document.body.innerText.includes('Peak 15m') && document.body.innerText.includes('Volume x') && document.body.innerText.includes('Range Position')`,
     );
+    const expandedSignal = await session.evaluate(`(() => {
+      const signal = document.querySelector('[data-testid="feed-section-v02"][data-section-id="sig_fixture"]');
+      const text = signal?.innerText ?? "";
+      return {
+        hasContextDetails: text.includes('Context Details'),
+        hasDuplicateSourceBlock: (text.match(/Sources/g) ?? []).length > 1,
+        sourceLinkCount: signal?.querySelectorAll('a[href]').length ?? 0,
+      };
+    })()`);
+    assert.equal(expandedSignal.hasContextDetails, false);
+    assert.equal(expandedSignal.hasDuplicateSourceBlock, false);
+    assert.equal(expandedSignal.sourceLinkCount, 3);
 
     await session.send("Emulation.setDeviceMetricsOverride", {
       width: 390,

@@ -540,6 +540,9 @@ export async function runRealApiSmoke(options) {
         dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(daily),
         hasMarketStoryContinues: stories.includes('Market Story continues'),
         hasOldMarketStoryContinue: stories.includes('Market Story (Continue)'),
+        hasWaitingForClaude: body.includes('Waiting for Claude'),
+        hasContextDetails: body.includes('Context Details'),
+        hasContextSummary: body.includes('Context summary'),
         storyHasSources: story.includes('Sources') || story.includes('Public Context') || story.includes('Focused Cause') || story.includes('Likely Cause') || story.includes('Market Backdrop') || story.includes('No Clear Cause') || story.includes('Claude Limited'),
         storiesHaveSources: stories.includes('Sources') || stories.includes('Public Context') || stories.includes('Focused Cause') || stories.includes('Likely Cause') || stories.includes('Market Backdrop') || stories.includes('No Clear Cause') || stories.includes('Claude Limited'),
         feedEntries: performance.getEntriesByType('resource').map((entry) => entry.name).filter((name) => name.includes('/api/intelligence/feed')).length,
@@ -559,6 +562,9 @@ export async function runRealApiSmoke(options) {
     assert.equal(initial.dailyHasLeadLabel, false);
     assert.equal(initial.dailyHasStandalonePeakLabel, false);
     assert.equal(initial.hasOldMarketStoryContinue, false);
+    assert.equal(initial.hasWaitingForClaude, false);
+    assert.equal(initial.hasContextDetails, false);
+    assert.equal(initial.hasContextSummary, false);
     if (initial.story > feedCounts.story) {
       assert.equal(initial.hasMarketStoryContinues, true);
     }

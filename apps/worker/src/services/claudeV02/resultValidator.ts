@@ -70,6 +70,24 @@ function nullableString(value: unknown): string | null {
   return typeof value === "string" ? value.trim() : null;
 }
 
+function optionalStringField(
+  input: Record<string, unknown>,
+  fieldName: string,
+): string | null {
+  const value = input[fieldName];
+
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    throw new ClaudeResultValidationErrorV02(`${fieldName} must be a string.`);
+  }
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 function optionalStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -142,6 +160,7 @@ function sources(
       published_at: nullableString(source.published_at),
       tag: tag as ClaudeOutputSourceV02["tag"],
       why_relevant: stringField(source, "why_relevant"),
+      catalyst_time_utc: nullableString(source.catalyst_time_utc),
     };
   });
 }
@@ -232,7 +251,7 @@ export function validateSignalEventClaudeResultV02(
     confidence: confidence(stringField(input, "confidence")),
     headline: stringField(input, "headline"),
     collapsed_summary: stringField(input, "collapsed_summary"),
-    context_details: stringField(input, "context_details"),
+    context_details: optionalStringField(input, "context_details"),
     why_this_classification: stringField(input, "why_this_classification"),
     source_support: sourceSupport(stringField(input, "source_support")),
     source_timing_alignment: sourceTiming(
@@ -280,7 +299,7 @@ export function validateDailyOverviewClaudeResultV02(
     confidence: confidence(stringField(input, "confidence")),
     headline: stringField(input, "headline"),
     collapsed_summary: stringField(input, "collapsed_summary"),
-    context_details: stringField(input, "context_details"),
+    context_details: optionalStringField(input, "context_details"),
     market_tone_summary: stringField(input, "market_tone_summary"),
     notable_drivers: drivers,
     sources: sources(input.sources, DAILY_SOURCE_TAGS),

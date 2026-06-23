@@ -226,6 +226,7 @@ function signalResult(
               publisher: "Reuters",
               url: sourceUrl,
               published_at: "2026-06-19T14:30:00.000Z",
+              catalyst_time_utc: "2026-06-19T14:05:00.000Z",
               tag,
               why_relevant: "Time aligned.",
             },
@@ -581,6 +582,37 @@ test("source policy downgrades Signal cause labels when accepted cause sources d
   assert.equal(tables.claude_briefs_v02[0].status, "no_clear_cause");
   assert.equal(tables.claude_briefs_v02[0].public_label, "No Clear Cause");
   assert.equal(tables.source_references_v02[0].accepted, 0);
+});
+
+test("source policy downgrades stale Signal cause sources outside the 6-hour event window", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+  });
+  const staleResult = signalResult("Focused Cause");
+  staleResult.sources[0].published_at = "2026-06-19T02:00:00.000Z";
+  staleResult.sources[0].catalyst_time_utc = "2026-06-19T02:00:00.000Z";
+  staleResult.sources[0].why_relevant =
+    "Older macro context that does not align with the Signal Event window.";
+  const mock = new MockClaudeClient([okResult(staleResult)]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+    }),
+    { now, client: mock },
+  );
+
+  assert.equal(result.context_only_count, 1);
+  assert.equal(tables.claude_briefs_v02[0].status, "context_only");
+  assert.equal(tables.claude_briefs_v02[0].public_label, "Market Backdrop");
+  assert.equal(tables.source_references_v02[0].accepted, 1);
+  assert.equal(tables.source_references_v02[0].source_role, "Backdrop source");
+  assert.match(
+    tables.source_references_v02[0].metadata_json,
+    /cause_source_downgraded_outside_6h_event_window/,
+  );
 });
 
 test("invalid v0.2 Claude JSON fails safely without fake brief or source rows", async () => {

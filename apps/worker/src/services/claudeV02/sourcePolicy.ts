@@ -61,6 +61,12 @@ const DAILY_SOURCE_TAGS = new Set<DailyOverviewSourceTagV02>([
   "Price check source",
 ]);
 
+const SIGNAL_CAUSE_TAGS = new Set<SignalEventSourceTagV02>([
+  "Focused catalyst source",
+  "Likely cause source",
+]);
+const SIGNAL_CAUSE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
+
 function assertClaudeBackedTarget(
   targetType: string,
 ): asserts targetType is ClaudeTargetTypeV02 {
@@ -99,6 +105,69 @@ function usedForFromTag(tag: SourceTagV02): RawClaudeSource["used_for"] {
   return "backdrop";
 }
 
+function timeValue(value: string | null | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function inWindow(value: number, start: number, end: number): boolean {
+  return value >= Math.min(start, end) && value <= Math.max(start, end);
+}
+
+function signalSourceRoleAfterTiming(input: {
+  tag: SourceTagV02;
+  published_at: string | null;
+  catalyst_time_utc?: string | null;
+  signalEventWindow?: { start: string; end: string } | null;
+}): {
+  tag: SourceTagV02;
+  timingPolicyNote: string | null;
+} {
+  if (!SIGNAL_CAUSE_TAGS.has(input.tag as SignalEventSourceTagV02)) {
+    return { tag: input.tag, timingPolicyNote: null };
+  }
+
+  if (!input.signalEventWindow) {
+    return { tag: input.tag, timingPolicyNote: null };
+  }
+
+  const eventStart = timeValue(input.signalEventWindow.start);
+  const eventEnd = timeValue(input.signalEventWindow.end);
+
+  if (eventStart === null || eventEnd === null) {
+    return { tag: input.tag, timingPolicyNote: null };
+  }
+
+  const catalystStart = eventStart - SIGNAL_CAUSE_LOOKBACK_MS;
+  const catalystEnd = eventEnd;
+  const catalystTime = timeValue(input.catalyst_time_utc);
+
+  if (
+    catalystTime !== null &&
+    inWindow(catalystTime, catalystStart, catalystEnd)
+  ) {
+    return { tag: input.tag, timingPolicyNote: "catalyst_time_in_window" };
+  }
+
+  const publishedAt = timeValue(input.published_at);
+
+  if (
+    publishedAt !== null &&
+    inWindow(publishedAt, catalystStart, catalystEnd)
+  ) {
+    return { tag: input.tag, timingPolicyNote: "published_time_in_window" };
+  }
+
+  return {
+    tag: "Backdrop source",
+    timingPolicyNote: "cause_source_downgraded_outside_6h_event_window",
+  };
+}
+
 export function toSourceReferenceInputsV02(input: {
   target_type: string;
   target_id: string;
@@ -107,6 +176,7 @@ export function toSourceReferenceInputsV02(input: {
   eventDate?: string;
   blockedDomains?: string[];
   includeRejected?: boolean;
+  signalEventWindow?: { start: string; end: string } | null;
 }): SourceReferenceInputV02[] {
   const targetType = input.target_type;
   assertClaudeBackedTarget(targetType);
@@ -116,18 +186,32 @@ export function toSourceReferenceInputsV02(input: {
       throw new Error(`Unsupported source tag ${source.tag} for ${targetType}`);
     }
 
+    const timing =
+      targetType === "signal_event_v02"
+        ? signalSourceRoleAfterTiming({
+            tag: source.tag,
+            published_at: source.published_at,
+            catalyst_time_utc: source.catalyst_time_utc,
+            signalEventWindow: input.signalEventWindow,
+          })
+        : { tag: source.tag, timingPolicyNote: null };
+
     return {
       publisher: source.publisher,
       title: source.title,
       url: source.url,
       published_at: source.published_at,
-      used_for: usedForFromTag(source.tag),
+      used_for: usedForFromTag(timing.tag),
       source_strength: "acceptable",
-      _source_role: source.tag,
+      _source_role: timing.tag,
       _why_relevant: source.why_relevant,
+      _catalyst_time_utc: source.catalyst_time_utc ?? null,
+      _timing_policy_note: timing.timingPolicyNote,
     } as RawClaudeSource & {
       _source_role: SourceTagV02;
       _why_relevant: string;
+      _catalyst_time_utc: string | null;
+      _timing_policy_note: string | null;
     };
   });
   const filtered = filterSourceLinks(rawSources, {
@@ -156,6 +240,8 @@ export function toSourceReferenceInputsV02(input: {
       rejection_reason: null,
       metadata: {
         why_relevant: raw?._why_relevant ?? "",
+        catalyst_time_utc: raw?._catalyst_time_utc ?? null,
+        timing_policy_note: raw?._timing_policy_note ?? null,
       },
     } satisfies AcceptedSourceReferenceV02;
   });

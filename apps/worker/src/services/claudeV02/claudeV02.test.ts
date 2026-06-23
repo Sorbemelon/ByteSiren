@@ -147,6 +147,7 @@ function validSignalResult() {
         publisher: "Reuters",
         url: "https://www.reuters.com/markets/2026/06/19/context/",
         published_at: "2026-06-19T14:20:00.000Z",
+        catalyst_time_utc: "2026-06-19T14:05:00.000Z",
         tag: "Focused catalyst source",
         why_relevant: "Time-aligned catalyst context.",
       },
@@ -255,12 +256,19 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
   assert.match(signalPrompt, /Market Backdrop/);
   assert.match(signalPrompt, /No Clear Cause/);
   assert.match(signalPrompt, /Claude Limited/);
+  assert.match(signalPrompt, /6 hours before the evidence window start/);
+  assert.match(signalPrompt, /published after the Signal Event/i);
+  assert.match(signalPrompt, /catalyst_time_utc/);
   assert.match(signalPrompt, /chart context only as descriptive evidence/i);
+  assert.match(signalPrompt, /collapsed_summary is the main public brief/);
+  assert.doesNotMatch(signalPrompt, /"context_details"/);
   assert.match(signalPrompt, /Return JSON only/);
   assert.match(dailyPrompt, /Daily Context/);
   assert.match(dailyPrompt, /Quiet Day/);
   assert.match(dailyPrompt, /No Major Driver/);
   assert.match(dailyPrompt, /Do not use Signal Event cause labels/);
+  assert.match(dailyPrompt, /collapsed_summary is the main public brief/);
+  assert.doesNotMatch(dailyPrompt, /"context_details"/);
   assert.match(dailyPrompt, /Do not provide trading advice/);
 });
 
@@ -283,6 +291,22 @@ test("v0.2 validators accept Signal and Daily results but reject crossed labels 
     }),
   );
   assert.throws(() => validateClaudeResultV02({ mode: "market_story" }));
+});
+
+test("v0.2 validators allow omitted long context details", () => {
+  const signal = validSignalResult();
+  const daily = validDailyResult();
+  delete (signal as { context_details?: string }).context_details;
+  delete (daily as { context_details?: string }).context_details;
+
+  assert.equal(
+    validateSignalEventClaudeResultV02(signal).context_details,
+    null,
+  );
+  assert.equal(
+    validateDailyOverviewClaudeResultV02(daily).context_details,
+    null,
+  );
 });
 
 test("v0.2 Signal Event cause labels require matching source tags", () => {
@@ -326,10 +350,15 @@ test("v0.2 source policy rejects root URLs and disallows Market Story targets", 
     target_type: "signal_event_v02",
     target_id: "sig_public",
     sources: signalResult.sources,
+    signalEventWindow: {
+      start: "2026-06-19T14:00:00.000Z",
+      end: "2026-06-19T14:45:00.000Z",
+    },
   });
 
   assert.equal(result.length, 1);
   assert.equal(result[0].accepted, true);
+  assert.equal(result[0].source_role, "Focused catalyst source");
   assert.equal(
     result[0].url,
     "https://www.reuters.com/markets/2026/06/19/context/",
@@ -359,4 +388,72 @@ test("v0.2 source policy rejects root URLs and disallows Market Story targets", 
       sources: [],
     }),
   );
+});
+
+test("v0.2 Signal source policy downgrades stale cause sources but allows aligned catalyst time", () => {
+  const window = {
+    start: "2026-06-19T14:00:00.000Z",
+    end: "2026-06-19T14:45:00.000Z",
+  };
+  const stale = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    sources: [
+      {
+        title: "Old catalyst recap",
+        publisher: "Reuters",
+        url: "https://www.reuters.com/markets/2026/06/19/old-catalyst-recap/",
+        published_at: "2026-06-19T02:00:00.000Z",
+        catalyst_time_utc: "2026-06-19T02:00:00.000Z",
+        tag: "Likely cause source",
+        why_relevant: "Older macro context outside the catalyst window.",
+      },
+    ],
+  });
+  const postEventArticle = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    sources: [
+      {
+        title: "Post-event catalyst report",
+        publisher: "Reuters",
+        url: "https://www.reuters.com/markets/2026/06/19/post-event-catalyst/",
+        published_at: "2026-06-19T18:00:00.000Z",
+        catalyst_time_utc: "2026-06-19T13:30:00.000Z",
+        tag: "Focused catalyst source",
+        why_relevant:
+          "Published later, but describes a catalyst inside the 6-hour event window.",
+      },
+    ],
+  });
+  const priceCheck = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    sources: [
+      {
+        title: "Price recap",
+        publisher: "CoinDesk",
+        url: "https://www.coindesk.com/markets/2026/06/19/price-recap/",
+        published_at: "2026-06-19T14:20:00.000Z",
+        tag: "Price check source",
+        why_relevant: "Price confirmation only.",
+      },
+    ],
+  });
+
+  assert.equal(stale[0].accepted, true);
+  assert.equal(stale[0].source_role, "Backdrop source");
+  assert.equal(
+    stale[0].metadata.timing_policy_note,
+    "cause_source_downgraded_outside_6h_event_window",
+  );
+  assert.equal(postEventArticle[0].source_role, "Focused catalyst source");
+  assert.equal(
+    postEventArticle[0].metadata.timing_policy_note,
+    "catalyst_time_in_window",
+  );
+  assert.equal(priceCheck[0].source_role, "Price check source");
 });

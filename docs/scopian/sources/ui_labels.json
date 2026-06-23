@@ -82,7 +82,7 @@
     "context_only": "Market Backdrop",
     "none_found": "No Clear Cause",
     "analysis_limited": "Claude Limited",
-    "queued_for_analysis": "Waiting for Claude"
+    "queued_for_analysis": "No context yet"
   },
   "daily_overview_labels_v02": [
     "Quiet Day",

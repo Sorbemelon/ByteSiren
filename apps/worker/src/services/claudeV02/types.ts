@@ -144,6 +144,7 @@ export interface ClaudeOutputSourceV02 {
   published_at: string | null;
   tag: SourceTagV02;
   why_relevant: string;
+  catalyst_time_utc?: string | null;
 }
 
 export interface SignalEventClaudeResultV02 {
@@ -154,7 +155,7 @@ export interface SignalEventClaudeResultV02 {
   confidence: ClaudeConfidenceV02;
   headline: string;
   collapsed_summary: string;
-  context_details: string;
+  context_details?: string | null;
   why_this_classification: string;
   source_support: SourceSupportV02;
   source_timing_alignment: SourceTimingAlignmentV02;
@@ -173,7 +174,7 @@ export interface DailyOverviewClaudeResultV02 {
   confidence: ClaudeConfidenceV02;
   headline: string;
   collapsed_summary: string;
-  context_details: string;
+  context_details?: string | null;
   market_tone_summary: string;
   notable_drivers: Array<{
     driver: string;

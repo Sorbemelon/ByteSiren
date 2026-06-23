@@ -157,7 +157,7 @@ const STATUS_META: Record<
   queued_for_analysis: {
     Icon: Clock,
     color: "var(--status-moving)",
-    label: "Waiting for Claude",
+    label: "No context yet",
   },
   brief_ready: {
     Icon: BadgeCheck,
@@ -808,6 +808,88 @@ function SourceChip({ source }: { source: FeedSourceV02 }) {
   );
 }
 
+function SourceChipRow({
+  sources,
+  itemId,
+  forceExpanded = false,
+  initialLimit = 2,
+}: {
+  sources: FeedSourceV02[];
+  itemId: string;
+  forceExpanded?: boolean;
+  initialLimit?: number;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const shouldShowAll = forceExpanded || showAll;
+  const visibleSources = shouldShowAll
+    ? sources
+    : sources.slice(0, initialLimit);
+  const overflowCount = Math.max(0, sources.length - visibleSources.length);
+
+  if (sources.length === 0) {
+    return (
+      <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+        No source
+      </span>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col"
+      aria-label="Accepted sources"
+      data-testid="source-chip-row-v02"
+      data-source-row-item-id={itemId}
+    >
+      {visibleSources.map((source) => (
+        <SourceChip key={source.url} source={source} />
+      ))}
+      {overflowCount > 0 && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            setShowAll(true);
+          }}
+          onKeyDown={(event) => event.stopPropagation()}
+          data-testid="source-chip-overflow-v02"
+          data-source-row-item-id={itemId}
+          aria-label={
+            "Show " +
+            overflowCount +
+            " more accepted source" +
+            (overflowCount === 1 ? "" : "s")
+          }
+          className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
+          style={{
+            borderColor: "var(--border-row)",
+            color: "var(--text-muted)",
+          }}
+        >
+          +{overflowCount}
+        </button>
+      )}
+      {showAll && !forceExpanded && sources.length > initialLimit && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            setShowAll(false);
+          }}
+          onKeyDown={(event) => event.stopPropagation()}
+          className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
+          style={{
+            borderColor: "var(--border-row)",
+            color: "var(--text-muted)",
+          }}
+        >
+          Hide
+        </button>
+      )}
+    </div>
+  );
+}
+
 function marketStoryPublicRangeContext(
   data: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -1045,20 +1127,6 @@ function StoryStructureList({
   );
 }
 
-function SourceList({ sources }: { sources: FeedSourceV02[] }) {
-  if (sources.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {sources.map((source) => (
-        <SourceChip key={source.url} source={source} />
-      ))}
-    </div>
-  );
-}
-
 function ExpandedSectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <p
@@ -1137,8 +1205,6 @@ function DailyOverviewSection({
   const summary =
     textOrNull(section.brief?.collapsed_summary) ??
     textOrNull(section.brief?.headline);
-  const visibleSources = section.sources.slice(0, 2);
-  const overflowCount = section.sources.length - visibleSources.length;
   const dailyChangeValues = numberValuesFromRecords(section.topSymbolMoves, [
     "change_pct",
     "daily_change_pct",
@@ -1157,6 +1223,20 @@ function DailyOverviewSection({
   const toneLabel = section.marketTone
     ? (toneMeta.label ?? humanize(section.marketTone))
     : null;
+  const contextStatusMeta = statusMetaFromValues(
+    section.brief?.public_label,
+    section.brief?.classification,
+    section.brief?.status,
+    section.publicContextStatus,
+  );
+  const ContextStatusIcon = contextStatusMeta.Icon;
+  const explicitContextStatusLabel =
+    textOrNull(section.brief?.public_label) ??
+    textOrNull(section.brief?.classification);
+  const contextStatusLabel =
+    explicitContextStatusLabel === "Daily Context"
+      ? null
+      : (explicitContextStatusLabel ?? contextStatusMeta.label);
   const leadMove = leadDailyMove(section);
   const widestRangeSymbol = widestDailyRangeMove(section);
   const dailyChangeStyle = {
@@ -1290,6 +1370,21 @@ function DailyOverviewSection({
       <div className="grid gap-2.5">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(132px,22%)]">
           <div className="min-w-0 space-y-1.5">
+            {contextStatusLabel && (
+              <div className="flex items-center gap-1.5">
+                <ContextStatusIcon
+                  size={14}
+                  color={contextStatusMeta.color}
+                  aria-hidden
+                />
+                <span
+                  className="text-[12.5px] font-semibold"
+                  style={{ color: contextStatusMeta.color }}
+                >
+                  {contextStatusLabel}
+                </span>
+              </div>
+            )}
             {summary ? (
               <p
                 className="text-[12.5px] leading-snug"
@@ -1330,37 +1425,11 @@ function DailyOverviewSection({
               Sources
             </p>
             {section.sources.length > 0 ? (
-              <div
-                className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col"
-                aria-label="Daily Overview sources"
-              >
-                {visibleSources.map((source) => (
-                  <SourceChip key={source.url} source={source} />
-                ))}
-                {overflowCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onToggle();
-                    }}
-                    onKeyDown={(event) => event.stopPropagation()}
-                    aria-label={
-                      "Show " +
-                      overflowCount +
-                      " more accepted source" +
-                      (overflowCount === 1 ? "" : "s")
-                    }
-                    className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
-                    style={{
-                      borderColor: "var(--border-row)",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    +{overflowCount}
-                  </button>
-                )}
-              </div>
+              <SourceChipRow
+                sources={section.sources}
+                itemId={section.id}
+                forceExpanded={isExpanded}
+              />
             ) : (
               <span
                 className="text-[11px]"
@@ -1386,20 +1455,8 @@ function DailyOverviewSection({
           className="feed-expand mt-3 space-y-4 pt-3"
           style={{ borderTop: "1px solid var(--border-row)" }}
         >
-          {section.brief?.context_details && (
-            <div>
-              <ExpandedSectionHeader>Context summary</ExpandedSectionHeader>
-              <p
-                className="max-w-[70ch] text-[13px] leading-relaxed"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {section.brief.context_details}
-              </p>
-            </div>
-          )}
           <DailyOverviewSnapshot section={section} />
           <DailyOverviewEvidenceTable section={section} />
-          <DailyOverviewSources sources={section.sources} />
         </div>
       )}
 
@@ -1757,21 +1814,6 @@ function DailyOverviewSnapshot({
   );
 }
 
-function DailyOverviewSources({ sources }: { sources: FeedSourceV02[] }) {
-  return (
-    <div>
-      <ExpandedSectionHeader>Sources</ExpandedSectionHeader>
-      {sources.length > 0 ? (
-        <SourceList sources={sources} />
-      ) : (
-        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-          No source
-        </span>
-      )}
-    </div>
-  );
-}
-
 function MarketStorySection({
   section,
   isExpanded,
@@ -1953,8 +1995,6 @@ function SignalEventSection({
   const summary =
     textOrNull(section.brief?.collapsed_summary) ??
     textOrNull(section.brief?.headline);
-  const visibleSources = section.sources.slice(0, 2);
-  const overflowCount = section.sources.length - visibleSources.length;
   const windowLabel = spaceTimeRangeSeparator(
     section.displayWindow || section.displayTime,
   );
@@ -2089,34 +2129,11 @@ function SignalEventSection({
             Sources
           </p>
           {section.sources.length > 0 ? (
-            <div className="flex flex-row flex-wrap items-start gap-1.5 sm:flex-col">
-              {visibleSources.map((source) => (
-                <SourceChip key={source.url} source={source} />
-              ))}
-              {overflowCount > 0 && (
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onToggle();
-                  }}
-                  onKeyDown={(event) => event.stopPropagation()}
-                  aria-label={
-                    "Show " +
-                    overflowCount +
-                    " more accepted source" +
-                    (overflowCount === 1 ? "" : "s")
-                  }
-                  className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-white/5"
-                  style={{
-                    borderColor: "var(--border-row)",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  +{overflowCount}
-                </button>
-              )}
-            </div>
+            <SourceChipRow
+              sources={section.sources}
+              itemId={section.id}
+              forceExpanded={isExpanded}
+            />
           ) : (
             <span
               className="text-[11px]"
@@ -2152,18 +2169,6 @@ function SignalEventSection({
               is highlighted in the Peak 15m column.
             </p>
           </div>
-          {section.brief?.context_details && (
-            <div>
-              <ExpandedSectionHeader>Context Details</ExpandedSectionHeader>
-              <p
-                className="max-w-[70ch] text-[13px] leading-relaxed"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {section.brief.context_details}
-              </p>
-            </div>
-          )}
-          <SignalEventSources sources={section.sources} />
         </div>
       )}
 
@@ -2173,21 +2178,6 @@ function SignalEventSection({
           onToggle={onToggle}
           sectionId={section.id}
         />
-      )}
-    </div>
-  );
-}
-
-function SignalEventSources({ sources }: { sources: FeedSourceV02[] }) {
-  return (
-    <div>
-      <ExpandedSectionHeader>Sources</ExpandedSectionHeader>
-      {sources.length > 0 ? (
-        <SourceList sources={sources} />
-      ) : (
-        <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-          No source
-        </span>
       )}
     </div>
   );

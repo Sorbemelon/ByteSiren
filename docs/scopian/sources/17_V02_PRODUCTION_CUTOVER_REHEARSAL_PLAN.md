@@ -370,8 +370,12 @@ Verify after sample:
 - `claude_briefs_v02` rows are created.
 - `source_references_v02` rows are created.
 - Source URLs are exact article URLs.
+- Signal Event Focused/Likely sources are time-aligned to the approved catalyst window: 6 hours before the evidence window start through the evidence window end. Later-published articles may pass only when they describe an in-window catalyst.
 - Rejected/root sources are excluded from public accepted-source reads.
 - Signal Event and Daily Overview can show sources if accepted rows exist.
+- v0.2 queued items show `No context yet` until context exists.
+- Signal Event and Daily Overview cards use the collapsed brief as the main readable context, without duplicate expanded Context Details / Context summary blocks.
+- Source chips appear in the main card source row with `+N` expansion, and chart source markers are always visible for Claude-backed Daily Overview or Signal Event items, de-duplicated by exact URL, based on `published_at` when available, and vertically separated when times overlap without shifting chart time.
 - Market Story still has no sources, source markers, Claude status, Claude result, or Public Context status.
 - No raw Claude traces are public.
 - No public budget/search/token counts are public.

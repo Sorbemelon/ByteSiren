@@ -154,8 +154,11 @@ v0.2 Claude status mapping should remain honest:
 - Claude search/tool cap failures map to `claude_limited`.
 - Missing API key skips v0.2 enrichment safely and must not mark v0.2 items terminal.
 - Validation failure uses retryable or terminal failure status and must not fake a brief.
+- Public v0.2 queued/not-yet-enriched copy is `No context yet`, not `Waiting for Claude`.
 
 If source policy removes focused/likely cause support, Signal Event results must not remain `Focused Cause` or `Likely Cause`. They should downgrade to `Market Backdrop` when accepted backdrop sources remain, otherwise `No Clear Cause`.
+
+For v0.2 Claude output, `collapsed_summary` is the main readable brief for Signal Event and Daily Overview cards. It should combine source-backed context with the relevant Signal Event window or Daily Overview day detail. Long separate Signal Event `Context Details` or Daily Overview `Context summary` sections are not required and should not be rendered as separate public expanded-card sections.
 
 ## Source Reference Versioning
 
@@ -175,6 +178,23 @@ Market Story has no Claude source references. Source markers in the chart may be
 v0.2 source persistence uses `source_references_v02` only. It must reject root/homepage URLs, low-quality source patterns covered by source policy, and any `market_story_v02` target. Accepted article URLs should be preserved exactly for public display.
 
 `source_references_v02.brief_id` was created during the first additive schema pass with a legacy `claude_briefs` reference. New v0.2 source writes should keep that legacy column null and use `brief_v02_id` for optional `claude_briefs_v02` linkage. The canonical public association remains `target_type` plus `target_id`.
+
+## Signal Event Source Timing
+
+Signal Event Focused/Likely source timing is stricter in v0.2:
+
+- catalyst window start = Signal Event evidence window start minus 6 hours
+- catalyst window end = Signal Event evidence window end
+- `Focused catalyst source` and `Likely cause source` are allowed only when the source describes a catalyst inside that catalyst window
+- an article may be published after the Signal Event if it clearly describes a catalyst inside the allowed catalyst window
+- broad older context outside the catalyst window can be `Backdrop source` only
+- price-check sources can confirm market data but must not establish Focused/Likely cause
+
+## Source Display and Chart Markers
+
+Frontend source chips live in the main card source row for Claude-backed Daily Overview and Signal Event cards. Compact rows may hide extra chips behind `+N`; expanding the row/card shows the full accepted list in that same main source area. Expanded detail sections should not duplicate a separate Sources block.
+
+Chart source markers are always visible for Claude-backed Daily Overview and Signal Event accepted sources. They are de-duplicated by exact accepted source URL. When an accepted source has `published_at`, that timestamp is the source marker time; fallback event/day timing is used only when the source timestamp is missing or unusable. Markers that share or nearly share a source time are separated vertically only so overlap handling does not bias the chart time coordinate. Market Story and Audit Event must not produce source markers.
 
 ## Planned Feature Flags
 
@@ -541,6 +561,15 @@ v0.2I7B1 adds local/protected v0.2 Claude sample tooling:
 - old `claude_briefs` and old `source_references` remain v0.1/legacy and must not be written by the v0.2 sample
 - reports are written to `.tmp/v02-claude-sample-report.json` and `.tmp/v02-claude-sample-report.md`
 - if sample output is poor, disable `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE`, keep production `FEED_VERSION=v01`, and leave rows for inspection
+
+v0.2I7B2 refines v0.2 Claude context and source display after the controlled sample:
+
+- v0.2 queued public copy is `No context yet`
+- Signal Event Focused/Likely source timing uses the 6-hour catalyst window rule above
+- Signal Event and Daily Overview prompts treat `collapsed_summary` as the main public brief
+- separate expanded `Context Details` / `Context summary` blocks are removed from the v0.2 feed UI
+- source chips stay in the main card source row, with `+N` expansion for the full accepted source list
+- chart source markers are always visible for Claude-backed Daily Overview and Signal Event items, one per unique accepted source URL, based on `published_at` when available, vertically separated when times overlap without shifting chart time, and never shown for Market Story
 
 v0.2I6A does not:
 

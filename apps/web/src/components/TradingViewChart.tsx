@@ -46,6 +46,7 @@ interface V02WindowOverlay extends EvidenceWindowOverlay {
 interface V02SourceOverlay {
   id: string;
   left: number;
+  top: number;
   marker: ChartSourceMarkerViewV02;
 }
 
@@ -147,6 +148,53 @@ function snapToCandle(
     else break;
   }
   return snap;
+}
+
+function sourceTimeToCoordinate(
+  chart: IChartApi,
+  timeSec: number,
+  candleTimes: number[],
+): number | null {
+  const direct = chart.timeScale().timeToCoordinate(timeSec as Time);
+
+  if (direct != null) {
+    return Number(direct);
+  }
+
+  const range = candleTimeRange(candleTimes);
+  if (!range || timeSec < range.first || timeSec > range.last) {
+    return null;
+  }
+
+  let previous = candleTimes[0];
+  let next = candleTimes[candleTimes.length - 1];
+
+  for (const candleTime of candleTimes) {
+    if (candleTime <= timeSec) {
+      previous = candleTime;
+    }
+
+    if (candleTime >= timeSec) {
+      next = candleTime;
+      break;
+    }
+  }
+
+  const previousLeft = chart.timeScale().timeToCoordinate(previous as Time);
+  const nextLeft = chart.timeScale().timeToCoordinate(next as Time);
+
+  if (previousLeft == null || nextLeft == null) {
+    return null;
+  }
+
+  if (previous === next) {
+    return Number(previousLeft);
+  }
+
+  const progress = (timeSec - previous) / (next - previous);
+  return (
+    Number(previousLeft) + (Number(nextLeft) - Number(previousLeft)) * progress
+  );
 }
 
 function incidentMarkers(
@@ -443,24 +491,55 @@ function buildV02SourceOverlays(
 ): V02SourceOverlay[] {
   const candleTimes = candles.map((c) => c.time);
 
-  return markers
+  const overlays = markers
     .map((marker) => {
       const raw = toUnixSeconds(marker.time);
       if (raw == null) return null;
 
-      const snapped = snapToCandle(raw, candleTimes, { clampToRange: true });
-      if (snapped == null) return null;
-
-      const left = chart.timeScale().timeToCoordinate(snapped as Time);
+      const left = sourceTimeToCoordinate(chart, raw, candleTimes);
       if (left == null) return null;
 
       return {
         id: marker.id,
         left: Number(left),
+        top: 6,
         marker,
       } satisfies V02SourceOverlay;
     })
     .filter((item): item is V02SourceOverlay => item !== null);
+
+  const sorted = [...overlays].sort((a, b) => a.left - b.left);
+  const groups: V02SourceOverlay[][] = [];
+  const collisionThreshold = 18;
+
+  for (const overlay of sorted) {
+    const group = groups.at(-1);
+    const groupCenter =
+      group == null
+        ? null
+        : group.reduce((sum, item) => sum + item.left, 0) / group.length;
+
+    if (
+      group &&
+      groupCenter != null &&
+      overlay.left - groupCenter <= collisionThreshold
+    ) {
+      group.push(overlay);
+    } else {
+      groups.push([overlay]);
+    }
+  }
+
+  return groups.flatMap((group) => {
+    return group.map((overlay, index) => {
+      const top = 6 + index * 16;
+
+      return {
+        ...overlay,
+        top,
+      };
+    });
+  });
 }
 
 function measurePlotArea(
@@ -514,6 +593,9 @@ export default function TradingViewChart({
     width: 0,
     height: 0,
   });
+  const hasSelectedSourceMarker = v02SourceMarkers.some(
+    (marker) => marker.selected,
+  );
 
   const initChart = useCallback(() => {
     const el = containerRef.current;
@@ -819,51 +901,61 @@ export default function TradingViewChart({
         className="pointer-events-none absolute left-0 top-0 z-[4] overflow-hidden"
         style={{
           width: plotArea.width,
-          height: Math.min(48, plotArea.height),
+          height: Math.min(108, plotArea.height),
         }}
       >
-        {v02SourceOverlays.map((overlay) => (
-          <button
-            key={overlay.id}
-            type="button"
-            data-testid="chart-v02-source-marker"
-            data-item-id={overlay.marker.itemId}
-            data-item-type={overlay.marker.itemType}
-            data-source-url={overlay.marker.url}
-            data-source-label={overlay.marker.label}
-            data-selected={String(overlay.marker.selected)}
-            onClick={(event) => {
-              event.stopPropagation();
-              onV02SourceMarkerSelect?.(overlay.marker);
-            }}
-            aria-label={`${overlay.marker.label} source marker for ${overlay.marker.publisher ?? overlay.marker.itemType}`}
-            title={`${overlay.marker.label}: ${overlay.marker.publisher ?? overlay.marker.url}`}
-            className="pointer-events-auto absolute top-2.5 inline-flex h-6 w-6 -translate-x-1/2 items-center justify-center bg-transparent p-0 transition-opacity hover:opacity-90"
-            style={{
-              left: overlay.left,
-              color: sourceMarkerTone(overlay.marker),
-            }}
-          >
-            <span
-              aria-hidden
-              className={
-                overlay.marker.itemType === "daily_overview"
-                  ? "block rounded-full border"
-                  : "block rotate-45 border"
-              }
-              style={{
-                width: overlay.marker.selected ? 14 : 10,
-                height: overlay.marker.selected ? 14 : 10,
-                borderColor: sourceMarkerTone(overlay.marker),
-                borderWidth: overlay.marker.selected ? 2 : 1.4,
-                background: sourceMarkerTone(overlay.marker),
-                boxShadow: overlay.marker.selected
-                  ? `0 0 0 2px color-mix(in srgb, ${sourceMarkerTone(overlay.marker)} 22%, transparent)`
-                  : "none",
+        {v02SourceOverlays.map((overlay) => {
+          const muted = hasSelectedSourceMarker && !overlay.marker.selected;
+          const markerSize = overlay.marker.selected ? 14 : muted ? 8 : 10;
+
+          return (
+            <button
+              key={overlay.id}
+              type="button"
+              data-testid="chart-v02-source-marker"
+              data-item-id={overlay.marker.itemId}
+              data-item-type={overlay.marker.itemType}
+              data-source-url={overlay.marker.url}
+              data-source-label={overlay.marker.label}
+              data-selected={String(overlay.marker.selected)}
+              data-muted={String(muted)}
+              data-marker-left={Math.round(overlay.left)}
+              data-marker-top={Math.round(overlay.top)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onV02SourceMarkerSelect?.(overlay.marker);
               }}
-            />
-          </button>
-        ))}
+              aria-label={`${overlay.marker.label} source marker for ${overlay.marker.publisher ?? overlay.marker.itemType}`}
+              title={`${overlay.marker.label}: ${overlay.marker.publisher ?? overlay.marker.url}`}
+              className="pointer-events-auto absolute inline-flex h-6 w-6 -translate-x-1/2 items-center justify-center bg-transparent p-0 transition-opacity"
+              style={{
+                left: overlay.left,
+                top: overlay.top,
+                color: sourceMarkerTone(overlay.marker),
+                opacity: muted ? 0.36 : 1,
+              }}
+            >
+              <span
+                aria-hidden
+                className={
+                  overlay.marker.itemType === "daily_overview"
+                    ? "block rounded-full border"
+                    : "block rotate-45 border"
+                }
+                style={{
+                  width: markerSize,
+                  height: markerSize,
+                  borderColor: sourceMarkerTone(overlay.marker),
+                  borderWidth: overlay.marker.selected ? 2 : muted ? 1 : 1.4,
+                  background: sourceMarkerTone(overlay.marker),
+                  boxShadow: overlay.marker.selected
+                    ? `0 0 0 2px color-mix(in srgb, ${sourceMarkerTone(overlay.marker)} 22%, transparent)`
+                    : "none",
+                }}
+              />
+            </button>
+          );
+        })}
       </div>
     </div>
   );

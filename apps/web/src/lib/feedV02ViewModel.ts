@@ -130,12 +130,9 @@ export function sectionHasExpandableDetails(
 ): boolean {
   if (section.itemType === "daily_overview") {
     return (
-      Boolean(section.brief?.context_details) ||
-      Boolean(section.brief?.headline) ||
       section.notableSymbols.length > 0 ||
       section.topSymbolMoves.length > 0 ||
-      Object.keys(section.details).length > 0 ||
-      section.sources.length > 0
+      Object.keys(section.details).length > 0
     );
   }
 
@@ -149,12 +146,7 @@ export function sectionHasExpandableDetails(
     );
   }
 
-  return (
-    section.perSymbolEvidence.length > 0 ||
-    Boolean(section.brief?.context_details) ||
-    Boolean(section.brief?.headline) ||
-    section.sources.length > 0
-  );
+  return section.perSymbolEvidence.length > 0;
 }
 
 function findDayPostForSection(
@@ -391,6 +383,48 @@ function sourceMarkerLabel(sourceTag: string | null | undefined): string {
   return "Source";
 }
 
+function validIsoOrNull(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? value : null;
+}
+
+function isoOffset(start: string, offsetMs: number): string | null {
+  const time = Date.parse(start);
+
+  if (!Number.isFinite(time)) {
+    return null;
+  }
+
+  return new Date(time + offsetMs).toISOString();
+}
+
+function fallbackSourceMarkerTime(
+  section: NormalizedFeedSection,
+  index: number,
+): string | null {
+  if (section.itemType === "signal_event") {
+    return (
+      validIsoOrNull(
+        section.chart?.peak_marker_time ?? section.evidenceWindow.peak_time,
+      ) ??
+      validIsoOrNull(section.chart?.highlight_end) ??
+      validIsoOrNull(section.evidenceWindow.end)
+    );
+  }
+
+  if (section.itemType === "daily_overview") {
+    const dayStart =
+      section.chart?.highlight_start ?? `${section.dateUtc}T00:00:00.000Z`;
+    return isoOffset(dayStart, (60 + index * 20) * 60 * 1000);
+  }
+
+  return null;
+}
+
 export function buildChartSourceMarkersV02(
   feed: NormalizedFeedV02 | null,
   selection: FeedSelectionV02,
@@ -399,44 +433,79 @@ export function buildChartSourceMarkersV02(
     return [];
   }
 
-  const hasSelection = isFeedSelectionActiveV02(selection);
+  type SourceMarkerCandidate = ChartSourceMarkerViewV02 & {
+    sourceOrder: number;
+    itemRank: number;
+  };
 
-  return feed.dayPosts.flatMap((day) =>
-    day.sections.flatMap((section) => {
+  const candidates: SourceMarkerCandidate[] = [];
+  let sourceOrder = 0;
+
+  for (const day of feed.dayPosts) {
+    for (const section of day.sections) {
       if (section.itemType === "market_story") {
-        return [];
+        continue;
       }
 
       const selected = isSectionSelectedV02(selection, section);
-      if (hasSelection && !selected) {
-        return [];
-      }
+      const seenUrls = new Set<string>();
 
-      return section.sources.flatMap((source, index) => {
-        const fallbackTime =
-          section.brief?.updated_at ??
-          section.chart?.highlight_start ??
-          section.dateUtc;
-        const time = source.published_at ?? fallbackTime;
+      for (const [index, source] of section.sources.entries()) {
+        if (seenUrls.has(source.url)) {
+          continue;
+        }
+        seenUrls.add(source.url);
+
+        const publishedAt = validIsoOrNull(source.published_at);
+        const time = publishedAt ?? fallbackSourceMarkerTime(section, index);
 
         if (!source.url || !time) {
-          return [];
+          continue;
         }
 
-        return [
-          {
-            id: `${section.itemType}:${section.id}:source:${index}`,
-            itemType: section.itemType,
-            itemId: section.id,
-            dayPostId: day.id,
-            time,
-            label: sourceMarkerLabel(source.tag || source.used_for),
-            publisher: source.publisher ?? source.title ?? null,
-            url: source.url,
-            selected,
-          } satisfies ChartSourceMarkerViewV02,
-        ];
-      });
-    }),
-  );
+        candidates.push({
+          id: `${section.itemType}:${section.id}:source:${index}:${source.url}`,
+          itemType: section.itemType,
+          itemId: section.id,
+          dayPostId: day.id,
+          time,
+          label: sourceMarkerLabel(source.tag || source.used_for),
+          publisher: source.publisher ?? source.title ?? null,
+          url: source.url,
+          selected,
+          sourceOrder: sourceOrder++,
+          itemRank: section.itemType === "signal_event" ? 0 : 1,
+        });
+      }
+    }
+  }
+
+  const chosenByUrl = new Map<string, SourceMarkerCandidate>();
+
+  for (const candidate of candidates) {
+    const existing = chosenByUrl.get(candidate.url);
+
+    if (
+      !existing ||
+      candidate.itemRank < existing.itemRank ||
+      (candidate.itemRank === existing.itemRank &&
+        candidate.sourceOrder < existing.sourceOrder)
+    ) {
+      chosenByUrl.set(candidate.url, candidate);
+    }
+  }
+
+  return Array.from(chosenByUrl.values())
+    .sort((a, b) => a.sourceOrder - b.sourceOrder)
+    .map((candidate) => ({
+      id: candidate.id,
+      itemType: candidate.itemType,
+      itemId: candidate.itemId,
+      dayPostId: candidate.dayPostId,
+      time: candidate.time,
+      label: candidate.label,
+      publisher: candidate.publisher,
+      url: candidate.url,
+      selected: candidate.selected,
+    }));
 }

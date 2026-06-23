@@ -510,11 +510,19 @@ export default function BottomAccordions({
           </DefinitionCard>
           <DefinitionCard term="Sources" tone="cyan" Icon={ExternalLink}>
             Accepted article links for Claude-backed Daily Overview and Signal
-            Event sections only. Market Story does not show sources.
+            Event sections only. Use the +N control in the main card source row
+            to reveal every accepted source. Market Story does not show sources.
           </DefinitionCard>
-          <DefinitionCard term="Context Details">
-            Expanded details can show per-symbol evidence, longer public
-            context, and the full accepted source list when available.
+          <DefinitionCard term="Brief">
+            The readable Claude context in a Daily Overview or Signal Event
+            card. It combines source-backed context with the relevant market
+            detail, so a separate Context Details section is not needed.
+          </DefinitionCard>
+          <DefinitionCard term="Source markers">
+            Chart markers for accepted sources on Claude-backed Daily Overview
+            or Signal Event cards. They use the source timestamp when present
+            and stack vertically when times overlap, so overlap handling does
+            not shift chart time. They never appear for Market Story.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>
@@ -573,11 +581,12 @@ export default function BottomAccordions({
           <DefinitionCard
             term={
               <StatusTextLabel color="var(--status-moving)" Icon={Clock}>
-                Waiting for Claude
+                No context yet
               </StatusTextLabel>
             }
           >
-            The detection is queued for date-matched public web context.
+            Claude context is not available for this item yet. This is different
+            from No Clear Cause or Claude Limited.
           </DefinitionCard>
         </DefinitionGrid>
 

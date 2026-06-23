@@ -390,6 +390,14 @@ function eventDateForPayload(payload: ClaudePayloadV02): string {
     : payload.day_start;
 }
 
+function signalWindowForPayload(
+  payload: ClaudePayloadV02,
+): { start: string; end: string } | null {
+  return payload.mode === "signal_event"
+    ? { start: payload.evidence_window.start, end: payload.evidence_window.end }
+    : null;
+}
+
 async function persistClientFailure(input: {
   db: D1Database;
   target: ClaudeEnrichmentTargetV02;
@@ -469,6 +477,7 @@ async function persistValidatedResult(input: {
       target_id: input.target.target_id,
       sources: result.sources,
       eventDate: eventDateForPayload(input.target.payload),
+      signalEventWindow: signalWindowForPayload(input.target.payload),
       blockedDomains: input.blockedDomains,
       includeRejected: true,
     });
@@ -502,6 +511,7 @@ async function persistValidatedResult(input: {
       brief_id: brief.id,
       sources: normalizedResult.sources,
       eventDate: eventDateForPayload(input.target.payload),
+      signalEventWindow: signalWindowForPayload(input.target.payload),
       blockedDomains: input.blockedDomains,
       includeRejected: true,
     });
