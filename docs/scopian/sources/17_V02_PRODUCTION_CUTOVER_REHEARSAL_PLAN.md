@@ -318,6 +318,53 @@ ENABLE_DAILY_CLAUDE=true
 CLAUDE_CATCHUP_LIMIT=2
 ```
 
+v0.2I7B1 local controlled-sample tooling:
+
+```bash
+# Dry-run Signal sample against local Worker.
+node scripts/v02-local-claude-sample.mjs \
+  --worker-url http://127.0.0.1:8787 \
+  --admin-token "<local-admin-token>" \
+  --mode signal \
+  --limit 2 \
+  --dry-run \
+  --expect-v02-feed
+
+# Live Signal sample. This is the only form that may call Claude.
+node scripts/v02-local-claude-sample.mjs \
+  --worker-url http://127.0.0.1:8787 \
+  --admin-token "<local-admin-token>" \
+  --mode signal \
+  --limit 2 \
+  --live \
+  --expect-v02-feed
+
+# Dry-run Daily sample after reviewing Signal output.
+node scripts/v02-local-claude-sample.mjs \
+  --worker-url http://127.0.0.1:8787 \
+  --admin-token "<local-admin-token>" \
+  --mode daily \
+  --limit 1 \
+  --dry-run \
+  --expect-v02-feed
+
+# Live Daily sample only after the Signal sample is acceptable.
+node scripts/v02-local-claude-sample.mjs \
+  --worker-url http://127.0.0.1:8787 \
+  --admin-token "<local-admin-token>" \
+  --mode daily \
+  --limit 1 \
+  --live \
+  --expect-v02-feed
+```
+
+The local sample script writes:
+
+- `.tmp/v02-claude-sample-report.json`
+- `.tmp/v02-claude-sample-report.md`
+
+The script defaults to dry-run and requires `--live` for any real Claude call. It must not print the admin token or `ANTHROPIC_API_KEY`. The protected Worker endpoint behind the script is `/api/admin/v02/run-claude-sample`, gated by `ENABLE_ADMIN_MAINTENANCE=true`, `ENABLE_V02_ADMIN_TOOLS=true`, and `x-bytesiren-admin-token`.
+
 Verify after sample:
 
 - `claude_briefs_v02` rows are created.
@@ -328,6 +375,8 @@ Verify after sample:
 - Market Story still has no sources, source markers, Claude status, Claude result, or Public Context status.
 - No raw Claude traces are public.
 - No public budget/search/token counts are public.
+- Old `claude_briefs` and old `source_references` counts do not increase.
+- `source_references_v02.brief_v02_id` links sources to the v0.2 brief.
 
 If the sample is good, optionally run a Daily Overview sample, then a bounded catch-up. Full 30-day Claude catch-up should happen only after sample source quality is accepted.
 

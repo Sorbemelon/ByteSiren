@@ -196,6 +196,31 @@ function seededSignalEventV02() {
   };
 }
 
+function seededSignalSymbolV02(signalEventId = "sig_v02_route") {
+  return {
+    id: `${signalEventId}_BTCUSDT`,
+    signal_event_id: signalEventId,
+    symbol: "BTCUSDT",
+    window_change_pct: 2.2,
+    peak_15m_change_pct: 1.1,
+    volume_ratio: 2.5,
+    range_position: "broke_high",
+    prev_24h_high: 100,
+    prev_24h_low: 90,
+    range_break_direction: "up",
+    range_break_pct: 1.2,
+    range_break_strength: 0.7,
+    distance_to_range_high_pct: 0.2,
+    distance_to_range_low_pct: 8.2,
+    is_lead_mover: 1,
+    is_peak_15m_highlight: 1,
+    participated: 1,
+    evidence_json: "{}",
+    created_at: "2026-06-15T09:00:00.000Z",
+    updated_at: "2026-06-15T09:00:00.000Z",
+  };
+}
+
 function seededDailyOverviewV02() {
   return {
     id: "daily_2026-06-15",
@@ -1211,6 +1236,204 @@ test("admin v0.2 pipeline validates requested steps", async () => {
 
   assert.equal(response.status, 400);
   assert.equal(body.error && typeof body.error === "object", true);
+});
+
+test("admin v0.2 Claude sample is hidden unless both admin gates are enabled", async () => {
+  const request = new Request(
+    "http://localhost/api/admin/v02/run-claude-sample",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+        origin: "http://localhost:3000",
+      },
+      body: JSON.stringify({ mode: "signal", dry_run: true }),
+    },
+  );
+  const maintenanceOff = await worker.fetch(
+    request.clone(),
+    makeEnv({
+      adminEnabled: false,
+      v02AdminToolsEnabled: true,
+      adminToken: "test-admin-token",
+    }),
+  );
+  const toolsOff = await worker.fetch(
+    request.clone(),
+    makeEnv({
+      adminEnabled: true,
+      v02AdminToolsEnabled: false,
+      adminToken: "test-admin-token",
+    }),
+  );
+  const wrongToken = await worker.fetch(
+    request.clone(),
+    makeEnv({
+      adminEnabled: true,
+      v02AdminToolsEnabled: true,
+      adminToken: "secret-admin-token",
+    }),
+  );
+  const wrongTokenBody = await wrongToken.text();
+
+  assert.equal(maintenanceOff.status, 404);
+  assert.equal(toolsOff.status, 404);
+  assert.equal(wrongToken.status, 404);
+  assert.equal(maintenanceOff.headers.get("access-control-allow-origin"), null);
+  assert.equal(toolsOff.headers.get("access-control-allow-origin"), null);
+  assert.equal(wrongTokenBody.includes("secret-admin-token"), false);
+  assert.equal(wrongTokenBody.includes("test-admin-token"), false);
+});
+
+test("admin v0.2 Claude sample dry-run selects Signal targets without writing", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [seededSignalEventV02()],
+    signal_event_symbols_v02: [seededSignalSymbolV02()],
+    daily_overviews_v02: [seededDailyOverviewV02()],
+    incidents: [seededIncident()],
+  });
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-claude-sample", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        mode: "signal",
+        limit: 99,
+        dry_run: true,
+      }),
+    }),
+    {
+      DB: db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+      ENABLE_DAILY_CLAUDE: "false",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+  const serialized = JSON.stringify(body);
+  const selected = body.selected as Array<Record<string, unknown>>;
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.dry_run, true);
+  assert.equal(body.limit, 5);
+  assert.equal(body.processed, 0);
+  assert.equal(Array.isArray(body.selected), true);
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].target_type, "signal_event_v02");
+  assert.equal(serialized.includes("market_story_v02"), false);
+  assert.equal(serialized.includes("audit_event_v02"), false);
+  assert.equal(serialized.includes("incident_id"), false);
+  assert.equal(serialized.includes("test-admin-token"), false);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(tables.claude_briefs.length, 0);
+  assert.equal(tables.source_references.length, 0);
+});
+
+test("admin v0.2 Claude sample requires target-specific flags", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-claude-sample", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        mode: "daily",
+        dry_run: true,
+      }),
+    }),
+    {
+      DB: createMemoryD1().db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ENABLE_DAILY_CLAUDE: "false",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+  const error = body.error as { code: string; message: string };
+
+  assert.equal(response.status, 400);
+  assert.equal(error.code, "invalid_request");
+  assert.match(error.message, /ENABLE_DAILY_CLAUDE=true/);
+});
+
+test("admin v0.2 Claude sample live path skips safely without API key", async () => {
+  const { db, tables } = createMemoryD1({
+    daily_overviews_v02: [seededDailyOverviewV02()],
+    claude_briefs: [
+      {
+        id: "legacy_brief",
+        incident_id: "legacy_incident",
+        analysis_mode: "web_search",
+        catalyst_status: null,
+        ui_label: "Market Backdrop",
+        confidence: null,
+        price_context_check: null,
+        headline: null,
+        summary: "Legacy",
+        focused_catalyst_json: null,
+        main_catalyst_json: null,
+        broader_context_json: "{}",
+        caveats_json: "[]",
+        tags_json: "[]",
+        source_quality_meta_json: "{}",
+        generated_at: "2026-06-15T00:00:00.000Z",
+        created_at: "2026-06-15T00:00:00.000Z",
+        updated_at: "2026-06-15T00:00:00.000Z",
+      },
+    ],
+  });
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-claude-sample", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        mode: "daily",
+        limit: 1,
+        dry_run: false,
+      }),
+    }),
+    {
+      DB: db,
+      ANTHROPIC_API_KEY: "",
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ENABLE_DAILY_CLAUDE: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+  const serialized = JSON.stringify(body);
+  const result = body.result as Record<string, unknown>;
+  const countsBefore = body.counts_before as Record<string, unknown>;
+  const countsAfter = body.counts_after as Record<string, unknown>;
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.dry_run, false);
+  assert.equal(body.processed, 0);
+  assert.equal(result.status, "skipped");
+  assert.equal(countsBefore.legacy_claude_briefs, 1);
+  assert.equal(countsAfter.legacy_claude_briefs, 1);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(tables.claude_briefs.length, 1);
+  assert.equal(tables.source_references.length, 0);
+  assert.equal(serialized.includes("user_prompt"), false);
+  assert.equal(serialized.includes("system_prompt"), false);
+  assert.equal(serialized.includes("ANTHROPIC"), false);
 });
 
 test("market candle import disabled returns not found without public CORS", async () => {

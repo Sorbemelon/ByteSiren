@@ -708,6 +708,24 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       }
 
       if (
+        this.sql.includes("claude_briefs_v02") &&
+        this.sql.includes("accepted_source_references_v02")
+      ) {
+        return {
+          claude_briefs_v02: tables.claude_briefs_v02.length,
+          source_references_v02: tables.source_references_v02.length,
+          accepted_source_references_v02: tables.source_references_v02.filter(
+            (row) => row.accepted === 1,
+          ).length,
+          rejected_source_references_v02: tables.source_references_v02.filter(
+            (row) => row.accepted === 0,
+          ).length,
+          legacy_claude_briefs: tables.claude_briefs.length,
+          legacy_source_references: tables.source_references.length,
+        } as T;
+      }
+
+      if (
         this.sql.includes("COUNT(*) AS count") &&
         this.sql.includes("FROM audit_events_v02")
       ) {

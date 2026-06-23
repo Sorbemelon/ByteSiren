@@ -417,6 +417,30 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8787 corepack pnpm --filter @bytesiren
 
 Local screenshots are written under `.tmp/`. The smoke report prints the requested web URL, actual web URL, detected port, and whether the smoke started its own server or attached to an existing server. If it starts a server, it may stop only the process it started. If it attaches to an existing local web server, do not stop that server from the smoke.
 
+7. Run the controlled local v0.2 Claude sample before any remote cutover:
+
+```bash
+node scripts/v02-local-claude-sample.mjs \
+  --worker-url http://127.0.0.1:8787 \
+  --admin-token <local token> \
+  --mode signal \
+  --limit 2 \
+  --dry-run \
+  --expect-v02-feed
+
+node scripts/v02-local-claude-sample.mjs \
+  --worker-url http://127.0.0.1:8787 \
+  --admin-token <local token> \
+  --mode signal \
+  --limit 2 \
+  --live \
+  --expect-v02-feed
+```
+
+Run the Daily Overview sample only after reviewing the Signal sample. Use `--mode daily --limit 1`. The script defaults to dry-run; `--live` is explicitly required for a real Claude call. Reports are written to `.tmp/v02-claude-sample-report.json` and `.tmp/v02-claude-sample-report.md`.
+
+The controlled sample must confirm `claude_briefs_v02` and `source_references_v02` writes for Signal/Daily only, no old `claude_briefs` or old `source_references` writes, no Market Story Claude/source rows, exact accepted source URLs, and no public raw Claude traces or token/search/budget counts. If sample output is poor, disable `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE`, keep production `FEED_VERSION=v01`, and leave v0.2 rows for inspection.
+
 The v0.2 real-API smoke should confirm:
 
 - Market Story displays `Avg Change` and `Volatility Score`, not `Swing Change`.

@@ -92,21 +92,21 @@ sources:
   - id: SRC-15-deployment-checklist
     path: docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md
     status: active
-    content_hash: sha256:8b48fbcf0c5a72600345303839b8c57042c2b2c4f237118ef7418cddf8eda88b
+    content_hash: sha256:1000b32461b419fd321537987a9d618c466ac58e4e259d43ca6133fbd3c074e7
     registered_at: 2026-06-17T21:30:08+07:00
-    updated_at: 2026-06-23T13:42:23+07:00
+    updated_at: 2026-06-23T14:03:13+07:00
   - id: SRC-16-v02-production-integration-spec
     path: docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md
     status: active
-    content_hash: sha256:eeab60c319ccd9818cbf1da0cc687d1920770ec53cadc7245154a5b3651b383a
+    content_hash: sha256:cc346f8fdb0f115aa003d5ceb9d5e7e86f97214c10f09f7fa96ffe8f05b9f2c0
     registered_at: 2026-06-21T16:00:00+07:00
-    updated_at: 2026-06-23T13:42:23+07:00
+    updated_at: 2026-06-23T14:03:13+07:00
   - id: SRC-17-v02-production-cutover-rehearsal-plan
     path: docs/scopian/sources/17_V02_PRODUCTION_CUTOVER_REHEARSAL_PLAN.md
     status: active
-    content_hash: sha256:65e8d96b8b15880b043673116e0764cd0e01a498caf42ad7497cd368da253816
+    content_hash: sha256:ad7dda981465e7f97152653084d0d301d56781ffacb514eb542869ef81af74ac
     registered_at: 2026-06-23T13:42:23+07:00
-    updated_at: 2026-06-23T13:42:23+07:00
+    updated_at: 2026-06-23T14:03:13+07:00
   - id: SRC-product
     path: PRODUCT.md
     status: active

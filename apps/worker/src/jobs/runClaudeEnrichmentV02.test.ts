@@ -377,6 +377,49 @@ test("v0.2 target selection respects flags, ordering, limit, and terminal briefs
   assert.equal(JSON.stringify(targets).includes("audit_hidden"), false);
 });
 
+test("v0.2 target selection can be bounded by sample kind and IDs", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [
+      signalEvent("sig_first", "2026-06-19T14:00:00.000Z"),
+      signalEvent("sig_second", "2026-06-19T16:00:00.000Z"),
+    ],
+    signal_event_symbols_v02: [
+      signalSymbol("sig_first"),
+      signalSymbol("sig_second"),
+    ],
+    daily_overviews_v02: [dailyOverview()],
+  });
+  const testEnv = env({
+    DB: db,
+    ENABLE_SIGNAL_CLAUDE_V02: "true",
+    ENABLE_DAILY_CLAUDE: "true",
+  });
+  const signalTargets = await selectClaudeEnrichmentTargetsV02(db, testEnv, {
+    now,
+    limit: 5,
+    targetKinds: ["signal"],
+    targetIds: ["sig_first"],
+  });
+  const dailyTargets = await selectClaudeEnrichmentTargetsV02(db, testEnv, {
+    now,
+    limit: 5,
+    targetKinds: ["daily"],
+  });
+
+  assert.deepEqual(
+    signalTargets.map((target) => target.target_id),
+    ["sig_first"],
+  );
+  assert.deepEqual(
+    dailyTargets.map((target) => target.target_id),
+    ["daily_2026-06-19"],
+  );
+  assert.equal(
+    dailyTargets.every((target) => target.target_type === "daily_overview_v02"),
+    true,
+  );
+});
+
 test("v0.2 enrichment writes Signal Event brief and sources only to v0.2 tables", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
@@ -414,6 +457,33 @@ test("v0.2 enrichment writes Signal Event brief and sources only to v0.2 tables"
     false,
   );
   assert.equal(mock.requests.length, 1);
+});
+
+test("v0.2 enrichment sample filters prevent accidental other-mode processing", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+    daily_overviews_v02: [dailyOverview()],
+  });
+  const mock = new MockClaudeClient([okResult(dailyResult())]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+      ENABLE_DAILY_CLAUDE: "true",
+    }),
+    { now, client: mock, targetKinds: ["daily"], limit: 5 },
+  );
+
+  assert.equal(result.signal_processed, 0);
+  assert.equal(result.daily_processed, 1);
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  assert.equal(tables.claude_briefs_v02[0].target_type, "daily_overview_v02");
+  assert.equal(
+    JSON.stringify(tables.claude_briefs_v02).includes("sig_public"),
+    false,
+  );
 });
 
 test("v0.2 enrichment writes Daily Overview brief and sources only when daily flag is enabled", async () => {

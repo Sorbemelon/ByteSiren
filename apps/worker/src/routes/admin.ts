@@ -7,6 +7,12 @@ import {
 } from "../config.ts";
 import { enrichQueuedIncidents } from "../jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "../jobs/pollMarket.ts";
+import {
+  runClaudeEnrichmentV02,
+  selectClaudeEnrichmentTargetsV02,
+  type ClaudeEnrichmentTargetV02,
+  type TargetKindV02,
+} from "../jobs/runClaudeEnrichmentV02.ts";
 import { runDailyOverviewsV02 } from "../jobs/runDailyOverviewsV02.ts";
 import { runDetectorV02 } from "../jobs/runDetectorV02.ts";
 import { runMarketStoriesV02 } from "../jobs/runMarketStoriesV02.ts";
@@ -24,6 +30,24 @@ const V02_PIPELINE_STEPS = new Set([
 ] as const);
 
 type V02PipelineStep = "detector" | "market_stories" | "daily_overviews";
+type V02ClaudeSampleMode = "signal" | "daily" | "both";
+
+interface V02ClaudeSampleOptions {
+  mode: V02ClaudeSampleMode;
+  limit: number;
+  ids: string[];
+  dryRun: boolean;
+  targetKinds: TargetKindV02[];
+}
+
+interface V02ClaudeCounts {
+  claude_briefs_v02: number;
+  source_references_v02: number;
+  accepted_source_references_v02: number;
+  rejected_source_references_v02: number;
+  legacy_claude_briefs: number;
+  legacy_source_references: number;
+}
 
 function isMaintenanceEnabled(env: Env): boolean {
   return env.ENABLE_ADMIN_MAINTENANCE?.trim().toLowerCase() === "true";
@@ -105,6 +129,144 @@ function parseCatchupLimit(value: unknown): number {
   }
 
   return Math.max(1, Math.min(10, Math.trunc(parsed)));
+}
+
+function parseSampleLimit(value: unknown): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return 2;
+  }
+
+  return Math.max(1, Math.min(5, Math.trunc(parsed)));
+}
+
+function parseSampleMode(value: unknown): V02ClaudeSampleMode {
+  if (value === undefined || value === null || value === "") {
+    return "signal";
+  }
+
+  if (value === "signal" || value === "daily" || value === "both") {
+    return value;
+  }
+
+  throw new Error("mode must be signal, daily, or both.");
+}
+
+function targetKindsForMode(mode: V02ClaudeSampleMode): TargetKindV02[] {
+  if (mode === "signal") {
+    return ["signal"];
+  }
+
+  if (mode === "daily") {
+    return ["daily"];
+  }
+
+  return ["signal", "daily"];
+}
+
+function parseSampleIds(value: unknown): string[] {
+  if (value === undefined || value === null || value === "") {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error("ids must be an array of strings.");
+  }
+
+  const ids = value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter(Boolean);
+
+  if (ids.length !== value.length) {
+    throw new Error("ids must be an array of strings.");
+  }
+
+  return [...new Set(ids)].slice(0, 5);
+}
+
+function requireSampleFlags(env: Env, mode: V02ClaudeSampleMode) {
+  const signalEnabled = parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02);
+  const dailyEnabled = parseBooleanFlag(env.ENABLE_DAILY_CLAUDE);
+
+  if ((mode === "signal" || mode === "both") && !signalEnabled) {
+    throw new Error("ENABLE_SIGNAL_CLAUDE_V02=true is required.");
+  }
+
+  if ((mode === "daily" || mode === "both") && !dailyEnabled) {
+    throw new Error("ENABLE_DAILY_CLAUDE=true is required.");
+  }
+}
+
+async function readV02ClaudeSampleOptions(
+  request: Request,
+): Promise<V02ClaudeSampleOptions> {
+  let body: Record<string, unknown> = {};
+
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    const parsed = (await request.json().catch(() => null)) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Request body must be a JSON object.");
+    }
+
+    body = parsed as Record<string, unknown>;
+  }
+
+  const mode = parseSampleMode(body.mode);
+
+  return {
+    mode,
+    limit: parseSampleLimit(body.limit),
+    ids: parseSampleIds(body.ids),
+    dryRun: parseBoolean(body.dry_run, true),
+    targetKinds: targetKindsForMode(mode),
+  };
+}
+
+function dateUtcForTarget(target: ClaudeEnrichmentTargetV02): string {
+  return target.payload.date_utc;
+}
+
+function safeSelectedTarget(target: ClaudeEnrichmentTargetV02) {
+  return {
+    target_type: target.target_type,
+    target_id: target.target_id,
+    prompt_mode: target.prompt_mode,
+    date_utc: dateUtcForTarget(target),
+    summary:
+      target.kind === "signal"
+        ? "Publishable v0.2 Signal Event selected for bounded Claude sample."
+        : "Existing v0.2 Daily Overview selected for bounded Claude sample.",
+  };
+}
+
+async function getV02ClaudeCounts(db: D1Database): Promise<V02ClaudeCounts> {
+  const row = await db
+    .prepare(
+      `SELECT
+        (SELECT COUNT(*) FROM claude_briefs_v02) AS claude_briefs_v02,
+        (SELECT COUNT(*) FROM source_references_v02) AS source_references_v02,
+        (SELECT COUNT(*) FROM source_references_v02 WHERE accepted = 1) AS accepted_source_references_v02,
+        (SELECT COUNT(*) FROM source_references_v02 WHERE accepted = 0) AS rejected_source_references_v02,
+        (SELECT COUNT(*) FROM claude_briefs) AS legacy_claude_briefs,
+        (SELECT COUNT(*) FROM source_references) AS legacy_source_references`,
+    )
+    .first<V02ClaudeCounts>();
+
+  return {
+    claude_briefs_v02: row?.claude_briefs_v02 ?? 0,
+    source_references_v02: row?.source_references_v02 ?? 0,
+    accepted_source_references_v02: row?.accepted_source_references_v02 ?? 0,
+    rejected_source_references_v02: row?.rejected_source_references_v02 ?? 0,
+    legacy_claude_briefs: row?.legacy_claude_briefs ?? 0,
+    legacy_source_references: row?.legacy_source_references ?? 0,
+  };
 }
 
 async function readV02PipelineOptions(request: Request): Promise<{
@@ -367,5 +529,83 @@ export async function adminResponse(
     return json(response);
   }
 
+  if (url.pathname === "/api/admin/v02/run-claude-sample") {
+    if (request.method !== "POST") {
+      return methodNotAllowed();
+    }
+
+    if (!isV02AdminToolsEnabled(env)) {
+      return notFound();
+    }
+
+    let options: V02ClaudeSampleOptions;
+
+    try {
+      options = await readV02ClaudeSampleOptions(request);
+      requireSampleFlags(env, options.mode);
+    } catch (error) {
+      return jsonError(400, "invalid_request", safeSampleError(error));
+    }
+
+    const countsBefore = await getV02ClaudeCounts(env.DB);
+    const selected = await selectClaudeEnrichmentTargetsV02(env.DB, env, {
+      limit: options.limit,
+      targetKinds: options.targetKinds,
+      targetIds: options.ids,
+    });
+    const response: Record<string, unknown> = {
+      ok: true,
+      dry_run: options.dryRun,
+      mode: options.mode,
+      limit: options.limit,
+      selected: selected.map(safeSelectedTarget),
+      processed: 0,
+      results: [],
+      counts_before: countsBefore,
+      counts_after: countsBefore,
+      warnings: [],
+    };
+
+    if (options.dryRun) {
+      return json(response);
+    }
+
+    const result = await runClaudeEnrichmentV02(env.DB, env, {
+      limit: options.limit,
+      targetKinds: options.targetKinds,
+      targetIds: selected.map((target) => target.target_id),
+    });
+    const countsAfter = await getV02ClaudeCounts(env.DB);
+
+    response.ok = result.status !== "failed";
+    response.processed = result.processed;
+    response.result = {
+      status: result.status,
+      message: result.message,
+      processed: result.processed,
+      signal_processed: result.signal_processed,
+      daily_processed: result.daily_processed,
+      brief_ready: result.brief_ready_count,
+      context_only: result.context_only_count,
+      no_clear_cause: result.no_clear_cause_count,
+      no_major_driver: result.no_major_driver_count,
+      claude_limited: result.claude_limited_count,
+      failed_retryable: result.failed_retryable_count,
+      failed_terminal: result.failed_terminal_count,
+      sources_written: result.sources_written,
+      rejected_sources: result.rejected_sources_count,
+      limit: result.limit,
+    };
+    response.counts_after = countsAfter;
+
+    return json(response);
+  }
+
   return notFound();
+}
+
+function safeSampleError(error: unknown): string {
+  return error instanceof Error
+    ? error.message
+    : "Request body must include valid v0.2 Claude sample options.";
 }

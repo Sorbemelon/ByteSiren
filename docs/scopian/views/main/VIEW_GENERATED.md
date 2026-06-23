@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-21T19:05:34+07:00
+generated_at: 2026-06-23T14:03:35+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -13,10 +13,10 @@ canonical_inputs:
   - source_registry.yml
 input_hashes:
   view: sha256:8c6b400b796c
-  sources: sha256:d67251b94f3b
+  sources: sha256:8e64b12fe565
   buffer: sha256:11e7a1a3d36e
   context: sha256:5ef45bc1a5d7
-  registry: sha256:89d5b977dbef
+  registry: sha256:96268507c30c
 ---
 
 # Generated Scope View
@@ -31,11 +31,11 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-21T19:05:34+07:00
+- generated_at: 2026-06-23T14:03:35+07:00
 
 ## Selected Sources
 
-- docs/scopian/sources/00_SOURCE_INDEX.md (sha256:34211b42e420ad334074a05f4845a03c5f0be59cae42a3853178d99cf930b21e)
+- docs/scopian/sources/00_SOURCE_INDEX.md (sha256:1294952f2b6f3fdd2b344dc474cf3b3a6cf2731f29cc5f66de43f592b01a962d)
 - docs/scopian/sources/01_PRODUCT_SPEC.md (sha256:5e1166ce582094a06466cc038086a6de0a117a5fa2a69880d23a60ea5e21d8f7)
 - docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md (sha256:6ee10db5ff934f5552c83fcad278e7c3e2ee2e981031f6b2e88ee68aa7e5bdbf)
 - docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md (sha256:99989ebd89a29d2bacf928768770d2f9fce828ddfc3dba7cfdd225a165bccbaf)
@@ -51,8 +51,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md (sha256:f59fa372b1951fe6b9d256070b31d84f906321a750a31e6a428918fe3eee6803)
 - docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5)
 - PRODUCT.md (sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd)
-- docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:17714e28df9947f0407ed63293221cb2c93320016968d19a3a51bd0bb69e8709)
-- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:12c17479d00b49717ad40b7d4c28c5f473b09c6911e1b8216d50019e9914cebb)
+- docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:1000b32461b419fd321537987a9d618c466ac58e4e259d43ca6133fbd3c074e7)
+- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:cc346f8fdb0f115aa003d5ceb9d5e7e86f97214c10f09f7fa96ffe8f05b9f2c0)
 
 ## Approved Buffer Summary
 
@@ -122,6 +122,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-headerbar-b999474e | allowed_with_limits | HeaderBar | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#headerbar | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-high-level-architecture-69790859 | allowed_with_limits | High-level architecture | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#high-level-architecture | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-how-to-read-copy-ae5a57e8 | allowed_with_limits | How-to-read copy | docs/scopian/sources/09_SAFETY_DISCLAIMER_COPY.md#how-to-read-copy | none | not_checked_in_generated_view |
+| ITEM-allowed-with-limits-i-v0-2-production-cutover-rehear-a06e828a | allowed_with_limits | I. v0.2 production cutover rehearsal | docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md#i-v0-2-production-cutover-rehearsal | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-if-only-broader-context-found-ec0892ae | allowed_with_limits | If only broader context found | docs/scopian/sources/12_CLAUDE_PRODUCTION_PROMPT.md#if-only-broader-context-found | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-included-07c8fcd2 | allowed_with_limits | Included | docs/scopian/sources/01_PRODUCT_SPEC.md#included | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-interactions-9ecb50cd | allowed_with_limits | Interactions | docs/scopian/sources/06_UI_UX_VARIANT_A_SPEC.md#interactions | none | not_checked_in_generated_view |
@@ -130,7 +131,6 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-allowed-with-limits-logo-assets-8ffb511f | allowed_with_limits | Logo assets | docs/scopian/sources/07_VISUAL_THEME_AND_BRAND.md#logo-assets | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-meta-description-6ee13576 | allowed_with_limits | Meta description | docs/scopian/sources/08_SEO_SPEC.md#meta-description | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-next-js-metadata-5b0ae45d | allowed_with_limits | Next.js metadata | docs/scopian/sources/08_SEO_SPEC.md#next-js-metadata | read-only | not_checked_in_generated_view |
-| ITEM-allowed-with-limits-non-goals-replace-the-production-3e88e8a6 | allowed_with_limits | Non-Goals: replace the production detector; switch the public feed API; change frontend production UI; change the production Claude prompt behavior | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#non-goals | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-open-graph-image-5216a2ca | allowed_with_limits | Open Graph image | docs/scopian/sources/08_SEO_SPEC.md#open-graph-image | read-only | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-page-background-2b23867e | allowed_with_limits | Page background | docs/scopian/sources/07_VISUAL_THEME_AND_BRAND.md#page-background | none | not_checked_in_generated_view |
 | ITEM-allowed-with-limits-phase-4-claude-enrichment-a5559d37 | allowed_with_limits | Phase 4 — Claude enrichment | docs/scopian/sources/11_BUILD_PLAN_AND_VERIFICATION.md#phase-4-claude-enrichment | none | not_checked_in_generated_view |
@@ -180,10 +180,12 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 | ITEM-likely-out-of-scope-codex-phase-1-prompt-cloudflare-ac8ee980 | likely_out_of_scope | Codex Phase 1 prompt — Cloudflare foundation: 01_PRODUCT_SPEC.md; 04_CLOUDFLARE_ARCHITECTURE_AND_API.md; 10_AGENT_ROLES_AND_BUILD_WORKFLOW.md; 11_BUILD_PLAN ... | docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md#codex-phase-1-prompt-cloudflare-foundation | do-not-build | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-codex-phase-2-prompt-market-inge-9cb3804f | likely_out_of_scope | Codex Phase 2 prompt — Market ingestion: 02_SIGNAL_ENGINE_V2_2.md; 04_CLOUDFLARE_ARCHITECTURE_AND_API.md; 05_DATA_MODEL_D1_RETENTION.md; D1 migration for ma ... | docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md#codex-phase-2-prompt-market-ingestion | do-not-build | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-daily-overview-1b23d564 | likely_out_of_scope | Daily Overview | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#daily-overview | none | not_checked_in_generated_view |
+| ITEM-likely-out-of-scope-h-local-v0-2-smoke-before-cutove-31b366b0 | likely_out_of_scope | H. Local v0.2 smoke before cutover: `apiFeedCounts` are the public `/api/intelligence/feed` item counts and are the source of truth for public feed contents ... | docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md#h-local-v0-2-smoke-before-cutover | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-idempotency-requirements-a89ade13 | likely_out_of_scope | Idempotency requirements | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#idempotency-requirements | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-impeccable-frontend-skill-7b91f37c | likely_out_of_scope | Impeccable frontend skill | docs/scopian/sources/10_AGENT_ROLES_AND_BUILD_WORKFLOW.md#impeccable-frontend-skill | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-implementation-requirements-12034e69 | likely_out_of_scope | Implementation requirements | docs/scopian/sources/02_SIGNAL_ENGINE_V2_2.md#implementation-requirements | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-market-story-claude-brief-id-cla-1c6b319a | likely_out_of_scope | Market Story: `claude_brief_id`; `claude_payload`; `public_context_status`; `source_status` | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#market-story | none | not_checked_in_generated_view |
+| ITEM-likely-out-of-scope-non-goals-replace-the-production-a380c163 | likely_out_of_scope | Non-Goals: replace the production detector; switch the public feed API; change frontend production UI; change the production Claude prompt behavior | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#non-goals | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-phase-4c-backend-smoke-status-fe6088fd | likely_out_of_scope | Phase 4C backend smoke status | docs/scopian/sources/04_CLOUDFLARE_ARCHITECTURE_AND_API.md#phase-4c-backend-smoke-status | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-phase-4c-live-smoke-finding-e0b3445b | likely_out_of_scope | Phase 4C live-smoke finding | docs/scopian/sources/03_CLAUDE_ENRICHMENT_POLICY.md#phase-4c-live-smoke-finding | none | not_checked_in_generated_view |
 | ITEM-likely-out-of-scope-planned-feature-flags-detector-v-71b41560 | likely_out_of_scope | Planned Feature Flags: `DETECTOR_VERSION=v01\|v02`; `FEED_VERSION=v01\|v02`; `ENABLE_DAILY_OVERVIEWS`; `ENABLE_MARKET_STORIES` | docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md#planned-feature-flags | none | not_checked_in_generated_view |
@@ -197,7 +199,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - likely_in_scope: 24
 - allowed_with_limits: 82
-- likely_out_of_scope: 21
+- likely_out_of_scope: 23
 - decision_required: 0
 - conflict_detected: 0
 - insufficient_evidence: 0
@@ -208,21 +210,21 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - template_only: true
 - correctness_claim: false
 - decision_required_items: 0
-- out_of_scope_items: 21
+- out_of_scope_items: 23
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-21T19:05:34+07:00
+- generated_refresh: 2026-06-23T14:03:35+07:00
 - selected_sources: 18
 - approved_buffer_records: 4
 
 ## Freshness Metadata
 
 - view: sha256:8c6b400b796c
-- sources: sha256:d67251b94f3b
+- sources: sha256:8e64b12fe565
 - buffer: sha256:11e7a1a3d36e
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:89d5b977dbef
+- registry: sha256:96268507c30c
 
 ## Refresh Instructions
 

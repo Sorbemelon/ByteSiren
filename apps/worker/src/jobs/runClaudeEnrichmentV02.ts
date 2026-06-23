@@ -53,7 +53,7 @@ type ClaudeBriefStatusV02 =
   | "failed_retryable"
   | "failed_terminal";
 
-type TargetKindV02 = "signal" | "daily";
+export type TargetKindV02 = "signal" | "daily";
 
 export interface ClaudeEnrichmentClientV02 {
   createIncidentBrief(
@@ -92,6 +92,8 @@ interface RunOptions {
   now?: Date;
   client?: ClaudeEnrichmentClientV02;
   limit?: number;
+  targetKinds?: TargetKindV02[];
+  targetIds?: string[];
 }
 
 const TERMINAL_STATUSES = new Set<string>([
@@ -157,7 +159,12 @@ function systemPromptForV02(): string {
 export async function selectClaudeEnrichmentTargetsV02(
   db: D1Database,
   env: Env,
-  options: { now?: Date; limit?: number } = {},
+  options: {
+    now?: Date;
+    limit?: number;
+    targetKinds?: TargetKindV02[];
+    targetIds?: string[];
+  } = {},
 ): Promise<ClaudeEnrichmentTargetV02[]> {
   const now = options.now ?? new Date();
   const limit = Math.max(
@@ -168,14 +175,27 @@ export async function selectClaudeEnrichmentTargetsV02(
     ),
   );
   const targets: ClaudeEnrichmentTargetV02[] = [];
+  const allowedKinds = options.targetKinds
+    ? new Set(options.targetKinds)
+    : null;
+  const allowedIds = options.targetIds?.length
+    ? new Set(options.targetIds)
+    : null;
 
-  if (parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02)) {
+  if (
+    (!allowedKinds || allowedKinds.has("signal")) &&
+    parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02)
+  ) {
     const signalPayloads = await buildSignalEventClaudePayloadsV02(db, {
       now,
       days: VISIBLE_RANGE_DAYS,
     });
 
     for (const payload of signalPayloads) {
+      if (allowedIds && !allowedIds.has(payload.target_id)) {
+        continue;
+      }
+
       const existing = await getClaudeBriefV02ByTarget(
         db,
         "signal_event_v02",
@@ -201,13 +221,20 @@ export async function selectClaudeEnrichmentTargetsV02(
     }
   }
 
-  if (parseBooleanFlag(env.ENABLE_DAILY_CLAUDE)) {
+  if (
+    (!allowedKinds || allowedKinds.has("daily")) &&
+    parseBooleanFlag(env.ENABLE_DAILY_CLAUDE)
+  ) {
     const dailyPayloads = await buildDailyOverviewClaudePayloadsV02(db, {
       now,
       days: VISIBLE_RANGE_DAYS,
     });
 
     for (const payload of dailyPayloads) {
+      if (allowedIds && !allowedIds.has(payload.target_id)) {
+        continue;
+      }
+
       const existing = await getClaudeBriefV02ByTarget(
         db,
         "daily_overview_v02",
@@ -611,6 +638,8 @@ export async function runClaudeEnrichmentV02(
   const targets = await selectClaudeEnrichmentTargetsV02(db, env, {
     now: startedAt,
     limit,
+    targetKinds: options.targetKinds,
+    targetIds: options.targetIds,
   });
 
   if (targets.length === 0) {
