@@ -431,9 +431,7 @@ function isDateOnly(iso: string): boolean {
 // Date-level marker position for accepted sources that have no honest
 // article/catalyst timestamp. They render hollow at 00:00 UTC so every accepted
 // source gets a marker without inventing a precise source time.
-function sectionDateStartAnchor(
-  section: NormalizedFeedSection,
-): string | null {
+function sectionDateStartAnchor(section: NormalizedFeedSection): string | null {
   if (/^\d{4}-\d{2}-\d{2}$/.test(section.dateUtc)) {
     return validIsoOrNull(`${section.dateUtc}T00:00:00.000Z`);
   }

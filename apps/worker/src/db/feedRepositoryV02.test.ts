@@ -796,10 +796,7 @@ test("public sources expose catalyst_time_utc from metadata", async () => {
 
   assert.equal(signal.sources.length, 1);
   assert.equal(signal.sources[0].published_at, "2026-06-19T18:00:00.000Z");
-  assert.equal(
-    signal.sources[0].catalyst_time_utc,
-    "2026-06-19T13:30:00.000Z",
-  );
+  assert.equal(signal.sources[0].catalyst_time_utc, "2026-06-19T13:30:00.000Z");
 });
 
 test("acceptance: feed surfaces each accepted source with its own role and preserved timestamps", async () => {
@@ -884,15 +881,19 @@ test("acceptance: feed surfaces each accepted source with its own role and prese
 
   assert.ok(signal && signal.item_type === "signal_event");
   assert.ok(daily && daily.item_type === "daily_overview");
-  if (signal.item_type !== "signal_event" || daily.item_type !== "daily_overview") {
+  if (
+    signal.item_type !== "signal_event" ||
+    daily.item_type !== "daily_overview"
+  ) {
     throw new Error("expected signal and daily items");
   }
 
   // Signal: each role is preserved (not flattened to Backdrop).
-  assert.deepEqual(
-    signal.sources.map((source) => source.tag).sort(),
-    ["Backdrop source", "Focused catalyst source", "Price check source"],
-  );
+  assert.deepEqual(signal.sources.map((source) => source.tag).sort(), [
+    "Backdrop source",
+    "Focused catalyst source",
+    "Price check source",
+  ]);
   const focused = signal.sources.find(
     (source) => source.tag === "Focused catalyst source",
   );
@@ -904,10 +905,10 @@ test("acceptance: feed surfaces each accepted source with its own role and prese
   assert.equal(price?.published_at, null);
 
   // Daily: Main + Supporting roles preserved.
-  assert.deepEqual(
-    daily.sources.map((source) => source.tag).sort(),
-    ["Main daily context source", "Supporting daily source"],
-  );
+  assert.deepEqual(daily.sources.map((source) => source.tag).sort(), [
+    "Main daily context source",
+    "Supporting daily source",
+  ]);
 });
 
 test("v0.2 public feed limits accepted sources to three", async () => {

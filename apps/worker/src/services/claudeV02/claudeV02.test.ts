@@ -328,7 +328,10 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
   assert.match(signalPrompt, /ALWAYS include catalyst_time_utc/);
   assert.match(signalPrompt, /FOMC rate decisions are announced ~18:00 UTC/);
   assert.match(signalPrompt, /date-level is acceptable/);
-  assert.match(signalPrompt, /never move published_at to a different calendar day/i);
+  assert.match(
+    signalPrompt,
+    /never move published_at to a different calendar day/i,
+  );
   assert.match(signalPrompt, /Prefer Market Backdrop over No Clear Cause/);
   // Daily sourcing must stay within the UTC day.
   assert.match(dailyPrompt, /Sources must fall within this UTC day/);
@@ -598,7 +601,8 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
         published_at: "2026-06-17T02:00:00.000Z",
         catalyst_time_utc: "2026-06-17T02:00:00.000Z",
         tag: "Backdrop source",
-        why_relevant: "Broad context from a prior UTC day, well outside the window.",
+        why_relevant:
+          "Broad context from a prior UTC day, well outside the window.",
       },
     ],
   });
@@ -633,7 +637,8 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
         published_at: "2026-06-19T02:00:00.000Z",
         catalyst_time_utc: null,
         tag: "Backdrop source",
-        why_relevant: "Same-day coverage of the move; no pinpoint catalyst time.",
+        why_relevant:
+          "Same-day coverage of the move; no pinpoint catalyst time.",
       },
     ],
   });
@@ -650,7 +655,8 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
         published_at: "2026-06-19T02:00:00.000Z",
         catalyst_time_utc: null,
         tag: "Likely cause source",
-        why_relevant: "Same day but outside the 6h window and no catalyst time.",
+        why_relevant:
+          "Same day but outside the 6h window and no catalyst time.",
       },
     ],
   });

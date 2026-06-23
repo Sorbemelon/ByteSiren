@@ -542,8 +542,8 @@ export default function BottomAccordions({
             Chart markers for accepted sources on Claude-backed Daily Overview
             or Signal Event cards. Filled markers use a specific article or
             catalyst timestamp. No-fill markers mean the source has no specific
-            timestamp, so ByteSiren places it at the source date&apos;s 00:00 UTC
-            point. When times overlap, markers stack vertically without
+            timestamp, so ByteSiren places it at the source date&apos;s 00:00
+            UTC point. When times overlap, markers stack vertically without
             shifting chart time. They never appear for Market Story.
           </DefinitionCard>
         </DefinitionGrid>
@@ -916,8 +916,8 @@ export default function BottomAccordions({
           </DefinitionCard>
           <DefinitionCard term="No-fill source marker">
             A hollow chart source marker means the accepted source has no
-            specific timestamp. ByteSiren marks it at that source date&apos;s 00:00
-            UTC instead of inventing an exact time.
+            specific timestamp. ByteSiren marks it at that source date&apos;s
+            00:00 UTC instead of inventing an exact time.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>
