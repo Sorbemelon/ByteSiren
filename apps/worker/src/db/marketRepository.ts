@@ -209,6 +209,25 @@ export async function getCandlesForSymbolSince(
   return result.results.map(toMarketCandle);
 }
 
+export async function getCandlesForSymbolRange(
+  db: D1Database,
+  symbol: MarketSymbol,
+  startIso: string,
+  endIso: string,
+): Promise<MarketCandle[]> {
+  const result = await db
+    .prepare(
+      `SELECT symbol, interval, open_time, close_time, open, high, low, close, volume, quote_volume, trade_count
+       FROM market_candles
+       WHERE symbol = ? AND interval = ? AND open_time >= ? AND open_time <= ?
+       ORDER BY open_time ASC`,
+    )
+    .bind(symbol, MARKET_INTERVAL, startIso, endIso)
+    .all<MarketCandleRow>();
+
+  return result.results.map(toMarketCandle);
+}
+
 export async function getCandleHistoryBounds(
   db: D1Database,
   symbol: MarketSymbol,

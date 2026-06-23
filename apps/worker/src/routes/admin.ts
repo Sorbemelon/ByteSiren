@@ -1,10 +1,15 @@
 import {
   ALLOWED_SYMBOLS,
   BINANCE_KLINES_LIMIT,
+  MARKET_INTERVAL,
   type MarketSymbol,
   parseMarketSymbol,
   parseBooleanFlag,
 } from "../config.ts";
+import {
+  getCandleHistoryBounds,
+  recordJobRun,
+} from "../db/marketRepository.ts";
 import { enrichQueuedIncidents } from "../jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "../jobs/pollMarket.ts";
 import {
@@ -15,12 +20,22 @@ import {
 } from "../jobs/runClaudeEnrichmentV02.ts";
 import { runDailyOverviewsV02 } from "../jobs/runDailyOverviewsV02.ts";
 import { runDetectorV02 } from "../jobs/runDetectorV02.ts";
-import { runMarketStoriesV02 } from "../jobs/runMarketStoriesV02.ts";
+import {
+  runMarketStoriesV02,
+  type RunMarketStoriesV02Result,
+} from "../jobs/runMarketStoriesV02.ts";
 import { seedFixtureClaudeV02 } from "../jobs/seedFixtureClaudeV02.ts";
 import { checkBinanceKlines } from "../services/binance.ts";
+import { MARKET_STORY_V02_MODEL_VERSION } from "../services/marketStoriesV02/index.ts";
 import type { Env } from "../types/env.ts";
 import type { SymbolPollResult } from "../types/market.ts";
-import { json, jsonError, methodNotAllowed, notFound } from "../utils/http.ts";
+import {
+  json,
+  jsonError,
+  methodNotAllowed,
+  notFound,
+  safeErrorMessage,
+} from "../utils/http.ts";
 
 const ADMIN_TOKEN_HEADER = "x-bytesiren-admin-token";
 const V02_PIPELINE_STEPS = new Set([
@@ -47,6 +62,35 @@ interface V02ClaudeCounts {
   rejected_source_references_v02: number;
   legacy_claude_briefs: number;
   legacy_source_references: number;
+}
+
+interface V02PipelineOptions {
+  steps: V02PipelineStep[];
+  includeFixtureClaude: boolean;
+  mode: "legacy_unbounded" | "bounded";
+  dryRun: boolean;
+  dateFrom: string | null;
+  dateTo: string | null;
+  maxDays: number;
+  maxSymbols: number;
+  allowUnboundedDetector: boolean;
+}
+
+interface V02TableCounts {
+  signal_events_v02: number;
+  signal_event_symbols_v02: number;
+  audit_events_v02: number;
+  market_stories_v02: number;
+  market_story_members_v02: number;
+  daily_overviews_v02: number;
+  claude_briefs_v02: number;
+  source_references_v02: number;
+}
+
+interface CandleCoverageRow {
+  symbol: MarketSymbol;
+  date_utc: string;
+  candle_count: number;
 }
 
 function isMaintenanceEnabled(env: Env): boolean {
@@ -129,6 +173,82 @@ function parseCatchupLimit(value: unknown): number {
   }
 
   return Math.max(1, Math.min(10, Math.trunc(parsed)));
+}
+
+function dateUtc(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
+}
+
+function parseMaxDays(value: unknown): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return 1;
+  }
+
+  return Math.max(1, Math.min(3, Math.trunc(parsed)));
+}
+
+function parseMaxSymbols(value: unknown): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return ALLOWED_SYMBOLS.length;
+  }
+
+  return Math.max(1, Math.min(ALLOWED_SYMBOLS.length, Math.trunc(parsed)));
+}
+
+function inclusiveDayCount(dateFrom: string, dateTo: string): number {
+  const from = Date.parse(`${dateFrom}T00:00:00.000Z`);
+  const to = Date.parse(`${dateTo}T00:00:00.000Z`);
+
+  if (!Number.isFinite(from) || !Number.isFinite(to) || to < from) {
+    return 0;
+  }
+
+  return Math.floor((to - from) / (24 * 60 * 60 * 1000)) + 1;
+}
+
+function resolvePipelineDateRange(body: Record<string, unknown>): {
+  dateFrom: string | null;
+  dateTo: string | null;
+} {
+  const singleDate = dateUtc(body.date_utc);
+  const dateFrom = dateUtc(body.date_from) ?? singleDate;
+  const dateTo = dateUtc(body.date_to) ?? singleDate ?? dateFrom;
+
+  if ((body.date_from && !dateFrom) || (body.date_to && !dateTo)) {
+    throw new Error("date_from and date_to must use YYYY-MM-DD.");
+  }
+
+  if (body.date_utc && !singleDate) {
+    throw new Error("date_utc must use YYYY-MM-DD.");
+  }
+
+  if (dateFrom && dateTo && inclusiveDayCount(dateFrom, dateTo) <= 0) {
+    throw new Error("date_to must be on or after date_from.");
+  }
+
+  return {
+    dateFrom,
+    dateTo,
+  };
 }
 
 function parseSampleLimit(value: unknown): number {
@@ -272,6 +392,13 @@ async function getV02ClaudeCounts(db: D1Database): Promise<V02ClaudeCounts> {
 async function readV02PipelineOptions(request: Request): Promise<{
   steps: V02PipelineStep[];
   includeFixtureClaude: boolean;
+  mode: "legacy_unbounded" | "bounded";
+  dryRun: boolean;
+  dateFrom: string | null;
+  dateTo: string | null;
+  maxDays: number;
+  maxSymbols: number;
+  allowUnboundedDetector: boolean;
 }> {
   let body: Record<string, unknown> = {};
 
@@ -314,9 +441,46 @@ async function readV02PipelineOptions(request: Request): Promise<{
     }
   }
 
+  const mode = body.mode === "bounded" ? "bounded" : "legacy_unbounded";
+  const { dateFrom, dateTo } = resolvePipelineDateRange(body);
+  const maxDays = parseMaxDays(body.max_days);
+  const maxSymbols = parseMaxSymbols(body.max_symbols);
+  const allowUnboundedDetector = parseBoolean(
+    body.allow_unbounded_detector,
+    false,
+  );
+
+  if (mode === "bounded") {
+    if (dateFrom && dateTo && inclusiveDayCount(dateFrom, dateTo) > maxDays) {
+      throw new Error("bounded pipeline date range exceeds max_days.");
+    }
+
+    if (
+      parsedSteps.some(
+        (step) => step === "detector" || step === "daily_overviews",
+      ) &&
+      (!dateFrom || !dateTo)
+    ) {
+      throw new Error(
+        "bounded detector/daily_overviews requests require date_utc or date_from/date_to.",
+      );
+    }
+  } else if (parsedSteps.includes("detector") && !allowUnboundedDetector) {
+    throw new Error(
+      "unbounded v0.2 detector requests require allow_unbounded_detector=true.",
+    );
+  }
+
   return {
     steps: parsedSteps,
     includeFixtureClaude: parseBoolean(body.include_fixture_claude, false),
+    mode,
+    dryRun: parseBoolean(body.dry_run, mode === "bounded"),
+    dateFrom,
+    dateTo,
+    maxDays,
+    maxSymbols,
+    allowUnboundedDetector,
   };
 }
 
@@ -363,6 +527,282 @@ function failuresForResponse(results: SymbolPollResult[]) {
       http_status: result.http_status ?? null,
       message: result.error ?? null,
     }));
+}
+
+async function getV02TableCounts(db: D1Database): Promise<V02TableCounts> {
+  const row = await db
+    .prepare(
+      `SELECT
+        (SELECT COUNT(*) FROM signal_events_v02) AS signal_events_v02,
+        (SELECT COUNT(*) FROM signal_event_symbols_v02) AS signal_event_symbols_v02,
+        (SELECT COUNT(*) FROM audit_events_v02) AS audit_events_v02,
+        (SELECT COUNT(*) FROM market_stories_v02) AS market_stories_v02,
+        (SELECT COUNT(*) FROM market_story_members_v02) AS market_story_members_v02,
+        (SELECT COUNT(*) FROM daily_overviews_v02) AS daily_overviews_v02,
+        (SELECT COUNT(*) FROM claude_briefs_v02) AS claude_briefs_v02,
+        (SELECT COUNT(*) FROM source_references_v02) AS source_references_v02`,
+    )
+    .first<V02TableCounts>();
+
+  return {
+    signal_events_v02: row?.signal_events_v02 ?? 0,
+    signal_event_symbols_v02: row?.signal_event_symbols_v02 ?? 0,
+    audit_events_v02: row?.audit_events_v02 ?? 0,
+    market_stories_v02: row?.market_stories_v02 ?? 0,
+    market_story_members_v02: row?.market_story_members_v02 ?? 0,
+    daily_overviews_v02: row?.daily_overviews_v02 ?? 0,
+    claude_briefs_v02: row?.claude_briefs_v02 ?? 0,
+    source_references_v02: row?.source_references_v02 ?? 0,
+  };
+}
+
+async function listCandleCoverageRows(
+  db: D1Database,
+): Promise<CandleCoverageRow[]> {
+  const result = await db
+    .prepare(
+      `SELECT
+        symbol,
+        substr(open_time, 1, 10) AS date_utc,
+        COUNT(*) AS candle_count
+       FROM market_candles
+       WHERE interval = ?
+       GROUP BY symbol, date_utc
+       ORDER BY date_utc ASC, symbol ASC`,
+    )
+    .bind(MARKET_INTERVAL)
+    .all<CandleCoverageRow>();
+
+  return result.results;
+}
+
+function completeUtcDaysFromCoverage(rows: CandleCoverageRow[]): string[] {
+  const byDate = new Map<string, Map<string, number>>();
+  const currentDateUtc = new Date().toISOString().slice(0, 10);
+
+  for (const row of rows) {
+    const bySymbol = byDate.get(row.date_utc) ?? new Map<string, number>();
+    bySymbol.set(row.symbol, Number(row.candle_count));
+    byDate.set(row.date_utc, bySymbol);
+  }
+
+  return [...byDate.entries()]
+    .filter(([dateUtc, bySymbol]) => {
+      if (dateUtc >= currentDateUtc) {
+        return false;
+      }
+
+      return ALLOWED_SYMBOLS.every(
+        (symbol) => (bySymbol.get(symbol) ?? 0) >= 77,
+      );
+    })
+    .map(([dateUtc]) => dateUtc)
+    .sort();
+}
+
+async function lastV02JobRuns(db: D1Database) {
+  const result = await db
+    .prepare(
+      `SELECT job_name, status, started_at, finished_at, message, metadata_json
+       FROM job_runs
+       WHERE job_name IN ('admin_v02_pipeline', 'run_detector_v02', 'run_market_stories_v02', 'run_daily_overviews_v02')
+       ORDER BY started_at DESC
+       LIMIT 20`,
+    )
+    .all<Record<string, unknown>>();
+
+  return result.results;
+}
+
+async function diagnosticsResponse(env: Env): Promise<Response> {
+  const [candleBounds, coverageRows, tableCounts, jobRuns] = await Promise.all([
+    Promise.all(
+      ALLOWED_SYMBOLS.map((symbol) => getCandleHistoryBounds(env.DB, symbol)),
+    ),
+    listCandleCoverageRows(env.DB),
+    getV02TableCounts(env.DB),
+    lastV02JobRuns(env.DB),
+  ]);
+  const completeDays = completeUtcDaysFromCoverage(coverageRows);
+  const totalCandles = candleBounds.reduce((sum, row) => sum + row.count, 0);
+  const oldest =
+    candleBounds
+      .map((row) => row.earliest_open_time)
+      .filter((value): value is string => Boolean(value))
+      .sort()[0] ?? null;
+  const latest =
+    candleBounds
+      .map((row) => row.latest_close_time)
+      .filter((value): value is string => Boolean(value))
+      .sort()
+      .at(-1) ?? null;
+
+  return json({
+    ok: true,
+    diagnostics_version: "v02_admin_diagnostics_v1",
+    feature_flags: {
+      detector_version: env.DETECTOR_VERSION ?? null,
+      feed_version: env.FEED_VERSION ?? null,
+      enable_market_stories: parseBooleanFlag(env.ENABLE_MARKET_STORIES),
+      enable_daily_overviews: parseBooleanFlag(env.ENABLE_DAILY_OVERVIEWS),
+      enable_signal_claude_v02: parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02),
+      enable_daily_claude: parseBooleanFlag(env.ENABLE_DAILY_CLAUDE),
+      enable_admin_maintenance: isMaintenanceEnabled(env),
+      enable_v02_admin_tools: isV02AdminToolsEnabled(env),
+    },
+    candles: {
+      by_symbol: candleBounds,
+      coverage_days_by_symbol: coverageRows,
+      expected_complete_utc_day_count: completeDays.length,
+      complete_utc_days: completeDays,
+    },
+    v02_table_counts: tableCounts,
+    last_job_runs: jobRuns,
+    estimated_work_size: {
+      symbol_count: ALLOWED_SYMBOLS.length,
+      candle_count: totalCandles,
+      oldest_candle_time: oldest,
+      latest_candle_time: latest,
+      complete_days: completeDays.length,
+      date_range:
+        oldest && latest
+          ? {
+              start: oldest.slice(0, 10),
+              end: latest.slice(0, 10),
+            }
+          : null,
+    },
+  });
+}
+
+async function recordPipelineBreadcrumb(
+  db: D1Database,
+  status: "started" | "success" | "failed" | "skipped",
+  message: string,
+  metadata: Record<string, unknown>,
+  startedAt = new Date(),
+) {
+  await recordJobRun(
+    db,
+    "admin_v02_pipeline",
+    status,
+    message,
+    metadata,
+    startedAt,
+    status === "started" ? startedAt : new Date(),
+  );
+}
+
+function safePipelineOptionsForMetadata(
+  options: Pick<
+    V02PipelineOptions,
+    "mode" | "dryRun" | "dateFrom" | "dateTo" | "maxDays" | "maxSymbols"
+  >,
+) {
+  return {
+    mode: options.mode,
+    dry_run: options.dryRun,
+    date_from: options.dateFrom,
+    date_to: options.dateTo,
+    max_days: options.maxDays,
+    max_symbols: options.maxSymbols,
+  };
+}
+
+async function runPipelineStepWithBreadcrumb<T>(
+  env: Env,
+  step: V02PipelineStep,
+  requestId: string,
+  options: V02PipelineOptions,
+  run: () => Promise<T>,
+): Promise<T> {
+  if (!options.dryRun) {
+    await recordPipelineBreadcrumb(
+      env.DB,
+      "started",
+      `v0.2 admin pipeline step started: ${step}.`,
+      {
+        request_id: requestId,
+        step,
+        ...safePipelineOptionsForMetadata(options),
+      },
+    );
+  }
+
+  try {
+    const result = await run();
+
+    if (!options.dryRun) {
+      await recordPipelineBreadcrumb(
+        env.DB,
+        "success",
+        `v0.2 admin pipeline step completed: ${step}.`,
+        {
+          request_id: requestId,
+          step,
+          result:
+            result && typeof result === "object"
+              ? {
+                  status: (result as { status?: unknown }).status ?? null,
+                  message: (result as { message?: unknown }).message ?? null,
+                }
+              : null,
+          ...safePipelineOptionsForMetadata(options),
+        },
+      );
+    }
+
+    return result;
+  } catch (error) {
+    if (!options.dryRun) {
+      await recordPipelineBreadcrumb(
+        env.DB,
+        "failed",
+        `v0.2 admin pipeline step failed: ${step}.`,
+        {
+          request_id: requestId,
+          step,
+          error_message: safeErrorMessage(error),
+          ...safePipelineOptionsForMetadata(options),
+        },
+      );
+    }
+
+    throw error;
+  }
+}
+
+function boundedDetectorOptions(
+  options: V02PipelineOptions,
+  requestId: string,
+) {
+  return options.mode === "bounded"
+    ? {
+        dateFrom: options.dateFrom ?? undefined,
+        dateTo: options.dateTo ?? undefined,
+        dryRun: options.dryRun,
+        requestId,
+        enableMarketStories: false,
+      }
+    : {
+        dryRun: false,
+        requestId,
+        enableMarketStories: false,
+      };
+}
+
+function boundedDailyOptions(options: V02PipelineOptions, requestId: string) {
+  return options.mode === "bounded"
+    ? {
+        dateFrom: options.dateFrom ?? undefined,
+        dateTo: options.dateTo ?? undefined,
+        dryRun: options.dryRun,
+        requestId,
+      }
+    : {
+        dryRun: false,
+        requestId,
+      };
 }
 
 export async function adminResponse(
@@ -468,6 +908,18 @@ export async function adminResponse(
     });
   }
 
+  if (url.pathname === "/api/admin/v02/diagnostics") {
+    if (request.method !== "GET") {
+      return methodNotAllowed();
+    }
+
+    if (!isV02AdminToolsEnabled(env)) {
+      return notFound();
+    }
+
+    return diagnosticsResponse(env);
+  }
+
   if (url.pathname === "/api/admin/v02/run-pipeline") {
     if (request.method !== "POST") {
       return methodNotAllowed();
@@ -481,49 +933,91 @@ export async function adminResponse(
 
     try {
       options = await readV02PipelineOptions(request);
-    } catch {
-      return jsonError(
-        400,
-        "invalid_request",
-        "Request body must include valid v0.2 pipeline options.",
-      );
+    } catch (error) {
+      return jsonError(400, "invalid_request", safeErrorMessage(error));
     }
 
     const stepsRun: V02PipelineStep[] = [];
     const warnings: string[] = [];
+    const requestId = crypto.randomUUID();
     const response: Record<string, unknown> = {
       ok: true,
+      dry_run: options.dryRun,
+      mode: options.mode,
+      request_id: requestId,
+      date_from: options.dateFrom,
+      date_to: options.dateTo,
       steps_run: stepsRun,
       warnings,
     };
 
     if (options.steps.includes("detector")) {
-      const detector = await runDetectorV02(env.DB, {
-        enableMarketStories: false,
-      });
+      const detector = await runPipelineStepWithBreadcrumb(
+        env,
+        "detector",
+        requestId,
+        options,
+        () =>
+          runDetectorV02(env.DB, boundedDetectorOptions(options, requestId)),
+      );
       stepsRun.push("detector");
       response.detector = detector;
     }
 
     if (options.steps.includes("market_stories")) {
-      const marketStories = await runMarketStoriesV02(env.DB);
+      const marketStories = await runPipelineStepWithBreadcrumb(
+        env,
+        "market_stories",
+        requestId,
+        options,
+        () =>
+          options.dryRun
+            ? Promise.resolve({
+                status: "success" as const,
+                message:
+                  "v0.2 Market Story generation dry-run: existing Signal/Audit rows would be used.",
+                story_model_version: MARKET_STORY_V02_MODEL_VERSION,
+                story_count: 0,
+                publish_candidate_count: 0,
+                suppressed_count: 0,
+                audit_only_story_count: 0,
+                signal_story_count: 0,
+                signal_audit_story_count: 0,
+                market_stories_written: 0,
+                market_story_members_written: 0,
+              } satisfies RunMarketStoriesV02Result)
+            : runMarketStoriesV02(env.DB),
+      );
       stepsRun.push("market_stories");
       response.market_stories = marketStories;
     }
 
     if (options.steps.includes("daily_overviews")) {
-      const dailyOverviews = await runDailyOverviewsV02(env.DB, env);
+      const dailyOverviews = await runPipelineStepWithBreadcrumb(
+        env,
+        "daily_overviews",
+        requestId,
+        options,
+        () =>
+          runDailyOverviewsV02(
+            env.DB,
+            env,
+            boundedDailyOptions(options, requestId),
+          ),
+      );
       stepsRun.push("daily_overviews");
       response.daily_overviews = dailyOverviews;
     }
 
-    if (options.includeFixtureClaude) {
+    if (options.includeFixtureClaude && !options.dryRun) {
       const fixtureClaude = await seedFixtureClaudeV02(env.DB);
       response.fixture_claude = fixtureClaude;
 
       if (fixtureClaude.status === "skipped") {
         warnings.push(fixtureClaude.message);
       }
+    } else if (options.includeFixtureClaude && options.dryRun) {
+      warnings.push("Fixture Claude seeding skipped during dry-run.");
     }
 
     return json(response);

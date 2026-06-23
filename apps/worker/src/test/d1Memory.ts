@@ -420,12 +420,48 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
 
       if (
         this.sql.includes("FROM market_candles") &&
+        this.sql.includes("GROUP BY symbol, date_utc")
+      ) {
+        const [interval] = this.params as [string];
+        const grouped = new Map<
+          string,
+          { symbol: string; date_utc: string; candle_count: number }
+        >();
+
+        for (const row of tables.market_candles) {
+          if (row.interval !== interval) {
+            continue;
+          }
+
+          const dateUtc = row.open_time.slice(0, 10);
+          const key = `${row.symbol}_${dateUtc}`;
+          const existing = grouped.get(key) ?? {
+            symbol: row.symbol,
+            date_utc: dateUtc,
+            candle_count: 0,
+          };
+          existing.candle_count += 1;
+          grouped.set(key, existing);
+        }
+
+        return {
+          results: [...grouped.values()].sort(
+            (a, b) =>
+              a.date_utc.localeCompare(b.date_utc) ||
+              a.symbol.localeCompare(b.symbol),
+          ) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM market_candles") &&
         this.sql.includes("open_time >= ?")
       ) {
-        const [symbol, interval, cutoff] = this.params as [
+        const [symbol, interval, cutoff, end] = this.params as [
           string,
           string,
           string,
+          string | undefined,
         ];
 
         return {
@@ -434,7 +470,8 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
               (row) =>
                 row.symbol === symbol &&
                 row.interval === interval &&
-                row.open_time >= cutoff,
+                row.open_time >= cutoff &&
+                (end === undefined || row.open_time <= end),
             )
             .sort((a, b) => a.open_time.localeCompare(b.open_time)) as T[],
         };
@@ -464,6 +501,38 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
                 b.started_at.localeCompare(a.started_at),
             )
             .slice(0, limit) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM signal_events_v02") &&
+        this.sql.includes("event_end >= ?") &&
+        this.sql.includes("event_start <= ?")
+      ) {
+        const [startIso, endIso] = this.params as [string, string];
+
+        return {
+          results: tables.signal_events_v02
+            .filter(
+              (row) => row.event_end >= startIso && row.event_start <= endIso,
+            )
+            .map((row) => ({ id: row.id })) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM audit_events_v02") &&
+        this.sql.includes("event_end >= ?") &&
+        this.sql.includes("event_start <= ?")
+      ) {
+        const [startIso, endIso] = this.params as [string, string];
+
+        return {
+          results: tables.audit_events_v02
+            .filter(
+              (row) => row.event_end >= startIso && row.event_start <= endIso,
+            )
+            .map((row) => ({ id: row.id })) as T[],
         };
       }
 
@@ -672,6 +741,25 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       }
 
       if (
+        this.sql.includes("FROM job_runs") &&
+        this.sql.includes("job_name IN")
+      ) {
+        return {
+          results: [...tables.job_runs]
+            .filter((row) =>
+              [
+                "admin_v02_pipeline",
+                "run_detector_v02",
+                "run_market_stories_v02",
+                "run_daily_overviews_v02",
+              ].includes(row.job_name),
+            )
+            .sort((a, b) => b.started_at.localeCompare(a.started_at))
+            .slice(0, 20) as T[],
+        };
+      }
+
+      if (
         this.sql.includes("FROM source_references") &&
         this.sql.includes("brief_id = ?")
       ) {
@@ -704,6 +792,23 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       ) {
         return {
           count: tables.daily_overviews_v02.length,
+        } as T;
+      }
+
+      if (
+        this.sql.includes("signal_event_symbols_v02") &&
+        this.sql.includes("market_story_members_v02") &&
+        this.sql.includes("source_references_v02")
+      ) {
+        return {
+          signal_events_v02: tables.signal_events_v02.length,
+          signal_event_symbols_v02: tables.signal_event_symbols_v02.length,
+          audit_events_v02: tables.audit_events_v02.length,
+          market_stories_v02: tables.market_stories_v02.length,
+          market_story_members_v02: tables.market_story_members_v02.length,
+          daily_overviews_v02: tables.daily_overviews_v02.length,
+          claude_briefs_v02: tables.claude_briefs_v02.length,
+          source_references_v02: tables.source_references_v02.length,
         } as T;
       }
 
@@ -1695,6 +1800,12 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
           const ids = new Set(this.params as string[]);
           tables.signal_event_symbols_v02 =
             tables.signal_event_symbols_v02.filter((row) => !ids.has(row.id));
+        } else if (this.sql.includes("WHERE signal_event_id IN")) {
+          const ids = new Set(this.params as string[]);
+          tables.signal_event_symbols_v02 =
+            tables.signal_event_symbols_v02.filter(
+              (row) => !ids.has(row.signal_event_id),
+            );
         } else {
           tables.signal_event_symbols_v02 = [];
         }

@@ -258,6 +258,16 @@ The protected local v0.2 pipeline endpoint may run these explicit steps:
 - `market_stories`: runs deterministic Market Story generation only.
 - `daily_overviews`: runs deterministic Daily Overview row generation only.
 
+v0.2I7B0 adds remote-safe pipeline diagnostics and bounded execution after a remote rehearsal failure. The protected admin surface includes:
+
+- `GET /api/admin/v02/diagnostics`: read-only candle/table/job/flag diagnostics, protected by `ENABLE_ADMIN_MAINTENANCE=true`, `ENABLE_V02_ADMIN_TOOLS=true`, and `x-bytesiren-admin-token`.
+- early `job_runs` breadcrumbs for protected pipeline steps so remote failures leave a safe started/failed trail.
+- bounded `POST /api/admin/v02/run-pipeline` mode with `mode: "bounded"`, `date_utc` or `date_from`/`date_to`, `max_days`, `max_symbols`, and `dry_run`.
+- one-day or explicitly small date chunks for remote detector and Daily Overview generation.
+- `scripts/v02-remote-pipeline-smoke.mjs` for dry-run-first chunk planning and owner-confirmed live remote pipeline execution.
+
+Unbounded v0.2 detector execution is no longer the protected admin default. It requires an explicit manual override and should not be used for remote production rehearsal unless the owner separately approves it. Remote rehearsal should use diagnostics first, then detector chunks, then Market Stories, then Daily Overview chunks.
+
 It must not clear data, write remote D1, deploy, call Claude, write legacy v0.1 incident/source/Claude rows, or write Market Story source/Claude rows.
 
 ## Deterministic Daily Overview Generation
@@ -316,6 +326,7 @@ If an existing Daily Overview row has a terminal Claude status, row generation s
 - v0.2I6A local/protected backfill smoke tooling: run local candle import, protected v0.2 detector/story/daily pipeline, v0.2 feed read checks, and frontend real-API smoke against local Worker/D1 without remote writes or live Claude.
 - v0.2I6 backfill/catch-up tools: rebuild visible 30-day v0.2 data safely.
 - v0.2I7A production cutover rehearsal plan: create the tracked remote rehearsal and execution plan only, preserving v0.1 rollback and avoiding remote writes, deploys, live Claude, and production flag changes.
+- v0.2I7B0 remote pipeline hardening: add protected diagnostics, started breadcrumbs, bounded date-range detector/Daily Overview chunks, and remote dry-run smoke tooling after the first remote data-build attempt failed before writing v0.2 rows.
 - v0.2I7B1 controlled v0.2 Claude sample: run dry-run-first local/protected Signal Event and Daily Overview Claude samples with small limits, v0.2 tables only, and no Market Story/Audit/legacy Claude writes.
 - v0.2I7 production smoke: verify ingestion, detector, Claude limits, feed, chart, and rollback.
 - v0.2I8 cleanup experiments: untrack local experiment artifacts after production integration is complete.

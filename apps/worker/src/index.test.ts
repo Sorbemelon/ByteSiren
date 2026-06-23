@@ -1108,6 +1108,174 @@ test("admin v0.2 pipeline is hidden unless both admin gates are enabled", async 
   assert.equal(wrongTokenBody.includes("test-admin-token"), false);
 });
 
+test("admin v0.2 diagnostics is protected, read-only, and has no public CORS", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededCompleteDayRows("2026-06-15"),
+    signal_events_v02: [seededSignalEventV02()],
+    daily_overviews_v02: [seededDailyOverviewV02()],
+  });
+  const request = new Request("http://localhost/api/admin/v02/diagnostics", {
+    headers: {
+      "x-bytesiren-admin-token": "test-admin-token",
+      origin: "http://localhost:3000",
+    },
+  });
+  const hidden = await worker.fetch(request.clone(), {
+    DB: db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "false",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+  });
+  const response = await worker.fetch(request, {
+    DB: db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    DETECTOR_VERSION: "v01",
+    FEED_VERSION: "v01",
+    ENABLE_DAILY_OVERVIEWS: "false",
+  });
+  const body = await readJson(response);
+  const serialized = JSON.stringify(body);
+
+  assert.equal(hidden.status, 404);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
+  assert.equal(body.ok, true);
+  assert.equal(body.diagnostics_version, "v02_admin_diagnostics_v1");
+  assert.equal(
+    (body.v02_table_counts as Record<string, unknown>).signal_events_v02,
+    1,
+  );
+  assert.equal(
+    (body.v02_table_counts as Record<string, unknown>).daily_overviews_v02,
+    1,
+  );
+  assert.equal(
+    (body.estimated_work_size as Record<string, unknown>).symbol_count,
+    5,
+  );
+  assert.equal(tables.job_runs.length, 0);
+  assert.equal(serialized.includes("test-admin-token"), false);
+});
+
+test("admin v0.2 pipeline rejects unbounded detector by default", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-pipeline", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({ steps: ["detector"] }),
+    }),
+    makeEnv({
+      adminEnabled: true,
+      v02AdminToolsEnabled: true,
+      adminToken: "test-admin-token",
+    }),
+  );
+  const body = await readJson(response);
+  const error = body.error as { message: string };
+
+  assert.equal(response.status, 400);
+  assert.match(error.message, /allow_unbounded_detector=true/);
+});
+
+test("admin v0.2 bounded pipeline dry-run writes no rows or breadcrumbs", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: [
+      ...seededCompleteDayRows("2026-06-15"),
+      ...seededCompleteDayRows("2026-06-16"),
+    ],
+  });
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-pipeline", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        steps: ["detector", "daily_overviews"],
+        mode: "bounded",
+        date_utc: "2026-06-16",
+      }),
+    }),
+    {
+      DB: db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ENABLE_DAILY_OVERVIEWS: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.dry_run, true);
+  assert.deepEqual(body.steps_run, ["detector", "daily_overviews"]);
+  assert.equal(tables.signal_events_v02.length, 0);
+  assert.equal(tables.audit_events_v02.length, 0);
+  assert.equal(tables.daily_overviews_v02.length, 0);
+  assert.equal(tables.job_runs.length, 0);
+});
+
+test("admin v0.2 bounded pipeline live run writes breadcrumbs without Claude or source rows", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: [
+      ...seededCompleteDayRows("2026-06-14"),
+      ...seededCompleteDayRows("2026-06-15"),
+    ],
+  });
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-pipeline", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        steps: ["daily_overviews"],
+        mode: "bounded",
+        date_utc: "2026-06-15",
+        dry_run: false,
+      }),
+    }),
+    {
+      DB: db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ENABLE_DAILY_OVERVIEWS: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+  const adminRows = tables.job_runs.filter(
+    (row) => row.job_name === "admin_v02_pipeline",
+  );
+  const started = adminRows.find((row) => row.status === "started");
+  const startedMetadata = JSON.parse(started?.metadata_json ?? "{}");
+  const serialized = JSON.stringify(body);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.dry_run, false);
+  assert.equal(tables.daily_overviews_v02.length, 1);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(Boolean(started), true);
+  assert.equal(startedMetadata.step, "daily_overviews");
+  assert.equal(startedMetadata.date_from, "2026-06-15");
+  assert.equal(startedMetadata.date_to, "2026-06-15");
+  assert.equal(
+    adminRows.some((row) => row.status === "success"),
+    true,
+  );
+  assert.equal(serialized.includes("test-admin-token"), false);
+});
+
 test("admin v0.2 pipeline can seed fixture experiment news without live Claude or legacy writes", async () => {
   const firstSignal = seededSignalEventV02();
   const secondSignal = {
@@ -1143,6 +1311,7 @@ test("admin v0.2 pipeline can seed fixture experiment news without live Claude o
       },
       body: JSON.stringify({
         steps: ["detector", "market_stories", "daily_overviews"],
+        allow_unbounded_detector: true,
         include_fixture_claude: true,
       }),
     }),

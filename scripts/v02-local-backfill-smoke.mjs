@@ -691,6 +691,7 @@ export async function runBackfillSmoke(
           },
           body: JSON.stringify({
             steps: ["detector", "market_stories", "daily_overviews"],
+            allow_unbounded_detector: true,
             include_fixture_claude: options.includeFixtureClaude,
           }),
         },

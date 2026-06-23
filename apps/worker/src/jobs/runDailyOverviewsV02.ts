@@ -13,6 +13,7 @@ import {
   upsertDailyOverviewsV02,
 } from "../db/dailyOverviewRepositoryV02.ts";
 import {
+  getCandlesForSymbolRange,
   getCandlesForSymbolSince,
   recordJobRun,
 } from "../db/marketRepository.ts";
@@ -38,6 +39,10 @@ export interface RunDailyOverviewsV02Options {
   now?: Date;
   includeIncompleteDays?: boolean;
   days?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  dryRun?: boolean;
+  requestId?: string;
 }
 
 export function isDailyOverviewGenerationEnabled(
@@ -65,6 +70,56 @@ async function loadCandles(
   return candlesBySymbol;
 }
 
+function dateStartIso(dateUtc: string): string {
+  return `${dateUtc}T00:00:00.000Z`;
+}
+
+function dateEndIso(dateUtc: string): string {
+  return `${dateUtc}T23:59:59.999Z`;
+}
+
+function previousDayStartIso(dateUtc: string): string {
+  const date = new Date(dateStartIso(dateUtc));
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString();
+}
+
+async function loadCandlesForDateRange(
+  db: D1Database,
+  dateFrom: string,
+  dateTo: string,
+): Promise<Record<MarketSymbol, MarketCandle[]>> {
+  const candlesBySymbol = {} as Record<MarketSymbol, MarketCandle[]>;
+
+  for (const symbol of ALLOWED_SYMBOLS) {
+    candlesBySymbol[symbol] = await getCandlesForSymbolRange(
+      db,
+      symbol,
+      previousDayStartIso(dateFrom),
+      dateEndIso(dateTo),
+    );
+  }
+
+  return candlesBySymbol;
+}
+
+function filterDates(
+  dates: string[],
+  options: Pick<RunDailyOverviewsV02Options, "dateFrom" | "dateTo">,
+): string[] {
+  if (!options.dateFrom && !options.dateTo) {
+    return dates;
+  }
+
+  const dateFrom = options.dateFrom ?? options.dateTo;
+  const dateTo = options.dateTo ?? options.dateFrom;
+
+  return dates.filter(
+    (dateUtc) =>
+      (!dateFrom || dateUtc >= dateFrom) && (!dateTo || dateUtc <= dateTo),
+  );
+}
+
 export async function runDailyOverviewsV02(
   db: D1Database,
   env: Pick<Env, "ENABLE_DAILY_OVERVIEWS">,
@@ -78,17 +133,23 @@ export async function runDailyOverviewsV02(
     const message =
       "v0.2 Daily Overview generation skipped: ENABLE_DAILY_OVERVIEWS is not true.";
 
-    await recordJobRun(
-      db,
-      "run_daily_overviews_v02",
-      "skipped",
-      message,
-      {
-        enable_daily_overviews: false,
-      },
-      startedAt,
-      new Date(),
-    );
+    if (!options.dryRun) {
+      await recordJobRun(
+        db,
+        "run_daily_overviews_v02",
+        "skipped",
+        message,
+        {
+          enable_daily_overviews: false,
+          dry_run: false,
+          date_from: options.dateFrom ?? null,
+          date_to: options.dateTo ?? null,
+          request_id: options.requestId ?? null,
+        },
+        startedAt,
+        new Date(),
+      );
+    }
 
     return {
       status: "skipped",
@@ -102,12 +163,17 @@ export async function runDailyOverviewsV02(
   }
 
   try {
-    const candlesBySymbol = await loadCandles(
-      db,
-      now,
-      options.days ?? INTERNAL_RETENTION_DAYS,
+    const bounded = Boolean(options.dateFrom || options.dateTo);
+    const dateFrom = options.dateFrom ?? options.dateTo;
+    const dateTo = options.dateTo ?? options.dateFrom;
+    const candlesBySymbol =
+      bounded && dateFrom && dateTo
+        ? await loadCandlesForDateRange(db, dateFrom, dateTo)
+        : await loadCandles(db, now, options.days ?? INTERNAL_RETENTION_DAYS);
+    const dates = filterDates(
+      candidateDailyOverviewDatesV02(candlesBySymbol),
+      options,
     );
-    const dates = candidateDailyOverviewDatesV02(candlesBySymbol);
     const signalEventIdsByDate = new Map<string, string[]>();
     const marketStoriesByDate = new Map<
       string,
@@ -139,27 +205,52 @@ export async function runDailyOverviewsV02(
       auditEventCountsByDate,
       existingClaudeStatusByDate,
     });
-    const written = await upsertDailyOverviewsV02(db, generated.rows);
-    const message = `v0.2 Daily Overview generation completed: ${generated.rows.length} rows generated, ${generated.skipped.length} days skipped.`;
-
-    await recordJobRun(
-      db,
-      "run_daily_overviews_v02",
-      "success",
-      message,
-      {
-        generated_count: generated.rows.length,
-        skipped_count: generated.skipped.length,
-        dates_generated: generated.summary.dates_generated,
-        dates_skipped: generated.summary.dates_skipped,
-        skipped: generated.skipped,
-        daily_overviews_written: written,
-        enable_daily_overviews: true,
-        include_incomplete_days: options.includeIncompleteDays === true,
-      },
-      startedAt,
-      new Date(),
+    generated.rows = generated.rows.filter((row) =>
+      dates.includes(row.date_utc),
     );
+    generated.skipped = generated.skipped.filter((row) =>
+      dates.includes(row.date_utc),
+    );
+    generated.summary.generated_count = generated.rows.length;
+    generated.summary.skipped_count = generated.skipped.length;
+    generated.summary.dates_generated = generated.rows.map(
+      (row) => row.date_utc,
+    );
+    generated.summary.dates_skipped = generated.skipped.map(
+      (row) => row.date_utc,
+    );
+    const written = options.dryRun
+      ? 0
+      : await upsertDailyOverviewsV02(db, generated.rows);
+    const message = options.dryRun
+      ? `v0.2 Daily Overview generation dry-run completed: ${generated.rows.length} rows estimated, ${generated.skipped.length} days skipped.`
+      : `v0.2 Daily Overview generation completed: ${generated.rows.length} rows generated, ${generated.skipped.length} days skipped.`;
+
+    if (!options.dryRun) {
+      await recordJobRun(
+        db,
+        "run_daily_overviews_v02",
+        "success",
+        message,
+        {
+          generated_count: generated.rows.length,
+          skipped_count: generated.skipped.length,
+          dates_generated: generated.summary.dates_generated,
+          dates_skipped: generated.summary.dates_skipped,
+          skipped: generated.skipped,
+          daily_overviews_written: written,
+          enable_daily_overviews: true,
+          include_incomplete_days: options.includeIncompleteDays === true,
+          bounded,
+          date_from: options.dateFrom ?? null,
+          date_to: options.dateTo ?? null,
+          dry_run: false,
+          request_id: options.requestId ?? null,
+        },
+        startedAt,
+        new Date(),
+      );
+    }
 
     return {
       status: "success",
@@ -173,17 +264,23 @@ export async function runDailyOverviewsV02(
   } catch (error) {
     const message = `v0.2 Daily Overview generation failed: ${safeErrorMessage(error)}`;
 
-    await recordJobRun(
-      db,
-      "run_daily_overviews_v02",
-      "failed",
-      message,
-      {
-        enable_daily_overviews: enabled,
-      },
-      startedAt,
-      new Date(),
-    );
+    if (!options.dryRun) {
+      await recordJobRun(
+        db,
+        "run_daily_overviews_v02",
+        "failed",
+        message,
+        {
+          enable_daily_overviews: enabled,
+          date_from: options.dateFrom ?? null,
+          date_to: options.dateTo ?? null,
+          dry_run: false,
+          request_id: options.requestId ?? null,
+        },
+        startedAt,
+        new Date(),
+      );
+    }
 
     return {
       status: "failed",

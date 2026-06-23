@@ -2,7 +2,12 @@ import type { MARKET_INTERVAL, MarketSymbol } from "../config.ts";
 
 export type MarketInterval = typeof MARKET_INTERVAL;
 export type DataStatus = "fresh" | "delayed" | "missing";
-export type JobRunStatus = "success" | "partial_success" | "failed" | "skipped";
+export type JobRunStatus =
+  | "started"
+  | "success"
+  | "partial_success"
+  | "failed"
+  | "skipped";
 
 export interface MarketCandle {
   symbol: MarketSymbol;

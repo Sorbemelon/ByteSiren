@@ -7,6 +7,7 @@ import {
   type MarketSymbol,
 } from "../config.ts";
 import { runDetector } from "./runDetector.ts";
+import { runDetectorV02 } from "./runDetectorV02.ts";
 import type { MarketCandle } from "../types/market.ts";
 import { createMemoryD1 } from "../test/d1Memory.ts";
 import {
@@ -394,6 +395,81 @@ test("runDetector v0.2 writes detector rows and is idempotent", async () => {
   assert.equal(tables.claude_briefs_v02.length, 0);
   assert.equal(tables.source_references_v02.length, 0);
   assert.equal(tables.incidents.length, 0);
+});
+
+test("runDetectorV02 bounded dry-run estimates work without writing rows or jobs", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols({ count: 192, spikeBars: 3 }),
+  });
+
+  const result = await runDetectorV02(db, {
+    now: detectorNow,
+    dateFrom: "2026-06-15",
+    dateTo: "2026-06-15",
+    dryRun: true,
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.bounded, true);
+  assert.equal(result.dry_run, true);
+  assert.equal(result.date_from, "2026-06-15");
+  assert.equal(result.date_to, "2026-06-15");
+  assert.ok((result.candles_loaded ?? 0) > 0);
+  assert.equal(tables.signal_events_v02.length, 0);
+  assert.equal(tables.audit_events_v02.length, 0);
+  assert.equal(tables.job_runs.length, 0);
+});
+
+test("runDetectorV02 bounded live run writes only overlapping target range", async () => {
+  const existing = storySignalRow(
+    "story_seed_signal_previous_day",
+    "2026-06-14T10:00:00.000Z",
+    "2026-06-14T10:45:00.000Z",
+  );
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols({ count: 192, spikeBars: 3 }),
+    signal_events_v02: [existing],
+    signal_event_symbols_v02: [
+      staleSignalSymbolRow("story_seed_signal_previous_day", "BTCUSDT"),
+    ],
+  });
+
+  const first = await runDetectorV02(db, {
+    now: detectorNow,
+    dateFrom: "2026-06-15",
+    dateTo: "2026-06-15",
+  });
+  const countAfterFirst = tables.signal_events_v02.length;
+  const second = await runDetectorV02(db, {
+    now: detectorNow,
+    dateFrom: "2026-06-15",
+    dateTo: "2026-06-15",
+  });
+
+  assert.equal(first.status, "success");
+  assert.equal(second.status, "success");
+  assert.equal(tables.signal_events_v02.length, countAfterFirst);
+  assert.equal(
+    tables.signal_events_v02.some((row) => row.id === existing.id),
+    true,
+  );
+  assert.equal(
+    tables.signal_events_v02.every(
+      (row) =>
+        row.id === existing.id ||
+        (row.event_end >= "2026-06-15T00:00:00.000Z" &&
+          row.event_start <= "2026-06-15T23:59:59.999Z"),
+    ),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some(
+      (row) =>
+        row.job_name === "run_detector_v02" &&
+        JSON.parse(row.metadata_json).bounded === true,
+    ),
+    true,
+  );
 });
 
 test("v0.2 Signal Event storage identity survives a later window extension", async () => {

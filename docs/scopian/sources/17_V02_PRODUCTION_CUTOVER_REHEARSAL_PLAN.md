@@ -238,17 +238,31 @@ Schema checks:
 
 Build production v0.2 data without destroying v0.1 data.
 
+Remote rehearsal update from v0.2I7B:
+
+- Remote v0.2 migrations were applied successfully.
+- Worker v0.2 code was deployed and then kept on v0.1-safe public flags.
+- The first combined protected remote pipeline failed with Cloudflare Worker error `1102`.
+- A detector-only retry failed with HTTP `503`.
+- No remote v0.2 rows were written and no v0.2 `job_runs` rows were recorded.
+- The safe response is v0.2I7B0: use protected diagnostics, early job breadcrumbs, and bounded date chunks before another data-build attempt.
+
 Recommended sequence:
 
 1. Keep existing `market_candles` unless the owner explicitly approves a refresh.
 2. If candle refresh is needed, use the GitHub workflow or protected import path for 31 days and five symbols.
-3. Run protected v0.2 pipeline:
-   - detector
-   - market_stories
-   - daily_overviews
-4. Verify v0.2 table counts.
-5. Verify the v0.2 feed with `FEED_VERSION=v02` only after data exists.
-6. Keep v0.1 data in place.
+3. Run read-only protected v0.2 diagnostics:
+   - candle counts by symbol
+   - complete UTC day estimate
+   - v0.2 table counts
+   - recent v0.2 job breadcrumbs
+4. Run protected v0.2 pipeline in bounded chunks:
+   - detector by one UTC day or an explicitly capped small date range
+   - market_stories after detector chunks
+   - daily_overviews by one UTC day or an explicitly capped small date range
+5. Verify v0.2 table counts.
+6. Verify the v0.2 feed with `FEED_VERSION=v02` only after data exists.
+7. Keep v0.1 data in place.
 
 Planned GitHub workflow approach:
 
@@ -263,13 +277,29 @@ Inputs:
 Planned protected admin pipeline call:
 
 ```bash
-# PLANNED MANUAL ONLY. Requires ENABLE_ADMIN_MAINTENANCE=true,
-# ENABLE_V02_ADMIN_TOOLS=true, and a valid admin token.
+# PLANNED MANUAL ONLY. Use bounded dry-run first.
 curl -X POST "$BYTESIREN_WORKER_URL/api/admin/v02/run-pipeline" \
   -H "content-type: application/json" \
   -H "x-bytesiren-admin-token: <redacted-admin-token>" \
-  --data '{"steps":["detector","market_stories","daily_overviews"],"include_fixture_claude":false}'
+  --data '{"steps":["detector"],"mode":"bounded","date_utc":"YYYY-MM-DD","dry_run":true,"max_days":1,"max_symbols":5,"include_fixture_claude":false}'
 ```
+
+Unbounded detector calls are not the remote default. They require an explicit manual override and should not be used for production rehearsal data build unless the owner separately approves the risk.
+
+Recommended chunked rehearsal script:
+
+```bash
+node scripts/v02-remote-pipeline-smoke.mjs \
+  --worker-url "$BYTESIREN_WORKER_URL" \
+  --admin-token "<redacted-admin-token>" \
+  --date-from YYYY-MM-DD \
+  --date-to YYYY-MM-DD \
+  --max-days-per-call 1 \
+  --remote-rehearsal \
+  --dry-run
+```
+
+Live chunk execution requires both `--live` and `--confirm-remote-v02-pipeline`.
 
 Verify counts after pipeline:
 
@@ -283,6 +313,14 @@ Verify counts after pipeline:
 - Market Story forbidden Claude/source field count is 0
 
 Do not plan remote destructive reset as the default. If a remote v0.2-only reset becomes necessary, it requires a separate owner-confirmed procedure and a backup checkpoint.
+
+If Cloudflare `1102` or HTTP `503` repeats, capture logs with:
+
+```bash
+corepack pnpm --filter @bytesiren/worker exec wrangler tail bytesiren-api
+```
+
+Record the request path, timestamp, Ray ID if available, started breadcrumb row, last completed chunk, and safe error message. Do not capture or paste secrets.
 
 ## 9. Controlled v0.2 Claude Rehearsal Plan
 

@@ -473,6 +473,33 @@ Before any remote v0.2 migration, production D1 write, production backfill, live
 
 That plan preserves v0.1 as the rollback path, requires backup/snapshot evidence before remote mutation, keeps Market Story deterministic-only, keeps Audit Events hidden from the public feed, and separates rehearsal/no-public-switch, temporary smoke window, and full cutover modes.
 
+After the first owner-supervised remote data-build attempt failed before writing v0.2 rows, the protected remote v0.2 pipeline must be run diagnostics-first and chunked:
+
+```bash
+# Read-only protected diagnostics after enabling the admin gates for a short window.
+curl "$BYTESIREN_WORKER_URL/api/admin/v02/diagnostics" \
+  -H "x-bytesiren-admin-token: <redacted-admin-token>"
+
+# Dry-run chunk plan from the repo root.
+node scripts/v02-remote-pipeline-smoke.mjs \
+  --worker-url "$BYTESIREN_WORKER_URL" \
+  --admin-token "<redacted-admin-token>" \
+  --date-from YYYY-MM-DD \
+  --date-to YYYY-MM-DD \
+  --max-days-per-call 1 \
+  --remote-rehearsal \
+  --dry-run
+```
+
+Live remote chunk execution additionally requires:
+
+```text
+--live
+--confirm-remote-v02-pipeline
+```
+
+Do not use a full unbounded remote v0.2 detector call as the default production rehearsal path. If Cloudflare `1102` or HTTP `503` repeats, capture `wrangler tail bytesiren-api` or dashboard logs with request path, timestamp, Ray ID if available, the started `job_runs` breadcrumb, last completed chunk, and safe error message. Do not paste tokens or secrets into reports.
+
 ## J. SEO asset note
 
 Create these later using the ByteSiren full logo:

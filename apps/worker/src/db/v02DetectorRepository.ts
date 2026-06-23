@@ -377,6 +377,35 @@ export async function upsertDetectorV02Output(
   };
 }
 
+export async function upsertDetectorV02OutputForRange(
+  db: D1Database,
+  output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
+  range: { startIso: string; endIso: string },
+): Promise<DetectorV02WriteCounts> {
+  const signalEventsForStorage = output.signal_events.map(
+    signalEventForStorage,
+  );
+  const storageOutput = {
+    signal_events: signalEventsForStorage,
+    audit_events: output.audit_events,
+  };
+
+  await pruneDetectorV02OutputForRange(db, storageOutput, range);
+
+  const signalEvents = await upsertSignalEventsV02(db, signalEventsForStorage);
+  const signalSymbols = await upsertSignalEventSymbolsV02(
+    db,
+    signalEventsForStorage.flatMap((event) => event.symbols),
+  );
+  const auditEvents = await upsertAuditEventsV02(db, output.audit_events);
+
+  return {
+    signal_events: signalEvents,
+    signal_event_symbols: signalSymbols,
+    audit_events: auditEvents,
+  };
+}
+
 async function deleteRowsNotIn(
   db: D1Database,
   table: string,
@@ -423,4 +452,92 @@ async function pruneDetectorV02Output(
   await deleteRowsNotIn(db, "signal_event_symbols_v02", "id", symbolIds);
   await deleteRowsNotIn(db, "signal_events_v02", "id", signalIds);
   await deleteRowsNotIn(db, "audit_events_v02", "id", auditIds);
+}
+
+async function idsOverlappingRange(
+  db: D1Database,
+  table: string,
+  range: { startIso: string; endIso: string },
+): Promise<string[]> {
+  const result = await db
+    .prepare(
+      `SELECT id
+       FROM ${table}
+       WHERE event_end >= ? AND event_start <= ?`,
+    )
+    .bind(range.startIso, range.endIso)
+    .all<{ id: string }>();
+
+  return result.results.map((row) => row.id);
+}
+
+async function deleteSignalSymbolsForEvents(
+  db: D1Database,
+  signalEventIds: string[],
+): Promise<void> {
+  for (
+    let index = 0;
+    index < signalEventIds.length;
+    index += SQLITE_BIND_CHUNK_SIZE
+  ) {
+    const chunk = signalEventIds.slice(index, index + SQLITE_BIND_CHUNK_SIZE);
+
+    if (chunk.length === 0) {
+      continue;
+    }
+
+    const placeholders = chunk.map(() => "?").join(", ");
+    await db
+      .prepare(
+        `DELETE FROM signal_event_symbols_v02 WHERE signal_event_id IN (${placeholders})`,
+      )
+      .bind(...chunk)
+      .run();
+  }
+}
+
+async function deleteRowsByIds(
+  db: D1Database,
+  table: string,
+  idColumn: string,
+  ids: string[],
+): Promise<void> {
+  for (let index = 0; index < ids.length; index += SQLITE_BIND_CHUNK_SIZE) {
+    const chunk = ids.slice(index, index + SQLITE_BIND_CHUNK_SIZE);
+
+    if (chunk.length === 0) {
+      continue;
+    }
+
+    const placeholders = chunk.map(() => "?").join(", ");
+    await db
+      .prepare(`DELETE FROM ${table} WHERE ${idColumn} IN (${placeholders})`)
+      .bind(...chunk)
+      .run();
+  }
+}
+
+async function pruneDetectorV02OutputForRange(
+  db: D1Database,
+  output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
+  range: { startIso: string; endIso: string },
+): Promise<void> {
+  const signalIds = new Set(output.signal_events.map((event) => event.id));
+  const auditIds = new Set(output.audit_events.map((event) => event.id));
+  const existingSignalIds = await idsOverlappingRange(
+    db,
+    "signal_events_v02",
+    range,
+  );
+  const existingAuditIds = await idsOverlappingRange(
+    db,
+    "audit_events_v02",
+    range,
+  );
+  const staleSignalIds = existingSignalIds.filter((id) => !signalIds.has(id));
+  const staleAuditIds = existingAuditIds.filter((id) => !auditIds.has(id));
+
+  await deleteSignalSymbolsForEvents(db, staleSignalIds);
+  await deleteRowsByIds(db, "signal_events_v02", "id", staleSignalIds);
+  await deleteRowsByIds(db, "audit_events_v02", "id", staleAuditIds);
 }
