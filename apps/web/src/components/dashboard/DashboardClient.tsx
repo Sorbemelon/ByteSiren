@@ -87,6 +87,7 @@ export default function DashboardClient() {
   const [feedSelectionV02, setFeedSelectionV02] = useState<FeedSelectionV02>(
     EMPTY_FEED_SELECTION_V02,
   );
+  const [scrollFeedSelectionV02, setScrollFeedSelectionV02] = useState(false);
   const [market, setMarket] =
     useState<Record<string, MarketLatest>>(getInitialMarket);
   const [candles, setCandles] = useState<CandleBar[]>(() =>
@@ -287,6 +288,7 @@ export default function DashboardClient() {
 
   useEffect(() => {
     setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
+    setScrollFeedSelectionV02(false);
   }, [feedVersion, selectedSymbol]);
 
   const handleToggle = useCallback(
@@ -300,6 +302,7 @@ export default function DashboardClient() {
 
   const handleSelectV02Section = useCallback(
     (itemType: FeedSelectionItemTypeV02, itemId: string, dayPostId: string) => {
+      setScrollFeedSelectionV02(false);
       setFeedSelectionV02((current) =>
         toggleFeedSelectionV02(current, itemType, itemId, dayPostId),
       );
@@ -310,10 +313,12 @@ export default function DashboardClient() {
   const handleSelectV02ChartHighlight = useCallback(
     (highlight: ChartHighlightViewV02 | null) => {
       if (!highlight) {
+        setScrollFeedSelectionV02(false);
         setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
         return;
       }
 
+      setScrollFeedSelectionV02(true);
       setFeedSelectionV02((current) =>
         toggleFeedSelectionV02(
           current,
@@ -328,6 +333,7 @@ export default function DashboardClient() {
 
   const handleSelectV02SourceMarker = useCallback(
     (marker: ChartSourceMarkerViewV02) => {
+      setScrollFeedSelectionV02(true);
       setFeedSelectionV02({
         itemType: marker.itemType,
         itemId: marker.itemId,
@@ -344,6 +350,7 @@ export default function DashboardClient() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        setScrollFeedSelectionV02(false);
         setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
       }
     };
@@ -452,10 +459,12 @@ export default function DashboardClient() {
               feed={feedV02}
               loading={feedLoading}
               selection={feedSelectionV02}
+              scrollSelectionIntoView={scrollFeedSelectionV02}
               onSelectSection={handleSelectV02Section}
-              onClearSelection={() =>
-                setFeedSelectionV02(EMPTY_FEED_SELECTION_V02)
-              }
+              onClearSelection={() => {
+                setScrollFeedSelectionV02(false);
+                setFeedSelectionV02(EMPTY_FEED_SELECTION_V02);
+              }}
             />
           ) : (
             <IntelligenceFeed

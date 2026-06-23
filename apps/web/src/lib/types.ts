@@ -213,6 +213,7 @@ export interface FeedSourceV02 {
   title: string | null;
   url: string;
   published_at: string | null;
+  catalyst_time_utc?: string | null;
   tag: string;
   source_strength?: string | null;
   used_for?: string | null;
@@ -530,6 +531,15 @@ export interface ChartHighlightViewV02 {
   dimmed: boolean;
 }
 
+export type SourceRoleToneV02 =
+  | "catalyst"
+  | "likely"
+  | "main"
+  | "support"
+  | "backdrop"
+  | "price"
+  | "source";
+
 export interface ChartSourceMarkerViewV02 {
   id: string;
   itemType: "daily_overview" | "signal_event";
@@ -537,9 +547,13 @@ export interface ChartSourceMarkerViewV02 {
   dayPostId: string;
   time: string;
   label: string;
+  tone: SourceRoleToneV02;
   publisher: string | null;
   url: string;
   selected: boolean;
+  // false when `time` is the analyzed item's anchor (no honest article/catalyst
+  // timestamp) — rendered hollow to signal the marker is not at a source time.
+  filled: boolean;
 }
 
 export interface NormalizedDayPost {

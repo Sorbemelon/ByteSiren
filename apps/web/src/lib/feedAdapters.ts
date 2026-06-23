@@ -148,6 +148,7 @@ function normalizeSources(
       title: source.title ?? null,
       url: source.url,
       published_at: source.published_at ?? null,
+      catalyst_time_utc: source.catalyst_time_utc ?? null,
       tag: source.tag,
       source_strength: source.source_strength ?? null,
       used_for: source.used_for ?? null,

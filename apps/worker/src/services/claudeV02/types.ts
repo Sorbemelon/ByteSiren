@@ -9,16 +9,6 @@ export type SignalEventClassificationV02 =
   | "No Clear Cause"
   | "Claude Limited";
 
-export type DailyOverviewLabelV02 =
-  | "Daily Context"
-  | "Quiet Day"
-  | "Mixed Day"
-  | "Volatile Day"
-  | "Risk-on Day"
-  | "Risk-off Day"
-  | "No Major Driver"
-  | "Claude Limited";
-
 export type ClaudeConfidenceV02 = "high" | "medium" | "low";
 
 export type SourceSupportV02 = "high" | "medium" | "low" | "none";
@@ -170,7 +160,6 @@ export interface DailyOverviewClaudeResultV02 {
   item_id: string;
   target_id: string;
   date_utc: string;
-  daily_label: DailyOverviewLabelV02;
   confidence: ClaudeConfidenceV02;
   headline: string;
   collapsed_summary: string;
@@ -195,17 +184,6 @@ export const SIGNAL_EVENT_CLASSIFICATIONS_V02 = [
   "Likely Cause",
   "Market Backdrop",
   "No Clear Cause",
-  "Claude Limited",
-] as const;
-
-export const DAILY_OVERVIEW_LABELS_V02 = [
-  "Daily Context",
-  "Quiet Day",
-  "Mixed Day",
-  "Volatile Day",
-  "Risk-on Day",
-  "Risk-off Day",
-  "No Major Driver",
   "Claude Limited",
 ] as const;
 

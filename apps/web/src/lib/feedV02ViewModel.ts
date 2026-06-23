@@ -6,6 +6,7 @@ import type {
   NormalizedDayPost,
   NormalizedFeedSection,
   NormalizedFeedV02,
+  SourceRoleToneV02,
 } from "./types";
 
 export type ExpandedDayIds = ReadonlySet<string>;
@@ -371,15 +372,33 @@ export function chooseChartHighlightAtTimeV02(
   })[0];
 }
 
-function sourceMarkerLabel(sourceTag: string | null | undefined): string {
+export function sourceRoleToneV02(
+  sourceTag: string | null | undefined,
+): SourceRoleToneV02 {
   const role = `${sourceTag ?? ""}`.toLowerCase();
 
-  if (role.includes("focused")) return "Catalyst";
-  if (role.includes("likely")) return "Likely";
-  if (role.includes("main")) return "Main";
-  if (role.includes("support")) return "Support";
-  if (role.includes("backdrop")) return "Backdrop";
-  if (role.includes("price")) return "Price";
+  if (role.includes("focused") || role.includes("catalyst")) {
+    return "catalyst";
+  }
+  if (role.includes("likely")) return "likely";
+  if (role.includes("support")) return "support";
+  if (role.includes("main") || role.includes("daily")) return "main";
+  if (role.includes("backdrop")) return "backdrop";
+  if (role.includes("price")) return "price";
+  return "source";
+}
+
+export function sourceRoleLabelV02(
+  sourceTag: string | null | undefined,
+): string {
+  const tone = sourceRoleToneV02(sourceTag);
+
+  if (tone === "catalyst") return "Catalyst";
+  if (tone === "likely") return "Likely";
+  if (tone === "main") return "Main";
+  if (tone === "support") return "Support";
+  if (tone === "backdrop") return "Backdrop";
+  if (tone === "price") return "Price";
   return "Source";
 }
 
@@ -392,37 +411,33 @@ function validIsoOrNull(value: string | null | undefined): string | null {
   return Number.isFinite(time) ? value : null;
 }
 
-function isoOffset(start: string, offsetMs: number): string | null {
-  const time = Date.parse(start);
-
+// A date-only timestamp (exactly 00:00:00.000 UTC) means only the publication
+// date is known, not a precise time. Such markers render hollow so the chart
+// never implies a precise time the source does not actually have.
+function isDateOnly(iso: string): boolean {
+  const time = Date.parse(iso);
   if (!Number.isFinite(time)) {
-    return null;
+    return false;
   }
-
-  return new Date(time + offsetMs).toISOString();
+  const date = new Date(time);
+  return (
+    date.getUTCHours() === 0 &&
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getUTCMilliseconds() === 0
+  );
 }
 
-function fallbackSourceMarkerTime(
+// Date-level marker position for accepted sources that have no honest
+// article/catalyst timestamp. They render hollow at 00:00 UTC so every accepted
+// source gets a marker without inventing a precise source time.
+function sectionDateStartAnchor(
   section: NormalizedFeedSection,
-  index: number,
 ): string | null {
-  if (section.itemType === "signal_event") {
-    return (
-      validIsoOrNull(
-        section.chart?.peak_marker_time ?? section.evidenceWindow.peak_time,
-      ) ??
-      validIsoOrNull(section.chart?.highlight_end) ??
-      validIsoOrNull(section.evidenceWindow.end)
-    );
+  if (/^\d{4}-\d{2}-\d{2}$/.test(section.dateUtc)) {
+    return validIsoOrNull(`${section.dateUtc}T00:00:00.000Z`);
   }
-
-  if (section.itemType === "daily_overview") {
-    const dayStart =
-      section.chart?.highlight_start ?? `${section.dateUtc}T00:00:00.000Z`;
-    return isoOffset(dayStart, (60 + index * 20) * 60 * 1000);
-  }
-
-  return null;
+  return validIsoOrNull(section.chart?.highlight_start);
 }
 
 export function buildChartSourceMarkersV02(
@@ -448,6 +463,7 @@ export function buildChartSourceMarkersV02(
       }
 
       const selected = isSectionSelectedV02(selection, section);
+      const dateStartAnchor = sectionDateStartAnchor(section);
       const seenUrls = new Set<string>();
 
       for (const [index, source] of section.sources.entries()) {
@@ -456,12 +472,25 @@ export function buildChartSourceMarkersV02(
         }
         seenUrls.add(source.url);
 
-        const publishedAt = validIsoOrNull(source.published_at);
-        const time = publishedAt ?? fallbackSourceMarkerTime(section, index);
+        // Pick the most honest time. Signals prefer the catalyst time, daily
+        // prefers the article publication time. A precise (non-midnight) time
+        // makes a filled marker; a date-only time or date-start fallback makes
+        // a hollow marker so the chart never implies a precise time the source
+        // does not have.
+        const catalyst = validIsoOrNull(source.catalyst_time_utc);
+        const published = validIsoOrNull(source.published_at);
+        const order =
+          section.itemType === "signal_event"
+            ? [catalyst, published]
+            : [published, catalyst];
+        const precise = order.find((t) => t !== null && !isDateOnly(t)) ?? null;
+        const dateOnly = order.find((t) => t !== null) ?? null;
+        const time = precise ?? dateOnly ?? dateStartAnchor;
 
         if (!source.url || !time) {
           continue;
         }
+        const roleSource = source.tag || source.used_for;
 
         candidates.push({
           id: `${section.itemType}:${section.id}:source:${index}:${source.url}`,
@@ -469,10 +498,12 @@ export function buildChartSourceMarkersV02(
           itemId: section.id,
           dayPostId: day.id,
           time,
-          label: sourceMarkerLabel(source.tag || source.used_for),
+          label: sourceRoleLabelV02(roleSource),
+          tone: sourceRoleToneV02(roleSource),
           publisher: source.publisher ?? source.title ?? null,
           url: source.url,
           selected,
+          filled: precise !== null,
           sourceOrder: sourceOrder++,
           itemRank: section.itemType === "signal_event" ? 0 : 1,
         });
@@ -480,23 +511,12 @@ export function buildChartSourceMarkersV02(
     }
   }
 
-  const chosenByUrl = new Map<string, SourceMarkerCandidate>();
-
-  for (const candidate of candidates) {
-    const existing = chosenByUrl.get(candidate.url);
-
-    if (
-      !existing ||
-      candidate.itemRank < existing.itemRank ||
-      (candidate.itemRank === existing.itemRank &&
-        candidate.sourceOrder < existing.sourceOrder)
-    ) {
-      chosenByUrl.set(candidate.url, candidate);
-    }
-  }
-
-  return Array.from(chosenByUrl.values())
-    .sort((a, b) => a.sourceOrder - b.sourceOrder)
+  return candidates
+    .sort((a, b) => {
+      if (a.sourceOrder !== b.sourceOrder) return a.sourceOrder - b.sourceOrder;
+      if (a.selected !== b.selected) return a.selected ? -1 : 1;
+      return a.id.localeCompare(b.id);
+    })
     .map((candidate) => ({
       id: candidate.id,
       itemType: candidate.itemType,
@@ -504,8 +524,10 @@ export function buildChartSourceMarkersV02(
       dayPostId: candidate.dayPostId,
       time: candidate.time,
       label: candidate.label,
+      tone: candidate.tone,
       publisher: candidate.publisher,
       url: candidate.url,
       selected: candidate.selected,
+      filled: candidate.filled,
     }));
 }

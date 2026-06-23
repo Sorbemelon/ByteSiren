@@ -51,32 +51,11 @@ interface V02SourceOverlay {
 }
 
 function sourceMarkerTone(marker: ChartSourceMarkerViewV02): string {
-  const label = `${marker.label ?? ""}`.toLowerCase();
-
-  if (label.includes("catalyst") || label.includes("focused")) {
-    return "var(--source-focused-text)";
-  }
-
-  if (label.includes("likely")) {
-    return "var(--source-likely-text)";
-  }
-
-  if (label.includes("price")) {
-    return "var(--source-price-text)";
-  }
-
-  if (label.includes("backdrop")) {
-    return "var(--source-backdrop-text)";
-  }
-
-  if (
-    label.includes("main") ||
-    label.includes("support") ||
-    label.includes("daily")
-  ) {
-    return "var(--source-chip-text)";
-  }
-
+  if (marker.tone === "catalyst") return "var(--source-catalyst-text)";
+  if (marker.tone === "likely") return "var(--source-likely-text)";
+  if (marker.tone === "main") return "var(--source-main-text)";
+  if (marker.tone === "support") return "var(--source-support-text)";
+  if (marker.tone === "price") return "var(--source-price-text)";
   return "var(--source-backdrop-text)";
 }
 
@@ -907,6 +886,17 @@ export default function TradingViewChart({
         {v02SourceOverlays.map((overlay) => {
           const muted = hasSelectedSourceMarker && !overlay.marker.selected;
           const markerSize = overlay.marker.selected ? 14 : muted ? 8 : 10;
+          const markerBorderWidth = overlay.marker.filled
+            ? overlay.marker.selected
+              ? 2
+              : muted
+                ? 1
+                : 1.4
+            : overlay.marker.selected
+              ? 3
+              : muted
+                ? 2
+                : 2.4;
 
           return (
             <button
@@ -917,8 +907,10 @@ export default function TradingViewChart({
               data-item-type={overlay.marker.itemType}
               data-source-url={overlay.marker.url}
               data-source-label={overlay.marker.label}
+              data-source-tone={overlay.marker.tone}
               data-selected={String(overlay.marker.selected)}
               data-muted={String(muted)}
+              data-filled={String(overlay.marker.filled)}
               data-marker-left={Math.round(overlay.left)}
               data-marker-top={Math.round(overlay.top)}
               onClick={(event) => {
@@ -946,8 +938,10 @@ export default function TradingViewChart({
                   width: markerSize,
                   height: markerSize,
                   borderColor: sourceMarkerTone(overlay.marker),
-                  borderWidth: overlay.marker.selected ? 2 : muted ? 1 : 1.4,
-                  background: sourceMarkerTone(overlay.marker),
+                  borderWidth: markerBorderWidth,
+                  background: overlay.marker.filled
+                    ? sourceMarkerTone(overlay.marker)
+                    : "transparent",
                   boxShadow: overlay.marker.selected
                     ? `0 0 0 2px color-mix(in srgb, ${sourceMarkerTone(overlay.marker)} 22%, transparent)`
                     : "none",

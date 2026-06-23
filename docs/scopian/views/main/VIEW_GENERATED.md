@@ -2,7 +2,7 @@
 generated_by: scopian
 generator_schema: v0.2-B
 view: main
-generated_at: 2026-06-23T15:52:52+07:00
+generated_at: 2026-06-23T16:41:23+07:00
 non_canonical: true
 generated_mode: single
 canonical_inputs:
@@ -13,10 +13,10 @@ canonical_inputs:
   - source_registry.yml
 input_hashes:
   view: sha256:8c6b400b796c
-  sources: sha256:a2f39e5aca8f
+  sources: sha256:407a289aed20
   buffer: sha256:11e7a1a3d36e
   context: sha256:5ef45bc1a5d7
-  registry: sha256:4262924275b7
+  registry: sha256:09b245c7c3f0
 ---
 
 # Generated Scope View
@@ -31,7 +31,7 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 - view: main
 - view_path: docs/scopian/views/main/VIEW.md
-- generated_at: 2026-06-23T15:52:52+07:00
+- generated_at: 2026-06-23T16:41:23+07:00
 
 ## Selected Sources
 
@@ -51,8 +51,8 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 - docs/scopian/sources/13_IMPLEMENTATION_PROMPT_TEMPLATES.md (sha256:f59fa372b1951fe6b9d256070b31d84f906321a750a31e6a428918fe3eee6803)
 - docs/scopian/sources/14_DEPLOYMENT_BOUNDARIES.md (sha256:314087d5866f15255072fbe69e4594e4d1b0d62a131db207cf8e2a5483b9f0e5)
 - PRODUCT.md (sha256:3c5250318e0bac61af2f8f54cd64356a08bce30afceaf7463a188549b0e30fdd)
-- docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:d87d0914f4930381fdb2164dc3b1dd0d77294e10233c583fbc33c30540426ee4)
-- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:304b7a42dbf65b00dee636a7a102ff8d71fed729d02914327c401fcb4b18d556)
+- docs/scopian/sources/15_DEPLOYMENT_CHECKLIST.md (sha256:0568152473820f29778e16e6ac667641ea1e4408e9b2bc9994272091c8c694cf)
+- docs/scopian/sources/16_V02_PRODUCTION_INTEGRATION_SPEC.md (sha256:16751468a63fa7e58d1a542b37012fcbcfbfa8f60f2cf04a2ca70478bb2d378e)
 
 ## Approved Buffer Summary
 
@@ -216,17 +216,17 @@ Regenerate with `scopian view refresh` after source or buffer changes.
 
 ## Changelog Snapshot
 
-- generated_refresh: 2026-06-23T15:52:52+07:00
+- generated_refresh: 2026-06-23T16:41:23+07:00
 - selected_sources: 18
 - approved_buffer_records: 4
 
 ## Freshness Metadata
 
 - view: sha256:8c6b400b796c
-- sources: sha256:a2f39e5aca8f
+- sources: sha256:407a289aed20
 - buffer: sha256:11e7a1a3d36e
 - context: sha256:5ef45bc1a5d7
-- registry: sha256:4262924275b7
+- registry: sha256:09b245c7c3f0
 
 ## Refresh Instructions
 

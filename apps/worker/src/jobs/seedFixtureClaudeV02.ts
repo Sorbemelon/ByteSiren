@@ -296,7 +296,7 @@ async function seedTarget(input: {
         : "context_only";
   const publicLabel =
     input.targetType === "daily_overview_v02"
-      ? "Daily Context"
+      ? null
       : input.source.context_decision === "keep"
         ? "Likely Cause"
         : "Market Backdrop";

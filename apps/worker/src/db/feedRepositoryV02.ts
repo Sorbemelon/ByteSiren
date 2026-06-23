@@ -1,4 +1,5 @@
 import { VISIBLE_RANGE_DAYS, isoDaysAgo } from "../config.ts";
+import { MAX_PUBLIC_SOURCES_PER_BRIEF_V02 } from "../services/claudeV02/sourcePolicy.ts";
 
 const UTC_MONTHS = [
   "Jan",
@@ -14,17 +15,6 @@ const UTC_MONTHS = [
   "Nov",
   "Dec",
 ] as const;
-
-const DAILY_LABELS = new Set([
-  "Daily Context",
-  "Quiet Day",
-  "Mixed Day",
-  "Volatile Day",
-  "Risk-on Day",
-  "Risk-off Day",
-  "No Major Driver",
-  "Claude Limited",
-]);
 
 type V02ClaudeTargetType = "signal_event_v02" | "daily_overview_v02";
 
@@ -176,6 +166,7 @@ export interface PublicSourceV02 {
   title: string | null;
   url: string;
   published_at: string | null;
+  catalyst_time_utc: string | null;
   tag: string;
   source_strength: string | null;
   used_for: string | null;
@@ -505,12 +496,8 @@ function rangePositionDisplay(value: string | null): string | null {
   return null;
 }
 
-function dailyLabel(brief: ClaudeBriefV02FeedRow | null): string {
-  if (brief?.public_label && DAILY_LABELS.has(brief.public_label)) {
-    return brief.public_label;
-  }
-
-  return "Daily Context";
+function dailyLabel(): string {
+  return "Daily Overview";
 }
 
 function publicBrief(row: ClaudeBriefV02FeedRow): ClaudeBriefPublicV02 {
@@ -533,15 +520,212 @@ function publicBrief(row: ClaudeBriefV02FeedRow): ClaudeBriefPublicV02 {
 }
 
 function publicSources(rows: SourceReferenceV02FeedRow[]): PublicSourceV02[] {
-  return rows.map((row) => ({
-    publisher: row.publisher,
-    title: row.title,
-    url: row.url,
-    published_at: row.published_at,
-    tag: row.source_role,
-    source_strength: row.source_strength,
-    used_for: row.used_for,
-  }));
+  return rows.slice(0, MAX_PUBLIC_SOURCES_PER_BRIEF_V02).map((row) => {
+    const metadata = parseJsonObject(row.metadata_json);
+    const catalystTimeUtc =
+      typeof metadata.catalyst_time_utc === "string"
+        ? metadata.catalyst_time_utc
+        : null;
+    return {
+      publisher: row.publisher,
+      title: row.title,
+      url: row.url,
+      published_at: row.published_at,
+      catalyst_time_utc: catalystTimeUtc,
+      tag: row.source_role,
+      source_strength: row.source_strength,
+      used_for: row.used_for,
+    };
+  });
+}
+
+function timeRangeLabel(startIso: string, endIso: string): string {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+    return "this Signal Event";
+  }
+
+  return `${String(start.getUTCHours()).padStart(2, "0")}:${String(
+    start.getUTCMinutes(),
+  ).padStart(2, "0")} - ${String(end.getUTCHours()).padStart(2, "0")}:${String(
+    end.getUTCMinutes(),
+  ).padStart(2, "0")} UTC`;
+}
+
+function signedPercent(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) {
+    return "unavailable";
+  }
+
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
+
+function movementDescription(row: SignalEventV02FeedRow): string {
+  if (row.avg_change_pct !== null) {
+    if (row.avg_change_pct > 0) return "upside move";
+    if (row.avg_change_pct < 0) return "downside move";
+  }
+
+  if (row.direction.includes("up")) return "upside move";
+  if (row.direction.includes("down")) return "downside move";
+  return "multi-direction move";
+}
+
+function signalBriefWithoutAcceptedSources(
+  brief: ClaudeBriefPublicV02,
+  row: SignalEventV02FeedRow,
+): ClaudeBriefPublicV02 {
+  // This is only reached when zero public source rows survive the window filter,
+  // so any source-backed copy in the stored brief is now unsupported and must be
+  // replaced. A genuine "Claude Limited" error state keeps its own label/copy
+  // (it is not source-backed news), but it still drops to no source support.
+  if (brief.classification === "Claude Limited") {
+    return {
+      ...brief,
+      source_support: "none",
+      source_timing_alignment: "none",
+    };
+  }
+
+  const windowLabel = timeRangeLabel(row.event_start, row.event_end);
+  const avgChange = signedPercent(row.avg_change_pct);
+
+  return {
+    ...brief,
+    public_label: "No Clear Cause",
+    classification: "No Clear Cause",
+    headline: "No accepted time-aligned public source",
+    collapsed_summary:
+      `No accepted time-aligned public source remained for the ${windowLabel} Signal Event. ` +
+      `ByteSiren still detected a ${movementDescription(row)} across ${row.signals_count} of ${row.n_tracked} tracked symbols` +
+      (avgChange === "unavailable" ? "." : ` with Avg Change ${avgChange}.`),
+    source_support: "none",
+    source_timing_alignment: "none",
+  };
+}
+
+const SIGNAL_PUBLIC_SOURCE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
+
+function parsedTime(value: string | null | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isWithinWindow(value: number, start: number, end: number): boolean {
+  return value >= Math.min(start, end) && value <= Math.max(start, end);
+}
+
+function utcDay(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+function signalPublicSourceRows(
+  rows: SourceReferenceV02FeedRow[],
+  eventStartIso: string,
+  eventEndIso: string,
+): SourceReferenceV02FeedRow[] {
+  const eventStart = parsedTime(eventStartIso);
+  const eventEnd = parsedTime(eventEndIso);
+
+  if (eventStart === null || eventEnd === null) {
+    return rows;
+  }
+
+  const sourceStart = eventStart - SIGNAL_PUBLIC_SOURCE_LOOKBACK_MS;
+  const sourceEnd = eventEnd;
+  const eventDay = utcDay(eventStart);
+
+  return rows.filter((row) => {
+    const metadata = parseJsonObject(row.metadata_json);
+    const catalystTime = parsedTime(
+      typeof metadata.catalyst_time_utc === "string"
+        ? metadata.catalyst_time_utc
+        : null,
+    );
+
+    if (
+      catalystTime !== null &&
+      isWithinWindow(catalystTime, sourceStart, sourceEnd)
+    ) {
+      return true;
+    }
+
+    const publishedAt = parsedTime(row.published_at);
+
+    if (
+      publishedAt !== null &&
+      isWithinWindow(publishedAt, sourceStart, sourceEnd)
+    ) {
+      return true;
+    }
+
+    // Mirror of sourcePolicy: a same-UTC-day Backdrop source is valid context
+    // even outside the strict 6h window (keeps Market Backdrop classifications).
+    const sameDayTime = catalystTime ?? publishedAt;
+    if (
+      row.source_role === "Backdrop source" &&
+      sameDayTime !== null &&
+      utcDay(sameDayTime) === eventDay
+    ) {
+      return true;
+    }
+
+    return row.source_role === "Price check source" && publishedAt === null;
+  });
+}
+
+const DAILY_PUBLIC_SOURCE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
+
+function dailyPublicSourceRows(
+  rows: SourceReferenceV02FeedRow[],
+  dayStartIso: string,
+  dayEndIso: string,
+): SourceReferenceV02FeedRow[] {
+  const dayStart = parsedTime(dayStartIso);
+  const dayEnd = parsedTime(dayEndIso);
+
+  if (dayStart === null || dayEnd === null) {
+    return rows;
+  }
+
+  // Within the UTC day, plus a short prior-overnight look-back so a late
+  // prior-evening catalyst that set the day's tone stays, while multi-day-old
+  // context is dropped.
+  const sourceStart = dayStart - DAILY_PUBLIC_SOURCE_LOOKBACK_MS;
+  const sourceEnd = dayEnd;
+
+  return rows.filter((row) => {
+    const metadata = parseJsonObject(row.metadata_json);
+    const catalystTime = parsedTime(
+      typeof metadata.catalyst_time_utc === "string"
+        ? metadata.catalyst_time_utc
+        : null,
+    );
+
+    if (
+      catalystTime !== null &&
+      isWithinWindow(catalystTime, sourceStart, sourceEnd)
+    ) {
+      return true;
+    }
+
+    const publishedAt = parsedTime(row.published_at);
+
+    if (
+      publishedAt !== null &&
+      isWithinWindow(publishedAt, sourceStart, sourceEnd)
+    ) {
+      return true;
+    }
+
+    return row.source_role === "Price check source" && publishedAt === null;
+  });
 }
 
 async function getClaudeBriefForTarget(
@@ -706,7 +890,7 @@ async function getDailyItems(
       date_utc: row.date_utc,
       _sort_time: row.day_end,
       display_time: "Full UTC day",
-      daily_label: dailyLabel(brief),
+      daily_label: dailyLabel(),
       daily_change_label: "24h Change",
       daily_change_pct: row.daily_change_pct,
       market_tone: row.market_tone,
@@ -714,7 +898,9 @@ async function getDailyItems(
       notable_symbols: notableSymbols,
       top_symbol_moves: topSymbolMoves,
       public_context_status: brief?.status ?? row.claude_status,
-      sources: publicSources(sourceRows),
+      sources: publicSources(
+        dailyPublicSourceRows(sourceRows, row.day_start, row.day_end),
+      ),
       chart: {
         chart_highlight_type: "day_window",
         highlight_start: row.day_start,
@@ -903,6 +1089,9 @@ async function getSignalEventItems(
         reason: "strongest_peak_15m",
       });
     }
+    const signalSources = publicSources(
+      signalPublicSourceRows(sourceRows, row.event_start, row.event_end),
+    );
 
     const item: SignalEventFeedItemV02 = {
       item_type: "signal_event",
@@ -928,7 +1117,7 @@ async function getSignalEventItems(
       volatility_context: row.volatility_context,
       event_range_context: row.event_range_context,
       public_context_status: brief?.status ?? "queued_for_analysis",
-      sources: publicSources(sourceRows),
+      sources: signalSources,
       evidence_window: {
         start: row.event_start,
         end: row.event_end,
@@ -981,7 +1170,10 @@ async function getSignalEventItems(
     };
 
     if (brief) {
-      item.brief = publicBrief(brief);
+      item.brief =
+        signalSources.length === 0
+          ? signalBriefWithoutAcceptedSources(publicBrief(brief), row)
+          : publicBrief(brief);
     }
 
     items.push(item);

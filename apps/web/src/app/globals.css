@@ -29,11 +29,14 @@
   --source-chip-border: rgba(34, 211, 238, 0.36);
   --source-chip-bg-strong: rgba(34, 211, 238, 0.18);
   --source-chip-border-strong: rgba(34, 211, 238, 0.58);
-  --source-chip-text: #67e8f9;
-  --source-focused-text: #3b82f6;
-  --source-likely-text: #7dd3fc;
+  --source-main-text: #22d3ee;
+  --source-support-text: #93c5fd;
+  --source-catalyst-text: #34d399;
+  --source-likely-text: var(--cause-likely);
   --source-backdrop-text: #cbd5e1;
   --source-price-text: #fcd34d;
+  --source-chip-text: var(--source-main-text);
+  --source-focused-text: var(--source-catalyst-text);
   --market-chip-text: #fbbf24;
   --market-chip-border: rgba(251, 191, 36, 0.28);
   --market-story-range-text: #22d3ee;
@@ -68,6 +71,7 @@
   --status-in-event: #8b5cf6;
   --status-strong: #f59e0b;
   --status-severe: #f97316;
+  --status-relief: #a3e635;
 
   /* ── Brand orange (logo + micro-accents only) ── */
   --brand-orange-deep: #fe4000;
@@ -123,11 +127,14 @@
   --source-chip-border: rgba(14, 165, 233, 0.3);
   --source-chip-bg-strong: rgba(14, 165, 233, 0.16);
   --source-chip-border-strong: rgba(14, 165, 233, 0.5);
-  --source-chip-text: #0369a1;
-  --source-focused-text: #1e3a8a;
-  --source-likely-text: #0369a1;
+  --source-main-text: #0e7490;
+  --source-support-text: #2563eb;
+  --source-catalyst-text: #047857;
+  --source-likely-text: var(--cause-likely);
   --source-backdrop-text: #475569;
   --source-price-text: #a16207;
+  --source-chip-text: var(--source-main-text);
+  --source-focused-text: var(--source-catalyst-text);
   --market-chip-text: #b45309;
   --market-chip-border: rgba(180, 83, 9, 0.24);
   --market-story-range-text: #0e7490;
@@ -144,6 +151,7 @@
   --cause-likely: #4d7c0f;
   --context-backdrop: #7c2d12;
   --none-found: #5b6677;
+  --status-relief: #65a30d;
 
   --brand-glow-soft: rgba(254, 114, 3, 0.06);
   --glow-violet: rgba(139, 92, 246, 0.06);

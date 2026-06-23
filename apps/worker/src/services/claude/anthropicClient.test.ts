@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   AnthropicClient,
   buildAnthropicMessagesRequest,
+  claudeWebSearchPolicyFromEnv,
   normalizeDomainFilters,
   parseAnthropicMessage,
   type ClaudeClientRequest,
@@ -61,6 +62,38 @@ test("Claude request construction includes model, web_search tool, max_uses, and
   assert.equal(tool.max_uses, 1);
   assert.deepEqual(tool.allowed_domains, ["www.reuters.com", "coindesk.com"]);
   assert.equal("blocked_domains" in tool, false);
+});
+
+test("web search policy defaults to the dynamic-filtering tool and honors the env override", () => {
+  assert.equal(
+    claudeWebSearchPolicyFromEnv({}).tool_type,
+    "web_search_20260209",
+  );
+  assert.equal(
+    claudeWebSearchPolicyFromEnv({
+      CLAUDE_WEB_SEARCH_TOOL_TYPE: "web_search_20250305",
+    }).tool_type,
+    "web_search_20250305",
+  );
+});
+
+test("Claude request sends the system prompt as a cached text block", () => {
+  const body = buildAnthropicMessagesRequest(
+    request({ system_prompt: "rules" }),
+  );
+  const systemBlocks = body.system as Array<Record<string, unknown>>;
+
+  assert.equal(Array.isArray(systemBlocks), true);
+  assert.equal(systemBlocks.length, 1);
+  assert.equal(systemBlocks[0].type, "text");
+  assert.equal(systemBlocks[0].text, "rules");
+  assert.deepEqual(systemBlocks[0].cache_control, { type: "ephemeral" });
+});
+
+test("Claude request omits the system field when no system prompt is provided", () => {
+  const body = buildAnthropicMessagesRequest(request({ system_prompt: "" }));
+
+  assert.equal("system" in body, false);
 });
 
 test("Claude request construction uses blocked domains only when allowed domains are absent", () => {
@@ -259,4 +292,31 @@ test("parser detects max_uses_exceeded and query_too_long safely", () => {
     assert.equal(parsed.metadata.error_code, errorCode);
     assert.equal(parsed.json, null);
   }
+});
+
+test("parser keeps valid JSON when web search max uses is exhausted", () => {
+  const parsed = parseAnthropicMessage(
+    {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(validBriefJson()),
+        },
+        {
+          type: "web_search_tool_result_error",
+          error_code: "max_uses_exceeded",
+        },
+      ],
+    },
+    {
+      model: "claude-test-model",
+      toolType: "web_search_20250305",
+      maxUses: 1,
+      generatedAt: "2026-06-16T12:00:00.000Z",
+    },
+  );
+
+  assert.equal(parsed.error_message, null);
+  assert.equal(parsed.metadata.error_code, "max_uses_exceeded");
+  assert.equal((parsed.json as Record<string, unknown>).schema_version, "1.0");
 });

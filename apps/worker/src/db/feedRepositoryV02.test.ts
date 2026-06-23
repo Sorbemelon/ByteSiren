@@ -164,10 +164,8 @@ function claudeBrief(
     prompt_mode:
       targetType === "daily_overview_v02" ? "daily_overview" : "signal_event",
     status: "brief_ready",
-    public_label:
-      targetType === "daily_overview_v02" ? "Daily Context" : "Likely Cause",
-    classification:
-      targetType === "daily_overview_v02" ? "Daily Context" : "Likely Cause",
+    public_label: targetType === "daily_overview_v02" ? null : "Likely Cause",
+    classification: targetType === "daily_overview_v02" ? null : "Likely Cause",
     confidence: "medium",
     headline: "Source-supported context",
     collapsed_summary: "Short context.",
@@ -446,6 +444,507 @@ test("Signal Event feed item exposes evidence labels, highlights, brief, and acc
   );
 });
 
+test("Signal Event feed item keeps in-window and same-UTC-day sources but hides prior-day sources", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_late", "2026-06-19T14:00:00.000Z")],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_late"),
+    ],
+    source_references_v02: [
+      // In the 6h window (08:00–14:45) → kept.
+      sourceReference(
+        "src_a_in_window",
+        "signal_event_v02",
+        "sig_late",
+        "https://www.reuters.com/markets/2026/06/19/in-window-context/",
+        {
+          published_at: "2026-06-19T14:30:00.000Z",
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+        },
+      ),
+      // Same UTC day but outside the window → kept as Backdrop (Market Backdrop).
+      sourceReference(
+        "src_b_same_day_backdrop",
+        "signal_event_v02",
+        "sig_late",
+        "https://blockchainreporter.net/markets/2026/06/19/roundup/",
+        {
+          published_at: "2026-06-19T02:00:00.000Z",
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          metadata_json: JSON.stringify({ catalyst_time_utc: null }),
+        },
+      ),
+      // Published after the event but with an in-window catalyst time → kept.
+      sourceReference(
+        "src_c_later_with_catalyst",
+        "signal_event_v02",
+        "sig_late",
+        "https://www.reuters.com/markets/2026/06/19/later-with-catalyst/",
+        {
+          published_at: "2026-06-19T18:00:00.000Z",
+          source_role: "Likely cause source",
+          used_for: "likely_cause",
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: "2026-06-19T13:30:00.000Z",
+          }),
+        },
+      ),
+      // Prior UTC day, well outside the window → dropped.
+      sourceReference(
+        "src_d_prior_day",
+        "signal_event_v02",
+        "sig_late",
+        "https://www.reuters.com/markets/2026/06/17/prior-day-context/",
+        {
+          published_at: "2026-06-17T02:00:00.000Z",
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: "2026-06-17T02:00:00.000Z",
+          }),
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  assert.deepEqual(
+    signal.sources.map((source) => source.url).sort(),
+    [
+      "https://blockchainreporter.net/markets/2026/06/19/roundup/",
+      "https://www.reuters.com/markets/2026/06/19/in-window-context/",
+      "https://www.reuters.com/markets/2026/06/19/later-with-catalyst/",
+    ].sort(),
+  );
+});
+
+test("Signal Event feed item replaces source-free news brief with honest no-source copy", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [
+      signalEvent("sig_no_source", "2026-06-19T14:00:00.000Z", {
+        direction: "observed_down",
+        avg_change_pct: -1.4,
+      }),
+    ],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_no_source", {
+        status: "no_clear_cause",
+        public_label: "No Clear Cause",
+        classification: "No Clear Cause",
+        headline: "Fed news drove the move",
+        collapsed_summary:
+          "Reuters and Binance news explained this Signal Event, but the source rows were rejected.",
+        source_support: "none",
+        source_timing_alignment: "none",
+      }),
+    ],
+    source_references_v02: [
+      sourceReference(
+        "src_stale",
+        "signal_event_v02",
+        "sig_no_source",
+        "https://www.reuters.com/markets/2026/06/17/stale-context/",
+        {
+          published_at: "2026-06-17T02:00:00.000Z",
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          accepted: 1,
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: "2026-06-17T02:00:00.000Z",
+          }),
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  assert.equal(signal.sources.length, 0);
+  assert.equal(
+    signal.brief?.headline,
+    "No accepted time-aligned public source",
+  );
+  assert.match(
+    signal.brief?.collapsed_summary ?? "",
+    /No accepted time-aligned public source remained/,
+  );
+  assert.match(signal.brief?.collapsed_summary ?? "", /Avg Change -1.40%/);
+  assert.equal(
+    (signal.brief?.collapsed_summary ?? "").includes("Reuters and Binance"),
+    false,
+  );
+});
+
+test("Signal Event with high source_support but zero in-window rows drops to No Clear Cause", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [
+      signalEvent("sig_drift", "2026-06-19T14:00:00.000Z", {
+        direction: "observed_up",
+        avg_change_pct: 2.1,
+      }),
+    ],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_drift", {
+        public_label: "Likely Cause",
+        classification: "Likely Cause",
+        headline: "Fed decision drove the rally",
+        collapsed_summary:
+          "Reuters reported a Fed decision that drove this Signal Event higher.",
+        source_support: "high",
+        source_timing_alignment: "exact",
+      }),
+    ],
+    source_references_v02: [
+      sourceReference(
+        "src_out_of_window",
+        "signal_event_v02",
+        "sig_drift",
+        "https://www.reuters.com/markets/2026/06/19/old-context/",
+        {
+          published_at: "2026-06-19T02:00:00.000Z",
+          source_role: "Likely cause source",
+          used_for: "likely_cause",
+          accepted: 1,
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: "2026-06-19T02:00:00.000Z",
+          }),
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  // The feed window filter drops the only (stale) row, so the stored
+  // high-support news brief must NOT survive — it is rewritten to No Clear Cause
+  // even though source_support/source_timing_alignment were not "none".
+  assert.equal(signal.sources.length, 0);
+  assert.equal(signal.brief?.public_label, "No Clear Cause");
+  assert.equal(signal.brief?.classification, "No Clear Cause");
+  assert.equal(
+    signal.brief?.headline,
+    "No accepted time-aligned public source",
+  );
+  assert.equal(
+    (signal.brief?.collapsed_summary ?? "").includes("Fed decision"),
+    false,
+  );
+  assert.equal(
+    (signal.brief?.collapsed_summary ?? "").includes("Reuters"),
+    false,
+  );
+});
+
+test("Signal Event source window uses 6h-before-event-start bounds", async () => {
+  const { db } = createMemoryD1({
+    // Event 14:00–14:45 UTC → allowed source window starts at 08:00 UTC.
+    signal_events_v02: [signalEvent("sig_bounds", "2026-06-19T14:00:00.000Z")],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_bounds"),
+    ],
+    source_references_v02: [
+      sourceReference(
+        "src_inside_window",
+        "signal_event_v02",
+        "sig_bounds",
+        "https://www.reuters.com/markets/2026/06/19/inside/",
+        {
+          published_at: "2026-06-19T08:30:00.000Z",
+          source_role: "Likely cause source",
+          used_for: "likely_cause",
+          metadata_json: JSON.stringify({ catalyst_time_utc: null }),
+        },
+      ),
+      sourceReference(
+        "src_just_before_window",
+        "signal_event_v02",
+        "sig_bounds",
+        "https://www.reuters.com/markets/2026/06/19/just-before/",
+        {
+          published_at: "2026-06-19T07:30:00.000Z",
+          source_role: "Likely cause source",
+          used_for: "likely_cause",
+          metadata_json: JSON.stringify({ catalyst_time_utc: null }),
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  // Only the row at/after eventStart-6h survives; the one 30m earlier is dropped.
+  assert.deepEqual(
+    signal.sources.map((source) => source.url),
+    ["https://www.reuters.com/markets/2026/06/19/inside/"],
+  );
+});
+
+test("Daily Overview sources stay within the UTC day plus a short overnight lookback", async () => {
+  const { db } = createMemoryD1({
+    // day_start 2026-06-19T00:00 → source window starts 2026-06-18T18:00.
+    daily_overviews_v02: [dailyOverview()],
+    claude_briefs_v02: [
+      claudeBrief("brief_daily", "daily_overview_v02", "daily_2026-06-19"),
+    ],
+    source_references_v02: [
+      sourceReference(
+        "src_in_day",
+        "daily_overview_v02",
+        "daily_2026-06-19",
+        "https://www.coindesk.com/markets/2026/06/19/in-day/",
+        {
+          source_role: "Main daily context source",
+          used_for: "daily_context",
+          published_at: "2026-06-19T10:00:00.000Z",
+        },
+      ),
+      sourceReference(
+        "src_prior_evening",
+        "daily_overview_v02",
+        "daily_2026-06-19",
+        "https://www.coindesk.com/markets/2026/06/18/prior-evening/",
+        {
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          published_at: "2026-06-18T21:00:00.000Z",
+        },
+      ),
+      sourceReference(
+        "src_two_days_old",
+        "daily_overview_v02",
+        "daily_2026-06-19",
+        "https://www.coindesk.com/markets/2026/06/17/two-days-old/",
+        {
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          published_at: "2026-06-17T12:00:00.000Z",
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const daily = feed.day_groups[0].items[0];
+
+  assert.equal(daily.item_type, "daily_overview");
+  if (daily.item_type !== "daily_overview") {
+    throw new Error("expected daily overview item");
+  }
+
+  // In-day and late-prior-evening kept; the two-days-old source is dropped.
+  assert.deepEqual(
+    daily.sources.map((source) => source.url).sort(),
+    [
+      "https://www.coindesk.com/markets/2026/06/18/prior-evening/",
+      "https://www.coindesk.com/markets/2026/06/19/in-day/",
+    ].sort(),
+  );
+});
+
+test("public sources expose catalyst_time_utc from metadata", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_cat", "2026-06-19T14:00:00.000Z")],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_cat"),
+    ],
+    source_references_v02: [
+      sourceReference(
+        "src_cat",
+        "signal_event_v02",
+        "sig_cat",
+        "https://www.reuters.com/markets/2026/06/19/catalyst/",
+        {
+          published_at: "2026-06-19T18:00:00.000Z",
+          source_role: "Likely cause source",
+          used_for: "likely_cause",
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: "2026-06-19T13:30:00.000Z",
+          }),
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  assert.equal(signal.sources.length, 1);
+  assert.equal(signal.sources[0].published_at, "2026-06-19T18:00:00.000Z");
+  assert.equal(
+    signal.sources[0].catalyst_time_utc,
+    "2026-06-19T13:30:00.000Z",
+  );
+});
+
+test("acceptance: feed surfaces each accepted source with its own role and preserved timestamps", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_acc", "2026-06-19T14:00:00.000Z")],
+    daily_overviews_v02: [dailyOverview()],
+    claude_briefs_v02: [
+      claudeBrief("brief_sig", "signal_event_v02", "sig_acc", {
+        public_label: "Focused Cause",
+        classification: "Focused Cause",
+      }),
+      claudeBrief("brief_day", "daily_overview_v02", "daily_2026-06-19"),
+    ],
+    source_references_v02: [
+      // Focused catalyst with an in-window catalyst_time_utc → stays Focused.
+      sourceReference(
+        "src_focused",
+        "signal_event_v02",
+        "sig_acc",
+        "https://www.reuters.com/markets/2026/06/19/focused/",
+        {
+          source_role: "Focused catalyst source",
+          used_for: "focused_catalyst",
+          published_at: "2026-06-19T18:00:00.000Z",
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: "2026-06-19T13:30:00.000Z",
+          }),
+        },
+      ),
+      // Same-day backdrop → stays Backdrop.
+      sourceReference(
+        "src_backdrop",
+        "signal_event_v02",
+        "sig_acc",
+        "https://blockchainreporter.net/markets/2026/06/19/roundup/",
+        {
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          published_at: "2026-06-19T02:00:00.000Z",
+        },
+      ),
+      // Price check, no publication time → stays Price check.
+      sourceReference(
+        "src_price",
+        "signal_event_v02",
+        "sig_acc",
+        "https://example.com/price/live",
+        {
+          source_role: "Price check source",
+          used_for: "price_check",
+          published_at: null,
+        },
+      ),
+      sourceReference(
+        "src_daily_main",
+        "daily_overview_v02",
+        "daily_2026-06-19",
+        "https://nexo.com/markets/2026/06/19/main/",
+        {
+          source_role: "Main daily context source",
+          used_for: "daily_context",
+          published_at: "2026-06-19T09:30:00.000Z",
+        },
+      ),
+      sourceReference(
+        "src_daily_support",
+        "daily_overview_v02",
+        "daily_2026-06-19",
+        "https://www.coindesk.com/markets/2026/06/19/support/",
+        {
+          source_role: "Supporting daily source",
+          used_for: "supporting_daily",
+          published_at: "2026-06-19T11:00:00.000Z",
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const items = feed.day_groups[0].items;
+  const signal = items.find((item) => item.item_type === "signal_event");
+  const daily = items.find((item) => item.item_type === "daily_overview");
+
+  assert.ok(signal && signal.item_type === "signal_event");
+  assert.ok(daily && daily.item_type === "daily_overview");
+  if (signal.item_type !== "signal_event" || daily.item_type !== "daily_overview") {
+    throw new Error("expected signal and daily items");
+  }
+
+  // Signal: each role is preserved (not flattened to Backdrop).
+  assert.deepEqual(
+    signal.sources.map((source) => source.tag).sort(),
+    ["Backdrop source", "Focused catalyst source", "Price check source"],
+  );
+  const focused = signal.sources.find(
+    (source) => source.tag === "Focused catalyst source",
+  );
+  assert.equal(focused?.published_at, "2026-06-19T18:00:00.000Z");
+  assert.equal(focused?.catalyst_time_utc, "2026-06-19T13:30:00.000Z");
+  const price = signal.sources.find(
+    (source) => source.tag === "Price check source",
+  );
+  assert.equal(price?.published_at, null);
+
+  // Daily: Main + Supporting roles preserved.
+  assert.deepEqual(
+    daily.sources.map((source) => source.tag).sort(),
+    ["Main daily context source", "Supporting daily source"],
+  );
+});
+
+test("v0.2 public feed limits accepted sources to three", async () => {
+  const { db } = createMemoryD1({
+    daily_overviews_v02: [dailyOverview()],
+    claude_briefs_v02: [
+      claudeBrief("brief_daily", "daily_overview_v02", "daily_2026-06-19"),
+    ],
+    source_references_v02: [1, 2, 3, 4, 5].map((index) =>
+      sourceReference(
+        `src_daily_${index}`,
+        "daily_overview_v02",
+        "daily_2026-06-19",
+        `https://www.coindesk.com/markets/2026/06/19/daily-context-${index}/`,
+        {
+          source_role:
+            index === 1
+              ? "Main daily context source"
+              : "Supporting daily source",
+          used_for: index === 1 ? "daily_context" : "supporting_daily",
+          published_at: `2026-06-19T1${index}:00:00.000Z`,
+          created_at: `2026-06-19T1${index}:10:00.000Z`,
+        },
+      ),
+    ),
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const daily = feed.day_groups[0].items[0];
+
+  assert.equal(daily.item_type, "daily_overview");
+  if (daily.item_type !== "daily_overview") {
+    throw new Error("expected daily overview item");
+  }
+
+  assert.equal(daily.sources.length, 3);
+});
+
 test("Daily Overview feed item uses daily labels and actual v0.2 Claude/source rows only", async () => {
   const { db } = createMemoryD1({
     daily_overviews_v02: [dailyOverview()],
@@ -474,7 +973,7 @@ test("Daily Overview feed item uses daily labels and actual v0.2 Claude/source r
   }
 
   assert.equal(daily.daily_change_label, "24h Change");
-  assert.equal(daily.daily_label, "Daily Context");
+  assert.equal(daily.daily_label, "Daily Overview");
   assert.equal(daily.public_context_status, "brief_ready");
   assert.equal(daily.chart.chart_highlight_type, "day_window");
   assert.equal(daily.sources.length, 1);

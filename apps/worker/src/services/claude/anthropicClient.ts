@@ -11,7 +11,7 @@ const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_TIMEOUT_MS = 120_000;
-const DEFAULT_RETRIES = 0;
+const DEFAULT_RETRIES = 2;
 const RETRYABLE_HTTP_STATUSES = new Set([
   408, 409, 425, 429, 500, 502, 503, 504,
 ]);
@@ -176,10 +176,9 @@ export function buildAnthropicMessagesRequest(
     tool.blocked_domains = blockedDomains;
   }
 
-  return {
+  const body: Record<string, unknown> = {
     model: request.model,
     max_tokens: DEFAULT_MAX_TOKENS,
-    system: request.system_prompt,
     messages: [
       {
         role: "user",
@@ -188,6 +187,23 @@ export function buildAnthropicMessagesRequest(
     ],
     tools: [tool],
   };
+
+  // Send the system prompt as a cached text block so the static instruction
+  // prefix can be served from the prompt cache across enrichment calls. The
+  // cache only activates once the prefix exceeds the model's minimum cacheable
+  // size; below that it is a no-op (no error), and the adherence benefit of
+  // keeping rules in the system role still stands.
+  if (request.system_prompt) {
+    body.system = [
+      {
+        type: "text",
+        text: request.system_prompt,
+        cache_control: { type: "ephemeral" },
+      },
+    ];
+  }
+
+  return body;
 }
 
 function normalizeDomainFilter(value: string): string | null {
@@ -259,7 +275,20 @@ export function parseAnthropicMessage(
     generated_at: context.generatedAt,
   };
 
+  const parsedJson = parseAssistantJson(text);
+
   if (toolErrorCode) {
+    if (toolErrorCode === "max_uses_exceeded" && parsedJson.ok) {
+      return {
+        json: parsedJson.value,
+        text,
+        citations,
+        metadata,
+        retryable: false,
+        error_message: null,
+      };
+    }
+
     return {
       json: null,
       text,
@@ -269,8 +298,6 @@ export function parseAnthropicMessage(
       error_message: `Claude Web Search returned ${toolErrorCode}.`,
     };
   }
-
-  const parsedJson = parseAssistantJson(text);
 
   if (!parsedJson.ok) {
     return {

@@ -105,7 +105,7 @@ const v02Feed = {
           id: "daily_2026-06-19",
           date_utc: "2026-06-19",
           display_time: "Full UTC day",
-          daily_label: "Daily Context",
+          daily_label: "Daily Overview",
           daily_change_label: "24h Change",
           daily_change_pct: 1.8,
           market_tone: "risk_on",
@@ -143,7 +143,7 @@ const v02Feed = {
           brief: {
             id: "brief_daily",
             status: "brief_ready",
-            public_label: "Daily Context",
+            public_label: null,
             collapsed_summary: "Daily context.",
           },
         },

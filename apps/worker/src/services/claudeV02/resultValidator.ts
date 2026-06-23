@@ -3,14 +3,12 @@ import type {
   ClaudeOutputSourceV02,
   ClaudeResultV02,
   DailyOverviewClaudeResultV02,
-  DailyOverviewLabelV02,
   SignalEventClassificationV02,
   SignalEventClaudeResultV02,
   SourceSupportV02,
   SourceTimingAlignmentV02,
 } from "./types.ts";
 import {
-  DAILY_OVERVIEW_LABELS_V02,
   DAILY_OVERVIEW_SOURCE_TAGS_V02,
   SIGNAL_EVENT_CLASSIFICATIONS_V02,
   SIGNAL_EVENT_SOURCE_TAGS_V02,
@@ -35,7 +33,17 @@ const SOURCE_TIMING_VALUES = new Set([
 const SIGNAL_CLASSIFICATIONS = new Set<string>(
   SIGNAL_EVENT_CLASSIFICATIONS_V02,
 );
-const DAILY_LABELS = new Set<string>(DAILY_OVERVIEW_LABELS_V02);
+const DAILY_LABELS = new Set<string>([
+  "Daily Context",
+  "Quiet Day",
+  "Mixed Day",
+  "Volatile Day",
+  "Risk-on Day",
+  "Risk-off Day",
+  "Relief Day",
+  "No Major Driver",
+  "Claude Limited",
+]);
 const SIGNAL_SOURCE_TAGS = new Set<string>(SIGNAL_EVENT_SOURCE_TAGS_V02);
 const DAILY_SOURCE_TAGS = new Set<string>(DAILY_OVERVIEW_SOURCE_TAGS_V02);
 
@@ -179,20 +187,6 @@ function classification(value: string): SignalEventClassificationV02 {
   return value as SignalEventClassificationV02;
 }
 
-function dailyLabel(value: string): DailyOverviewLabelV02 {
-  if (!DAILY_LABELS.has(value)) {
-    if (SIGNAL_CLASSIFICATIONS.has(value)) {
-      throw new ClaudeResultValidationErrorV02(
-        "Daily Overview result cannot use Signal Event cause labels.",
-      );
-    }
-
-    throw new ClaudeResultValidationErrorV02("daily_label is invalid.");
-  }
-
-  return value as DailyOverviewLabelV02;
-}
-
 function enforceSignalSourceRules(input: {
   classification: SignalEventClassificationV02;
   sources: ClaudeOutputSourceV02[];
@@ -276,6 +270,13 @@ export function validateDailyOverviewClaudeResultV02(
   }
 
   const itemId = stringField(input, "item_id");
+  for (const labelField of ["daily_label", "public_label", "classification"]) {
+    if (input[labelField] !== null && input[labelField] !== undefined) {
+      throw new ClaudeResultValidationErrorV02(
+        "Daily Overview Claude result must not include a day label.",
+      );
+    }
+  }
   const drivers = Array.isArray(input.notable_drivers)
     ? input.notable_drivers.map((item) => {
         const driver = record(item);
@@ -295,7 +296,6 @@ export function validateDailyOverviewClaudeResultV02(
         ? input.target_id.trim()
         : itemId,
     date_utc: stringField(input, "date_utc"),
-    daily_label: dailyLabel(stringField(input, "daily_label")),
     confidence: confidence(stringField(input, "confidence")),
     headline: stringField(input, "headline"),
     collapsed_summary: stringField(input, "collapsed_summary"),

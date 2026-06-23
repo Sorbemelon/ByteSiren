@@ -110,7 +110,7 @@ const fixtureFeed = {
           id: "daily_2026-06-20",
           date_utc: "2026-06-20",
           display_time: "Full UTC day",
-          daily_label: "Daily Context",
+          daily_label: "Daily Overview",
           daily_change_label: "24h Change",
           daily_change_pct: 1.42,
           market_tone: "mixed",
@@ -200,7 +200,7 @@ const fixtureFeed = {
           brief: {
             id: "brief_daily_fixture",
             status: "brief_ready",
-            public_label: "Daily Context",
+            public_label: null,
             confidence: "medium",
             collapsed_summary:
               "A mixed but active UTC day: SOL and BTC led the broad move while XRP lagged into the close.",

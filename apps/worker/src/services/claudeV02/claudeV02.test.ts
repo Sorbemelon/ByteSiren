@@ -4,9 +4,12 @@ import test from "node:test";
 import { createMemoryD1 } from "../../test/d1Memory.ts";
 import {
   buildDailyOverviewClaudePayloadsV02,
-  buildDailyOverviewPromptV02,
+  buildDailyOverviewSystemPromptV02,
+  buildDailyOverviewUserPromptV02,
   buildSignalEventClaudePayloadsV02,
-  buildSignalEventPromptV02,
+  buildSignalEventSystemPromptV02,
+  buildSignalEventUserPromptV02,
+  MAX_PUBLIC_SOURCES_PER_BRIEF_V02,
   toSourceReferenceInputsV02,
   validateClaudeResultV02,
   validateDailyOverviewClaudeResultV02,
@@ -163,7 +166,6 @@ function validDailyResult() {
     mode: "daily_overview",
     item_id: "daily_2026-06-19",
     date_utc: "2026-06-19",
-    daily_label: "Daily Context",
     confidence: "medium",
     headline: "Daily crypto context",
     collapsed_summary: "The day had broad crypto market context.",
@@ -248,8 +250,12 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
   const dailyPayload = (
     await buildDailyOverviewClaudePayloadsV02(db, { now })
   )[0];
-  const signalPrompt = buildSignalEventPromptV02(signalPayload);
-  const dailyPrompt = buildDailyOverviewPromptV02(dailyPayload);
+  // Rules and the output schema now live in the static system prompt; the
+  // per-item payload is the only thing in the user prompt.
+  const signalPrompt = buildSignalEventSystemPromptV02();
+  const dailyPrompt = buildDailyOverviewSystemPromptV02();
+  const signalUserPrompt = buildSignalEventUserPromptV02(signalPayload);
+  const dailyUserPrompt = buildDailyOverviewUserPromptV02(dailyPayload);
 
   assert.match(signalPrompt, /Focused Cause/);
   assert.match(signalPrompt, /Likely Cause/);
@@ -258,18 +264,83 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
   assert.match(signalPrompt, /Claude Limited/);
   assert.match(signalPrompt, /6 hours before the evidence window start/);
   assert.match(signalPrompt, /published after the Signal Event/i);
+  assert.match(
+    signalPrompt,
+    /Keep article publication time and catalyst\/event time separate/,
+  );
+  assert.match(
+    signalPrompt,
+    /published_at is the article's publication timestamp/,
+  );
+  assert.match(signalPrompt, /never substitute the Signal Event time/);
+  assert.match(signalPrompt, /If catalyst_time_utc is unknown/);
+  assert.match(
+    signalPrompt,
+    /publication itself is inside the allowed catalyst window/,
+  );
+  assert.match(
+    signalPrompt,
+    /Later recaps without an in-window catalyst_time_utc/,
+  );
+  assert.match(
+    signalPrompt,
+    /broad multi-day-old macro context belongs in Daily Overview/,
+  );
+  assert.match(
+    signalPrompt,
+    /Sources too far from the event should be omitted or rejected/,
+  );
+  assert.match(signalPrompt, /Return no more than 3 sources total/);
+  assert.match(
+    signalPrompt,
+    /collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources/,
+  );
   assert.match(signalPrompt, /catalyst_time_utc/);
   assert.match(signalPrompt, /chart context only as descriptive evidence/i);
   assert.match(signalPrompt, /collapsed_summary is the main public brief/);
   assert.doesNotMatch(signalPrompt, /"context_details"/);
   assert.match(signalPrompt, /Return JSON only/);
-  assert.match(dailyPrompt, /Daily Context/);
-  assert.match(dailyPrompt, /Quiet Day/);
-  assert.match(dailyPrompt, /No Major Driver/);
-  assert.match(dailyPrompt, /Do not use Signal Event cause labels/);
+  assert.match(dailyPrompt, /Do not generate a Daily Overview label/);
+  assert.match(dailyPrompt, /deterministic market_tone/);
+  assert.doesNotMatch(dailyPrompt, /Allowed Daily Overview labels/);
+  assert.doesNotMatch(dailyPrompt, /daily_label:/);
   assert.match(dailyPrompt, /collapsed_summary is the main public brief/);
+  assert.match(dailyPrompt, /Return no more than 3 sources total/);
+  assert.match(
+    dailyPrompt,
+    /collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources/,
+  );
   assert.doesNotMatch(dailyPrompt, /"context_details"/);
   assert.match(dailyPrompt, /Do not provide trading advice/);
+
+  // Bug 2 hardening: explicit anti-stale-promotion / no-back-dating wording.
+  assert.match(
+    signalPrompt,
+    /Do not back-date it to fit the allowed catalyst window/,
+  );
+  assert.match(
+    signalPrompt,
+    /published well before the allowed catalyst window must be a Backdrop source/,
+  );
+
+  // Round 2: catalyst recall — require catalyst_time_utc, known macro times,
+  // no midnight rounding, and prefer Market Backdrop over No Clear Cause.
+  assert.match(signalPrompt, /ALWAYS include catalyst_time_utc/);
+  assert.match(signalPrompt, /FOMC rate decisions are announced ~18:00 UTC/);
+  assert.match(signalPrompt, /date-level is acceptable/);
+  assert.match(signalPrompt, /never move published_at to a different calendar day/i);
+  assert.match(signalPrompt, /Prefer Market Backdrop over No Clear Cause/);
+  // Daily sourcing must stay within the UTC day.
+  assert.match(dailyPrompt, /Sources must fall within this UTC day/);
+
+  // User prompts carry only the payload, not the rules/schema.
+  assert.match(signalUserPrompt, /Signal Event payload:/);
+  assert.match(signalUserPrompt, new RegExp(signalPayload.target_id));
+  assert.doesNotMatch(signalUserPrompt, /Allowed classifications/);
+  assert.doesNotMatch(signalUserPrompt, /Return JSON only/);
+  assert.match(dailyUserPrompt, /Daily Overview payload:/);
+  assert.match(dailyUserPrompt, new RegExp(dailyPayload.target_id));
+  assert.doesNotMatch(dailyUserPrompt, /Allowed Daily Overview labels/);
 });
 
 test("v0.2 validators accept Signal and Daily results but reject crossed labels and Market Story mode", () => {
@@ -277,7 +348,7 @@ test("v0.2 validators accept Signal and Daily results but reject crossed labels 
   const daily = validateDailyOverviewClaudeResultV02(validDailyResult());
 
   assert.equal(signal.classification, "Focused Cause");
-  assert.equal(daily.daily_label, "Daily Context");
+  assert.equal(Object.hasOwn(daily, "daily_label"), false);
   assert.throws(() =>
     validateSignalEventClaudeResultV02({
       ...validSignalResult(),
@@ -287,7 +358,7 @@ test("v0.2 validators accept Signal and Daily results but reject crossed labels 
   assert.throws(() =>
     validateDailyOverviewClaudeResultV02({
       ...validDailyResult(),
-      daily_label: "Focused Cause",
+      daily_label: "Daily Context",
     }),
   );
   assert.throws(() => validateClaudeResultV02({ mode: "market_story" }));
@@ -390,6 +461,58 @@ test("v0.2 source policy rejects root URLs and disallows Market Story targets", 
   );
 });
 
+test("v0.2 source policy limits accepted public sources to three by role priority", () => {
+  const result = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: {
+      start: "2026-06-19T14:00:00.000Z",
+      end: "2026-06-19T14:45:00.000Z",
+    },
+    sources: [
+      {
+        title: "Backdrop one",
+        publisher: "Reuters",
+        url: "https://www.reuters.com/markets/2026/06/19/backdrop-one/",
+        published_at: "2026-06-19T14:05:00.000Z",
+        tag: "Backdrop source",
+        why_relevant: "In-window backdrop.",
+      },
+      {
+        title: "Backdrop two",
+        publisher: "CoinDesk",
+        url: "https://www.coindesk.com/markets/2026/06/19/backdrop-two/",
+        published_at: "2026-06-19T14:10:00.000Z",
+        tag: "Backdrop source",
+        why_relevant: "In-window backdrop.",
+      },
+      {
+        title: "Likely catalyst",
+        publisher: "The Block",
+        url: "https://www.theblock.co/post/likely-catalyst",
+        published_at: "2026-06-19T14:15:00.000Z",
+        catalyst_time_utc: "2026-06-19T14:12:00.000Z",
+        tag: "Likely cause source",
+        why_relevant: "In-window likely catalyst.",
+      },
+      {
+        title: "Price check",
+        publisher: "Cointelegraph",
+        url: "https://cointelegraph.com/news/price-check",
+        published_at: "2026-06-19T14:20:00.000Z",
+        tag: "Price check source",
+        why_relevant: "Price check.",
+      },
+    ],
+  });
+
+  assert.equal(result.length, MAX_PUBLIC_SOURCES_PER_BRIEF_V02);
+  assert.deepEqual(
+    result.map((source) => source.source_role),
+    ["Likely cause source", "Backdrop source", "Backdrop source"],
+  );
+});
+
 test("v0.2 Signal source policy downgrades stale cause sources but allows aligned catalyst time", () => {
   const window = {
     start: "2026-06-19T14:00:00.000Z",
@@ -399,15 +522,16 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
     target_type: "signal_event_v02",
     target_id: "sig_public",
     signalEventWindow: window,
+    includeRejected: true,
     sources: [
       {
         title: "Old catalyst recap",
         publisher: "Reuters",
         url: "https://www.reuters.com/markets/2026/06/19/old-catalyst-recap/",
-        published_at: "2026-06-19T02:00:00.000Z",
-        catalyst_time_utc: "2026-06-19T02:00:00.000Z",
+        published_at: "2026-06-17T02:00:00.000Z",
+        catalyst_time_utc: "2026-06-17T02:00:00.000Z",
         tag: "Likely cause source",
-        why_relevant: "Older macro context outside the catalyst window.",
+        why_relevant: "Older macro context from a prior UTC day.",
       },
     ],
   });
@@ -428,6 +552,24 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
       },
     ],
   });
+  const postEventArticleWithoutCatalystTime = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    includeRejected: true,
+    sources: [
+      {
+        title: "Post-event recap without catalyst time",
+        publisher: "Reuters",
+        url: "https://www.reuters.com/markets/2026/06/19/post-event-recap-no-catalyst-time/",
+        published_at: "2026-06-19T18:00:00.000Z",
+        catalyst_time_utc: null,
+        tag: "Focused catalyst source",
+        why_relevant:
+          "Published later, but does not provide a catalyst time inside the event window.",
+      },
+    ],
+  });
   const priceCheck = toSourceReferenceInputsV02({
     target_type: "signal_event_v02",
     target_id: "sig_public",
@@ -443,17 +585,119 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
       },
     ],
   });
+  const oldBackdrop = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    includeRejected: true,
+    sources: [
+      {
+        title: "Old broad backdrop",
+        publisher: "Reuters",
+        url: "https://www.reuters.com/markets/2026/06/19/old-broad-backdrop/",
+        published_at: "2026-06-17T02:00:00.000Z",
+        catalyst_time_utc: "2026-06-17T02:00:00.000Z",
+        tag: "Backdrop source",
+        why_relevant: "Broad context from a prior UTC day, well outside the window.",
+      },
+    ],
+  });
+  const untimestampedPriceCheck = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    sources: [
+      {
+        title: "Live price page",
+        publisher: "Price Feed",
+        url: "https://example.com/price/live-sol",
+        published_at: null,
+        tag: "Price check source",
+        why_relevant: "Live price page without article publication time.",
+      },
+    ],
+  });
+  // Same UTC day as the event but outside the 6h window (window starts 08:00):
+  // a Backdrop source is kept as Backdrop (Market Backdrop context), and a cause
+  // tag is downgraded to Backdrop but still kept because it is same-UTC-day.
+  const sameDayBackdrop = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    includeRejected: true,
+    sources: [
+      {
+        title: "Same-day market roundup",
+        publisher: "BlockchainReporter",
+        url: "https://blockchainreporter.net/markets/2026/06/19/roundup/",
+        published_at: "2026-06-19T02:00:00.000Z",
+        catalyst_time_utc: null,
+        tag: "Backdrop source",
+        why_relevant: "Same-day coverage of the move; no pinpoint catalyst time.",
+      },
+    ],
+  });
+  const sameDayCauseDowngraded = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    includeRejected: true,
+    sources: [
+      {
+        title: "Same-day cause claim without in-window time",
+        publisher: "Reuters",
+        url: "https://www.reuters.com/markets/2026/06/19/same-day-cause/",
+        published_at: "2026-06-19T02:00:00.000Z",
+        catalyst_time_utc: null,
+        tag: "Likely cause source",
+        why_relevant: "Same day but outside the 6h window and no catalyst time.",
+      },
+    ],
+  });
 
-  assert.equal(stale[0].accepted, true);
+  assert.equal(stale[0].accepted, false);
   assert.equal(stale[0].source_role, "Backdrop source");
   assert.equal(
-    stale[0].metadata.timing_policy_note,
-    "cause_source_downgraded_outside_6h_event_window",
+    stale[0].rejection_reason,
+    "signal_source_outside_6h_event_window",
   );
   assert.equal(postEventArticle[0].source_role, "Focused catalyst source");
   assert.equal(
     postEventArticle[0].metadata.timing_policy_note,
     "catalyst_time_in_window",
   );
+  // Published same UTC day, after the event, without an in-window catalyst time:
+  // downgraded from cause to Backdrop and kept as same-day Market Backdrop context.
+  assert.equal(postEventArticleWithoutCatalystTime[0].accepted, true);
+  assert.equal(
+    postEventArticleWithoutCatalystTime[0].source_role,
+    "Backdrop source",
+  );
+  assert.equal(
+    postEventArticleWithoutCatalystTime[0].metadata.timing_policy_note,
+    "signal_source_same_utc_day_backdrop",
+  );
+  assert.equal(oldBackdrop[0].accepted, false);
+  assert.equal(
+    oldBackdrop[0].rejection_reason,
+    "signal_source_outside_6h_event_window",
+  );
   assert.equal(priceCheck[0].source_role, "Price check source");
+  assert.equal(untimestampedPriceCheck[0].source_role, "Price check source");
+  assert.equal(
+    untimestampedPriceCheck[0].metadata.timing_policy_note,
+    "price_source_without_publication_time",
+  );
+  assert.equal(sameDayBackdrop[0].accepted, true);
+  assert.equal(sameDayBackdrop[0].source_role, "Backdrop source");
+  assert.equal(
+    sameDayBackdrop[0].metadata.timing_policy_note,
+    "signal_source_same_utc_day_backdrop",
+  );
+  assert.equal(sameDayCauseDowngraded[0].accepted, true);
+  assert.equal(sameDayCauseDowngraded[0].source_role, "Backdrop source");
+  assert.equal(
+    sameDayCauseDowngraded[0].metadata.timing_policy_note,
+    "signal_source_same_utc_day_backdrop",
+  );
 });

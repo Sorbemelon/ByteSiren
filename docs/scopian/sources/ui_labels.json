@@ -74,7 +74,7 @@
     "Volatile Day",
     "Risk-on Day",
     "Risk-off Day",
-    "Relief"
+    "Relief Day"
   ],
   "claude_labels": {
     "cause_supported": "Focused Cause",

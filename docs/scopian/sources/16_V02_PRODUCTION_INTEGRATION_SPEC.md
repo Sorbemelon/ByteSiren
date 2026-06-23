@@ -181,20 +181,25 @@ v0.2 source persistence uses `source_references_v02` only. It must reject root/h
 
 ## Signal Event Source Timing
 
-Signal Event Focused/Likely source timing is stricter in v0.2:
+Signal Event public source timing is stricter in v0.2:
 
 - catalyst window start = Signal Event evidence window start minus 6 hours
 - catalyst window end = Signal Event evidence window end
+- `published_at` is the honest article publication timestamp and must not be rewritten to the Signal Event time, catalyst time, chart peak, or day boundary
+- `catalyst_time_utc` is the time of the described public catalyst/event and is separate from `published_at`
+- public Signal Event sources are allowed only when they are time-relevant to that source window
 - `Focused catalyst source` and `Likely cause source` are allowed only when the source describes a catalyst inside that catalyst window
-- an article may be published after the Signal Event if it clearly describes a catalyst inside the allowed catalyst window
-- broad older context outside the catalyst window can be `Backdrop source` only
+- an article may be published after the Signal Event only if it clearly describes a catalyst inside the allowed catalyst window and supplies an in-window `catalyst_time_utc`
+- if `catalyst_time_utc` is unknown, Focused/Likely use is allowed only when the article publication itself is inside the catalyst window and the article describes a catalyst tied to this exact event
+- broad older context outside the Signal source window belongs in Daily Overview context, not as a public Signal Event source
+- later recaps without an in-window catalyst time should be omitted or rejected for Signal Event public sources
 - price-check sources can confirm market data but must not establish Focused/Likely cause
 
 ## Source Display and Chart Markers
 
 Frontend source chips live in the main card source row for Claude-backed Daily Overview and Signal Event cards. Compact rows may hide extra chips behind `+N`; expanding the row/card shows the full accepted list in that same main source area. Expanded detail sections should not duplicate a separate Sources block.
 
-Chart source markers are always visible for Claude-backed Daily Overview and Signal Event accepted sources. They are de-duplicated by exact accepted source URL. When an accepted source has `published_at`, that timestamp is the source marker time; fallback event/day timing is used only when the source timestamp is missing or unusable. Markers that share or nearly share a source time are separated vertically only so overlap handling does not bias the chart time coordinate. Market Story and Audit Event must not produce source markers.
+Chart source markers are visible for Claude-backed Daily Overview and Signal Event accepted public sources that have a usable `published_at`. Source markers are not globally de-duplicated by URL; if two cards legitimately reference the same article, each source row can produce its own marker. Source markers use the honest `published_at` article publication timestamp and do not substitute event time, chart peak, or day-boundary fallback times. Sources without a usable publication timestamp may still appear as card source chips if policy allows them, but they do not produce chart source markers. Markers that share or nearly share a source time are separated vertically only so overlap handling does not bias the chart time coordinate. Market Story and Audit Event must not produce source markers.
 
 ## Planned Feature Flags
 
@@ -277,7 +282,7 @@ Deterministic fields:
 - `market_range_pct`: median tracked-symbol high-low range percent for the UTC day.
 - `top_symbol_moves_json`: tracked symbols sorted by absolute daily change.
 - `notable_symbols_json`: compact deterministic top-symbol list by change/range.
-- `market_tone`: deterministic `risk_on`, `risk_off`, `mixed`, `quiet`, `volatile`, or `relief`.
+- `market_tone`: deterministic `risk_on`, `risk_off`, `mixed`, `quiet`, `volatile`, or `relief`; public UI labels use `Risk-on Day`, `Risk-off Day`, `Mixed Day`, `Quiet Day`, `Volatile Day`, and `Relief Day`.
 - `signal_event_ids_json`: publishable Signal Event IDs for the same UTC day.
 - `market_story_ids_json`: publishable Market Story IDs anchored to the same UTC day.
 - `audit_event_count`: count of Audit Events for the same UTC day; Audit Event IDs are not public standalone data.
@@ -569,7 +574,7 @@ v0.2I7B2 refines v0.2 Claude context and source display after the controlled sam
 - Signal Event and Daily Overview prompts treat `collapsed_summary` as the main public brief
 - separate expanded `Context Details` / `Context summary` blocks are removed from the v0.2 feed UI
 - source chips stay in the main card source row, with `+N` expansion for the full accepted source list
-- chart source markers are always visible for Claude-backed Daily Overview and Signal Event items, one per unique accepted source URL, based on `published_at` when available, vertically separated when times overlap without shifting chart time, and never shown for Market Story
+- chart source markers are visible for Claude-backed Daily Overview and Signal Event public sources with usable `published_at`, are not globally de-duplicated by URL, use only honest article publication time without fallback substitution, are vertically separated when times overlap without shifting chart time, and are never shown for Market Story
 
 v0.2I6A does not:
 

@@ -375,7 +375,7 @@ Verify after sample:
 - Signal Event and Daily Overview can show sources if accepted rows exist.
 - v0.2 queued items show `No context yet` until context exists.
 - Signal Event and Daily Overview cards use the collapsed brief as the main readable context, without duplicate expanded Context Details / Context summary blocks.
-- Source chips appear in the main card source row with `+N` expansion, and chart source markers are always visible for Claude-backed Daily Overview or Signal Event items, de-duplicated by exact URL, based on `published_at` when available, and vertically separated when times overlap without shifting chart time.
+- Source chips appear in the main card source row with `+N` expansion, and chart source markers are visible for Claude-backed Daily Overview or Signal Event public sources with usable `published_at`. Markers are not globally de-duplicated by exact URL, marker time uses only the honest article publication timestamp without event/peak/day fallback substitution, and overlapping markers are separated vertically without shifting chart time. Sources without usable publication time may remain as card chips if policy allows them, but do not produce chart markers.
 - Market Story still has no sources, source markers, Claude status, Claude result, or Public Context status.
 - No raw Claude traces are public.
 - No public budget/search/token counts are public.
@@ -576,21 +576,21 @@ Monitor after cutover:
 
 ## 16. Risk Register
 
-| Risk | Mitigation |
-|---|---|
-| Cloudflare env flags mis-set | Record before/after flag values; change one mode at a time; keep rollback flag set ready. |
-| GitHub workflow dispatch failure | Keep protected import/admin path available; verify GitHub secrets before import. |
-| Binance or GitHub fetch issue | Run import with smaller symbol/day scope first; retry after confirming upstream availability. |
-| D1 migration issue | Backup first; run local migration and dry-run deploy; stop on first remote migration error. |
-| v0.2 feed empty because of Daily Overview filter/range | Compare table counts to API feed dates; use mismatch diagnosis rules from local smoke. |
-| Claude `max_uses_exceeded` | Map to `claude_limited`; keep catch-up limit small; disable Claude flags until quota is clear. |
-| Poor Claude source quality | Run sample first; verify exact URLs; disable Claude flags if source quality is not acceptable. |
-| Market Story duplicate or continuation confusion | Verify story counts and continuation wording; keep Market Story deterministic and source-free. |
-| Frontend static env issue | Confirm `NEXT_PUBLIC_API_BASE_URL`; rebuild Pages after env change; test deployed Pages. |
-| CORS origin mismatch | Confirm Worker `PUBLIC_WEB_ORIGINS` contains the Pages origin before public smoke. |
-| Local/prod mismatch | Compare local smoke report with remote table/feed counts; run remote smoke before public switch. |
-| Admin tools left enabled | Restore `ENABLE_ADMIN_MAINTENANCE=false` and `ENABLE_V02_ADMIN_TOOLS=false` after protected work. |
-| Accidental token exposure | Run secret scan; keep tokens in Cloudflare/GitHub secrets only; do not paste tokens into reports. |
+| Risk                                                   | Mitigation                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Cloudflare env flags mis-set                           | Record before/after flag values; change one mode at a time; keep rollback flag set ready.         |
+| GitHub workflow dispatch failure                       | Keep protected import/admin path available; verify GitHub secrets before import.                  |
+| Binance or GitHub fetch issue                          | Run import with smaller symbol/day scope first; retry after confirming upstream availability.     |
+| D1 migration issue                                     | Backup first; run local migration and dry-run deploy; stop on first remote migration error.       |
+| v0.2 feed empty because of Daily Overview filter/range | Compare table counts to API feed dates; use mismatch diagnosis rules from local smoke.            |
+| Claude `max_uses_exceeded`                             | Map to `claude_limited`; keep catch-up limit small; disable Claude flags until quota is clear.    |
+| Poor Claude source quality                             | Run sample first; verify exact URLs; disable Claude flags if source quality is not acceptable.    |
+| Market Story duplicate or continuation confusion       | Verify story counts and continuation wording; keep Market Story deterministic and source-free.    |
+| Frontend static env issue                              | Confirm `NEXT_PUBLIC_API_BASE_URL`; rebuild Pages after env change; test deployed Pages.          |
+| CORS origin mismatch                                   | Confirm Worker `PUBLIC_WEB_ORIGINS` contains the Pages origin before public smoke.                |
+| Local/prod mismatch                                    | Compare local smoke report with remote table/feed counts; run remote smoke before public switch.  |
+| Admin tools left enabled                               | Restore `ENABLE_ADMIN_MAINTENANCE=false` and `ENABLE_V02_ADMIN_TOOLS=false` after protected work. |
+| Accidental token exposure                              | Run secret scan; keep tokens in Cloudflare/GitHub secrets only; do not paste tokens into reports. |
 
 ## 17. Open Questions
 

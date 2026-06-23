@@ -19,9 +19,11 @@ import {
 } from "../services/claude/index.ts";
 import {
   buildDailyOverviewClaudePayloadsV02,
-  buildDailyOverviewPromptV02,
+  buildDailyOverviewSystemPromptV02,
+  buildDailyOverviewUserPromptV02,
   buildSignalEventClaudePayloadsV02,
-  buildSignalEventPromptV02,
+  buildSignalEventSystemPromptV02,
+  buildSignalEventUserPromptV02,
   toSourceReferenceInputsV02,
   validateDailyOverviewClaudeResultV02,
   validateSignalEventClaudeResultV02,
@@ -29,7 +31,6 @@ import {
   type ClaudePromptModeV02,
   type ClaudeTargetTypeV02,
   type DailyOverviewClaudePayloadV02,
-  type DailyOverviewClaudeResultV02,
   type SignalEventClaudePayloadV02,
   type SignalEventClaudeResultV02,
   type SourceReferenceInputV02,
@@ -148,12 +149,16 @@ function requestForPrompt(input: {
   };
 }
 
-function systemPromptForV02(): string {
-  return [
-    "You are ByteSiren v0.2 market-context validation.",
-    "Return one JSON object only.",
-    "Do not provide trading advice, price targets, or buy/sell/long/short/hold guidance.",
-  ].join(" ");
+function systemPromptForPayload(payload: ClaudePayloadV02): string {
+  return payload.mode === "signal_event"
+    ? buildSignalEventSystemPromptV02()
+    : buildDailyOverviewSystemPromptV02();
+}
+
+function userPromptForPayload(payload: ClaudePayloadV02): string {
+  return payload.mode === "signal_event"
+    ? buildSignalEventUserPromptV02(payload as SignalEventClaudePayloadV02)
+    : buildDailyOverviewUserPromptV02(payload as DailyOverviewClaudePayloadV02);
 }
 
 export async function selectClaudeEnrichmentTargetsV02(
@@ -281,24 +286,6 @@ function signalStatusFor(
   return "brief_ready";
 }
 
-function dailyStatusFor(
-  label: DailyOverviewClaudeResultV02["daily_label"],
-): ClaudeBriefStatusV02 {
-  if (label === "No Major Driver") {
-    return "no_major_driver";
-  }
-
-  if (label === "Claude Limited") {
-    return "claude_limited";
-  }
-
-  if (label === "Quiet Day" || label === "Mixed Day") {
-    return "context_only";
-  }
-
-  return "brief_ready";
-}
-
 function acceptedSources(
   sources: SourceReferenceInputV02[],
 ): SourceReferenceInputV02[] {
@@ -320,10 +307,85 @@ function hasAcceptedSignalCauseSource(
   );
 }
 
+function signalWindowLabel(payload: SignalEventClaudePayloadV02): string {
+  const start = new Date(payload.evidence_window.start);
+  const end = new Date(payload.evidence_window.end);
+
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+    return "this Signal Event";
+  }
+
+  const startLabel = `${String(start.getUTCHours()).padStart(2, "0")}:${String(
+    start.getUTCMinutes(),
+  ).padStart(2, "0")}`;
+  const endLabel = `${String(end.getUTCHours()).padStart(2, "0")}:${String(
+    end.getUTCMinutes(),
+  ).padStart(2, "0")}`;
+
+  return `${startLabel} - ${endLabel} UTC`;
+}
+
+function signedPercent(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) {
+    return "unavailable";
+  }
+
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
+
+function signalMovementDescription(
+  payload: SignalEventClaudePayloadV02,
+): string {
+  if (payload.avg_change_pct !== null) {
+    if (payload.avg_change_pct > 0) return "upside move";
+    if (payload.avg_change_pct < 0) return "downside move";
+  }
+
+  if (payload.direction.includes("up")) return "upside move";
+  if (payload.direction.includes("down")) return "downside move";
+  return "multi-direction move";
+}
+
+function noAcceptedSignalSourceResult(input: {
+  result: SignalEventClaudeResultV02;
+  payload: SignalEventClaudePayloadV02;
+}): SignalEventClaudeResultV02 {
+  const avgChange = signedPercent(input.payload.avg_change_pct);
+
+  return {
+    ...input.result,
+    classification: "No Clear Cause",
+    headline: "No accepted time-aligned public source",
+    collapsed_summary:
+      `No accepted time-aligned public source remained for the ${signalWindowLabel(input.payload)} Signal Event. ` +
+      `ByteSiren still detected a ${signalMovementDescription(input.payload)} across ${input.payload.signals_count} of ${input.payload.n_tracked} tracked symbols` +
+      (avgChange === "unavailable" ? "." : ` with Avg Change ${avgChange}.`),
+    source_support: "none",
+    source_timing_alignment: "none",
+    validation_flags: {
+      ...input.result.validation_flags,
+      source_policy_no_accepted_sources: true,
+    },
+    detector_feedback: {
+      ...input.result.detector_feedback,
+      source_policy_note:
+        "Signal Event brief text was replaced because no accepted time-aligned source remained after source policy.",
+    },
+  };
+}
+
 function normalizeSignalResultAfterSourcePolicy(input: {
   result: SignalEventClaudeResultV02;
   sourceInputs: SourceReferenceInputV02[];
+  payload: SignalEventClaudePayloadV02;
 }): SignalEventClaudeResultV02 {
+  if (acceptedSources(input.sourceInputs).length === 0) {
+    return noAcceptedSignalSourceResult({
+      result: input.result,
+      payload: input.payload,
+    });
+  }
+
   const hasBackdrop = acceptedSources(input.sourceInputs).some(
     (source) => source.source_role === "Backdrop source",
   );
@@ -378,12 +440,6 @@ function normalizeSignalResultAfterSourcePolicy(input: {
   return input.result;
 }
 
-function promptForPayload(payload: ClaudePayloadV02): string {
-  return payload.mode === "signal_event"
-    ? buildSignalEventPromptV02(payload as SignalEventClaudePayloadV02)
-    : buildDailyOverviewPromptV02(payload as DailyOverviewClaudePayloadV02);
-}
-
 function eventDateForPayload(payload: ClaudePayloadV02): string {
   return payload.mode === "signal_event"
     ? payload.evidence_window.start
@@ -406,10 +462,9 @@ async function persistClientFailure(input: {
   now: Date;
 }) {
   const errorCode = input.clientResult.parsed.metadata.error_code;
-  const isLimited = errorCode === "max_uses_exceeded";
-  const status: ClaudeBriefStatusV02 = isLimited
-    ? "claude_limited"
-    : input.clientResult.parsed.retryable
+  const status: ClaudeBriefStatusV02 = input.clientResult.parsed.retryable
+    ? "failed_retryable"
+    : errorCode === "max_uses_exceeded"
       ? "failed_retryable"
       : "failed_terminal";
 
@@ -418,8 +473,8 @@ async function persistClientFailure(input: {
     target_id: input.target.target_id,
     prompt_mode: input.target.prompt_mode,
     status,
-    public_label: isLimited ? "Claude Limited" : null,
-    classification: isLimited ? "Claude Limited" : null,
+    public_label: null,
+    classification: null,
     prompt_version:
       input.target.kind === "signal"
         ? SIGNAL_PROMPT_VERSION
@@ -484,6 +539,7 @@ async function persistValidatedResult(input: {
     const normalizedResult = normalizeSignalResultAfterSourcePolicy({
       result,
       sourceInputs: initialSources,
+      payload: input.target.payload as SignalEventClaudePayloadV02,
     });
     const status = signalStatusFor(normalizedResult.classification);
     const brief = await upsertClaudeBriefV02(input.db, {
@@ -524,14 +580,14 @@ async function persistValidatedResult(input: {
   }
 
   const result = validateDailyOverviewClaudeResultV02(input.rawJson);
-  const status = dailyStatusFor(result.daily_label);
+  const status = "brief_ready";
   const brief = await upsertClaudeBriefV02(input.db, {
     target_type: "daily_overview_v02",
     target_id: input.target.target_id,
     prompt_mode: "daily_overview",
     status,
-    public_label: result.daily_label,
-    classification: result.daily_label,
+    public_label: null,
+    classification: null,
     confidence: result.confidence,
     headline: result.headline,
     collapsed_summary: result.collapsed_summary,
@@ -726,8 +782,8 @@ export async function runClaudeEnrichmentV02(
 
     const clientResult = await client.createIncidentBrief(
       requestForPrompt({
-        systemPrompt: systemPromptForV02(),
-        userPrompt: promptForPayload(target.payload),
+        systemPrompt: systemPromptForPayload(target.payload),
+        userPrompt: userPromptForPayload(target.payload),
         model,
         toolType: policy.tool_type,
         maxUses: policy.default_max_uses,

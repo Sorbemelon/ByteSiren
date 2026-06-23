@@ -7,6 +7,7 @@ import {
   BadgeCheck,
   BookOpen,
   ChartSpline,
+  Check,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -38,6 +39,7 @@ import {
   getVisibleSectionsForDay,
   isSectionSelectedV02,
   sectionHasExpandableDetails,
+  sourceRoleToneV02,
   toggleAllDayPosts,
   toggleDayPost,
   toggleSectionDetails,
@@ -61,6 +63,7 @@ interface IntelligenceFeedV02Props {
   feed: NormalizedFeedV02 | null;
   loading: boolean;
   selection: FeedSelectionV02;
+  scrollSelectionIntoView: boolean;
   onSelectSection: (
     itemType: FeedSelectionItemTypeV02,
     itemId: string,
@@ -87,7 +90,7 @@ const SECTION_ICON_COLOR = {
 
 const STATUS_META: Record<
   string,
-  { Icon: LucideIcon; color: string; label?: string }
+  { Icon: LucideIcon; color: string; label?: string; iconTransform?: string }
 > = {
   focused_cause: {
     Icon: BadgeCheck,
@@ -134,10 +137,17 @@ const STATUS_META: Record<
     color: "var(--down)",
     label: "Risk-off Day",
   },
+  relief_day: {
+    Icon: Check,
+    color: "var(--status-relief)",
+    label: "Relief Day",
+    iconTransform: "scaleX(-1)",
+  },
   relief: {
-    Icon: TrendingUp,
-    color: "var(--up)",
-    label: "Relief",
+    Icon: Check,
+    color: "var(--status-relief)",
+    label: "Relief Day",
+    iconTransform: "scaleX(-1)",
   },
   no_clear_cause: {
     Icon: HelpCircle,
@@ -181,15 +191,31 @@ const STATUS_META: Record<
 };
 
 const SOURCE_STYLE: Record<string, React.CSSProperties> = {
-  focused: {
-    color: "var(--source-focused-text)",
-    borderColor: "rgba(30, 64, 175, 0.46)",
-    background: "rgba(30, 64, 175, 0.16)",
+  catalyst: {
+    color: "var(--source-catalyst-text)",
+    borderColor:
+      "color-mix(in srgb, var(--source-catalyst-text) 42%, transparent)",
+    background:
+      "color-mix(in srgb, var(--source-catalyst-text) 13%, transparent)",
   },
   likely: {
     color: "var(--source-likely-text)",
-    borderColor: "rgba(14, 165, 233, 0.34)",
-    background: "rgba(14, 165, 233, 0.1)",
+    borderColor:
+      "color-mix(in srgb, var(--source-likely-text) 42%, transparent)",
+    background:
+      "color-mix(in srgb, var(--source-likely-text) 12%, transparent)",
+  },
+  main: {
+    color: "var(--source-main-text)",
+    borderColor: "color-mix(in srgb, var(--source-main-text) 42%, transparent)",
+    background: "color-mix(in srgb, var(--source-main-text) 11%, transparent)",
+  },
+  support: {
+    color: "var(--source-support-text)",
+    borderColor:
+      "color-mix(in srgb, var(--source-support-text) 42%, transparent)",
+    background:
+      "color-mix(in srgb, var(--source-support-text) 11%, transparent)",
   },
   backdrop: {
     color: "var(--source-backdrop-text)",
@@ -201,7 +227,7 @@ const SOURCE_STYLE: Record<string, React.CSSProperties> = {
     borderColor: "rgba(245, 158, 11, 0.32)",
     background: "rgba(245, 158, 11, 0.07)",
   },
-  daily: {
+  source: {
     color: "var(--source-chip-text)",
     borderColor: "var(--source-chip-border)",
     background: "var(--source-chip-bg)",
@@ -348,6 +374,7 @@ function statusMetaFromValues(...values: Array<string | null | undefined>): {
   Icon: LucideIcon;
   color: string;
   label?: string;
+  iconTransform?: string;
 } {
   for (const value of values) {
     const meta = STATUS_META[statusKey(value)];
@@ -705,14 +732,7 @@ function DirectionIcon({
 }
 
 function sourceStyle(source: FeedSourceV02): React.CSSProperties {
-  const role = `${source.used_for ?? source.tag ?? ""}`.toLowerCase();
-
-  if (role.includes("focused")) return SOURCE_STYLE.focused;
-  if (role.includes("likely")) return SOURCE_STYLE.likely;
-  if (role.includes("price")) return SOURCE_STYLE.price;
-  if (role.includes("daily") || role.includes("main"))
-    return SOURCE_STYLE.daily;
-  return SOURCE_STYLE.backdrop;
+  return SOURCE_STYLE[sourceRoleToneV02(source.tag || source.used_for)];
 }
 
 function signalToneStyle(
@@ -1223,20 +1243,6 @@ function DailyOverviewSection({
   const toneLabel = section.marketTone
     ? (toneMeta.label ?? humanize(section.marketTone))
     : null;
-  const contextStatusMeta = statusMetaFromValues(
-    section.brief?.public_label,
-    section.brief?.classification,
-    section.brief?.status,
-    section.publicContextStatus,
-  );
-  const ContextStatusIcon = contextStatusMeta.Icon;
-  const explicitContextStatusLabel =
-    textOrNull(section.brief?.public_label) ??
-    textOrNull(section.brief?.classification);
-  const contextStatusLabel =
-    explicitContextStatusLabel === "Daily Context"
-      ? null
-      : (explicitContextStatusLabel ?? contextStatusMeta.label);
   const leadMove = leadDailyMove(section);
   const widestRangeSymbol = widestDailyRangeMove(section);
   const dailyChangeStyle = {
@@ -1257,7 +1263,15 @@ function DailyOverviewSection({
                   background: "var(--chip-bg)",
                 }}
               >
-                <ToneIcon size={14} aria-hidden />
+                <ToneIcon
+                  size={14}
+                  aria-hidden
+                  style={
+                    toneMeta.iconTransform
+                      ? { transform: toneMeta.iconTransform }
+                      : undefined
+                  }
+                />
                 {toneLabel}
               </span>
               <p
@@ -1370,21 +1384,6 @@ function DailyOverviewSection({
       <div className="grid gap-2.5">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(132px,22%)]">
           <div className="min-w-0 space-y-1.5">
-            {contextStatusLabel && (
-              <div className="flex items-center gap-1.5">
-                <ContextStatusIcon
-                  size={14}
-                  color={contextStatusMeta.color}
-                  aria-hidden
-                />
-                <span
-                  className="text-[12.5px] font-semibold"
-                  style={{ color: contextStatusMeta.color }}
-                >
-                  {contextStatusLabel}
-                </span>
-              </div>
-            )}
             {summary ? (
               <p
                 className="text-[12.5px] leading-snug"
@@ -2089,7 +2088,16 @@ function SignalEventSection({
         <div className="min-w-0 space-y-1.5">
           {statusLabel && (
             <div className="flex items-center gap-1.5">
-              <StatusIcon size={14} color={statusMeta.color} aria-hidden />
+              <StatusIcon
+                size={14}
+                color={statusMeta.color}
+                aria-hidden
+                style={
+                  statusMeta.iconTransform
+                    ? { transform: statusMeta.iconTransform }
+                    : undefined
+                }
+              />
               <span
                 className="text-[12.5px] font-semibold"
                 style={{ color: statusMeta.color }}
@@ -2646,6 +2654,7 @@ export default function IntelligenceFeedV02({
   feed,
   loading,
   selection,
+  scrollSelectionIntoView,
   onSelectSection,
   onClearSelection,
 }: IntelligenceFeedV02Props) {
@@ -2672,6 +2681,10 @@ export default function IntelligenceFeedV02({
       ensureSelectedDayExpandedV02(current, selection),
     );
 
+    if (!scrollSelectionIntoView) {
+      return;
+    }
+
     let secondFrame: number | null = null;
     const firstFrame = window.requestAnimationFrame(() => {
       secondFrame = window.requestAnimationFrame(() => {
@@ -2691,7 +2704,7 @@ export default function IntelligenceFeedV02({
         window.cancelAnimationFrame(secondFrame);
       }
     };
-  }, [selection]);
+  }, [scrollSelectionIntoView, selection]);
 
   const globalLabel = useMemo(() => {
     if (!feed) {

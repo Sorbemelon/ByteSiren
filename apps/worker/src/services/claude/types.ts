@@ -226,7 +226,7 @@ export function claudeWebSearchPolicyFromEnv(
   env: Partial<Env> = {},
 ): ClaudeWebSearchPolicy {
   return {
-    tool_type: env.CLAUDE_WEB_SEARCH_TOOL_TYPE || "web_search_20250305",
+    tool_type: env.CLAUDE_WEB_SEARCH_TOOL_TYPE || "web_search_20260209",
     model: env.CLAUDE_MODEL || null,
     default_max_uses: parseInteger(env.CLAUDE_DEFAULT_MAX_USES, 2),
     second_search_max_uses: parseInteger(env.CLAUDE_SECOND_SEARCH_MAX_USES, 3),

@@ -15,11 +15,41 @@ import {
   getVisibleSectionsForDay,
   isSectionSelectedV02,
   sectionHasExpandableDetails,
+  sourceRoleLabelV02,
+  sourceRoleToneV02,
   toggleAllDayPosts,
   toggleDayPost,
   toggleFeedSelectionV02,
   toggleSectionDetails,
 } from "./feedV02ViewModel.ts";
+
+test("v0.2 source roles map to distinct public labels and tones", () => {
+  assert.deepEqual(
+    [
+      "Focused catalyst source",
+      "Likely cause source",
+      "Main daily context source",
+      "Supporting daily source",
+      "Backdrop source",
+      "Price check source",
+    ].map((role) => ({
+      label: sourceRoleLabelV02(role),
+      tone: sourceRoleToneV02(role),
+    })),
+    [
+      { label: "Catalyst", tone: "catalyst" },
+      { label: "Likely", tone: "likely" },
+      { label: "Main", tone: "main" },
+      { label: "Support", tone: "support" },
+      { label: "Backdrop", tone: "backdrop" },
+      { label: "Price", tone: "price" },
+    ],
+  );
+  assert.notEqual(
+    sourceRoleToneV02("Main daily context source"),
+    sourceRoleToneV02("Supporting daily source"),
+  );
+});
 
 const v01Feed = {
   ok: true,
@@ -90,7 +120,7 @@ const v02Feed = {
           id: "daily_2026-06-20",
           date_utc: "2026-06-20",
           display_time: "Full UTC day",
-          daily_label: "Daily Context",
+          daily_label: "Daily Overview",
           daily_change_label: "24h Change",
           daily_change_pct: 1.4,
           market_tone: "mixed",
@@ -118,7 +148,7 @@ const v02Feed = {
           brief: {
             id: "brief_daily",
             status: "queued_for_analysis",
-            public_label: "Daily Context",
+            public_label: null,
             collapsed_summary: "Daily context summary.",
           },
           chart: {
@@ -669,6 +699,7 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
   assert.equal(signalMarkers.length, 2);
   assert.equal(selectedSignalMarker?.itemType, "signal_event");
   assert.equal(selectedSignalMarker?.label, "Likely");
+  assert.equal(selectedSignalMarker?.tone, "likely");
   assert.equal(selectedSignalMarker?.selected, true);
   assert.equal(
     selectedSignalMarker?.url,
@@ -690,6 +721,7 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
   assert.equal(dailyMarkers.length, 2);
   assert.equal(selectedDailyMarker?.itemType, "daily_overview");
   assert.equal(selectedDailyMarker?.label, "Main");
+  assert.equal(selectedDailyMarker?.tone, "main");
   assert.equal(selectedDailyMarker?.selected, true);
 
   const storyMarkers = buildChartSourceMarkersV02(
@@ -712,7 +744,7 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
   );
 });
 
-test("v0.2 chart source markers de-duplicate exact URLs across Claude-backed sections", () => {
+test("v0.2 chart source markers keep duplicate URLs visible per source row", () => {
   const duplicateFeed = structuredClone(v02Feed);
   const signal = duplicateFeed.day_groups[0].items.find(
     (item) => item.item_type === "signal_event",
@@ -792,20 +824,41 @@ test("v0.2 chart source markers de-duplicate exact URLs across Claude-backed sec
       day.id,
     ),
   );
+  const dailyMarkers = buildChartSourceMarkersV02(
+    feed,
+    toggleFeedSelectionV02(
+      EMPTY_FEED_SELECTION_V02,
+      dailySection.itemType,
+      dailySection.id,
+      day.id,
+    ),
+  );
 
-  assert.equal(defaultMarkers.length, 5);
+  assert.equal(defaultMarkers.length, 6);
   assert.equal(new Set(defaultMarkers.map((marker) => marker.url)).size, 5);
   assert.equal(
-    defaultMarkers.find((marker) => marker.url.endsWith("/signal-fixture/"))
-      ?.itemType,
-    "signal_event",
+    defaultMarkers.filter((marker) => marker.url.endsWith("/signal-fixture/"))
+      .length,
+    2,
   );
-  assert.equal(signalMarkers.length, 5);
+  assert.equal(signalMarkers.length, 6);
   assert.deepEqual(
     signalMarkers
       .filter((marker) => marker.itemId === signalSection.id)
       .map((marker) => marker.label),
     ["Likely", "Backdrop", "Price"],
+  );
+  assert.deepEqual(
+    signalMarkers
+      .filter((marker) => marker.itemId === signalSection.id)
+      .map((marker) => marker.tone),
+    ["likely", "backdrop", "price"],
+  );
+  assert.deepEqual(
+    signalMarkers
+      .filter((marker) => marker.itemId === dailySection.id)
+      .map((marker) => marker.tone),
+    ["main", "support", "support"],
   );
   assert.equal(new Set(signalMarkers.map((marker) => marker.url)).size, 5);
   assert.equal(
@@ -814,7 +867,30 @@ test("v0.2 chart source markers de-duplicate exact URLs across Claude-backed sec
   );
   assert.equal(
     signalMarkers.filter((marker) => marker.itemId === dailySection.id).length,
+    3,
+  );
+  assert.equal(
+    dailyMarkers.filter((marker) => marker.url.endsWith("/signal-fixture/"))
+      .length,
     2,
+  );
+  assert.equal(
+    dailyMarkers.some(
+      (marker) =>
+        marker.url.endsWith("/signal-fixture/") &&
+        marker.itemId === dailySection.id &&
+        marker.selected === true,
+    ),
+    true,
+  );
+  assert.equal(
+    dailyMarkers.some(
+      (marker) =>
+        marker.url.endsWith("/signal-fixture/") &&
+        marker.itemId === signalSection.id &&
+        marker.selected === false,
+    ),
+    true,
   );
 });
 
@@ -883,21 +959,311 @@ test("v0.2 chart source markers keep source timestamps stable when available", (
   );
   const signalArticleUrl =
     "https://www.reuters.com/markets/2026/06/20/post-window-signal/";
+  const defaultSharedMarkers = defaultMarkers.filter(
+    (marker) => marker.url === signalArticleUrl,
+  );
+  const dailySelectedSharedMarkers = dailySelectedMarkers.filter(
+    (marker) => marker.url === signalArticleUrl,
+  );
+  const signalSelectedSharedMarker = signalSelectedMarkers.find(
+    (marker) =>
+      marker.url === signalArticleUrl && marker.itemId === signalSection.id,
+  );
+
+  assert.deepEqual(
+    defaultSharedMarkers.map((marker) => ({
+      itemId: marker.itemId,
+      time: marker.time,
+    })),
+    [
+      {
+        itemId: dailySection.id,
+        time: "2026-06-20T19:30:00.000Z",
+      },
+      {
+        itemId: signalSection.id,
+        time: "2026-06-20T18:15:00.000Z",
+      },
+    ],
+  );
+  assert.deepEqual(
+    dailySelectedSharedMarkers.map((marker) => ({
+      itemId: marker.itemId,
+      selected: marker.selected,
+      time: marker.time,
+    })),
+    [
+      {
+        itemId: dailySection.id,
+        selected: true,
+        time: "2026-06-20T19:30:00.000Z",
+      },
+      {
+        itemId: signalSection.id,
+        selected: false,
+        time: "2026-06-20T18:15:00.000Z",
+      },
+    ],
+  );
+  assert.equal(signalSelectedSharedMarker?.time, "2026-06-20T18:15:00.000Z");
+});
+
+test("v0.2 chart source markers show honest published_at even outside the item window", () => {
+  const farTimestampFeed = structuredClone(v02Feed);
+  const signal = farTimestampFeed.day_groups[0].items.find(
+    (item) => item.item_type === "signal_event",
+  );
+  const daily = farTimestampFeed.day_groups[0].items.find(
+    (item) => item.item_type === "daily_overview",
+  );
+
+  signal.sources = [
+    {
+      publisher: "Reuters",
+      title: "Next-day signal recap",
+      url: "https://www.reuters.com/markets/2026/06/21/next-day-signal/",
+      published_at: "2026-06-21T10:00:00.000Z",
+      tag: "Likely cause source",
+      used_for: "likely_cause",
+    },
+  ];
+  daily.sources = [
+    {
+      publisher: "CoinDesk",
+      title: "Next-day daily recap",
+      url: "https://www.coindesk.com/markets/2026/06/21/next-day-daily/",
+      published_at: "2026-06-21T10:00:00.000Z",
+      tag: "Main daily context source",
+      used_for: "daily_context",
+    },
+  ];
+
+  const feed = normalizeFeedV02(farTimestampFeed);
+  const markers = buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02);
+  const dailyMarker = markers.find(
+    (marker) => marker.itemType === "daily_overview",
+  );
+  const signalMarker = markers.find(
+    (marker) => marker.itemType === "signal_event",
+  );
 
   assert.equal(
-    defaultMarkers.find((marker) => marker.url === signalArticleUrl)?.time,
-    "2026-06-20T18:15:00.000Z",
+    dailyMarker?.time,
+    "2026-06-21T10:00:00.000Z",
+    "Daily source marker should preserve the exact article timestamp",
   );
+  assert.equal(dailyMarker?.filled, true);
   assert.equal(
-    dailySelectedMarkers.find((marker) => marker.url === signalArticleUrl)
-      ?.time,
-    "2026-06-20T18:15:00.000Z",
+    signalMarker?.time,
+    "2026-06-21T10:00:00.000Z",
+    "Signal source marker should preserve the exact article timestamp",
   );
-  assert.equal(
-    signalSelectedMarkers.find((marker) => marker.url === signalArticleUrl)
-      ?.time,
-    "2026-06-20T18:15:00.000Z",
+  assert.equal(signalMarker?.filled, true);
+});
+
+test("v0.2 chart source markers fall back to catalyst time, then a hollow day-start marker", () => {
+  const fallbackFeed = structuredClone(v02Feed);
+  const signal = fallbackFeed.day_groups[0].items.find(
+    (item) => item.item_type === "signal_event",
   );
+  const daily = fallbackFeed.day_groups[0].items.find(
+    (item) => item.item_type === "daily_overview",
+  );
+
+  signal.sources = [
+    {
+      publisher: "Price Feed",
+      title: "Signal live price page",
+      url: "https://prices.example.test/signal-live-price",
+      published_at: null,
+      catalyst_time_utc: null,
+      tag: "Price check source",
+      used_for: "price_check",
+    },
+    {
+      publisher: "Reuters",
+      title: "Catalyst only, no publication time",
+      url: "https://www.reuters.com/markets/catalyst-only/",
+      published_at: null,
+      catalyst_time_utc: "2026-06-20T05:00:00.000Z",
+      tag: "Likely cause source",
+      used_for: "likely_cause",
+    },
+  ];
+  daily.sources = [
+    {
+      publisher: "Daily Publisher",
+      title: "Daily article",
+      url: "https://www.example-news.test/daily-article",
+      published_at: "2026-06-20T20:30:00.000Z",
+      tag: "Main daily context source",
+      used_for: "daily_context",
+    },
+  ];
+
+  const feed = normalizeFeedV02(fallbackFeed);
+  const markers = buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02);
+  const priceMarker = markers.find((marker) =>
+    marker.url.includes("signal-live-price"),
+  );
+  const catalystMarker = markers.find((marker) =>
+    marker.url.includes("catalyst-only"),
+  );
+  const dailyMarker = markers.find((marker) =>
+    marker.url.includes("daily-article"),
+  );
+
+  // No honest time → still rendered, hollow, anchored to the analyzed item.
+  assert.ok(priceMarker, "time-less source should still produce a marker");
+  assert.equal(priceMarker.filled, false);
+  assert.equal(priceMarker.time, "2026-06-20T00:00:00.000Z");
+
+  // catalyst_time_utc fallback → filled marker at the catalyst time.
+  assert.ok(catalystMarker);
+  assert.equal(catalystMarker.filled, true);
+  assert.equal(catalystMarker.time, "2026-06-20T05:00:00.000Z");
+
+  // Honest published_at → filled marker at the article time.
+  assert.ok(dailyMarker);
+  assert.equal(dailyMarker.filled, true);
+  assert.equal(dailyMarker.time, "2026-06-20T20:30:00.000Z");
+});
+
+test("v0.2 chart source markers render date-only timestamps as hollow at the date", () => {
+  const dateOnlyFeed = structuredClone(v02Feed);
+  const signal = dateOnlyFeed.day_groups[0].items.find(
+    (item) => item.item_type === "signal_event",
+  );
+
+  signal.sources = [
+    {
+      publisher: "BlockchainReporter",
+      title: "Same-day roundup, date only",
+      url: "https://blockchainreporter.net/markets/2026/06/20/roundup/",
+      published_at: "2026-06-20T00:00:00.000Z",
+      catalyst_time_utc: null,
+      tag: "Backdrop source",
+      used_for: "backdrop",
+    },
+  ];
+
+  const feed = normalizeFeedV02(dateOnlyFeed);
+  const markers = buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02);
+  const marker = markers.find((m) => m.url.includes("roundup"));
+
+  assert.ok(marker, "date-only source should still produce a marker");
+  assert.equal(marker.filled, false);
+  assert.equal(marker.time, "2026-06-20T00:00:00.000Z");
+  assert.equal(marker.tone, "backdrop");
+  assert.equal(marker.label, "Backdrop");
+});
+
+test("acceptance: each accepted source shows in the chart with its own role and corrected timestamp", () => {
+  const acceptanceFeed = structuredClone(v02Feed);
+  const signal = acceptanceFeed.day_groups[0].items.find(
+    (item) => item.item_type === "signal_event",
+  );
+  const daily = acceptanceFeed.day_groups[0].items.find(
+    (item) => item.item_type === "daily_overview",
+  );
+
+  signal.sources = [
+    {
+      publisher: "Reuters",
+      title: "Focused catalyst",
+      url: "https://example.test/src-focused",
+      published_at: null,
+      catalyst_time_utc: "2026-06-20T05:15:00.000Z",
+      tag: "Focused catalyst source",
+      used_for: "focused_catalyst",
+    },
+    {
+      publisher: "BlockchainReporter",
+      title: "Same-day backdrop (date only)",
+      url: "https://example.test/src-backdrop",
+      published_at: "2026-06-20T00:00:00.000Z",
+      catalyst_time_utc: null,
+      tag: "Backdrop source",
+      used_for: "backdrop",
+    },
+    {
+      publisher: "Price Feed",
+      title: "Live price page",
+      url: "https://example.test/src-price",
+      published_at: null,
+      catalyst_time_utc: null,
+      tag: "Price check source",
+      used_for: "price_check",
+    },
+  ];
+  daily.sources = [
+    {
+      publisher: "Nexo",
+      title: "Main daily context",
+      url: "https://example.test/src-main",
+      published_at: "2026-06-20T09:30:00.000Z",
+      catalyst_time_utc: null,
+      tag: "Main daily context source",
+      used_for: "daily_context",
+    },
+    {
+      publisher: "CoinDesk",
+      title: "Supporting daily (date only)",
+      url: "https://example.test/src-support",
+      published_at: "2026-06-20T00:00:00.000Z",
+      catalyst_time_utc: null,
+      tag: "Supporting daily source",
+      used_for: "supporting_daily",
+    },
+  ];
+
+  const feed = normalizeFeedV02(acceptanceFeed);
+  const markers = buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02);
+  const by = (fragment) => markers.find((m) => m.url.includes(fragment));
+
+  // Every accepted source is shown in the chart (none silently missing).
+  for (const fragment of [
+    "src-focused",
+    "src-backdrop",
+    "src-price",
+    "src-main",
+    "src-support",
+  ]) {
+    assert.ok(by(fragment), `${fragment} should produce a marker`);
+  }
+
+  // Source type is classified correctly per role — not flattened to Backdrop.
+  assert.equal(by("src-focused").tone, "catalyst");
+  assert.equal(by("src-focused").label, "Catalyst");
+  assert.equal(by("src-backdrop").tone, "backdrop");
+  assert.equal(by("src-backdrop").label, "Backdrop");
+  assert.equal(by("src-price").tone, "price");
+  assert.equal(by("src-price").label, "Price");
+  assert.equal(by("src-main").tone, "main");
+  assert.equal(by("src-main").label, "Main");
+  assert.equal(by("src-support").tone, "support");
+  assert.equal(by("src-support").label, "Support");
+
+  // Corrected/honest timestamps: precise → filled at that time; date-only and
+  // no-time → hollow.
+  assert.equal(by("src-focused").filled, true);
+  assert.equal(by("src-focused").time, "2026-06-20T05:15:00.000Z");
+  assert.equal(by("src-backdrop").filled, false);
+  assert.equal(by("src-backdrop").time, "2026-06-20T00:00:00.000Z");
+  assert.equal(by("src-price").filled, false);
+  assert.equal(by("src-price").time, "2026-06-20T00:00:00.000Z");
+  assert.equal(by("src-main").filled, true);
+  assert.equal(by("src-main").time, "2026-06-20T09:30:00.000Z");
+  assert.equal(by("src-support").filled, false);
+  assert.equal(by("src-support").time, "2026-06-20T00:00:00.000Z");
+
+  // Roles are genuinely distinct (sanity check against "everything is backdrop").
+  const distinctTones = new Set(
+    ["src-focused", "src-backdrop", "src-price", "src-main", "src-support"].map(
+      (fragment) => by(fragment).tone,
+    ),
+  );
+  assert.equal(distinctTones.size, 5);
 });
 
 test("Market Story normalized section strips Claude and source material", () => {

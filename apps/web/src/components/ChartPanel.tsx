@@ -229,7 +229,8 @@ export default function ChartPanel({
       >
         30-day chart | {chartInterval} display | Detections use 15m signals |
         Binance public market data | Evidence window band shows candles used as
-        evidence | Source markers show accepted source timing when available
+        evidence | Source markers use honest article publication time when
+        available
       </p>
     </section>
   );

@@ -119,11 +119,16 @@ function signalSearchQueries(row: SignalEventPayloadRow): string[] {
   const routeHint = row.source_route_hint
     ? ` ${row.source_route_hint.replaceAll("_", " ")}`
     : "";
+  const hourUtc = `${row.event_start.slice(0, 13)}:00 UTC`;
+  const moveTerms = row.direction.includes("down")
+    ? "selloff liquidations"
+    : "rally breakout";
 
   return [
     `${row.date_utc} ${directionQueryWord(row.direction)}`,
-    `${row.date_utc} Bitcoin Ethereum crypto catalyst${routeHint}`,
-    `${row.event_start.slice(0, 13)} UTC crypto market news`,
+    `${row.date_utc} BTC ETH SOL BNB XRP crypto catalyst${routeHint}`,
+    `${hourUtc} crypto market news Bitcoin Ethereum`,
+    `${row.date_utc} crypto ${moveTerms} FOMC CPI rate decision macro catalyst`,
   ];
 }
 

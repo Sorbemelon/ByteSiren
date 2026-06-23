@@ -4,6 +4,7 @@ import {
   Activity,
   ArrowLeftRight,
   BadgeCheck,
+  Check,
   ChevronDown,
   Clock,
   CornerUpLeft,
@@ -305,10 +306,12 @@ function DailyToneChip({
   children,
   color,
   Icon,
+  iconTransform,
 }: {
   children: ReactNode;
   color: string;
   Icon: LucideIcon;
+  iconTransform?: string;
 }) {
   return (
     <span
@@ -319,7 +322,11 @@ function DailyToneChip({
         background: "var(--chip-bg)",
       }}
     >
-      <Icon size={14} aria-hidden />
+      <Icon
+        size={14}
+        aria-hidden
+        style={iconTransform ? { transform: iconTransform } : undefined}
+      />
       {children}
     </span>
   );
@@ -351,18 +358,36 @@ function SourceExampleChip({
   role,
 }: {
   children: ReactNode;
-  role: "focused" | "likely" | "backdrop" | "price" | "daily";
+  role: "catalyst" | "likely" | "main" | "support" | "backdrop" | "price";
 }) {
   const styles = {
-    focused: {
-      borderColor: "rgba(30, 64, 175, 0.46)",
-      background: "rgba(30, 64, 175, 0.16)",
-      color: "var(--source-focused-text)",
+    catalyst: {
+      borderColor:
+        "color-mix(in srgb, var(--source-catalyst-text) 42%, transparent)",
+      background:
+        "color-mix(in srgb, var(--source-catalyst-text) 13%, transparent)",
+      color: "var(--source-catalyst-text)",
     },
     likely: {
-      borderColor: "rgba(14, 165, 233, 0.34)",
-      background: "rgba(14, 165, 233, 0.1)",
+      borderColor:
+        "color-mix(in srgb, var(--source-likely-text) 42%, transparent)",
+      background:
+        "color-mix(in srgb, var(--source-likely-text) 12%, transparent)",
       color: "var(--source-likely-text)",
+    },
+    main: {
+      borderColor:
+        "color-mix(in srgb, var(--source-main-text) 42%, transparent)",
+      background:
+        "color-mix(in srgb, var(--source-main-text) 11%, transparent)",
+      color: "var(--source-main-text)",
+    },
+    support: {
+      borderColor:
+        "color-mix(in srgb, var(--source-support-text) 42%, transparent)",
+      background:
+        "color-mix(in srgb, var(--source-support-text) 11%, transparent)",
+      color: "var(--source-support-text)",
     },
     backdrop: {
       borderColor: "rgba(148, 163, 184, 0.3)",
@@ -373,11 +398,6 @@ function SourceExampleChip({
       borderColor: "rgba(245, 158, 11, 0.32)",
       background: "rgba(245, 158, 11, 0.07)",
       color: "var(--source-price-text)",
-    },
-    daily: {
-      borderColor: "var(--source-chip-border)",
-      background: "var(--source-chip-bg)",
-      color: "var(--source-chip-text)",
     },
   }[role];
 
@@ -520,9 +540,11 @@ export default function BottomAccordions({
           </DefinitionCard>
           <DefinitionCard term="Source markers">
             Chart markers for accepted sources on Claude-backed Daily Overview
-            or Signal Event cards. They use the source timestamp when present
-            and stack vertically when times overlap, so overlap handling does
-            not shift chart time. They never appear for Market Story.
+            or Signal Event cards. Filled markers use a specific article or
+            catalyst timestamp. No-fill markers mean the source has no specific
+            timestamp, so ByteSiren places it at the source date&apos;s 00:00 UTC
+            point. When times overlap, markers stack vertically without
+            shifting chart time. They never appear for Market Story.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>
@@ -687,8 +709,12 @@ export default function BottomAccordions({
           </DefinitionCard>
           <DefinitionCard
             term={
-              <DailyToneChip color="var(--up)" Icon={TrendingUp}>
-                Relief
+              <DailyToneChip
+                color="var(--status-relief)"
+                Icon={Check}
+                iconTransform="scaleX(-1)"
+              >
+                Relief Day
               </DailyToneChip>
             }
           >
@@ -849,7 +875,7 @@ export default function BottomAccordions({
         <DefinitionGrid>
           <DefinitionCard
             term={
-              <SourceExampleChip role="focused">Catalyst</SourceExampleChip>
+              <SourceExampleChip role="catalyst">Catalyst</SourceExampleChip>
             }
           >
             A focused catalyst source for a Signal Event. The card chip shows
@@ -862,12 +888,12 @@ export default function BottomAccordions({
             less certainty than a focused catalyst.
           </DefinitionCard>
           <DefinitionCard
-            term={<SourceExampleChip role="daily">Main</SourceExampleChip>}
+            term={<SourceExampleChip role="main">Main</SourceExampleChip>}
           >
             A main daily context source for a Daily Overview.
           </DefinitionCard>
           <DefinitionCard
-            term={<SourceExampleChip role="daily">Support</SourceExampleChip>}
+            term={<SourceExampleChip role="support">Support</SourceExampleChip>}
           >
             A supporting daily source for a Daily Overview.
           </DefinitionCard>
@@ -887,6 +913,11 @@ export default function BottomAccordions({
           </DefinitionCard>
           <DefinitionCard term="Clickable source link" Icon={ExternalLink}>
             The visible publisher name opens the exact article URL in a new tab.
+          </DefinitionCard>
+          <DefinitionCard term="No-fill source marker">
+            A hollow chart source marker means the accepted source has no
+            specific timestamp. ByteSiren marks it at that source date&apos;s 00:00
+            UTC instead of inventing an exact time.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>

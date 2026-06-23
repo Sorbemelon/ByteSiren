@@ -242,7 +242,6 @@ function dailyResult() {
     mode: "daily_overview",
     item_id: "daily_2026-06-19",
     date_utc: "2026-06-19",
-    daily_label: "Daily Context",
     confidence: "medium",
     headline: "Daily context",
     collapsed_summary: "Short daily context.",
@@ -283,6 +282,30 @@ function okResult(json: unknown, searchesUsed = 1): ClaudeClientResult {
         tool_type: "web_search_20250305",
         max_uses: searchesUsed,
         error_code: null,
+        generated_at: "2026-06-21T12:00:00.000Z",
+      },
+      retryable: false,
+      error_message: null,
+    },
+  };
+}
+
+function maxUsesExceededWithJsonResult(
+  json: unknown,
+  searchesUsed = 2,
+): ClaudeClientResult {
+  return {
+    ok: true,
+    parsed: {
+      json,
+      text: JSON.stringify(json),
+      citations: [],
+      metadata: {
+        searches_used: searchesUsed,
+        claude_model: "claude-test-model",
+        tool_type: "web_search_20250305",
+        max_uses: searchesUsed,
+        error_code: "max_uses_exceeded",
         generated_at: "2026-06-21T12:00:00.000Z",
       },
       retryable: false,
@@ -341,8 +364,8 @@ test("v0.2 target selection respects flags, ordering, limit, and terminal briefs
         target_id: "daily_2026-06-19",
         prompt_mode: "daily_overview",
         status: "brief_ready",
-        public_label: "Daily Context",
-        classification: "Daily Context",
+        public_label: null,
+        classification: null,
         confidence: "medium",
         headline: "Done",
         collapsed_summary: "Done",
@@ -458,6 +481,13 @@ test("v0.2 enrichment writes Signal Event brief and sources only to v0.2 tables"
     false,
   );
   assert.equal(mock.requests.length, 1);
+
+  // Rules + output schema live in the system prompt; the user prompt is the payload only.
+  const request = mock.requests[0];
+  assert.match(request.system_prompt, /Allowed classifications/);
+  assert.match(request.system_prompt, /Required output shape/);
+  assert.match(request.user_prompt, /Signal Event payload:/);
+  assert.doesNotMatch(request.user_prompt, /Allowed classifications/);
 });
 
 test("v0.2 enrichment sample filters prevent accidental other-mode processing", async () => {
@@ -487,6 +517,57 @@ test("v0.2 enrichment sample filters prevent accidental other-mode processing", 
   );
 });
 
+test("v0.2 enrichment replaces Signal news copy when no accepted source survives policy", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+  });
+  const staleNewsResult = signalResult("Likely Cause");
+  staleNewsResult.headline = "Fed news drove the move";
+  staleNewsResult.collapsed_summary =
+    "Reuters reported a Fed catalyst and Binance news around this Signal Event.";
+  staleNewsResult.sources = [
+    {
+      title: "Old catalyst recap",
+      publisher: "Reuters",
+      url: "https://www.reuters.com/markets/2026/06/17/old-catalyst-recap/",
+      published_at: "2026-06-17T02:00:00.000Z",
+      catalyst_time_utc: "2026-06-17T02:00:00.000Z",
+      tag: "Likely cause source",
+      why_relevant: "Older macro context from a prior UTC day.",
+    },
+  ];
+  const mock = new MockClaudeClient([okResult(staleNewsResult)]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+      ENABLE_DAILY_CLAUDE: "false",
+    }),
+    { now, client: mock },
+  );
+
+  assert.equal(result.status, "success");
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  const brief = tables.claude_briefs_v02[0];
+  assert.equal(brief.status, "no_clear_cause");
+  assert.equal(brief.headline, "No accepted time-aligned public source");
+  assert.ok(brief.collapsed_summary);
+  assert.match(
+    brief.collapsed_summary,
+    /No accepted time-aligned public source remained/,
+  );
+  assert.match(brief.collapsed_summary, /Avg Change/);
+  assert.equal(brief.collapsed_summary.includes("Fed news"), false);
+  assert.equal(tables.source_references_v02.length, 1);
+  assert.equal(tables.source_references_v02[0].accepted, 0);
+  assert.equal(
+    tables.source_references_v02[0].rejection_reason,
+    "signal_source_outside_6h_event_window",
+  );
+});
+
 test("v0.2 enrichment writes Daily Overview brief and sources only when daily flag is enabled", async () => {
   const { db, tables } = createMemoryD1({
     daily_overviews_v02: [dailyOverview()],
@@ -507,7 +588,8 @@ test("v0.2 enrichment writes Daily Overview brief and sources only when daily fl
   assert.equal(result.signal_processed, 0);
   assert.equal(result.daily_processed, 1);
   assert.equal(tables.claude_briefs_v02[0].target_type, "daily_overview_v02");
-  assert.equal(tables.claude_briefs_v02[0].public_label, "Daily Context");
+  assert.equal(tables.claude_briefs_v02[0].public_label, null);
+  assert.equal(tables.claude_briefs_v02[0].classification, null);
   assert.equal(
     tables.source_references_v02[0].target_type,
     "daily_overview_v02",
@@ -540,7 +622,7 @@ test("v0.2 enrichment skips safely when API key is missing", async () => {
   );
 });
 
-test("max_uses_exceeded maps to claude_limited without writing legacy tables", async () => {
+test("max_uses_exceeded without usable JSON is retryable and not Claude Limited", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
     signal_event_symbols_v02: [signalSymbol("sig_public")],
@@ -555,10 +637,39 @@ test("max_uses_exceeded maps to claude_limited without writing legacy tables", a
     { now, client: mock },
   );
 
-  assert.equal(result.claude_limited_count, 1);
-  assert.equal(tables.claude_briefs_v02[0].status, "claude_limited");
-  assert.equal(tables.claude_briefs_v02[0].public_label, "Claude Limited");
+  assert.equal(result.claude_limited_count, 0);
+  assert.equal(result.failed_retryable_count, 1);
+  assert.equal(tables.claude_briefs_v02[0].status, "failed_retryable");
+  assert.equal(tables.claude_briefs_v02[0].public_label, null);
+  assert.equal(tables.claude_briefs_v02[0].classification, null);
   assert.equal(tables.claude_briefs.length, 0);
+});
+
+test("max_uses_exceeded with usable JSON persists the available result", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+  });
+  const mock = new MockClaudeClient([
+    maxUsesExceededWithJsonResult(signalResult("Likely Cause")),
+  ]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+    }),
+    { now, client: mock },
+  );
+
+  assert.equal(result.brief_ready_count, 1);
+  assert.equal(result.claude_limited_count, 0);
+  assert.equal(result.failed_retryable_count, 0);
+  assert.equal(tables.claude_briefs_v02[0].status, "brief_ready");
+  assert.equal(tables.claude_briefs_v02[0].public_label, "Likely Cause");
+  assert.equal(tables.source_references_v02.length, 1);
+  assert.equal(tables.claude_briefs.length, 0);
+  assert.equal(tables.source_references.length, 0);
 });
 
 test("source policy downgrades Signal cause labels when accepted cause sources do not remain", async () => {
@@ -584,16 +695,16 @@ test("source policy downgrades Signal cause labels when accepted cause sources d
   assert.equal(tables.source_references_v02[0].accepted, 0);
 });
 
-test("source policy downgrades stale Signal cause sources outside the 6-hour event window", async () => {
+test("source policy rejects stale Signal cause sources outside the 6-hour event window", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
     signal_event_symbols_v02: [signalSymbol("sig_public")],
   });
   const staleResult = signalResult("Focused Cause");
-  staleResult.sources[0].published_at = "2026-06-19T02:00:00.000Z";
-  staleResult.sources[0].catalyst_time_utc = "2026-06-19T02:00:00.000Z";
+  staleResult.sources[0].published_at = "2026-06-17T02:00:00.000Z";
+  staleResult.sources[0].catalyst_time_utc = "2026-06-17T02:00:00.000Z";
   staleResult.sources[0].why_relevant =
-    "Older macro context that does not align with the Signal Event window.";
+    "Older macro context from a prior UTC day that does not align with the window.";
   const mock = new MockClaudeClient([okResult(staleResult)]);
   const result = await runClaudeEnrichmentV02(
     db,
@@ -604,14 +715,14 @@ test("source policy downgrades stale Signal cause sources outside the 6-hour eve
     { now, client: mock },
   );
 
-  assert.equal(result.context_only_count, 1);
-  assert.equal(tables.claude_briefs_v02[0].status, "context_only");
-  assert.equal(tables.claude_briefs_v02[0].public_label, "Market Backdrop");
-  assert.equal(tables.source_references_v02[0].accepted, 1);
+  assert.equal(result.no_clear_cause_count, 1);
+  assert.equal(tables.claude_briefs_v02[0].status, "no_clear_cause");
+  assert.equal(tables.claude_briefs_v02[0].public_label, "No Clear Cause");
+  assert.equal(tables.source_references_v02[0].accepted, 0);
   assert.equal(tables.source_references_v02[0].source_role, "Backdrop source");
   assert.match(
     tables.source_references_v02[0].metadata_json,
-    /cause_source_downgraded_outside_6h_event_window/,
+    /signal_source_outside_6h_event_window/,
   );
 });
 
