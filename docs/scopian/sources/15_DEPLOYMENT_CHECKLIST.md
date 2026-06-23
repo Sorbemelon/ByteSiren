@@ -338,8 +338,10 @@ verify accepted source links remain exact article/source URLs
 
 ## H. Local v0.2 smoke before cutover
 
-Production cutover remains deferred until v0.2 local/protected smoke is clean.
-Run these checks against local D1 and local Worker only.
+The public v0.2 cutover completed in Phase C after the local/protected smoke and
+remote offline-import rebuild were clean. Keep this section as the local
+regression path for future v0.2 changes; run these checks against local D1 and
+local Worker only.
 
 1. Configure `apps/worker/.dev.vars` with local-only throwaway values:
 
@@ -441,7 +443,7 @@ node scripts/v02-local-claude-sample.mjs \
 
 Run the Daily Overview sample only after reviewing the Signal sample. Use `--mode daily --limit 1`. The script defaults to dry-run; `--live` is explicitly required for a real Claude call. Reports are written to `.tmp/v02-claude-sample-report.json` and `.tmp/v02-claude-sample-report.md`.
 
-The controlled sample must confirm `claude_briefs_v02` and `source_references_v02` writes for Signal/Daily only, no old `claude_briefs` or old `source_references` writes, no Market Story Claude/source rows, exact accepted source URLs, no public raw Claude traces or token/search/budget counts, no scheduled-run collision, and no terminal brief overwrite by a later retry/failure. If sample output is poor, disable `ENABLE_V02_CLAUDE_SAMPLE_TOOLS`, keep scheduled Claude flags false, keep production `FEED_VERSION=v01`, and leave v0.2 rows for inspection.
+The controlled sample must confirm `claude_briefs_v02` and `source_references_v02` writes for Signal/Daily only, no old `claude_briefs` or old `source_references` writes, no Market Story Claude/source rows, exact accepted source URLs, no public raw Claude traces or token/search/budget counts, no scheduled-run collision, and no terminal brief overwrite by a later retry/failure. If sample output is poor, disable `ENABLE_V02_CLAUDE_SAMPLE_TOOLS`, keep scheduled Claude flags false, do not run broader Claude backfill, and leave v0.2 rows for inspection. Roll back public `FEED_VERSION` to `v01` only if the public feed safety checks fail.
 
 The v0.2 real-API smoke should confirm:
 
@@ -475,6 +477,12 @@ Before any remote v0.2 migration, production D1 write, production backfill, live
 
 That plan preserves v0.1 as the rollback path, requires backup/snapshot evidence before remote mutation, keeps Market Story deterministic-only, keeps Audit Events hidden from the public feed, and separates rehearsal/no-public-switch, temporary smoke window, and full cutover modes.
 
+As of Phase C / Phase C1, the public production feed is v0.2 and tracked Worker
+configuration should preserve `FEED_VERSION=v02` on deploy. The rollback path is
+still `FEED_VERSION=v01`, but future normal deploys must not accidentally revert
+the public feed to v0.1. v0.2 scheduled generation and all v0.2 Claude flags
+remain disabled until later owner-approved phases.
+
 After the first owner-supervised remote data-build attempt failed before writing v0.2 rows, the protected remote v0.2 pipeline must be run diagnostics-first and chunked:
 
 ```bash
@@ -500,11 +508,11 @@ Live remote chunk execution additionally requires:
 --confirm-remote-v02-pipeline
 ```
 
-For owner-approved fresh remote v0.2 rebuilds where downtime/drift control is more important than continuous scheduled writes, temporarily set `ENABLE_SCHEDULED_JOBS=false` before resetting v0.2 tables. This freezes scheduled GitHub ingest dispatch, scheduled market polling, detector cron, cleanup/Daily Overview cron, and Claude enrichment cron while keeping public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` after `FEED_VERSION` is restored to `v01` and final public smoke passes.
+For owner-approved fresh remote v0.2 rebuilds where downtime/drift control is more important than continuous scheduled writes, temporarily set `ENABLE_SCHEDULED_JOBS=false` before resetting v0.2 tables. This freezes scheduled GitHub ingest dispatch, scheduled market polling, detector cron, cleanup/Daily Overview cron, and Claude enrichment cron while keeping public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` after the smoke window ends and the intended public feed version (`v02` for normal production, `v01` only for rollback) is verified.
 
 Do not use a full unbounded remote v0.2 detector call as the default production rehearsal path. If Cloudflare `1102` or HTTP `503` repeats, capture `wrangler tail bytesiren-api` or dashboard logs with request path, timestamp, Ray ID if available, the started `job_runs` breadcrumb, last completed chunk, and safe error message. Do not paste tokens or secrets into reports.
 
-If a bounded detector chunk returns HTML/non-JSON, stop the live run and keep `FEED_VERSION=v01`. The R2 failure pattern stopped at `2026-06-12` after completing `2026-06-11`; the hardened R2A recovery path is:
+If a bounded detector chunk returns HTML/non-JSON, stop the live run and keep the public feed on the current intended version; use `FEED_VERSION=v01` only when rolling back or before a public v0.2 launch. The R2 failure pattern stopped at `2026-06-12` after completing `2026-06-11`; the hardened R2A recovery path is:
 
 ```bash
 # Local/report-only diagnostic; no remote writes.

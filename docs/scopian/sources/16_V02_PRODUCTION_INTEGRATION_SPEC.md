@@ -28,7 +28,9 @@ ByteSiren v0.2 has four feed item concepts:
 
 The public feed groups items by UTC day as day posts. Daily Overview appears first. Market Story sections appear after Daily Overview. Signal Event sections appear after Market Story sections. Market Story must not nest Signal Event cards.
 
-The v0.2 feed API is exposed only when `FEED_VERSION=v02`. Missing, invalid, or `v01` feed versions use the existing v0.1 feed response. v0.2 feed reads are read-only: they do not generate Daily Overview rows, Market Story rows, Claude briefs, or source references.
+The v0.2 feed API is exposed when `FEED_VERSION=v02`. Missing, invalid, or `v01` feed versions use the existing v0.1 feed response. v0.2 feed reads are read-only: they do not generate Daily Overview rows, Market Story rows, Claude briefs, or source references.
+
+Phase C made `FEED_VERSION=v02` the live public production read path, backed by imported v0.2 snapshot rows. Phase C1 aligns the tracked Worker production default to `v02` so future deploys do not accidentally revert to v0.1. `FEED_VERSION=v01` remains the explicit rollback path and local legacy-feed fallback.
 
 ## Storage Decisions
 
@@ -204,7 +206,7 @@ Chart source markers are visible for Claude-backed Daily Overview and Signal Eve
 
 ## Planned Feature Flags
 
-Runtime flags should keep v0.1 as the default path until v0.2 is validated:
+Runtime flags originally kept v0.1 as the default path until v0.2 was validated. After Phase C, the public production feed default is `FEED_VERSION=v02`; v0.1 remains available as `FEED_VERSION=v01` rollback:
 
 - `DETECTOR_VERSION=v01|v02`
 - `FEED_VERSION=v01|v02`
@@ -231,7 +233,7 @@ Rollback behavior should be feature-flag/config based:
 
 `ENABLE_DAILY_OVERVIEWS` controls deterministic Daily Overview row generation. It must default to `false`. When true, the row-generation job may create or update `daily_overviews_v02` rows for completed UTC days with sufficient candle coverage. It must not call Claude, create Claude briefs, create source references, or generate missing Market Stories or Signal Events.
 
-`FEED_VERSION` controls only the public feed read contract. It must default to `v01`. `FEED_VERSION=v02` reads `daily_overviews_v02`, publishable `market_stories_v02`, publishable `signal_events_v02`, `claude_briefs_v02`, and accepted `source_references_v02` for Claude-backed items. It must not expose Audit Events as standalone public feed items.
+`FEED_VERSION` controls only the public feed read contract. The production default is `v02` after Phase C/C1. `FEED_VERSION=v02` reads `daily_overviews_v02`, publishable `market_stories_v02`, publishable `signal_events_v02`, `claude_briefs_v02`, and accepted `source_references_v02` for Claude-backed items. It must not expose Audit Events as standalone public feed items. `FEED_VERSION=v01` remains the explicit rollback and local legacy-feed fallback.
 
 `ENABLE_SIGNAL_CLAUDE_V02` controls Signal Event v0.2 Claude enrichment. It must default to `false`.
 
@@ -401,9 +403,9 @@ v0.2I2B does not:
 - write source references
 - add Claude status, Claude payload, Claude source tags, or public cause labels to Market Story
 
-v0.2I3 does:
+v0.2I3 originally did:
 
-- add `FEED_VERSION=v01|v02` feed contract selection with `v01` as the default
+- add `FEED_VERSION=v01|v02` feed contract selection with `v01` as the pre-cutover default
 - return grouped UTC day posts when `FEED_VERSION=v02`
 - include Daily Overview first, then publishable Market Story sections, then publishable Signal Event sections
 - read actual `claude_briefs_v02` and accepted `source_references_v02` rows for Signal Event and Daily Overview items only
@@ -595,7 +597,7 @@ v0.2I7B1 adds local/protected v0.2 Claude sample tooling:
 - v0.2 writes go only to `claude_briefs_v02` and `source_references_v02`
 - old `claude_briefs` and old `source_references` remain v0.1/legacy and must not be written by the v0.2 sample
 - reports are written to `.tmp/v02-claude-sample-report.json` and `.tmp/v02-claude-sample-report.md`
-- if sample output is poor, disable `ENABLE_V02_CLAUDE_SAMPLE_TOOLS`, keep scheduled Claude flags false, keep production `FEED_VERSION=v01`, and leave rows for inspection
+- if sample output is poor, disable `ENABLE_V02_CLAUDE_SAMPLE_TOOLS`, keep scheduled Claude flags false, do not broaden Claude backfill, and leave rows for inspection; roll back public `FEED_VERSION` to `v01` only if public feed safety is affected
 
 v0.2I7B1A hardens the sample path after a remote Signal sample collision:
 

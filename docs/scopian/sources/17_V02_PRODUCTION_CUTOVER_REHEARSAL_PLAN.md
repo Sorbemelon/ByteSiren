@@ -23,7 +23,7 @@ This plan is for production cutover rehearsal and later owner-approved execution
 
 It does not execute remote mutations. The v0.2I7A phase must not apply remote D1 migrations, write remote D1 data, deploy Worker or Pages, call live Claude, clear production data, change production flags, or merge branches.
 
-This plan is based on the successful local v0.2 end-to-end smoke. v0.1 remains the hosted production default until the owner explicitly approves a cutover execution phase.
+This plan is based on the successful local v0.2 end-to-end smoke. Phase C has since completed the public v0.2 cutover, and Phase C1 aligns the tracked Worker production default to `FEED_VERSION=v02`. v0.1 remains the rollback path through `FEED_VERSION=v01`.
 
 ## 2. Current Local v0.2 Evidence
 
@@ -115,11 +115,12 @@ Required GitHub repository secrets:
 - `BYTESIREN_WORKER_URL`
 - `BYTESIREN_MARKET_IMPORT_TOKEN`
 
-Worker vars for safe production default:
+Worker vars for current production default after Phase C/C1:
 
 ```text
 DETECTOR_VERSION=v01
-FEED_VERSION=v01
+FEED_VERSION=v02
+ENABLE_SCHEDULED_JOBS=true
 ENABLE_MARKET_STORIES=false
 ENABLE_DAILY_OVERVIEWS=false
 ENABLE_SIGNAL_CLAUDE_V02=false
@@ -135,7 +136,7 @@ Worker vars for temporary cutover rehearsal:
 DETECTOR_VERSION=v02
 ENABLE_MARKET_STORIES=true
 ENABLE_DAILY_OVERVIEWS=true
-FEED_VERSION=v02 only after v0.2 data is ready
+FEED_VERSION=v02 remains the normal public feed after Phase C; use FEED_VERSION=v01 only for rollback
 ENABLE_SIGNAL_CLAUDE_V02=true only during scheduled Signal Claude enrichment or bounded catch-up
 ENABLE_DAILY_CLAUDE=true only during scheduled Daily Claude enrichment or bounded catch-up
 ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true only during protected one-shot admin Claude samples
@@ -303,7 +304,7 @@ node scripts/v02-remote-pipeline-smoke.mjs \
 
 Live chunk execution requires both `--live` and `--confirm-remote-v02-pipeline`.
 
-During owner-approved fresh remote v0.2 rebuilds, set `ENABLE_SCHEDULED_JOBS=false` before the v0.2 reset and keep it false until after the short v02 smoke window is restored to `FEED_VERSION=v01`. This freezes scheduled write paths while leaving public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` before ending the maintenance window.
+During owner-approved fresh remote v0.2 rebuilds, set `ENABLE_SCHEDULED_JOBS=false` before the v0.2 reset and keep it false until after the short smoke window is complete and the intended public feed version is verified. This freezes scheduled write paths while leaving public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` before ending the maintenance window.
 
 Verify counts after pipeline:
 
@@ -369,7 +370,7 @@ Therefore live v0.2 Claude should be rehearsed in a controlled sample before bro
 
 Recommended first sample:
 
-1. Keep `FEED_VERSION=v01` if public users should not see v0.2 yet.
+1. Keep the current public `FEED_VERSION=v02` during Claude sample calls unless public feed safety requires rollback to `v01`.
 2. Set `CLAUDE_CATCHUP_LIMIT=1` to `2`.
 3. Enable the admin sample gate, not the scheduler-visible Signal/Daily Claude flags.
 4. Start with Signal Event or Daily Overview based on owner decision.
@@ -468,12 +469,12 @@ Verify after sample:
 
 If the sample is good, optionally run a Daily Overview sample, then a bounded catch-up. Full 30-day Claude catch-up should happen only after sample source quality is accepted.
 
-Rollback if Claude output is poor:
+Rollback if Claude output affects public feed safety:
 
 - Set `ENABLE_SIGNAL_CLAUDE_V02=false`.
 - Set `ENABLE_DAILY_CLAUDE=false`.
 - Set `ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false`.
-- Keep or restore `FEED_VERSION=v01`.
+- Restore `FEED_VERSION=v01` only if the public v0.2 feed safety checks fail.
 - Leave `claude_briefs_v02` and `source_references_v02` rows for inspection unless the owner approves cleanup.
 
 v0.2I7B1A remote sample hardening note:
@@ -500,8 +501,8 @@ Frontend deployment steps:
 1. Merge/deploy v0.2 frontend code only after backend smoke is acceptable.
 2. Confirm Pages build environment uses the correct API base URL.
 3. Rebuild Pages after env changes.
-4. Verify v0.1 behavior with `FEED_VERSION=v01`.
-5. Verify v0.2 behavior with `FEED_VERSION=v02`.
+4. Verify the rollback feed with `FEED_VERSION=v01` when a rollback test is required.
+5. Verify normal production behavior with `FEED_VERSION=v02`.
 
 Public web smoke checks:
 
@@ -534,18 +535,18 @@ Use this mode for remote schema, data refresh, and Claude sample validation befo
 - Revert `FEED_VERSION=v01` immediately if any issue appears.
 - Keep admin and Claude flags disabled unless actively running a protected step.
 
-Use this mode for final production-real UI/API validation.
+Use this mode for production-real UI/API validation before either restoring the prior state or intentionally leaving v0.2 live.
 
 ### Mode C - Full v0.2 cutover
 
 - `FEED_VERSION=v02`
-- `DETECTOR_VERSION=v02`
-- `ENABLE_MARKET_STORIES=true`
-- `ENABLE_DAILY_OVERVIEWS=true`
-- v0.2 Claude flags set according to final policy.
-- Scheduled jobs monitored after switch.
+- `DETECTOR_VERSION=v01` until ongoing v0.2 scheduled refresh is separately approved.
+- `ENABLE_MARKET_STORIES=false` until ongoing v0.2 scheduled refresh is separately approved.
+- `ENABLE_DAILY_OVERVIEWS=false` until ongoing v0.2 scheduled refresh is separately approved.
+- v0.2 Claude flags remain false until the owner approves a separate Claude phase.
+- Scheduled jobs remain enabled only for the currently approved production write paths.
 
-Use this mode only after Mode A and Mode B pass or the owner explicitly accepts the remaining risk.
+Use this mode for the Phase C public read-path cutover. Ongoing v0.2 refresh and Claude remain separate owner-approved phases.
 
 ## 12. Rollback Plan
 

@@ -16,7 +16,9 @@ CLAUDE_BLOCKED_DOMAINS=coindcx.com,bitcoinfoundation.org,tradingkey.com,intellec
 # Public API CORS origins. Add the deployed Pages origin before production use.
 PUBLIC_WEB_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://bytesiren.pages.dev
 
-# v0.2 integration flags. Production-safe defaults stay on v0.1 and disabled.
+# v0.2 integration flags. Production now serves the v0.2 public feed by default
+# from tracked wrangler.toml. Keep FEED_VERSION=v01 here only for local fallback
+# or legacy-feed testing unless you are validating local v0.2 rows.
 DETECTOR_VERSION=v01
 FEED_VERSION=v01
 ENABLE_MARKET_STORIES=false
