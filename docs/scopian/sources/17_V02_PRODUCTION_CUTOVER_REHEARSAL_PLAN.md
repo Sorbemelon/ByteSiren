@@ -303,6 +303,8 @@ node scripts/v02-remote-pipeline-smoke.mjs \
 
 Live chunk execution requires both `--live` and `--confirm-remote-v02-pipeline`.
 
+During owner-approved fresh remote v0.2 rebuilds, set `ENABLE_SCHEDULED_JOBS=false` before the v0.2 reset and keep it false until after the short v02 smoke window is restored to `FEED_VERSION=v01`. This freezes scheduled write paths while leaving public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` before ending the maintenance window.
+
 Verify counts after pipeline:
 
 - `signal_events_v02`
@@ -354,7 +356,7 @@ node scripts/v02-remote-pipeline-smoke.mjs \
   --retry-failed-once
 ```
 
-If `2026-06-12` fails again, retry with `--fallback-hours 12` to split the failed detector date into UTC half-day target windows. The fallback still requires the same live confirmation and must not be used for unbounded remote detector execution.
+If `2026-06-12` fails again, retry with `--fallback-hours 12` to split the failed detector date into UTC half-day target windows. If a half-day window itself exceeds Worker limits, use `--fallback-hours 6,3,1` so the script can recursively split failed detector windows to 6-hour, 3-hour, and 1-hour chunks. The fallback still requires the same live confirmation and must not be used for unbounded remote detector execution.
 
 ## 9. Controlled v0.2 Claude Rehearsal Plan
 

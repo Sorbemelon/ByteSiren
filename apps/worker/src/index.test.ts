@@ -572,6 +572,49 @@ test("worker does not allow arbitrary CORS origins", async () => {
   assert.equal(response.headers.get("access-control-allow-origin"), null);
 });
 
+test("scheduled crons no-op when scheduled jobs are frozen", async () => {
+  const incident = seededIncident();
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [incident],
+    signal_events_v02: [seededSignalEventV02()],
+  });
+  const env: Env = {
+    DB: db,
+    ENABLE_SCHEDULED_JOBS: "false",
+    MARKET_FETCH_MODE: "worker_fetch",
+    DETECTOR_VERSION: "v02",
+    ENABLE_DAILY_OVERVIEWS: "true",
+    ENABLE_SIGNAL_CLAUDE_V02: "true",
+    ENABLE_GITHUB_INGEST_DISPATCH: "true",
+    GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
+    ANTHROPIC_API_KEY: "",
+  };
+  const fetcher: typeof fetch = async () => {
+    throw new Error("fetch should not be called while scheduled jobs freeze");
+  };
+
+  await withMockFetch(fetcher, async () => {
+    await worker.scheduled(
+      scheduledController(GITHUB_INGEST_DISPATCH_CRON),
+      env,
+    );
+    await worker.scheduled(scheduledController(DETECTOR_CRON), env);
+    await worker.scheduled(scheduledController(LEGACY_POLL_MARKET_CRON), env);
+    await worker.scheduled(scheduledController(CLEANUP_CRON), env);
+    await worker.scheduled(scheduledController(CLAUDE_ENRICHMENT_CRON), env);
+  });
+
+  assert.equal(tables.job_runs.length, 0);
+  assert.equal(tables.incidents[0].status, incident.status);
+  assert.equal(tables.signal_events_v02.length, 1);
+  assert.equal(tables.daily_overviews_v02.length, 0);
+  assert.equal(tables.claude_briefs.length, 0);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+});
+
 test("scheduled detector cron runs detector only", async () => {
   const { db, tables } = createMemoryD1({
     market_candles: seededRows(),
@@ -1174,6 +1217,10 @@ test("admin v0.2 diagnostics is protected, read-only, and has no public CORS", a
   assert.equal(response.headers.get("access-control-allow-origin"), null);
   assert.equal(body.ok, true);
   assert.equal(body.diagnostics_version, "v02_admin_diagnostics_v1");
+  assert.equal(
+    (body.feature_flags as Record<string, unknown>).enable_scheduled_jobs,
+    true,
+  );
   assert.equal(
     (body.v02_table_counts as Record<string, unknown>).signal_events_v02,
     1,

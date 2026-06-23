@@ -60,6 +60,10 @@ function isWorkerMarketFetchEnabled(env: Env): boolean {
   return env.MARKET_FETCH_MODE?.trim().toLowerCase() === "worker_fetch";
 }
 
+function areScheduledJobsEnabled(env: Env): boolean {
+  return env.ENABLE_SCHEDULED_JOBS?.trim().toLowerCase() !== "false";
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -142,6 +146,10 @@ export default {
   },
 
   async scheduled(controller: ScheduledController, env: Env): Promise<void> {
+    if (!areScheduledJobsEnabled(env)) {
+      return;
+    }
+
     if (controller.cron === GITHUB_INGEST_DISPATCH_CRON) {
       await dispatchGitHubIngest(env.DB, env);
       return;

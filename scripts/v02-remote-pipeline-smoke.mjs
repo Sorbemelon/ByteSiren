@@ -64,6 +64,42 @@ function readPositiveInteger(value, fallback) {
   return Math.trunc(parsed);
 }
 
+function readPositiveIntegerList(value) {
+  if (value === undefined || value === "") {
+    return [];
+  }
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const parsed = readPositiveInteger(item, null);
+
+      if (parsed > 24) {
+        throw new Error(
+          `Fallback detector windows must be 24 hours or less, received: ${item}`,
+        );
+      }
+
+      return parsed;
+    });
+}
+
+function uniquePositiveIntegerSequence(values) {
+  const seen = new Set();
+  const sequence = [];
+
+  for (const value of values) {
+    if (!seen.has(value)) {
+      seen.add(value);
+      sequence.push(value);
+    }
+  }
+
+  return sequence;
+}
+
 function parseSteps(value = DEFAULT_STEPS) {
   const steps = value
     .split(",")
@@ -262,22 +298,36 @@ function buildTimeWindowCalls(call, fallbackHours) {
     call.step !== "detector" ||
     !call.date_from ||
     call.date_from !== call.date_to ||
-    call.time_from ||
     !fallbackHours
   ) {
     return [];
   }
 
   const windows = [];
-  let cursor = Date.parse(`${call.date_from}T00:00:00.000Z`);
+  let cursor = call.time_from
+    ? Date.parse(call.time_from)
+    : Date.parse(`${call.date_from}T00:00:00.000Z`);
   const dayEnd = endOfUtcDate(call.date_from).getTime();
+  const targetEnd = call.time_to ? Date.parse(call.time_to) : dayEnd;
   const windowMs = fallbackHours * HOUR_MS;
 
-  while (cursor <= dayEnd) {
-    const windowEnd = Math.min(cursor + windowMs - 1, dayEnd);
+  if (
+    !Number.isFinite(cursor) ||
+    !Number.isFinite(targetEnd) ||
+    targetEnd < cursor ||
+    targetEnd - cursor + 1 <= windowMs
+  ) {
+    return [];
+  }
+
+  while (cursor <= targetEnd) {
+    const windowEnd = Math.min(cursor + windowMs - 1, targetEnd);
     windows.push({
       ...call,
-      fallback_for_date: call.date_from,
+      fallback_for_date: call.fallback_for_date ?? call.date_from,
+      fallback_parent_time_from: call.time_from ?? null,
+      fallback_parent_time_to: call.time_to ?? null,
+      fallback_hours: fallbackHours,
       time_from: new Date(cursor).toISOString(),
       time_to: new Date(windowEnd).toISOString(),
     });
@@ -321,14 +371,17 @@ export function parseRemotePipelineSmokeArgs(
     dateUtc(readOption(argv, "--date-utc")) ??
     diagnoseDate ??
     dateFrom;
-  const fallbackHours = argv.includes("--fallback-half-day")
-    ? 12
-    : readOption(argv, "--fallback-hours")
-      ? Math.min(
-          12,
-          readPositiveInteger(readOption(argv, "--fallback-hours"), 12),
-        )
-      : null;
+  const fallbackHoursSequence = uniquePositiveIntegerSequence(
+    argv.includes("--fallback-half-day")
+      ? [12]
+      : [
+          ...readPositiveIntegerList(readOption(argv, "--fallback-hours")),
+          ...readPositiveIntegerList(
+            readOption(argv, "--adaptive-fallback-hours"),
+          ),
+        ],
+  );
+  const fallbackHours = fallbackHoursSequence[0] ?? null;
   const options = {
     workerUrl:
       readOption(argv, "--worker-url") ??
@@ -355,6 +408,7 @@ export function parseRemotePipelineSmokeArgs(
     startAfter: dateUtc(readOption(argv, "--start-after")),
     skipCompleted: argv.includes("--skip-completed"),
     fallbackHours,
+    fallbackHoursSequence,
     diagnoseDate,
     reportDir: readOption(argv, "--report-dir") ?? ".tmp",
   };
@@ -581,14 +635,14 @@ function buildDateDiagnosticReport(options, calls) {
       call.date_to === options.diagnoseDate,
   );
   const fallback_preview =
-    options.fallbackHours && options.diagnoseDate
+    options.fallbackHoursSequence.length > 0 && options.diagnoseDate
       ? buildTimeWindowCalls(
           {
             step: "detector",
             date_from: options.diagnoseDate,
             date_to: options.diagnoseDate,
           },
-          options.fallbackHours,
+          options.fallbackHoursSequence[0],
         )
       : [];
 
@@ -689,6 +743,64 @@ async function runCallWithRetry(call, options, fetchImpl) {
   };
 }
 
+async function runFallbackCalls({
+  call,
+  originalFailure,
+  options,
+  fetchImpl,
+  report,
+  fallbackLevel,
+}) {
+  const fallbackHours = options.fallbackHoursSequence[fallbackLevel];
+  const fallbackCalls = buildTimeWindowCalls(call, fallbackHours);
+
+  if (!fallbackHours || fallbackCalls.length === 0) {
+    return { ok: false, failure: originalFailure };
+  }
+
+  const fallbackAttempt = {
+    failed_call: call,
+    original_failure: originalFailure,
+    fallback_level: fallbackLevel + 1,
+    fallback_hours: fallbackHours,
+    fallback_calls: fallbackCalls,
+    completed_calls: [],
+    failures: [],
+  };
+  report.fallback_attempts.push(fallbackAttempt);
+
+  for (const fallbackCall of fallbackCalls) {
+    const result = await runCallWithRetry(fallbackCall, options, fetchImpl);
+
+    if (result.ok) {
+      const completed = {
+        ...fallbackCall,
+        attempts: result.attempts,
+        response: result.response,
+      };
+      fallbackAttempt.completed_calls.push(completed);
+      report.completed_calls.push(completed);
+      continue;
+    }
+
+    const nested = await runFallbackCalls({
+      call: fallbackCall,
+      originalFailure: result.failure,
+      options,
+      fetchImpl,
+      report,
+      fallbackLevel: fallbackLevel + 1,
+    });
+
+    if (!nested.ok) {
+      fallbackAttempt.failures.push(nested.failure);
+      return nested;
+    }
+  }
+
+  return { ok: true };
+}
+
 export async function runRemotePipelineSmoke(
   options,
   { fetchImpl = fetch, logger = console } = {},
@@ -708,6 +820,7 @@ export async function runRemotePipelineSmoke(
     retry_failed_once: options.retryFailedOnce,
     skip_completed: options.skipCompleted,
     fallback_hours: options.fallbackHours,
+    fallback_hours_sequence: options.fallbackHoursSequence,
     planned_calls: calls,
     completed_calls: [],
     skipped_completed_calls: [],
@@ -768,52 +881,21 @@ export async function runRemotePipelineSmoke(
       continue;
     }
 
-    const fallbackCalls = buildTimeWindowCalls(call, options.fallbackHours);
+    const fallbackResult = await runFallbackCalls({
+      call,
+      originalFailure: result.failure,
+      options,
+      fetchImpl,
+      report,
+      fallbackLevel: 0,
+    });
 
-    if (fallbackCalls.length > 0) {
-      const fallbackAttempt = {
-        failed_call: call,
-        original_failure: result.failure,
-        fallback_calls: fallbackCalls,
-        completed_calls: [],
-        failures: [],
-      };
-      report.fallback_attempts.push(fallbackAttempt);
-
-      for (const fallbackCall of fallbackCalls) {
-        const fallbackResult = await runCallWithRetry(
-          fallbackCall,
-          options,
-          fetchImpl,
-        );
-
-        if (!fallbackResult.ok) {
-          fallbackAttempt.failures.push(fallbackResult.failure);
-          report.failures.push(fallbackResult.failure);
-          report.ok = false;
-          break;
-        }
-
-        fallbackAttempt.completed_calls.push({
-          ...fallbackCall,
-          attempts: fallbackResult.attempts,
-          response: fallbackResult.response,
-        });
-        report.completed_calls.push({
-          ...fallbackCall,
-          attempts: fallbackResult.attempts,
-          response: fallbackResult.response,
-        });
-      }
-
-      if (report.ok) {
-        continue;
-      }
-    } else {
-      report.failures.push(result.failure);
-      report.ok = false;
+    if (fallbackResult.ok) {
+      continue;
     }
 
+    report.failures.push(fallbackResult.failure);
+    report.ok = false;
     break;
   }
 

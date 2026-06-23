@@ -712,6 +712,9 @@ async function diagnosticsResponse(env: Env): Promise<Response> {
       enable_daily_overviews: parseBooleanFlag(env.ENABLE_DAILY_OVERVIEWS),
       enable_signal_claude_v02: parseBooleanFlag(env.ENABLE_SIGNAL_CLAUDE_V02),
       enable_daily_claude: parseBooleanFlag(env.ENABLE_DAILY_CLAUDE),
+      enable_scheduled_jobs: env.ENABLE_SCHEDULED_JOBS
+        ? parseBooleanFlag(env.ENABLE_SCHEDULED_JOBS)
+        : true,
       enable_admin_maintenance: isMaintenanceEnabled(env),
       enable_v02_admin_tools: isV02AdminToolsEnabled(env),
       enable_v02_claude_sample_tools: isV02ClaudeSampleToolsEnabled(env),

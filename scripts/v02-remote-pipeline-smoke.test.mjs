@@ -277,6 +277,105 @@ test("v0.2 remote pipeline smoke failed-date diagnostic shows half-day fallback 
   );
 });
 
+test("v0.2 remote pipeline smoke adaptively splits failed detector windows", async () => {
+  const options = parseRemotePipelineSmokeArgs(
+    [
+      "--live",
+      "--confirm-remote-v02-pipeline",
+      "--admin-token",
+      "secret-admin-token",
+      "--date-from",
+      "2026-06-09",
+      "--date-to",
+      "2026-06-09",
+      "--steps",
+      "detector",
+      "--retry-failed-once",
+      "--fallback-hours",
+      "6,3,1",
+    ],
+    {},
+  );
+  const requestedBodies = [];
+  const report = await runRemotePipelineSmoke(options, {
+    fetchImpl: async (_input, init) => {
+      const body = JSON.parse(String(init?.body));
+      requestedBodies.push(body);
+      const timeFrom = body.time_from ?? "";
+      const timeTo = body.time_to ?? "";
+      const shouldFail =
+        !timeFrom ||
+        (timeFrom === "2026-06-09T12:00:00.000Z" &&
+          timeTo === "2026-06-09T17:59:59.999Z");
+
+      return new Response(JSON.stringify({ ok: !shouldFail, body }), {
+        status: shouldFail ? 503 : 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+    logger: { log() {} },
+  });
+
+  assert.equal(report.ok, true);
+  assert.deepEqual(report.fallback_hours_sequence, [6, 3, 1]);
+  assert.equal(report.fallback_attempts.length, 2);
+  assert.equal(report.fallback_attempts[0].fallback_hours, 6);
+  assert.equal(report.fallback_attempts[1].fallback_hours, 3);
+  assert.equal(
+    report.completed_calls.some(
+      (call) =>
+        call.time_from === "2026-06-09T12:00:00.000Z" &&
+        call.time_to === "2026-06-09T14:59:59.999Z",
+    ),
+    true,
+  );
+  assert.equal(
+    report.completed_calls.some(
+      (call) =>
+        call.time_from === "2026-06-09T15:00:00.000Z" &&
+        call.time_to === "2026-06-09T17:59:59.999Z",
+    ),
+    true,
+  );
+  assert.equal(
+    requestedBodies.some((body) => body.dry_run === false),
+    true,
+  );
+});
+
+test("v0.2 remote pipeline smoke reports unresolved fallback without looping", async () => {
+  const options = parseRemotePipelineSmokeArgs(
+    [
+      "--live",
+      "--confirm-remote-v02-pipeline",
+      "--admin-token",
+      "secret-admin-token",
+      "--date-from",
+      "2026-06-09",
+      "--date-to",
+      "2026-06-09",
+      "--steps",
+      "detector",
+      "--fallback-hours",
+      "24",
+    ],
+    {},
+  );
+  const report = await runRemotePipelineSmoke(options, {
+    fetchImpl: async () =>
+      new Response(JSON.stringify({ ok: false }), {
+        status: 503,
+        headers: { "content-type": "application/json" },
+      }),
+    logger: { log() {} },
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.fallback_attempts.length, 0);
+  assert.equal(report.failures.length, 1);
+  assert.equal(report.failures[0].date_from, "2026-06-09");
+});
+
 test("v0.2 remote pipeline chunk helper supports capped multi-day chunks", () => {
   assert.deepEqual(buildDateChunks("2026-06-20", "2026-06-24", 2), [
     { date_from: "2026-06-20", date_to: "2026-06-21" },

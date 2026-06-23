@@ -18,6 +18,7 @@ export interface Env {
   ENABLE_SIGNAL_CLAUDE_V02?: string;
   ENABLE_DAILY_CLAUDE?: string;
   CLAUDE_CATCHUP_LIMIT?: string;
+  ENABLE_SCHEDULED_JOBS?: string;
   ENABLE_ADMIN_MAINTENANCE?: string;
   ENABLE_V02_ADMIN_TOOLS?: string;
   ENABLE_V02_CLAUDE_SAMPLE_TOOLS?: string;

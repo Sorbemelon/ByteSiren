@@ -257,6 +257,8 @@ Protected broad admin catch-up for v0.2 Claude remains separate from the one-sho
 
 `ENABLE_V02_ADMIN_TOOLS` controls protected local/admin v0.2 smoke tooling. It must default to `false`. The protected v0.2 pipeline endpoint also requires `ENABLE_ADMIN_MAINTENANCE=true` and a valid `x-bytesiren-admin-token`. It is not a public frontend API, must not expose public CORS, and must not run Claude.
 
+`ENABLE_SCHEDULED_JOBS` controls the Worker `scheduled()` handler only. It must default to `true`. During an owner-approved maintenance/rebuild window it may be set to `false` to freeze scheduled write paths while public HTTP reads remain available. The freeze covers scheduled GitHub ingest dispatch, scheduled Worker market polling, detector cron, cleanup/Daily Overview cron, and Claude enrichment cron. It must be restored to `true` after the rebuild/smoke window unless the owner explicitly extends maintenance.
+
 The protected local v0.2 pipeline endpoint may run these explicit steps:
 
 - `detector`: runs the v0.2 Signal/Audit detector write path only.
@@ -280,6 +282,7 @@ v0.2I7B0-R2A hardens the failed-chunk path:
 - `--retry-failed-once` retries a failed chunk once before stopping.
 - `--diagnose-date YYYY-MM-DD` writes a local/report-only failed-date diagnostic.
 - `--fallback-hours 12` can split a failed detector day into UTC half-day target windows after an owner-approved live retry.
+- `--fallback-hours 6,3,1` can recursively split a failed detector day/window into smaller UTC windows for Worker resource-limit recovery.
 
 Unbounded v0.2 detector execution is no longer the protected admin default. It requires an explicit manual override and should not be used for remote production rehearsal unless the owner separately approves it. Remote rehearsal should use diagnostics first, then detector chunks, then Market Stories, then Daily Overview chunks.
 

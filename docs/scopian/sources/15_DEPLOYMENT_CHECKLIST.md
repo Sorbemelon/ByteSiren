@@ -500,6 +500,8 @@ Live remote chunk execution additionally requires:
 --confirm-remote-v02-pipeline
 ```
 
+For owner-approved fresh remote v0.2 rebuilds where downtime/drift control is more important than continuous scheduled writes, temporarily set `ENABLE_SCHEDULED_JOBS=false` before resetting v0.2 tables. This freezes scheduled GitHub ingest dispatch, scheduled market polling, detector cron, cleanup/Daily Overview cron, and Claude enrichment cron while keeping public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` after `FEED_VERSION` is restored to `v01` and final public smoke passes.
+
 Do not use a full unbounded remote v0.2 detector call as the default production rehearsal path. If Cloudflare `1102` or HTTP `503` repeats, capture `wrangler tail bytesiren-api` or dashboard logs with request path, timestamp, Ray ID if available, the started `job_runs` breadcrumb, last completed chunk, and safe error message. Do not paste tokens or secrets into reports.
 
 If a bounded detector chunk returns HTML/non-JSON, stop the live run and keep `FEED_VERSION=v01`. The R2 failure pattern stopped at `2026-06-12` after completing `2026-06-11`; the hardened R2A recovery path is:
@@ -525,7 +527,7 @@ node scripts/v02-remote-pipeline-smoke.mjs \
   --retry-failed-once
 ```
 
-Only if the resumed day fails again and the owner approves continuing, add `--fallback-hours 12` to split the failed detector day into UTC half-day target windows. Do not run Market Stories, Daily Overviews, `FEED_VERSION=v02`, or Claude until detector chunks complete and counts are reviewed.
+Only if the resumed day fails again and the owner approves continuing, add `--fallback-hours 12` to split the failed detector day into UTC half-day target windows. If a half-day window itself exceeds Worker limits, use adaptive smaller windows such as `--fallback-hours 6,3,1` so the script can split failed detector windows recursively before stopping. Do not run Market Stories, Daily Overviews, `FEED_VERSION=v02`, or Claude until detector chunks complete and counts are reviewed.
 
 ## J. SEO asset note
 
