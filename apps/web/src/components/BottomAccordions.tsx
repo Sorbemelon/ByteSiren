@@ -476,25 +476,29 @@ export default function BottomAccordions({
           className="mb-2 text-[16px] font-semibold"
           style={{ color: "var(--text-primary)" }}
         >
-          What is ByteSiren
+          About ByteSiren
         </h2>
         <p style={{ textIndent: "1.25rem" }}>
           ByteSiren is a read-only AI crypto market intelligence dashboard and
-          portfolio project. It watches BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, and
-          XRPUSDT using Binance public market data, keeps the chart focused on
-          the selected symbol, and keeps the Intelligence Feed organized around
-          Daily Overviews, deterministic Market Stories, and compact Signal
-          Events.
+          portfolio project for observing broad crypto market movement. It
+          monitors BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, and XRPUSDT from Binance
+          public market data, then turns recent 15-minute candles into a public
+          v0.2 intelligence feed.
         </p>
         <p className="mt-2" style={{ textIndent: "1.25rem" }}>
-          The backend stores recent 15-minute candle data, detects compact
-          evidence-window movement, builds broader chart-pattern stories
-          deterministically, and uses Claude only for source-backed Signal Event
-          and Daily Overview context.
+          The system detects compact Signal Events when multiple tracked symbols
+          move together, builds deterministic Market Stories from broader chart
+          windows, and summarizes each UTC day with a Daily Overview. The chart
+          and feed are designed to explain what ByteSiren observed without
+          turning the observation into a trading recommendation.
         </p>
         <p className="mt-2" style={{ textIndent: "1.25rem" }}>
-          ByteSiren is designed for market awareness and engineering
-          demonstration, not financial advice or automated trading.
+          Claude Web Search is used only for source-backed Signal Event and
+          Daily Overview context when public sources are available. Market
+          Stories remain deterministic and source-free. ByteSiren is designed
+          for market awareness, transparent source review, and engineering
+          demonstration, not financial advice, price targets, buy/sell signals,
+          or automated trading.
         </p>
       </div>
 
