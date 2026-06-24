@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { dispatchMarketIngestWorkflow } from "./githubDispatch.ts";
+import {
+  dispatchMarketIngestWorkflow,
+  dispatchV02SnapshotRefreshWorkflow,
+} from "./githubDispatch.ts";
 import type { Env } from "../types/env.ts";
 
 function baseEnv(overrides: Partial<Env> = {}): Env {
@@ -15,6 +18,18 @@ function baseEnv(overrides: Partial<Env> = {}): Env {
     GITHUB_INGEST_HOURS: "6",
     GITHUB_INGEST_SYMBOLS: "BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT",
     GITHUB_INGEST_DRY_RUN: "false",
+    GITHUB_INGEST_DISPATCH_TOKEN: "test-github-token",
+    ...overrides,
+  };
+}
+
+function baseV02RefreshEnv(overrides: Partial<Env> = {}): Env {
+  return {
+    DB: {} as D1Database,
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
+    GITHUB_REFRESH_WORKFLOW_REPO: "Sorbemelon/ByteSiren",
+    GITHUB_REFRESH_WORKFLOW_FILE: "v02-snapshot-refresh.yml",
+    GITHUB_REFRESH_WORKFLOW_REF: "main",
     GITHUB_INGEST_DISPATCH_TOKEN: "test-github-token",
     ...overrides,
   };
@@ -133,4 +148,152 @@ test("GitHub dispatch rejects invalid symbol config before calling GitHub", asyn
   assert.equal(called, false);
   assert.equal(result.ok, false);
   assert.match(result.message, /invalid GITHUB_INGEST_SYMBOLS/);
+});
+
+test("v0.2 refresh workflow dispatch is disabled by default", async () => {
+  let called = false;
+  const result = await dispatchV02SnapshotRefreshWorkflow(
+    { DB: {} as D1Database },
+    {
+      fetcher: async () => {
+        called = true;
+        return new Response(null, { status: 204 });
+      },
+    },
+  );
+
+  assert.equal(called, false);
+  assert.equal(result.ok, false);
+  assert.equal(result.outcome, "skipped");
+  assert.equal(result.dispatch_status, "skipped_disabled");
+  assert.match(result.message, /ENABLE_V02_REFRESH_WORKFLOW_DISPATCH/);
+});
+
+test("v0.2 refresh workflow dry-run previews payload without GitHub call", async () => {
+  let called = false;
+  const result = await dispatchV02SnapshotRefreshWorkflow(
+    baseV02RefreshEnv({ GITHUB_INGEST_DISPATCH_TOKEN: "" }),
+    {
+      dryRun: true,
+      triggerSource: "admin_test",
+      refreshMode: "admin_dry_run",
+      now: new Date("2026-06-24T01:30:00.000Z"),
+      fetcher: async () => {
+        called = true;
+        return new Response(null, { status: 204 });
+      },
+    },
+  );
+
+  assert.equal(called, false);
+  assert.equal(result.ok, true);
+  assert.equal(result.dispatch_status, "dry_run");
+  assert.equal(result.dispatch_attempted, false);
+  assert.equal(result.token_present, false);
+  assert.deepEqual(result.inputs_summary, {
+    trigger_source: "admin_test",
+    refresh_mode: "admin_dry_run",
+    requested_at: "2026-06-24T01:30:00.000Z",
+    idempotency_key: "v02-refresh-2026-06-24",
+    dry_run: "false",
+    confirm_live: "true",
+  });
+});
+
+test("v0.2 refresh workflow dispatch checks active runs and builds workflow_dispatch payload", async () => {
+  const calls: Array<{ url: string; init: RequestInit | undefined }> = [];
+  const fetcher: typeof fetch = async (input, init) => {
+    const url = String(input);
+    calls.push({ url, init });
+
+    if (url.includes("/runs?")) {
+      return Response.json({ workflow_runs: [] }, { status: 200 });
+    }
+
+    return new Response(null, { status: 204 });
+  };
+
+  const result = await dispatchV02SnapshotRefreshWorkflow(baseV02RefreshEnv(), {
+    triggerSource: "cloudflare_cron",
+    refreshMode: "scheduled",
+    now: new Date("2026-06-24T01:30:00.000Z"),
+    fetcher,
+  });
+  const dispatchCall = calls[1];
+  const headers = new Headers(dispatchCall.init?.headers);
+  const body = JSON.parse(String(dispatchCall.init?.body)) as {
+    ref: string;
+    inputs: Record<string, string>;
+  };
+
+  assert.equal(calls.length, 2);
+  assert.match(calls[0].url, /v02-snapshot-refresh\.yml\/runs\?/);
+  assert.equal(
+    dispatchCall.url,
+    "https://api.github.com/repos/Sorbemelon/ByteSiren/actions/workflows/v02-snapshot-refresh.yml/dispatches",
+  );
+  assert.equal(dispatchCall.init?.method, "POST");
+  assert.equal(headers.get("authorization"), "Bearer test-github-token");
+  assert.equal(result.ok, true);
+  assert.equal(result.dispatch_status, "dispatched");
+  assert.deepEqual(body, {
+    ref: "main",
+    inputs: {
+      trigger_source: "cloudflare_cron",
+      refresh_mode: "scheduled",
+      requested_at: "2026-06-24T01:30:00.000Z",
+      idempotency_key: "v02-refresh-2026-06-24",
+      dry_run: "false",
+      confirm_live: "true",
+    },
+  });
+});
+
+test("v0.2 refresh workflow dispatch skips duplicate active run", async () => {
+  let postCalled = false;
+  const result = await dispatchV02SnapshotRefreshWorkflow(baseV02RefreshEnv(), {
+    fetcher: async (input, init) => {
+      if (String(input).includes("/dispatches")) {
+        postCalled = true;
+      }
+
+      assert.equal(init?.method, "GET");
+      return Response.json(
+        {
+          workflow_runs: [
+            {
+              id: 123,
+              status: "in_progress",
+              event: "workflow_dispatch",
+              html_url:
+                "https://github.com/Sorbemelon/ByteSiren/actions/runs/123",
+            },
+          ],
+        },
+        { status: 200 },
+      );
+    },
+  });
+
+  assert.equal(postCalled, false);
+  assert.equal(result.ok, false);
+  assert.equal(result.outcome, "skipped");
+  assert.equal(result.dispatch_status, "skipped_existing_run");
+  assert.equal(result.active_run?.id, 123);
+});
+
+test("v0.2 refresh workflow dispatch failure redacts token", async () => {
+  const result = await dispatchV02SnapshotRefreshWorkflow(baseV02RefreshEnv(), {
+    force: true,
+    fetcher: async () =>
+      new Response(JSON.stringify({ token: "test-github-token" }), {
+        status: 401,
+      }),
+  });
+  const serialized = JSON.stringify(result);
+
+  assert.equal(result.ok, false);
+  assert.equal(result.dispatch_status, "failed_dispatch");
+  assert.equal(result.status, 401);
+  assert.equal(serialized.includes("test-github-token"), false);
 });

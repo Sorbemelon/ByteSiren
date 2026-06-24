@@ -327,7 +327,13 @@ The refresh must:
 - temporarily use `FEED_VERSION=v01` during the reset/import window to avoid exposing an empty v02 feed
 - restore `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true` after a clean v02 API smoke
 
-`.github/workflows/v02-snapshot-refresh.yml` is available for manual `workflow_dispatch` and, after Phase D2 proof, a daily GitHub Actions cron at `30 1 * * *` UTC. The proof run was `28066280181` on `main`. Required GitHub secret: `CLOUDFLARE_API_TOKEN`. Do not add `ANTHROPIC_API_KEY`; Claude remains disabled and separate.
+`.github/workflows/v02-snapshot-refresh.yml` is available for manual `workflow_dispatch`. Phase D2 proved dispatch with run `28066280181` on `main`, but E2 found no GitHub native scheduled run yet. Phase D3 changes the scheduler to Cloudflare Cron:
+
+```text
+Cloudflare Cron -> Worker lightweight dispatch -> GitHub workflow_dispatch -> GitHub Actions offline rebuild/import
+```
+
+The Worker dispatch path requires `ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true`, `GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren`, `GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml`, `GITHUB_REFRESH_WORKFLOW_REF=main`, and the Worker secret `GITHUB_INGEST_DISPATCH_TOKEN`. It must dispatch only and must not run historical detector/rebuild work in the Worker. Required GitHub repository secret: `CLOUDFLARE_API_TOKEN`. Do not add `ANTHROPIC_API_KEY`; Claude remains disabled and separate. After Cloudflare dispatch is proven, remove the GitHub native `schedule:` block to avoid duplicate refreshes.
 
 Verify counts after pipeline:
 

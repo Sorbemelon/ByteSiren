@@ -293,7 +293,14 @@ The refresh path must never touch:
 - `public_view_counts`
 - `job_runs`
 
-The workflow is `.github/workflows/v02-snapshot-refresh.yml`. Phase D2 proved it with `workflow_dispatch` run `28066280181` on `main` and enabled a daily GitHub Actions cron at `30 1 * * *` UTC. `workflow_dispatch` remains available for owner-supervised refreshes. The workflow requires the repository secret `CLOUDFLARE_API_TOKEN`, uses concurrency to avoid overlapping refreshes, and must not use or require `ANTHROPIC_API_KEY`. No Claude secrets are required or allowed for deterministic snapshot refresh.
+The workflow is `.github/workflows/v02-snapshot-refresh.yml`. Phase D2 proved it with `workflow_dispatch` run `28066280181` on `main`, but the E2 verification found that the GitHub native schedule had not fired. Phase D3 uses Cloudflare Cron as the scheduler and GitHub Actions as the executor:
+
+1. Cloudflare Cron invokes the Worker `scheduled()` handler.
+2. The Worker checks `ENABLE_SCHEDULED_JOBS=true` and `ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true`.
+3. The Worker dispatches `.github/workflows/v02-snapshot-refresh.yml` through GitHub `workflow_dispatch` with safe metadata inputs.
+4. GitHub Actions runs the offline deterministic rebuild/import.
+
+The Worker dispatch path must be lightweight. It must not run detector, Market Story, Daily Overview, Claude, reset, import, or rebuild logic inside the Worker. It uses the existing Worker secret `GITHUB_INGEST_DISPATCH_TOKEN` only for the GitHub dispatch API call. Required dispatch vars are `GITHUB_REFRESH_WORKFLOW_REPO`, `GITHUB_REFRESH_WORKFLOW_FILE`, and `GITHUB_REFRESH_WORKFLOW_REF`. `workflow_dispatch` remains available for owner-supervised refreshes. The workflow requires the repository secret `CLOUDFLARE_API_TOKEN`, uses concurrency to avoid overlapping refreshes, and must not use or require `ANTHROPIC_API_KEY`. No Claude secrets are required or allowed for deterministic snapshot refresh.
 
 The protected local v0.2 pipeline endpoint may run these explicit steps:
 

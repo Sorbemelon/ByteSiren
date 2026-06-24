@@ -575,9 +575,22 @@ Before every live import, create rollback artifacts under `.tmp/v02-refresh-roll
 4. Deploy the normal tracked Worker config with `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true`.
 5. Smoke the v02 API and confirm public Audit Events and source count are both zero.
 
-`.github/workflows/v02-snapshot-refresh.yml` is the deterministic v0.2 snapshot refresh workflow. Phase D2 proved the workflow with `workflow_dispatch` run `28066280181` on `main`, then enabled a daily GitHub Actions cron at `30 1 * * *` UTC. Keep `workflow_dispatch` available for owner-supervised refreshes. The workflow requires the GitHub repository secret `CLOUDFLARE_API_TOKEN` and must not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase. It uses a concurrency group so daily and manual refreshes do not overlap.
+`.github/workflows/v02-snapshot-refresh.yml` is the deterministic v0.2 snapshot refresh workflow. Phase D2 proved the workflow with `workflow_dispatch` run `28066280181` on `main`, but the follow-up E2 check found no GitHub native `schedule` run yet. Phase D3 therefore moves the scheduler to Cloudflare Cron while keeping GitHub Actions as the executor:
 
-The v0.1 market-ingest workflow remains Cloudflare-Cron-dispatched and should keep its existing `workflow_dispatch`-only pattern. The v0.2 snapshot refresh cron is separate and may be revisited later if the owner wants Cloudflare Cron to dispatch it too.
+```text
+Cloudflare Cron -> Worker lightweight dispatch -> GitHub workflow_dispatch -> GitHub Actions offline rebuild/import
+```
+
+The Worker must not run historical v0.2 detector/rebuild work. It only builds a safe dispatch payload, checks for an active queued/in-progress refresh run, and calls the GitHub workflow dispatch API using the existing Worker secret `GITHUB_INGEST_DISPATCH_TOKEN`. Required v0.2 refresh vars:
+
+```text
+ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true after proof
+GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren
+GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml
+GITHUB_REFRESH_WORKFLOW_REF=main
+```
+
+The GitHub workflow requires the repository secret `CLOUDFLARE_API_TOKEN` and must not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase. Keep `workflow_dispatch` available for owner-supervised refreshes. After Cloudflare dispatch is proven, remove the GitHub native `schedule:` block to avoid duplicate refreshes.
 
 ## K. Public v0.2 hosted smoke
 

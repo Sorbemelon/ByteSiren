@@ -24,6 +24,7 @@ ENABLE_SCHEDULED_JOBS = "true"
 ENABLE_ADMIN_MAINTENANCE = "false"
 ENABLE_V02_ADMIN_TOOLS = "false"
 ENABLE_V02_CLAUDE_SAMPLE_TOOLS = "false"
+ENABLE_V02_REFRESH_WORKFLOW_DISPATCH = "false"
 ENABLE_MARKET_IMPORT = "true"
 MARKET_FETCH_MODE = "external_import"
 ENABLE_GITHUB_INGEST_DISPATCH = "true"
@@ -34,6 +35,9 @@ GITHUB_INGEST_REF = "main"
 GITHUB_INGEST_HOURS = "6"
 GITHUB_INGEST_SYMBOLS = "BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT"
 GITHUB_INGEST_DRY_RUN = "false"
+GITHUB_REFRESH_WORKFLOW_REPO = "Sorbemelon/ByteSiren"
+GITHUB_REFRESH_WORKFLOW_FILE = "v02-snapshot-refresh.yml"
+GITHUB_REFRESH_WORKFLOW_REF = "main"
 
 [[d1_databases]]
 binding = "DB"
@@ -44,6 +48,7 @@ migrations_dir = "migrations"
 [triggers]
 crons = [
   "2,17,32,47 * * * *",
+  "30 1 * * *",
   "5,20,35,50 * * * *",
   "10,25,40,55 * * * *",
   "17 0 * * *"

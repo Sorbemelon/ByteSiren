@@ -10,6 +10,7 @@ import {
   getCandleHistoryBounds,
   recordJobRun,
 } from "../db/marketRepository.ts";
+import { dispatchV02SnapshotRefresh } from "../jobs/dispatchV02SnapshotRefresh.ts";
 import { enrichQueuedIncidents } from "../jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "../jobs/pollMarket.ts";
 import {
@@ -26,6 +27,7 @@ import {
 } from "../jobs/runMarketStoriesV02.ts";
 import { seedFixtureClaudeV02 } from "../jobs/seedFixtureClaudeV02.ts";
 import { checkBinanceKlines } from "../services/binance.ts";
+import { dispatchV02SnapshotRefreshWorkflow } from "../services/githubDispatch.ts";
 import { MARKET_STORY_V02_MODEL_VERSION } from "../services/marketStoriesV02/index.ts";
 import type { Env } from "../types/env.ts";
 import type { SymbolPollResult } from "../types/market.ts";
@@ -78,6 +80,13 @@ interface V02PipelineOptions {
   allowUnboundedDetector: boolean;
 }
 
+interface V02RefreshDispatchAdminOptions {
+  dryRun: boolean;
+  force: boolean;
+  confirmDispatch: boolean;
+  triggerSource: string;
+}
+
 interface V02TableCounts {
   signal_events_v02: number;
   signal_event_symbols_v02: number;
@@ -105,6 +114,10 @@ function isV02AdminToolsEnabled(env: Env): boolean {
 
 function isV02ClaudeSampleToolsEnabled(env: Env): boolean {
   return parseBooleanFlag(env.ENABLE_V02_CLAUDE_SAMPLE_TOOLS);
+}
+
+function isV02RefreshWorkflowDispatchEnabled(env: Env): boolean {
+  return parseBooleanFlag(env.ENABLE_V02_REFRESH_WORKFLOW_DISPATCH);
 }
 
 function isAuthorized(request: Request, env: Env): boolean {
@@ -394,6 +407,41 @@ async function readV02ClaudeSampleOptions(
     ids: parseSampleIds(body.ids),
     dryRun: parseBoolean(body.dry_run, true),
     targetKinds: targetKindsForMode(mode),
+  };
+}
+
+async function readV02RefreshDispatchOptions(
+  request: Request,
+): Promise<V02RefreshDispatchAdminOptions> {
+  let body: Record<string, unknown> = {};
+
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    const parsed = (await request.json().catch(() => null)) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Request body must be a JSON object.");
+    }
+
+    body = parsed as Record<string, unknown>;
+  }
+
+  const dryRun = parseBoolean(body.dry_run, true);
+  const confirmDispatch = parseBoolean(body.confirm_dispatch, false);
+  const force = parseBoolean(body.force, false);
+  const triggerSource =
+    typeof body.trigger_source === "string" && body.trigger_source.trim()
+      ? body.trigger_source.trim()
+      : "admin_test";
+
+  if (!dryRun && !confirmDispatch) {
+    throw new Error("live dispatch requires confirm_dispatch=true.");
+  }
+
+  return {
+    dryRun,
+    force,
+    confirmDispatch,
+    triggerSource,
   };
 }
 
@@ -718,6 +766,8 @@ async function diagnosticsResponse(env: Env): Promise<Response> {
       enable_admin_maintenance: isMaintenanceEnabled(env),
       enable_v02_admin_tools: isV02AdminToolsEnabled(env),
       enable_v02_claude_sample_tools: isV02ClaudeSampleToolsEnabled(env),
+      enable_v02_refresh_workflow_dispatch:
+        isV02RefreshWorkflowDispatchEnabled(env),
     },
     candles: {
       by_symbol: candleBounds,
@@ -1272,6 +1322,65 @@ export async function adminResponse(
     response.counts_after = countsAfter;
 
     return json(response);
+  }
+
+  if (url.pathname === "/api/admin/v02/dispatch-refresh-workflow") {
+    if (request.method !== "POST") {
+      return methodNotAllowed();
+    }
+
+    if (!isMaintenanceEnabled(env)) {
+      return notFound();
+    }
+
+    if (!isV02AdminToolsEnabled(env)) {
+      return notFound();
+    }
+
+    if (!isV02RefreshWorkflowDispatchEnabled(env)) {
+      return notFound();
+    }
+
+    let options: V02RefreshDispatchAdminOptions;
+
+    try {
+      options = await readV02RefreshDispatchOptions(request);
+    } catch (error) {
+      return jsonError(400, "invalid_request", safeErrorMessage(error));
+    }
+
+    const dispatchOptions = {
+      dryRun: options.dryRun,
+      force: options.force,
+      triggerSource: options.triggerSource,
+      refreshMode: options.dryRun ? "admin_dry_run" : "admin_live_test",
+    };
+    const result = options.dryRun
+      ? await dispatchV02SnapshotRefreshWorkflow(env, dispatchOptions)
+      : await dispatchV02SnapshotRefresh(env.DB, env, dispatchOptions);
+
+    return json({
+      ok: result.ok,
+      dry_run: options.dryRun,
+      force: options.force,
+      confirm_dispatch: options.confirmDispatch,
+      workflow: result.workflow,
+      repo: result.repo,
+      ref: result.ref,
+      dispatch_attempted: result.dispatch_attempted,
+      dispatch_status: result.dispatch_status,
+      idempotency_key: result.inputs_summary.idempotency_key,
+      inputs_summary: result.inputs_summary,
+      github_response_status: result.status,
+      duplicate_check_status: result.duplicate_check_status,
+      active_run: result.active_run ?? null,
+      token_present: result.token_present,
+      message: result.message,
+      error_summary: result.error_summary ?? null,
+      ...(result && "job_status" in result
+        ? { job_status: result.job_status }
+        : {}),
+    });
   }
 
   return notFound();

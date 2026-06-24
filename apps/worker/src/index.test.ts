@@ -13,6 +13,7 @@ import {
   DETECTOR_CRON,
   GITHUB_INGEST_DISPATCH_CRON,
   LEGACY_POLL_MARKET_CRON,
+  V02_REFRESH_WORKFLOW_DISPATCH_CRON,
 } from "./config.ts";
 
 const symbols = [
@@ -587,6 +588,7 @@ test("scheduled crons no-op when scheduled jobs are frozen", async () => {
     ENABLE_DAILY_OVERVIEWS: "true",
     ENABLE_SIGNAL_CLAUDE_V02: "true",
     ENABLE_GITHUB_INGEST_DISPATCH: "true",
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
     GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
     ANTHROPIC_API_KEY: "",
   };
@@ -597,6 +599,10 @@ test("scheduled crons no-op when scheduled jobs are frozen", async () => {
   await withMockFetch(fetcher, async () => {
     await worker.scheduled(
       scheduledController(GITHUB_INGEST_DISPATCH_CRON),
+      env,
+    );
+    await worker.scheduled(
+      scheduledController(V02_REFRESH_WORKFLOW_DISPATCH_CRON),
       env,
     );
     await worker.scheduled(scheduledController(DETECTOR_CRON), env);
@@ -849,6 +855,102 @@ test("scheduled GitHub ingest dispatch records skipped when disabled", async () 
   assert.equal(
     job?.message,
     "GitHub ingest dispatch skipped: ENABLE_GITHUB_INGEST_DISPATCH is not true.",
+  );
+});
+
+test("scheduled v0.2 refresh dispatch records successful workflow dispatch", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
+    GITHUB_REFRESH_WORKFLOW_REPO: "Sorbemelon/ByteSiren",
+    GITHUB_REFRESH_WORKFLOW_FILE: "v02-snapshot-refresh.yml",
+    GITHUB_REFRESH_WORKFLOW_REF: "main",
+    GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
+  };
+  const calls: Array<{ url: string; init: RequestInit | undefined }> = [];
+  const fetcher: typeof fetch = async (input, init) => {
+    const url = String(input);
+    calls.push({ url, init });
+
+    if (url.includes("/runs?")) {
+      return Response.json({ workflow_runs: [] }, { status: 200 });
+    }
+
+    const body = JSON.parse(String(init?.body)) as {
+      ref: string;
+      inputs: Record<string, string>;
+    };
+
+    assert.equal(body.ref, "main");
+    assert.equal(body.inputs.trigger_source, "cloudflare_cron");
+    assert.equal(body.inputs.refresh_mode, "scheduled");
+    assert.equal(body.inputs.dry_run, "false");
+    assert.equal(body.inputs.confirm_live, "true");
+
+    return new Response(null, { status: 204 });
+  };
+
+  await withMockFetch(fetcher, async () => {
+    await worker.scheduled(
+      scheduledController(V02_REFRESH_WORKFLOW_DISPATCH_CRON),
+      env,
+    );
+  });
+
+  const job = tables.job_runs.find(
+    (row) => row.job_name === "v02_snapshot_refresh_dispatch",
+  );
+  const metadata = JSON.parse(job?.metadata_json ?? "{}") as {
+    status: number;
+    dispatch_status: string;
+    workflow: string;
+    ref: string;
+    inputs: Record<string, string>;
+  };
+  const serializedJob = JSON.stringify(job);
+
+  assert.equal(calls.length, 2);
+  assert.match(calls[0].url, /v02-snapshot-refresh\.yml\/runs\?/);
+  assert.match(calls[1].url, /v02-snapshot-refresh\.yml\/dispatches$/);
+  assert.equal(job?.status, "success");
+  assert.equal(
+    job?.message,
+    "v0.2 refresh workflow dispatched: v02-snapshot-refresh.yml on main.",
+  );
+  assert.equal(metadata.status, 204);
+  assert.equal(metadata.dispatch_status, "dispatched");
+  assert.equal(metadata.workflow, "v02-snapshot-refresh.yml");
+  assert.equal(metadata.ref, "main");
+  assert.equal(metadata.inputs.trigger_source, "cloudflare_cron");
+  assert.equal(serializedJob.includes("secret-github-token"), false);
+});
+
+test("scheduled v0.2 refresh dispatch records skipped when disabled", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "false",
+  };
+  const fetcher: typeof fetch = async () => {
+    throw new Error("fetch should not be called");
+  };
+
+  await withMockFetch(fetcher, async () => {
+    await worker.scheduled(
+      scheduledController(V02_REFRESH_WORKFLOW_DISPATCH_CRON),
+      env,
+    );
+  });
+
+  const job = tables.job_runs.find(
+    (row) => row.job_name === "v02_snapshot_refresh_dispatch",
+  );
+
+  assert.equal(job?.status, "skipped");
+  assert.equal(
+    job?.message,
+    "v0.2 refresh workflow dispatch skipped: ENABLE_V02_REFRESH_WORKFLOW_DISPATCH is not true.",
   );
 });
 
@@ -1795,6 +1897,174 @@ test("admin v0.2 Claude sample requires sample tools flag", async () => {
   );
 
   assert.equal(response.status, 404);
+});
+
+test("admin v0.2 refresh workflow dispatch requires v0.2 admin and dispatch flags", async () => {
+  const request = new Request(
+    "http://localhost/api/admin/v02/dispatch-refresh-workflow",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({ dry_run: true }),
+    },
+  );
+  const adminOff = await worker.fetch(request.clone(), {
+    DB: createMemoryD1().db,
+    ENABLE_ADMIN_MAINTENANCE: "false",
+    ENABLE_V02_ADMIN_TOOLS: "true",
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+  });
+  const toolsOff = await worker.fetch(request.clone(), {
+    DB: createMemoryD1().db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "false",
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+  });
+  const dispatchOff = await worker.fetch(request.clone(), {
+    DB: createMemoryD1().db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "true",
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "false",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+  });
+
+  assert.equal(adminOff.status, 404);
+  assert.equal(toolsOff.status, 404);
+  assert.equal(dispatchOff.status, 404);
+  assert.equal(adminOff.headers.get("access-control-allow-origin"), null);
+});
+
+test("admin v0.2 refresh workflow dry-run does not call GitHub", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "true",
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    GITHUB_REFRESH_WORKFLOW_REPO: "Sorbemelon/ByteSiren",
+    GITHUB_REFRESH_WORKFLOW_FILE: "v02-snapshot-refresh.yml",
+    GITHUB_REFRESH_WORKFLOW_REF: "main",
+  };
+  const fetcher: typeof fetch = async () => {
+    throw new Error("fetch should not be called for dry-run");
+  };
+  const response = await withMockFetch(fetcher, () =>
+    worker.fetch(
+      new Request("http://localhost/api/admin/v02/dispatch-refresh-workflow", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-bytesiren-admin-token": "test-admin-token",
+        },
+        body: JSON.stringify({
+          dry_run: true,
+          trigger_source: "admin_test",
+        }),
+      }),
+      env,
+    ),
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.dry_run, true);
+  assert.equal(body.dispatch_attempted, false);
+  assert.equal(body.dispatch_status, "dry_run");
+  assert.equal(body.workflow, "v02-snapshot-refresh.yml");
+  assert.equal(body.ref, "main");
+  assert.equal(body.token_present, false);
+  assert.equal(tables.job_runs.length, 0);
+});
+
+test("admin v0.2 refresh workflow live dispatch requires confirmation", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/dispatch-refresh-workflow", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        dry_run: false,
+      }),
+    }),
+    {
+      DB: createMemoryD1().db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 400);
+  assert.equal((body.error as Record<string, unknown>).code, "invalid_request");
+});
+
+test("admin v0.2 refresh workflow live dispatch records safe job result", async () => {
+  const { db, tables } = createMemoryD1();
+  const env: Env = {
+    DB: db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "true",
+    ENABLE_V02_REFRESH_WORKFLOW_DISPATCH: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    GITHUB_REFRESH_WORKFLOW_REPO: "Sorbemelon/ByteSiren",
+    GITHUB_REFRESH_WORKFLOW_FILE: "v02-snapshot-refresh.yml",
+    GITHUB_REFRESH_WORKFLOW_REF: "main",
+    GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
+  };
+  const fetcher: typeof fetch = async (input) => {
+    if (String(input).includes("/runs?")) {
+      return Response.json({ workflow_runs: [] }, { status: 200 });
+    }
+
+    return new Response(null, { status: 204 });
+  };
+  const response = await withMockFetch(fetcher, () =>
+    worker.fetch(
+      new Request("http://localhost/api/admin/v02/dispatch-refresh-workflow", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-bytesiren-admin-token": "test-admin-token",
+        },
+        body: JSON.stringify({
+          dry_run: false,
+          confirm_dispatch: true,
+          trigger_source: "admin_test",
+        }),
+      }),
+      env,
+    ),
+  );
+  const body = await readJson(response);
+  const serializedBody = JSON.stringify(body);
+  const serializedJobs = JSON.stringify(tables.job_runs);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.dry_run, false);
+  assert.equal(body.dispatch_attempted, true);
+  assert.equal(body.dispatch_status, "dispatched");
+  assert.equal(body.github_response_status, 204);
+  assert.equal(body.job_status, "success");
+  assert.equal(serializedBody.includes("secret-github-token"), false);
+  assert.equal(serializedJobs.includes("secret-github-token"), false);
+  assert.equal(
+    tables.job_runs.some(
+      (row) => row.job_name === "v02_snapshot_refresh_dispatch",
+    ),
+    true,
+  );
 });
 
 test("admin v0.2 Claude sample live path skips safely without API key", async () => {

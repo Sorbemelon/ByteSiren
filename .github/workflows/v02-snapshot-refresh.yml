@@ -27,6 +27,24 @@ on:
         options:
           - "false"
           - "true"
+      trigger_source:
+        description: "Safe trigger label, such as manual or cloudflare_cron"
+        required: false
+        default: "manual"
+        type: string
+      refresh_mode:
+        description: "Safe refresh mode label"
+        required: false
+        default: "manual"
+        type: string
+      requested_at:
+        description: "Optional requester timestamp"
+        required: false
+        type: string
+      idempotency_key:
+        description: "Optional external idempotency key"
+        required: false
+        type: string
   schedule:
     - cron: "30 1 * * *"
 
@@ -58,6 +76,13 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Print safe trigger metadata
+        run: |
+          echo "trigger_source=${{ inputs.trigger_source }}"
+          echo "refresh_mode=${{ inputs.refresh_mode }}"
+          echo "requested_at=${{ inputs.requested_at }}"
+          echo "idempotency_key=${{ inputs.idempotency_key }}"
 
       - name: Setup Node
         uses: actions/setup-node@v4

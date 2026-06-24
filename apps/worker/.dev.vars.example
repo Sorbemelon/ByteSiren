@@ -32,6 +32,7 @@ ENABLE_SCHEDULED_JOBS=true
 ENABLE_ADMIN_MAINTENANCE=false
 ENABLE_V02_ADMIN_TOOLS=false
 ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false
+ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=false
 ADMIN_BACKFILL_TOKEN=
 
 # Local v0.2 smoke profile, using throwaway local tokens:
@@ -72,3 +73,9 @@ GITHUB_INGEST_HOURS=6
 GITHUB_INGEST_SYMBOLS=BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT
 GITHUB_INGEST_DRY_RUN=false
 GITHUB_INGEST_DISPATCH_TOKEN=
+
+# v0.2 deterministic snapshot refresh dispatch. The Worker only dispatches the
+# GitHub workflow; GitHub Actions runs the offline rebuild/import.
+GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren
+GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml
+GITHUB_REFRESH_WORKFLOW_REF=main

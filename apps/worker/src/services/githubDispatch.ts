@@ -5,9 +5,18 @@ const GITHUB_API_VERSION = "2026-03-10";
 const GITHUB_DISPATCH_URL_PREFIX = "https://api.github.com/repos";
 const SUCCESS_STATUSES = new Set([200, 201, 202, 204]);
 const DEFAULT_WORKFLOW = "market-ingest.yml";
+const DEFAULT_V02_REFRESH_WORKFLOW = "v02-snapshot-refresh.yml";
 const DEFAULT_REF = "main";
 const DEFAULT_HOURS = "6";
 const DEFAULT_DRY_RUN = "false";
+const DEFAULT_REFRESH_REPO = "Sorbemelon/ByteSiren";
+const ACTIVE_WORKFLOW_RUN_STATUSES = new Set([
+  "queued",
+  "in_progress",
+  "waiting",
+  "requested",
+  "pending",
+]);
 
 export type GitHubDispatchOutcome = "success" | "failed" | "skipped";
 
@@ -32,6 +41,54 @@ export interface GitHubDispatchOptions {
   fetcher?: typeof fetch;
 }
 
+export type V02RefreshDispatchStatus =
+  | "dry_run"
+  | "dispatched"
+  | "skipped_disabled"
+  | "skipped_existing_run"
+  | "failed_dispatch";
+
+export interface V02RefreshInputsSummary {
+  trigger_source: string;
+  refresh_mode: string;
+  requested_at: string;
+  idempotency_key: string;
+  dry_run: "false";
+  confirm_live: "true";
+}
+
+export interface V02RefreshActiveRunSummary {
+  id: number | null;
+  status: string | null;
+  event: string | null;
+  url: string | null;
+}
+
+export interface V02RefreshDispatchResult {
+  ok: boolean;
+  outcome: GitHubDispatchOutcome;
+  status: number | null;
+  message: string;
+  dispatch_status: V02RefreshDispatchStatus;
+  workflow: string;
+  repo: string;
+  ref: string;
+  inputs_summary: V02RefreshInputsSummary;
+  dispatch_attempted: boolean;
+  duplicate_check_status: number | null;
+  active_run?: V02RefreshActiveRunSummary;
+  token_present: boolean;
+  error_summary?: string;
+}
+
+export interface V02RefreshDispatchOptions extends GitHubDispatchOptions {
+  dryRun?: boolean;
+  force?: boolean;
+  triggerSource?: string;
+  refreshMode?: string;
+  now?: Date;
+}
+
 interface DispatchConfig {
   owner: string;
   repo: string;
@@ -40,6 +97,15 @@ interface DispatchConfig {
   hours: string;
   symbols: string[];
   dryRun: "true" | "false";
+  token: string;
+}
+
+interface V02RefreshDispatchConfig {
+  owner: string;
+  repoName: string;
+  repoSlug: string;
+  workflow: string;
+  ref: string;
   token: string;
 }
 
@@ -107,6 +173,53 @@ function dispatchConfig(env: Env): DispatchConfig {
   };
 }
 
+function v02RefreshWorkflowDispatchEnabled(env: Env): boolean {
+  return isEnabled(env.ENABLE_V02_REFRESH_WORKFLOW_DISPATCH);
+}
+
+function normalizeRepoSlug(value: string | undefined): {
+  owner: string;
+  repoName: string;
+  repoSlug: string;
+} {
+  const trimmed = (value?.trim() || DEFAULT_REFRESH_REPO).replace(
+    /^\/+|\/+$/g,
+    "",
+  );
+  const [owner, repoName, extra] = trimmed.split("/");
+
+  if (!owner || !repoName || extra) {
+    throw new Error("invalid GITHUB_REFRESH_WORKFLOW_REPO");
+  }
+
+  return {
+    owner,
+    repoName,
+    repoSlug: `${owner}/${repoName}`,
+  };
+}
+
+function v02RefreshDispatchConfig(
+  env: Env,
+  { requireToken }: { requireToken: boolean },
+): V02RefreshDispatchConfig {
+  const repo = normalizeRepoSlug(env.GITHUB_REFRESH_WORKFLOW_REPO);
+  const token = requireToken
+    ? readRequired(
+        env.GITHUB_INGEST_DISPATCH_TOKEN,
+        "GITHUB_INGEST_DISPATCH_TOKEN",
+      )
+    : (env.GITHUB_INGEST_DISPATCH_TOKEN?.trim() ?? "");
+
+  return {
+    ...repo,
+    workflow:
+      env.GITHUB_REFRESH_WORKFLOW_FILE?.trim() || DEFAULT_V02_REFRESH_WORKFLOW,
+    ref: env.GITHUB_REFRESH_WORKFLOW_REF?.trim() || DEFAULT_REF,
+    token,
+  };
+}
+
 function safeSummary(value: string, token?: string): string {
   let sanitized = value.replace(/\s+/g, " ").trim();
 
@@ -115,6 +228,29 @@ function safeSummary(value: string, token?: string): string {
   }
 
   return sanitized.slice(0, 160);
+}
+
+function safeInputSlug(value: string | undefined, fallback: string): string {
+  const trimmed = value?.trim().toLowerCase() || fallback;
+  const safe = trimmed.replace(/[^a-z0-9_-]/g, "_").replace(/_+/g, "_");
+
+  return safe.slice(0, 48) || fallback;
+}
+
+function v02RefreshInputsSummary(
+  now: Date,
+  options: Pick<V02RefreshDispatchOptions, "triggerSource" | "refreshMode">,
+): V02RefreshInputsSummary {
+  const requestedAt = now.toISOString();
+
+  return {
+    trigger_source: safeInputSlug(options.triggerSource, "cloudflare_cron"),
+    refresh_mode: safeInputSlug(options.refreshMode, "scheduled"),
+    requested_at: requestedAt,
+    idempotency_key: `v02-refresh-${requestedAt.slice(0, 10)}`,
+    dry_run: "false",
+    confirm_live: "true",
+  };
 }
 
 function defaultInputsSummary(): GitHubDispatchInputsSummary {
@@ -245,6 +381,292 @@ export async function dispatchMarketIngestWorkflow(
         error instanceof Error
           ? safeSummary(error.message, config.token)
           : "Unexpected dispatch error.",
+    });
+  }
+}
+
+function v02RefreshFailureResult({
+  status,
+  message,
+  dispatchStatus,
+  workflow = DEFAULT_V02_REFRESH_WORKFLOW,
+  repo = DEFAULT_REFRESH_REPO,
+  ref = DEFAULT_REF,
+  inputsSummary = v02RefreshInputsSummary(new Date(0), {}),
+  duplicateCheckStatus = null,
+  errorSummary,
+  outcome = "failed",
+  tokenPresent = false,
+  activeRun,
+}: {
+  status: number | null;
+  message: string;
+  dispatchStatus: V02RefreshDispatchStatus;
+  workflow?: string;
+  repo?: string;
+  ref?: string;
+  inputsSummary?: V02RefreshInputsSummary;
+  duplicateCheckStatus?: number | null;
+  errorSummary?: string;
+  outcome?: "failed" | "skipped";
+  tokenPresent?: boolean;
+  activeRun?: V02RefreshActiveRunSummary;
+}): V02RefreshDispatchResult {
+  return {
+    ok: false,
+    outcome,
+    status,
+    message,
+    dispatch_status: dispatchStatus,
+    workflow,
+    repo,
+    ref,
+    inputs_summary: inputsSummary,
+    dispatch_attempted: false,
+    duplicate_check_status: duplicateCheckStatus,
+    token_present: tokenPresent,
+    ...(activeRun ? { active_run: activeRun } : {}),
+    ...(errorSummary ? { error_summary: errorSummary } : {}),
+  };
+}
+
+async function activeWorkflowRun(
+  config: V02RefreshDispatchConfig,
+  fetcher: typeof fetch,
+): Promise<{
+  status: number;
+  activeRun: V02RefreshActiveRunSummary | null;
+  errorSummary?: string;
+}> {
+  const url = `${GITHUB_DISPATCH_URL_PREFIX}/${encodeURIComponent(
+    config.owner,
+  )}/${encodeURIComponent(config.repoName)}/actions/workflows/${encodeURIComponent(
+    config.workflow,
+  )}/runs?branch=${encodeURIComponent(config.ref)}&per_page=20`;
+  const response = await fetcher(url, {
+    method: "GET",
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${config.token}`,
+      "user-agent": "ByteSiren-Worker",
+      "x-github-api-version": GITHUB_API_VERSION,
+    },
+  });
+  const text = await response.text();
+
+  if (!SUCCESS_STATUSES.has(response.status)) {
+    return {
+      status: response.status,
+      activeRun: null,
+      errorSummary: safeSummary(text, config.token),
+    };
+  }
+
+  const parsed = JSON.parse(text || "{}") as {
+    workflow_runs?: Array<{
+      id?: number;
+      status?: string;
+      event?: string;
+      html_url?: string;
+      url?: string;
+    }>;
+  };
+  const active = (parsed.workflow_runs ?? []).find((run) =>
+    ACTIVE_WORKFLOW_RUN_STATUSES.has(run.status ?? ""),
+  );
+
+  return {
+    status: response.status,
+    activeRun: active
+      ? {
+          id: active.id ?? null,
+          status: active.status ?? null,
+          event: active.event ?? null,
+          url: active.html_url ?? active.url ?? null,
+        }
+      : null,
+  };
+}
+
+export async function dispatchV02SnapshotRefreshWorkflow(
+  env: Env,
+  options: V02RefreshDispatchOptions = {},
+): Promise<V02RefreshDispatchResult> {
+  const dryRun = options.dryRun === true;
+  const now = options.now ?? new Date();
+  const inputsSummary = v02RefreshInputsSummary(now, options);
+  const tokenPresent = Boolean(env.GITHUB_INGEST_DISPATCH_TOKEN?.trim());
+
+  if (!v02RefreshWorkflowDispatchEnabled(env)) {
+    return v02RefreshFailureResult({
+      status: null,
+      message:
+        "v0.2 refresh workflow dispatch skipped: ENABLE_V02_REFRESH_WORKFLOW_DISPATCH is not true.",
+      dispatchStatus: "skipped_disabled",
+      inputsSummary,
+      outcome: "skipped",
+      tokenPresent,
+    });
+  }
+
+  let config: V02RefreshDispatchConfig;
+
+  try {
+    config = v02RefreshDispatchConfig(env, { requireToken: !dryRun });
+  } catch (error) {
+    return v02RefreshFailureResult({
+      status: null,
+      message: `v0.2 refresh workflow dispatch failed: ${
+        error instanceof Error ? safeSummary(error.message) : "invalid config"
+      }.`,
+      dispatchStatus: "failed_dispatch",
+      inputsSummary,
+      tokenPresent,
+    });
+  }
+
+  const workflow = config.workflow;
+  const repo = config.repoSlug;
+  const ref = config.ref;
+
+  if (dryRun) {
+    return {
+      ok: true,
+      outcome: "success",
+      status: null,
+      message: `v0.2 refresh workflow dispatch dry-run: ${workflow} on ${ref}.`,
+      dispatch_status: "dry_run",
+      workflow,
+      repo,
+      ref,
+      inputs_summary: inputsSummary,
+      dispatch_attempted: false,
+      duplicate_check_status: null,
+      token_present: tokenPresent,
+    };
+  }
+
+  const fetcher = options.fetcher ?? fetch;
+
+  if (!options.force) {
+    try {
+      const duplicate = await activeWorkflowRun(config, fetcher);
+
+      if (duplicate.errorSummary) {
+        return v02RefreshFailureResult({
+          status: duplicate.status,
+          message: `v0.2 refresh workflow dispatch failed: active run check HTTP ${duplicate.status}.`,
+          dispatchStatus: "failed_dispatch",
+          workflow,
+          repo,
+          ref,
+          inputsSummary,
+          duplicateCheckStatus: duplicate.status,
+          errorSummary: duplicate.errorSummary,
+          tokenPresent,
+        });
+      }
+
+      if (duplicate.activeRun) {
+        return v02RefreshFailureResult({
+          status: null,
+          message:
+            "v0.2 refresh workflow dispatch skipped: an active workflow run already exists.",
+          dispatchStatus: "skipped_existing_run",
+          workflow,
+          repo,
+          ref,
+          inputsSummary,
+          duplicateCheckStatus: duplicate.status,
+          outcome: "skipped",
+          tokenPresent,
+          activeRun: duplicate.activeRun,
+        });
+      }
+    } catch (error) {
+      return v02RefreshFailureResult({
+        status: null,
+        message:
+          "v0.2 refresh workflow dispatch failed: active run check network_error.",
+        dispatchStatus: "failed_dispatch",
+        workflow,
+        repo,
+        ref,
+        inputsSummary,
+        errorSummary:
+          error instanceof Error
+            ? safeSummary(error.message, config.token)
+            : "Unexpected active run check error.",
+        tokenPresent,
+      });
+    }
+  }
+
+  const url = `${GITHUB_DISPATCH_URL_PREFIX}/${encodeURIComponent(
+    config.owner,
+  )}/${encodeURIComponent(config.repoName)}/actions/workflows/${encodeURIComponent(
+    workflow,
+  )}/dispatches`;
+
+  try {
+    const response = await fetcher(url, {
+      method: "POST",
+      headers: {
+        accept: "application/vnd.github+json",
+        authorization: `Bearer ${config.token}`,
+        "content-type": "application/json",
+        "user-agent": "ByteSiren-Worker",
+        "x-github-api-version": GITHUB_API_VERSION,
+      },
+      body: JSON.stringify({
+        ref,
+        inputs: inputsSummary,
+      }),
+    });
+    const text = await response.text();
+
+    if (!SUCCESS_STATUSES.has(response.status)) {
+      return v02RefreshFailureResult({
+        status: response.status,
+        message: `v0.2 refresh workflow dispatch failed: HTTP ${response.status}.`,
+        dispatchStatus: "failed_dispatch",
+        workflow,
+        repo,
+        ref,
+        inputsSummary,
+        errorSummary: safeSummary(text, config.token),
+        tokenPresent,
+      });
+    }
+
+    return {
+      ok: true,
+      outcome: "success",
+      status: response.status,
+      message: `v0.2 refresh workflow dispatched: ${workflow} on ${ref}.`,
+      dispatch_status: "dispatched",
+      workflow,
+      repo,
+      ref,
+      inputs_summary: inputsSummary,
+      dispatch_attempted: true,
+      duplicate_check_status: options.force ? null : 200,
+      token_present: tokenPresent,
+    };
+  } catch (error) {
+    return v02RefreshFailureResult({
+      status: null,
+      message: "v0.2 refresh workflow dispatch failed: network_error.",
+      dispatchStatus: "failed_dispatch",
+      workflow,
+      repo,
+      ref,
+      inputsSummary,
+      errorSummary:
+        error instanceof Error
+          ? safeSummary(error.message, config.token)
+          : "Unexpected dispatch error.",
+      tokenPresent,
     });
   }
 }

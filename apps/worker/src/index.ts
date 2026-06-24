@@ -4,9 +4,11 @@ import {
   DETECTOR_CRON,
   GITHUB_INGEST_DISPATCH_CRON,
   LEGACY_POLL_MARKET_CRON,
+  V02_REFRESH_WORKFLOW_DISPATCH_CRON,
 } from "./config.ts";
 import { cleanupOldData } from "./jobs/cleanupOldData.ts";
 import { dispatchGitHubIngest } from "./jobs/dispatchGitHubIngest.ts";
+import { dispatchV02SnapshotRefresh } from "./jobs/dispatchV02SnapshotRefresh.ts";
 import { enrichQueuedIncidents } from "./jobs/enrichQueuedIncidents.ts";
 import { pollMarket } from "./jobs/pollMarket.ts";
 import {
@@ -152,6 +154,14 @@ export default {
 
     if (controller.cron === GITHUB_INGEST_DISPATCH_CRON) {
       await dispatchGitHubIngest(env.DB, env);
+      return;
+    }
+
+    if (controller.cron === V02_REFRESH_WORKFLOW_DISPATCH_CRON) {
+      await dispatchV02SnapshotRefresh(env.DB, env, {
+        triggerSource: "cloudflare_cron",
+        refreshMode: "scheduled",
+      });
       return;
     }
 
