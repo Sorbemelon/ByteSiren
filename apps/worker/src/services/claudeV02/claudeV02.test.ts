@@ -140,6 +140,8 @@ function validSignalResult() {
     confidence: "high",
     headline: "Source-supported catalyst",
     collapsed_summary: "A source-supported event lined up with the move.",
+    source_free_signal_insight:
+      "Breadth stayed coherent while the lead mover set the pace and the external driver remained unconfirmed.",
     context_details: "The public context was time-aligned with the event.",
     why_this_classification: "A focused source matched the event window.",
     source_support: "high",
@@ -302,8 +304,8 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
     signalPrompt,
     /source_free_signal_insight must not mention sources, articles, publishers/,
   );
-  assert.match(signalPrompt, /Always fill source_free_signal_insight/);
-  assert.match(signalPrompt, /brief source-free chart\/evidence insight/);
+  assert.match(signalPrompt, /source_free_signal_insight is required/);
+  assert.match(signalPrompt, /fallback-safe public copy/);
   assert.match(
     signalPrompt,
     /summarize chart\/evidence insight rather than listing metrics/,
@@ -404,6 +406,16 @@ test("v0.2 validators allow omitted long context details", () => {
   assert.equal(
     validateDailyOverviewClaudeResultV02(daily).context_details,
     null,
+  );
+});
+
+test("v0.2 Signal Event validator requires source-free insight", () => {
+  const signal = validSignalResult() as Record<string, unknown>;
+  delete signal.source_free_signal_insight;
+
+  assert.throws(
+    () => validateSignalEventClaudeResultV02(signal),
+    /source_free_signal_insight is required/,
   );
 });
 

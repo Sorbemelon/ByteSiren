@@ -144,7 +144,7 @@ export interface SignalEventClaudeResultV02 {
   confidence: ClaudeConfidenceV02;
   headline: string;
   collapsed_summary: string;
-  source_free_signal_insight?: string | null;
+  source_free_signal_insight: string;
   context_details?: string | null;
   why_this_classification: string;
   source_support: SourceSupportV02;

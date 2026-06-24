@@ -411,11 +411,10 @@ function signalEvidenceOnlyNoClearCauseSummary(
       : `${context ? `${context} ` : ""}${direction} pressure`;
 
   return [
-    "No clear public catalyst stands out.",
-    ` This looks more like ${pressure} across ${breadth}`,
-    lead ? `, with ${lead} leading the move` : "",
-    avgChange ? ` and an average move of ${avgChange}` : "",
-    " than a confirmed news-driven move.",
+    `The chart evidence points to ${pressure} across ${breadth}`,
+    lead ? `, with ${lead} setting the pace` : "",
+    avgChange ? ` and the basket averaging ${avgChange}` : "",
+    ". The move is internally coherent, but the external driver remains unconfirmed.",
   ]
     .join("")
     .replace(/\s+/g, " ")

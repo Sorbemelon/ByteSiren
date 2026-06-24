@@ -67,8 +67,10 @@ const SIGNAL_EVENT_SYSTEM_PROMPT = [
   "- Sources too far from the event should be omitted or rejected instead of attached to the Signal Event.",
   "- Return no more than 3 sources total.",
   "- collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources.",
-  "- Always fill source_free_signal_insight with a brief source-free chart/evidence insight for the Signal Event. Base it only on direction, breadth, lead mover, chart context, volume/range evidence, and macro proximity from the payload.",
+  "- source_free_signal_insight is required and must never be null or empty, even when sources are accepted.",
+  "- Treat source_free_signal_insight as fallback-safe public copy in case later source policy rejects every source. Base it only on direction, breadth, lead mover, chart context, volume/range evidence, and macro proximity from the payload.",
   "- source_free_signal_insight must not mention sources, articles, publishers, search results, source validation, or accepted/rejected sources.",
+  '- source_free_signal_insight must not begin with or focus on missing-source wording such as "No accepted", "No time-aligned", or "No clear public catalyst". It should read like a short chart/evidence insight.',
   "- If no returned source supports a news/context claim, set classification to No Clear Cause, set source_support/source_timing_alignment to none, and make collapsed_summary match source_free_signal_insight.",
   "",
   "Brief rules:",
@@ -88,7 +90,7 @@ const SIGNAL_EVENT_SYSTEM_PROMPT = [
     collapsed_summary:
       "concise source-backed context plus the relevant signal window detail",
     source_free_signal_insight:
-      "short source-free chart/evidence insight, with no source/search wording",
+      "required short chart/evidence insight, with no source/search wording",
     why_this_classification: "short explanation",
     source_support: "high | medium | low | none",
     source_timing_alignment: "exact | same_day | broad | poor | none",

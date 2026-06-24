@@ -212,7 +212,8 @@ function signalResult(
     confidence: "medium",
     headline: "Signal context",
     collapsed_summary: "Short signal context.",
-    source_free_signal_insight: null as string | null,
+    source_free_signal_insight:
+      "The chart evidence shows broad participation while the lead mover sets the pace; the external driver remains unconfirmed.",
     context_details: "Long signal context.",
     why_this_classification: "A public source matched the event context.",
     source_support: classification === "No Clear Cause" ? "none" : "medium",
@@ -726,6 +727,8 @@ test("v0.2 enrichment replaces Signal news copy when no accepted source survives
   staleNewsResult.headline = "Fed news drove the move";
   staleNewsResult.collapsed_summary =
     "Reuters reported a Fed catalyst and Binance news around this Signal Event.";
+  staleNewsResult.source_free_signal_insight =
+    "Reuters and other sources did not line up with this Signal Event.";
   staleNewsResult.sources = [
     {
       title: "Old catalyst recap",
@@ -755,10 +758,10 @@ test("v0.2 enrichment replaces Signal news copy when no accepted source survives
   assert.equal(brief.headline, "No clear public catalyst");
   assert.match(
     brief.collapsed_summary ?? "",
-    /range break upside pressure across 4 of 5 tracked symbols/,
+    /chart evidence points to range break upside pressure across 4 of 5 tracked symbols/,
   );
-  assert.match(brief.collapsed_summary ?? "", /BTCUSDT leading the move/);
-  assert.match(brief.collapsed_summary ?? "", /average move of \+1\.80%/);
+  assert.match(brief.collapsed_summary ?? "", /BTCUSDT setting the pace/);
+  assert.match(brief.collapsed_summary ?? "", /basket averaging \+1\.80%/);
   assert.doesNotMatch(brief.collapsed_summary ?? "", /Signal Event reads as/);
   assert.doesNotMatch(brief.collapsed_summary ?? "", /Avg Change/);
   assert.equal(

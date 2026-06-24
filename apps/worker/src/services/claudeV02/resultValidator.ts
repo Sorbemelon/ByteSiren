@@ -285,7 +285,7 @@ export function validateSignalEventClaudeResultV02(
 
   const headline = stringField(input, "headline");
   const collapsedSummary = stringField(input, "collapsed_summary");
-  const sourceFreeSignalInsight = optionalStringField(
+  const sourceFreeSignalInsight = stringField(
     input,
     "source_free_signal_insight",
   );
