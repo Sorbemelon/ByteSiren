@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   applyBindings,
+  claudeEnrichmentReportResult,
   parseClaudeEnrichmentArgs,
   redact,
   runClaudeEnrichmentCli,
@@ -114,4 +115,33 @@ test("v0.2 Claude enrichment redacts Claude and GitHub secrets", () => {
   assert.equal(value.includes("ghp_abcdef"), false);
   assert.equal(value.includes("github_pat_secret"), false);
   assert.match(value, /x-api-key \[redacted\]/);
+});
+
+test("v0.2 Claude enrichment report marks failed live target as needs fix", () => {
+  assert.equal(
+    claudeEnrichmentReportResult({
+      options: { live: true },
+      liveResult: { status: "failed" },
+      publicFeedSmoke: {
+        ok: true,
+        version: "v02",
+        public_audit_events: 0,
+        market_story_forbidden_field_count: 0,
+      },
+    }),
+    "NEEDS_FIX",
+  );
+  assert.equal(
+    claudeEnrichmentReportResult({
+      options: { live: true },
+      liveResult: { status: "success" },
+      publicFeedSmoke: {
+        ok: true,
+        version: "v02",
+        public_audit_events: 0,
+        market_story_forbidden_field_count: 0,
+      },
+    }),
+    "PASS",
+  );
 });

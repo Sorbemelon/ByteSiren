@@ -636,6 +636,23 @@ async function fetchPublicFeedSmoke(apiBase) {
   }
 }
 
+export function claudeEnrichmentReportResult({
+  options,
+  liveResult,
+  publicFeedSmoke,
+}) {
+  const liveResultOk =
+    !options.live || !liveResult || liveResult.status !== "failed";
+
+  return liveResultOk &&
+    publicFeedSmoke.ok &&
+    publicFeedSmoke.version === "v02" &&
+    publicFeedSmoke.public_audit_events === 0 &&
+    publicFeedSmoke.market_story_forbidden_field_count === 0
+    ? "PASS"
+    : "NEEDS_FIX";
+}
+
 async function writeReports(report, options) {
   await mkdir(options.reportDir, { recursive: true });
   const timestamp = safeTimestamp();
@@ -706,13 +723,11 @@ export async function runClaudeEnrichmentCli(options) {
 
   const countsAfter = await readCounts(db);
   const publicFeedSmoke = await fetchPublicFeedSmoke(options.apiBase);
-  const result =
-    publicFeedSmoke.ok &&
-    publicFeedSmoke.version === "v02" &&
-    publicFeedSmoke.public_audit_events === 0 &&
-    publicFeedSmoke.market_story_forbidden_field_count === 0
-      ? "PASS"
-      : "NEEDS_FIX";
+  const result = claudeEnrichmentReportResult({
+    options,
+    liveResult,
+    publicFeedSmoke,
+  });
   const report = {
     result,
     generated_at: new Date().toISOString(),
@@ -776,6 +791,10 @@ async function main() {
       ),
     ),
   );
+
+  if (report.result !== "PASS") {
+    process.exitCode = 1;
+  }
 }
 
 if (

@@ -162,7 +162,12 @@ test("AnthropicClient treats fetch exceptions as retryable unavailable errors", 
   const client = new AnthropicClient({
     apiKey: "test-key",
     fetcher: async () => {
-      throw new Error("network timeout");
+      const error = new Error("network timeout sk-ant-secret");
+      Object.assign(error, {
+        code: "ETIMEDOUT",
+        cause: { code: "UND_ERR_CONNECT_TIMEOUT" },
+      });
+      throw error;
     },
     retries: 0,
     now: () => new Date("2026-06-16T12:00:00.000Z"),
@@ -173,6 +178,37 @@ test("AnthropicClient treats fetch exceptions as retryable unavailable errors", 
   assert.equal(result.ok, false);
   assert.equal(result.parsed.retryable, true);
   assert.equal(result.parsed.metadata.error_code, "unavailable");
+  assert.match(result.parsed.error_message ?? "", /ETIMEDOUT/);
+  assert.match(result.parsed.error_message ?? "", /UND_ERR_CONNECT_TIMEOUT/);
+  assert.equal(result.parsed.error_message?.includes("sk-ant-secret"), false);
+});
+
+test("AnthropicClient stores safe HTTP provider error details", async () => {
+  const client = new AnthropicClient({
+    apiKey: "test-key",
+    fetcher: async () =>
+      new Response(
+        JSON.stringify({
+          error: {
+            type: "overloaded_error",
+            message: "Anthropic service is temporarily overloaded.",
+          },
+        }),
+        { status: 529 },
+      ),
+    retries: 0,
+    now: () => new Date("2026-06-16T12:00:00.000Z"),
+  });
+
+  const result = await client.createIncidentBrief(request());
+
+  assert.equal(result.ok, false);
+  assert.equal(result.parsed.retryable, true);
+  assert.equal(result.parsed.metadata.error_code, "unavailable");
+  assert.match(
+    result.parsed.error_message ?? "",
+    /HTTP 529 \(overloaded_error: Anthropic service is temporarily overloaded\.\)/,
+  );
 });
 
 test("parser strips markdown fences and parses valid JSON text content", () => {

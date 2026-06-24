@@ -83,6 +83,7 @@ test("v0.2 Claude enrichment workflow is manual-only and bounded to Signal/Daily
   assert.equal(workflow.includes("v02-snapshot-refresh.yml"), false);
   assert.equal(workflow.includes("market_story_v02"), false);
   assert.equal(workflow.includes("audit_event_v02"), false);
+  assert.match(workflow, /include-hidden-files: true/);
 });
 
 test("Claude secrets stay out of frontend and no scripts depend on root Wrangler config", () => {

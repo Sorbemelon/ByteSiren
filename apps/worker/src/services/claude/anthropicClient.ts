@@ -13,7 +13,7 @@ const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_RETRIES = 2;
 const RETRYABLE_HTTP_STATUSES = new Set([
-  408, 409, 425, 429, 500, 502, 503, 504,
+  408, 409, 425, 429, 500, 502, 503, 504, 529,
 ]);
 const RETRYABLE_TOOL_ERRORS = new Set<ClaudeToolErrorCode>([
   "too_many_requests",
@@ -59,12 +59,12 @@ export class AnthropicClient {
 
       try {
         response = await this.fetchWithTimeout(body);
-      } catch {
+      } catch (error) {
         lastResult = errorResult({
           request,
           generatedAt: this.now().toISOString(),
           errorCode: "unavailable",
-          message: "Claude request failed before a response.",
+          message: safeTransportErrorMessage(error),
           retryable: true,
         });
 
@@ -385,13 +385,69 @@ async function responseToErrorResult(
   const errorCode =
     httpStatusToErrorCode(response.status, bodyCode) ?? "http_error";
 
+  const bodyMessage = stringField(recordField(body, "error"), "message");
+  const detail = [bodyCode, bodyMessage && safeDiagnosticText(bodyMessage)]
+    .filter(Boolean)
+    .join(": ");
+
   return errorResult({
     request,
     generatedAt,
     errorCode,
-    message: `Claude request failed with HTTP ${response.status}.`,
+    message: `Claude request failed with HTTP ${response.status}${detail ? ` (${detail})` : ""}.`,
     retryable: RETRYABLE_HTTP_STATUSES.has(response.status),
   });
+}
+
+function safeTransportErrorMessage(error: unknown): string {
+  const detail = errorDiagnostic(error);
+
+  return detail
+    ? `Claude request failed before a response (${detail}).`
+    : "Claude request failed before a response.";
+}
+
+function errorDiagnostic(error: unknown): string | null {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  const record = error as Record<string, unknown>;
+  const name = typeof record.name === "string" ? record.name.trim() : "";
+  const message =
+    typeof record.message === "string"
+      ? safeDiagnosticText(record.message)
+      : "";
+  const code = typeof record.code === "string" ? record.code.trim() : "";
+  const cause =
+    record.cause && typeof record.cause === "object"
+      ? (record.cause as Record<string, unknown>)
+      : null;
+  const causeCode =
+    cause && typeof cause.code === "string" ? cause.code.trim() : "";
+  const causeName =
+    cause && typeof cause.name === "string" ? cause.name.trim() : "";
+  const pieces = [
+    name,
+    code,
+    message && message !== name ? message : "",
+    causeCode && causeCode !== code ? `cause:${causeCode}` : "",
+    causeName && causeName !== name ? `cause:${causeName}` : "",
+  ].filter(Boolean);
+
+  return pieces.length > 0 ? pieces.join(" ").slice(0, 180) : null;
+}
+
+function safeDiagnosticText(value: string): string {
+  return value
+    .replace(/sk-ant-[A-Za-z0-9_-]+/g, "sk-ant-[redacted]")
+    .replace(/github_pat_[A-Za-z0-9_]+/g, "github_pat_[redacted]")
+    .replace(/ghp_[A-Za-z0-9_]+/g, "ghp_[redacted]")
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/g, "Bearer [redacted]")
+    .replace(/x-api-key['":\s]+[A-Za-z0-9._-]+/gi, "x-api-key [redacted]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 140);
 }
 
 function errorResult(input: {

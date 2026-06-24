@@ -188,3 +188,4 @@ jobs:
             .tmp/v02-phase-g-claude-enrichment-run-*.json
             .tmp/v02-phase-g-claude-enrichment-run-*.md
           if-no-files-found: warn
+          include-hidden-files: true
