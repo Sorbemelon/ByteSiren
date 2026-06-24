@@ -1,3 +1,11 @@
+<p align="center">
+  <img
+    src="apps/web/public/brand/bytesiren_logo-name_transparent.png"
+    alt="ByteSiren"
+    width="360"
+  />
+</p>
+
 # ByteSiren
 
 **AI-assisted crypto market monitoring for public market signals.**
