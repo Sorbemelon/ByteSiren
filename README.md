@@ -1,6 +1,6 @@
 <p align="center">
   <img
-    src="https://raw.githubusercontent.com/Sorbemelon/ByteSiren/main/apps/web/public/brand/bytesiren_readme_logo-name.png"
+    src="apps/web/public/brand/bytesiren_readme_logo-name.png"
     alt="ByteSiren"
     width="520"
   />
