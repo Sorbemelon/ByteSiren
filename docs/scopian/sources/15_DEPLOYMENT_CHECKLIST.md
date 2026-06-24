@@ -537,18 +537,18 @@ node scripts/v02-remote-pipeline-smoke.mjs \
 
 Only if the resumed day fails again and the owner approves continuing, add `--fallback-hours 12` to split the failed detector day into UTC half-day target windows. If a half-day window itself exceeds Worker limits, use adaptive smaller windows such as `--fallback-hours 6,3,1` so the script can split failed detector windows recursively before stopping. Do not run Market Stories, Daily Overviews, `FEED_VERSION=v02`, or Claude until detector chunks complete and counts are reviewed.
 
-## J. Ongoing v0.2 snapshot refresh
+## J. Ongoing v0.2 refresh
 
-Phase D moves ongoing deterministic v0.2 refresh out of the production Worker. The Worker-side historical detector rebuild exceeded Cloudflare resource limits, so normal refresh uses the offline rebuild/import path:
+Phase D proved an offline deterministic snapshot rebuild/import path because the production Worker exceeded Cloudflare resource limits during historical v0.2 detector rebuilds. Phase D5 makes that full 31-day snapshot path a manual recovery/backfill tool only. Normal cron refresh must be incremental, like v0.1: ingest recent candles, run a bounded v0.2 Signal/Audit detector window, and refresh only current/open Market Stories.
 
 ```bash
 # Plan only. Reads remote candle coverage, exports a candle window, rebuilds local
 # deterministic v0.2 rows, and prepares v0.2-only import SQL.
 node scripts/v02-snapshot-refresh.mjs --dry-run
 
-# Owner-approved manual live refresh. Temporarily freezes scheduled jobs and
-# switches the public feed to v01 during reset/import, then restores v02 after
-# v02 API smoke passes.
+# Owner-approved manual live snapshot recovery/backfill. Temporarily freezes
+# scheduled jobs and switches the public feed to v01 during reset/import, then
+# restores v02 after v02 API smoke passes.
 node scripts/v02-snapshot-refresh.mjs \
   --manual-refresh \
   --live \
@@ -565,7 +565,7 @@ The refresh imports only deterministic v0.2 tables:
 - `market_story_members_v02`
 - `daily_overviews_v02`
 
-It must not import `claude_briefs_v02`, `source_references_v02`, legacy Claude/source tables, candles/features, incidents, public view counts, or `job_runs`.
+It must not import `claude_briefs_v02`, `source_references_v02`, legacy Claude/source tables, candles/features, incidents, public view counts, or `job_runs`. Do not schedule this full snapshot workflow as the normal daily refresh.
 
 Before every live import, create rollback artifacts under `.tmp/v02-refresh-rollback/<UTC_TIMESTAMP>/`. If rollback export fails, do not import the new snapshot. The simple live-feed safety model is:
 
@@ -575,22 +575,49 @@ Before every live import, create rollback artifacts under `.tmp/v02-refresh-roll
 4. Deploy the normal tracked Worker config with `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true`.
 5. Smoke the v02 API and confirm public Audit Events and source count are both zero.
 
-`.github/workflows/v02-snapshot-refresh.yml` is the deterministic v0.2 snapshot refresh workflow. Phase D2 proved the workflow with `workflow_dispatch` run `28066280181` on `main`, but the follow-up E2 check found no GitHub native `schedule` run yet. Phase D3 therefore moved the scheduler to Cloudflare Cron while keeping GitHub Actions as the executor.
+`.github/workflows/v02-snapshot-refresh.yml` remains available through manual `workflow_dispatch` for owner-supervised recovery/backfill. Phase D2 proved the workflow with `workflow_dispatch` run `28066280181` on `main`. Phase D3 briefly proved Cloudflare Cron could dispatch that workflow, but D5 removes the full snapshot dispatch from the normal cron path.
 
 ```text
-Cloudflare Cron -> Worker lightweight dispatch -> GitHub workflow_dispatch -> GitHub Actions offline rebuild/import
+Manual owner action -> GitHub workflow_dispatch -> GitHub Actions offline rebuild/import
 ```
 
-The Worker must not run historical v0.2 detector/rebuild work. It only builds a safe dispatch payload, checks for an active queued/in-progress refresh run, and calls the GitHub workflow dispatch API using the existing Worker secret `GITHUB_INGEST_DISPATCH_TOKEN`. Required v0.2 refresh vars:
+The Worker must not run historical v0.2 detector/rebuild work and must not dispatch the full snapshot workflow on a normal schedule. Keep the manual workflow config available for recovery:
 
 ```text
-ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true
+ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=false
 GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren
 GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml
 GITHUB_REFRESH_WORKFLOW_REF=main
 ```
 
-Phase D3 proof dispatched `workflow_dispatch` run `28068735301` from the protected Worker admin endpoint, and the run completed successfully on `main` commit `3d9e16d`. The GitHub workflow requires the repository secret `CLOUDFLARE_API_TOKEN` and must not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase. Keep `workflow_dispatch` available for owner-supervised refreshes. The GitHub native `schedule:` block is intentionally removed to avoid duplicate refreshes; Cloudflare Cron is the scheduler.
+Incremental v0.2 refresh runs from the existing detector cron after market ingest has had time to update recent candles:
+
+```text
+Cloudflare Cron market ingest dispatch -> GitHub market-ingest workflow -> Worker detector cron -> bounded v0.2 incremental refresh
+```
+
+Tracked defaults keep the incremental path off until the remote canary passes:
+
+```text
+ENABLE_V02_INCREMENTAL_REFRESH=false
+ENABLE_V02_INCREMENTAL_SIGNALS=true
+ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
+V02_INCREMENTAL_TARGET_WINDOW_HOURS=6
+V02_INCREMENTAL_LOOKBACK_HOURS=24
+V02_MARKET_STORY_OPEN_TTL_HOURS=24
+```
+
+After the protected canary passes, production may set `ENABLE_V02_INCREMENTAL_REFRESH=true`. The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. It must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
+
+Claude triggering for new Signal Events is a future GitHub-executed phase. The D5 scaffold is bounded and disabled by default:
+
+```text
+ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=false
+V02_SIGNAL_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
+V02_SIGNAL_CLAUDE_DISPATCH_LIMIT=3
+```
+
+Do not enable this scaffold until the owner approves Phase G. Worker-side long-running Claude remains prohibited.
 
 ## K. Public v0.2 hosted smoke
 

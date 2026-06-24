@@ -13,7 +13,6 @@ import {
   DETECTOR_CRON,
   GITHUB_INGEST_DISPATCH_CRON,
   LEGACY_POLL_MARKET_CRON,
-  V02_REFRESH_WORKFLOW_DISPATCH_CRON,
 } from "./config.ts";
 
 const symbols = [
@@ -24,6 +23,7 @@ const symbols = [
   "XRPUSDT",
 ] as const;
 const now = new Date("2026-06-16T12:00:00.000Z");
+const removedV02SnapshotCron = "30 1 * * *";
 
 function seededRows(): MarketCandle[] {
   return symbols.flatMap((symbol) =>
@@ -601,10 +601,7 @@ test("scheduled crons no-op when scheduled jobs are frozen", async () => {
       scheduledController(GITHUB_INGEST_DISPATCH_CRON),
       env,
     );
-    await worker.scheduled(
-      scheduledController(V02_REFRESH_WORKFLOW_DISPATCH_CRON),
-      env,
-    );
+    await worker.scheduled(scheduledController(removedV02SnapshotCron), env);
     await worker.scheduled(scheduledController(DETECTOR_CRON), env);
     await worker.scheduled(scheduledController(LEGACY_POLL_MARKET_CRON), env);
     await worker.scheduled(scheduledController(CLEANUP_CRON), env);
@@ -638,9 +635,49 @@ test("scheduled detector cron runs detector only", async () => {
   );
   assert.equal(tables.signal_events_v02.length, 0);
   assert.equal(
+    tables.job_runs.some(
+      (row) => row.job_name === "run_incremental_signals_v02",
+    ),
+    false,
+  );
+  assert.equal(
     tables.job_runs.some((row) => row.job_name === "poll_market"),
     false,
   );
+});
+
+test("scheduled detector cron runs incremental v0.2 refresh only when enabled", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+    ENABLE_V02_INCREMENTAL_REFRESH: "true",
+    ENABLE_V02_INCREMENTAL_SIGNALS: "true",
+    ENABLE_V02_INCREMENTAL_MARKET_STORIES: "true",
+  };
+
+  await worker.scheduled(scheduledController(DETECTOR_CRON), env);
+
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_detector"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some(
+      (row) => row.job_name === "run_incremental_signals_v02",
+    ),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some(
+      (row) => row.job_name === "run_incremental_market_stories_v02",
+    ),
+    true,
+  );
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
 });
 
 test("scheduled detector cron can run v0.2 detector behind DETECTOR_VERSION", async () => {
@@ -858,7 +895,7 @@ test("scheduled GitHub ingest dispatch records skipped when disabled", async () 
   );
 });
 
-test("scheduled v0.2 refresh dispatch records successful workflow dispatch", async () => {
+test("old scheduled v0.2 snapshot refresh cron is inert", async () => {
   const { db, tables } = createMemoryD1();
   const env: Env = {
     DB: db,
@@ -868,65 +905,28 @@ test("scheduled v0.2 refresh dispatch records successful workflow dispatch", asy
     GITHUB_REFRESH_WORKFLOW_REF: "main",
     GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
   };
-  const calls: Array<{ url: string; init: RequestInit | undefined }> = [];
+  let called = false;
   const fetcher: typeof fetch = async (input, init) => {
-    const url = String(input);
-    calls.push({ url, init });
-
-    if (url.includes("/runs?")) {
-      return Response.json({ workflow_runs: [] }, { status: 200 });
-    }
-
-    const body = JSON.parse(String(init?.body)) as {
-      ref: string;
-      inputs: Record<string, string>;
-    };
-
-    assert.equal(body.ref, "main");
-    assert.equal(body.inputs.trigger_source, "cloudflare_cron");
-    assert.equal(body.inputs.refresh_mode, "scheduled");
-    assert.equal(body.inputs.dry_run, "false");
-    assert.equal(body.inputs.confirm_live, "true");
-
+    called = true;
+    assert.equal(String(input).includes("/dispatches"), false);
+    assert.equal(init, undefined);
     return new Response(null, { status: 204 });
   };
 
   await withMockFetch(fetcher, async () => {
-    await worker.scheduled(
-      scheduledController(V02_REFRESH_WORKFLOW_DISPATCH_CRON),
-      env,
-    );
+    await worker.scheduled(scheduledController(removedV02SnapshotCron), env);
   });
 
-  const job = tables.job_runs.find(
-    (row) => row.job_name === "v02_snapshot_refresh_dispatch",
-  );
-  const metadata = JSON.parse(job?.metadata_json ?? "{}") as {
-    status: number;
-    dispatch_status: string;
-    workflow: string;
-    ref: string;
-    inputs: Record<string, string>;
-  };
-  const serializedJob = JSON.stringify(job);
-
-  assert.equal(calls.length, 2);
-  assert.match(calls[0].url, /v02-snapshot-refresh\.yml\/runs\?/);
-  assert.match(calls[1].url, /v02-snapshot-refresh\.yml\/dispatches$/);
-  assert.equal(job?.status, "success");
+  assert.equal(called, false);
   assert.equal(
-    job?.message,
-    "v0.2 refresh workflow dispatched: v02-snapshot-refresh.yml on main.",
+    tables.job_runs.some(
+      (row) => row.job_name === "v02_snapshot_refresh_dispatch",
+    ),
+    false,
   );
-  assert.equal(metadata.status, 204);
-  assert.equal(metadata.dispatch_status, "dispatched");
-  assert.equal(metadata.workflow, "v02-snapshot-refresh.yml");
-  assert.equal(metadata.ref, "main");
-  assert.equal(metadata.inputs.trigger_source, "cloudflare_cron");
-  assert.equal(serializedJob.includes("secret-github-token"), false);
 });
 
-test("scheduled v0.2 refresh dispatch records skipped when disabled", async () => {
+test("old scheduled v0.2 snapshot refresh cron is inert even when disabled", async () => {
   const { db, tables } = createMemoryD1();
   const env: Env = {
     DB: db,
@@ -937,21 +937,14 @@ test("scheduled v0.2 refresh dispatch records skipped when disabled", async () =
   };
 
   await withMockFetch(fetcher, async () => {
-    await worker.scheduled(
-      scheduledController(V02_REFRESH_WORKFLOW_DISPATCH_CRON),
-      env,
-    );
+    await worker.scheduled(scheduledController(removedV02SnapshotCron), env);
   });
 
   const job = tables.job_runs.find(
     (row) => row.job_name === "v02_snapshot_refresh_dispatch",
   );
 
-  assert.equal(job?.status, "skipped");
-  assert.equal(
-    job?.message,
-    "v0.2 refresh workflow dispatch skipped: ENABLE_V02_REFRESH_WORKFLOW_DISPATCH is not true.",
-  );
+  assert.equal(job, undefined);
 });
 
 test("scheduled cleanup cron runs cleanup only", async () => {
@@ -1937,6 +1930,101 @@ test("admin v0.2 refresh workflow dispatch requires v0.2 admin and dispatch flag
   assert.equal(toolsOff.status, 404);
   assert.equal(dispatchOff.status, 404);
   assert.equal(adminOff.headers.get("access-control-allow-origin"), null);
+});
+
+test("admin v0.2 incremental refresh requires v0.2 admin tools", async () => {
+  const request = new Request(
+    "http://localhost/api/admin/v02/run-incremental-refresh",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({ dry_run: true }),
+    },
+  );
+  const adminOff = await worker.fetch(request.clone(), {
+    DB: createMemoryD1().db,
+    ENABLE_ADMIN_MAINTENANCE: "false",
+    ENABLE_V02_ADMIN_TOOLS: "true",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+  });
+  const toolsOff = await worker.fetch(request.clone(), {
+    DB: createMemoryD1().db,
+    ENABLE_ADMIN_MAINTENANCE: "true",
+    ENABLE_V02_ADMIN_TOOLS: "false",
+    ADMIN_BACKFILL_TOKEN: "test-admin-token",
+  });
+
+  assert.equal(adminOff.status, 404);
+  assert.equal(toolsOff.status, 404);
+  assert.equal(adminOff.headers.get("access-control-allow-origin"), null);
+});
+
+test("admin v0.2 incremental refresh dry-run writes no rows", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+  });
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-incremental-refresh", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        dry_run: true,
+        target_window_hours: 6,
+        lookback_hours: 24,
+        run_market_stories: true,
+        dispatch_claude: false,
+      }),
+    }),
+    {
+      DB: db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+  const serialized = JSON.stringify(body);
+
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.dry_run, true);
+  assert.equal(serialized.includes("test-admin-token"), false);
+  assert.equal(tables.signal_events_v02.length, 0);
+  assert.equal(tables.market_stories_v02.length, 0);
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+  assert.equal(tables.job_runs.length, 0);
+});
+
+test("admin v0.2 incremental refresh live requires confirmation", async () => {
+  const response = await worker.fetch(
+    new Request("http://localhost/api/admin/v02/run-incremental-refresh", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-bytesiren-admin-token": "test-admin-token",
+      },
+      body: JSON.stringify({
+        dry_run: false,
+      }),
+    }),
+    {
+      DB: createMemoryD1().db,
+      ENABLE_ADMIN_MAINTENANCE: "true",
+      ENABLE_V02_ADMIN_TOOLS: "true",
+      ADMIN_BACKFILL_TOKEN: "test-admin-token",
+    },
+  );
+  const body = await readJson(response);
+
+  assert.equal(response.status, 400);
+  assert.equal((body.error as Record<string, unknown>).code, "invalid_request");
 });
 
 test("admin v0.2 refresh workflow dry-run does not call GitHub", async () => {

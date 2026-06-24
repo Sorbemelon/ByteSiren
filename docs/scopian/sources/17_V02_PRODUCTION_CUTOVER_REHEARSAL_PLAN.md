@@ -306,7 +306,7 @@ Live chunk execution requires both `--live` and `--confirm-remote-v02-pipeline`.
 
 During owner-approved fresh remote v0.2 rebuilds, set `ENABLE_SCHEDULED_JOBS=false` before the v0.2 reset and keep it false until after the short smoke window is complete and the intended public feed version is verified. This freezes scheduled write paths while leaving public HTTP reads available. Restore `ENABLE_SCHEDULED_JOBS=true` before ending the maintenance window.
 
-Phase D ongoing refresh uses the Phase B2 offline rebuild/import path instead of the production Worker historical detector path. The refresh command is:
+Phase D proved the Phase B2 offline rebuild/import path instead of the production Worker historical detector path. Phase D5 makes that full snapshot path manual-only. Use it for owner-approved recovery/backfill, not normal cron:
 
 ```bash
 node scripts/v02-snapshot-refresh.mjs --dry-run
@@ -318,7 +318,7 @@ node scripts/v02-snapshot-refresh.mjs \
   --rollback-on-fail
 ```
 
-The refresh must:
+The manual snapshot refresh must:
 
 - export current deterministic v0.2 rows to `.tmp/v02-refresh-rollback/<UTC_TIMESTAMP>/` before reset/import
 - import only `signal_events_v02`, `signal_event_symbols_v02`, `audit_events_v02`, `market_stories_v02`, `market_story_members_v02`, and `daily_overviews_v02`
@@ -327,13 +327,40 @@ The refresh must:
 - temporarily use `FEED_VERSION=v01` during the reset/import window to avoid exposing an empty v02 feed
 - restore `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true` after a clean v02 API smoke
 
-`.github/workflows/v02-snapshot-refresh.yml` is available for manual `workflow_dispatch`. Phase D2 proved dispatch with run `28066280181` on `main`, but E2 found no GitHub native scheduled run yet. Phase D3 changes the scheduler to Cloudflare Cron:
+`.github/workflows/v02-snapshot-refresh.yml` remains available for manual `workflow_dispatch`. Phase D2 proved dispatch with run `28066280181` on `main`, and Phase D3 proved a protected Worker dispatch with run `28068735301`. D5 removes full snapshot dispatch from the normal cron path:
 
 ```text
-Cloudflare Cron -> Worker lightweight dispatch -> GitHub workflow_dispatch -> GitHub Actions offline rebuild/import
+Owner manual dispatch -> GitHub Actions offline rebuild/import
 ```
 
-The Worker dispatch path requires `ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true`, `GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren`, `GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml`, `GITHUB_REFRESH_WORKFLOW_REF=main`, and the Worker secret `GITHUB_INGEST_DISPATCH_TOKEN`. It must dispatch only and must not run historical detector/rebuild work in the Worker. Required GitHub repository secret: `CLOUDFLARE_API_TOKEN`. Do not add `ANTHROPIC_API_KEY`; Claude remains disabled and separate. Phase D3 proof dispatched `workflow_dispatch` run `28068735301` on `main` commit `3d9e16d`, and the run completed successfully. The GitHub native `schedule:` block is removed after that proof to avoid duplicate refreshes; Cloudflare Cron is the daily scheduler.
+Tracked production keeps:
+
+```text
+ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=false
+```
+
+Normal v0.2 refresh is incremental. The existing market ingest workflow continues on the 15-minute cadence. The existing Worker detector cron may run bounded v0.2 incremental Signal/Audit detection and current/open Market Story refresh only when `ENABLE_V02_INCREMENTAL_REFRESH=true`:
+
+```text
+ENABLE_V02_INCREMENTAL_REFRESH=false initially, true only after canary
+ENABLE_V02_INCREMENTAL_SIGNALS=true
+ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
+V02_INCREMENTAL_TARGET_WINDOW_HOURS=6
+V02_INCREMENTAL_LOOKBACK_HOURS=24
+V02_MARKET_STORY_OPEN_TTL_HOURS=24
+```
+
+This incremental path must not run the historical detector rebuild, reset v0.2 tables, import snapshot SQL, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or mutate old v0.1 Claude/source tables. Market Story stays deterministic-only and source-free.
+
+The D5 Claude workflow dispatch scaffold is disabled and future-only:
+
+```text
+ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=false
+V02_SIGNAL_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
+V02_SIGNAL_CLAUDE_DISPATCH_LIMIT=3
+```
+
+Do not enable it before an owner-approved Claude phase.
 
 Verify counts after pipeline:
 

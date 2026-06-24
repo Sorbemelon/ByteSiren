@@ -41,6 +41,11 @@ export interface MarketStoryV02WriteCounts {
   market_story_members: number;
 }
 
+export interface MarketStoryV02Range {
+  startIso: string;
+  endIso: string;
+}
+
 function changedRows(result: D1Result<unknown>): number {
   return typeof result.meta.changes === "number" ? result.meta.changes : 0;
 }
@@ -148,10 +153,11 @@ function auditRowToStoryEvent(
 
 export async function listSignalEventsV02ForStoryGeneration(
   db: D1Database,
+  range?: MarketStoryV02Range,
 ): Promise<MarketStorySourceEventV02[]> {
-  const rows = await db
-    .prepare(
-      `SELECT
+  const rangeClause = range ? "WHERE event_end >= ? AND event_start <= ?" : "";
+  const statement = db.prepare(
+    `SELECT
         id,
         event_start,
         event_end,
@@ -169,19 +175,25 @@ export async function listSignalEventsV02ForStoryGeneration(
         macro_aligned,
         suppress_reason
       FROM signal_events_v02
+      ${rangeClause}
       ORDER BY event_start ASC`,
-    )
-    .all<SignalEventStoryRow>();
+  );
+  const rows = range
+    ? await statement
+        .bind(range.startIso, range.endIso)
+        .all<SignalEventStoryRow>()
+    : await statement.all<SignalEventStoryRow>();
 
   return rows.results.map(signalRowToStoryEvent);
 }
 
 export async function listAuditEventsV02ForStoryGeneration(
   db: D1Database,
+  range?: MarketStoryV02Range,
 ): Promise<MarketStorySourceEventV02[]> {
-  const rows = await db
-    .prepare(
-      `SELECT
+  const rangeClause = range ? "WHERE event_end >= ? AND event_start <= ?" : "";
+  const statement = db.prepare(
+    `SELECT
         id,
         event_start,
         event_end,
@@ -193,9 +205,14 @@ export async function listAuditEventsV02ForStoryGeneration(
         suppress_reason,
         evidence_json
       FROM audit_events_v02
+      ${rangeClause}
       ORDER BY event_start ASC`,
-    )
-    .all<AuditEventStoryRow>();
+  );
+  const rows = range
+    ? await statement
+        .bind(range.startIso, range.endIso)
+        .all<AuditEventStoryRow>()
+    : await statement.all<AuditEventStoryRow>();
 
   return rows.results.map(auditRowToStoryEvent);
 }
@@ -373,6 +390,34 @@ async function pruneMarketStoryOutputV02(
   await deleteStoriesByIds(db, staleIds);
 }
 
+async function storyIdsOverlappingRange(
+  db: D1Database,
+  range: MarketStoryV02Range,
+): Promise<string[]> {
+  const result = await db
+    .prepare(
+      `SELECT id
+       FROM market_stories_v02
+       WHERE story_end >= ? AND story_start <= ?`,
+    )
+    .bind(range.startIso, range.endIso)
+    .all<{ id: string }>();
+
+  return result.results.map((row) => row.id);
+}
+
+async function pruneMarketStoryOutputV02ForRange(
+  db: D1Database,
+  stories: MarketStoryV02[],
+  range: MarketStoryV02Range,
+): Promise<void> {
+  const keep = new Set(stories.map((story) => story.id));
+  const existingIds = await storyIdsOverlappingRange(db, range);
+  const staleIds = existingIds.filter((id) => !keep.has(id));
+
+  await deleteStoriesByIds(db, staleIds);
+}
+
 export async function upsertMarketStoryOutputV02(
   db: D1Database,
   output: {
@@ -381,6 +426,34 @@ export async function upsertMarketStoryOutputV02(
   },
 ): Promise<MarketStoryV02WriteCounts> {
   await pruneMarketStoryOutputV02(db, output.market_stories);
+  const stories = await upsertMarketStoriesV02(db, output.market_stories);
+  let members = 0;
+
+  for (const story of output.market_stories) {
+    members += await replaceMarketStoryMembersV02(
+      db,
+      story.id,
+      output.market_story_members.filter(
+        (member) => member.market_story_id === story.id,
+      ),
+    );
+  }
+
+  return {
+    market_stories: stories,
+    market_story_members: members,
+  };
+}
+
+export async function upsertMarketStoryOutputV02ForRange(
+  db: D1Database,
+  output: {
+    market_stories: MarketStoryV02[];
+    market_story_members: MarketStoryMemberV02[];
+  },
+  range: MarketStoryV02Range,
+): Promise<MarketStoryV02WriteCounts> {
+  await pruneMarketStoryOutputV02ForRange(db, output.market_stories, range);
   const stories = await upsertMarketStoriesV02(db, output.market_stories);
   let members = 0;
 

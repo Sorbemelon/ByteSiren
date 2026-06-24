@@ -270,6 +270,51 @@ test("runMarketStoriesV02 prunes stale stories and members", async () => {
   assert.equal(tables.market_stories_v02.length, result.story_count);
 });
 
+test("runMarketStoriesV02 bounded mode preserves stories outside the refresh window", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [
+      signalRow(
+        "signal_a",
+        "2026-06-15T00:00:00.000Z",
+        "2026-06-15T01:00:00.000Z",
+      ),
+      signalRow(
+        "signal_b",
+        "2026-06-15T04:00:00.000Z",
+        "2026-06-15T05:00:00.000Z",
+      ),
+    ],
+    market_stories_v02: [
+      storedStoryRow(
+        "old_story",
+        "2026-06-14T00:00:00.000Z",
+        "2026-06-14T06:00:00.000Z",
+      ),
+    ],
+    market_story_members_v02: [storedStoryMemberRow("old_story", "old_signal")],
+  });
+
+  const result = await runMarketStoriesV02(db, {
+    now: new Date("2026-06-15T06:00:00.000Z"),
+    timeFrom: "2026-06-15T00:00:00.000Z",
+    timeTo: "2026-06-15T06:00:00.000Z",
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.bounded, true);
+  assert.equal(
+    tables.market_stories_v02.some((story) => story.id === "old_story"),
+    true,
+  );
+  assert.equal(
+    tables.market_story_members_v02.some(
+      (member) => member.market_story_id === "old_story",
+    ),
+    true,
+  );
+  assert.equal(tables.market_stories_v02.length, 2);
+});
+
 test("runMarketStoriesV02 clears stale stories when generation is skipped", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [

@@ -507,7 +507,9 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       if (
         this.sql.includes("FROM signal_events_v02") &&
         this.sql.includes("event_end >= ?") &&
-        this.sql.includes("event_start <= ?")
+        this.sql.includes("event_start <= ?") &&
+        this.sql.includes("SELECT id") &&
+        !this.sql.includes("ORDER BY event_start ASC")
       ) {
         const [startIso, endIso] = this.params as [string, string];
 
@@ -523,7 +525,9 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       if (
         this.sql.includes("FROM audit_events_v02") &&
         this.sql.includes("event_end >= ?") &&
-        this.sql.includes("event_start <= ?")
+        this.sql.includes("event_start <= ?") &&
+        this.sql.includes("SELECT id") &&
+        !this.sql.includes("ORDER BY event_start ASC")
       ) {
         const [startIso, endIso] = this.params as [string, string];
 
@@ -580,10 +584,19 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         this.sql.includes("FROM signal_events_v02") &&
         this.sql.includes("ORDER BY event_start ASC")
       ) {
+        const hasRange =
+          this.sql.includes("event_end >= ?") &&
+          this.sql.includes("event_start <= ?");
+        const [startIso, endIso] = this.params as [string, string];
+
         return {
-          results: [...tables.signal_events_v02].sort((a, b) =>
-            a.event_start.localeCompare(b.event_start),
-          ) as T[],
+          results: tables.signal_events_v02
+            .filter(
+              (row) =>
+                !hasRange ||
+                (row.event_end >= startIso && row.event_start <= endIso),
+            )
+            .sort((a, b) => a.event_start.localeCompare(b.event_start)) as T[],
         };
       }
 
@@ -591,10 +604,35 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         this.sql.includes("FROM audit_events_v02") &&
         this.sql.includes("ORDER BY event_start ASC")
       ) {
+        const hasRange =
+          this.sql.includes("event_end >= ?") &&
+          this.sql.includes("event_start <= ?");
+        const [startIso, endIso] = this.params as [string, string];
+
         return {
-          results: [...tables.audit_events_v02].sort((a, b) =>
-            a.event_start.localeCompare(b.event_start),
-          ) as T[],
+          results: tables.audit_events_v02
+            .filter(
+              (row) =>
+                !hasRange ||
+                (row.event_end >= startIso && row.event_start <= endIso),
+            )
+            .sort((a, b) => a.event_start.localeCompare(b.event_start)) as T[],
+        };
+      }
+
+      if (
+        this.sql.includes("FROM market_stories_v02") &&
+        this.sql.includes("story_end >= ?") &&
+        this.sql.includes("story_start <= ?")
+      ) {
+        const [startIso, endIso] = this.params as [string, string];
+
+        return {
+          results: tables.market_stories_v02
+            .filter(
+              (row) => row.story_end >= startIso && row.story_start <= endIso,
+            )
+            .map((row) => ({ id: row.id })) as T[],
         };
       }
 

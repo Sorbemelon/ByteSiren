@@ -16,6 +16,17 @@ export interface DetectorV02StoredCounts {
   audit_events: number;
 }
 
+export interface DetectorV02TableCounts {
+  signal_events_v02: number;
+  signal_event_symbols_v02: number;
+  audit_events_v02: number;
+  market_stories_v02: number;
+  market_story_members_v02: number;
+  daily_overviews_v02: number;
+  claude_briefs_v02: number;
+  source_references_v02: number;
+}
+
 function changedRows(result: D1Result<unknown>): number {
   return typeof result.meta.changes === "number" ? result.meta.changes : 0;
 }
@@ -469,6 +480,54 @@ async function idsOverlappingRange(
     .all<{ id: string }>();
 
   return result.results.map((row) => row.id);
+}
+
+export async function listSignalEventIdsV02ForRange(
+  db: D1Database,
+  range: { startIso: string; endIso: string },
+  limit = 50,
+): Promise<string[]> {
+  const result = await db
+    .prepare(
+      `SELECT id
+       FROM signal_events_v02
+       WHERE event_end >= ? AND event_start <= ?
+       ORDER BY event_start ASC, id ASC
+       LIMIT ?`,
+    )
+    .bind(range.startIso, range.endIso, Math.max(1, Math.trunc(limit)))
+    .all<{ id: string }>();
+
+  return result.results.map((row) => row.id);
+}
+
+export async function getDetectorV02TableCounts(
+  db: D1Database,
+): Promise<DetectorV02TableCounts> {
+  const row = await db
+    .prepare(
+      `SELECT
+        (SELECT COUNT(*) FROM signal_events_v02) AS signal_events_v02,
+        (SELECT COUNT(*) FROM signal_event_symbols_v02) AS signal_event_symbols_v02,
+        (SELECT COUNT(*) FROM audit_events_v02) AS audit_events_v02,
+        (SELECT COUNT(*) FROM market_stories_v02) AS market_stories_v02,
+        (SELECT COUNT(*) FROM market_story_members_v02) AS market_story_members_v02,
+        (SELECT COUNT(*) FROM daily_overviews_v02) AS daily_overviews_v02,
+        (SELECT COUNT(*) FROM claude_briefs_v02) AS claude_briefs_v02,
+        (SELECT COUNT(*) FROM source_references_v02) AS source_references_v02`,
+    )
+    .first<DetectorV02TableCounts>();
+
+  return {
+    signal_events_v02: row?.signal_events_v02 ?? 0,
+    signal_event_symbols_v02: row?.signal_event_symbols_v02 ?? 0,
+    audit_events_v02: row?.audit_events_v02 ?? 0,
+    market_stories_v02: row?.market_stories_v02 ?? 0,
+    market_story_members_v02: row?.market_story_members_v02 ?? 0,
+    daily_overviews_v02: row?.daily_overviews_v02 ?? 0,
+    claude_briefs_v02: row?.claude_briefs_v02 ?? 0,
+    source_references_v02: row?.source_references_v02 ?? 0,
+  };
 }
 
 async function deleteSignalSymbolsForEvents(

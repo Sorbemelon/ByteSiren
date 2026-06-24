@@ -21,6 +21,7 @@ import {
 } from "../jobs/runClaudeEnrichmentV02.ts";
 import { runDailyOverviewsV02 } from "../jobs/runDailyOverviewsV02.ts";
 import { runDetectorV02 } from "../jobs/runDetectorV02.ts";
+import { runIncrementalRefreshV02 } from "../jobs/runIncrementalRefreshV02.ts";
 import {
   runMarketStoriesV02,
   type RunMarketStoriesV02Result,
@@ -85,6 +86,15 @@ interface V02RefreshDispatchAdminOptions {
   force: boolean;
   confirmDispatch: boolean;
   triggerSource: string;
+}
+
+interface V02IncrementalRefreshAdminOptions {
+  dryRun: boolean;
+  confirmIncrementalRefresh: boolean;
+  targetWindowHours: number;
+  lookbackHours: number;
+  runMarketStories: boolean;
+  dispatchClaude: boolean;
 }
 
 interface V02TableCounts {
@@ -445,6 +455,64 @@ async function readV02RefreshDispatchOptions(
   };
 }
 
+function parseBoundedHours(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.max(min, Math.min(max, Math.trunc(parsed)));
+}
+
+async function readV02IncrementalRefreshOptions(
+  request: Request,
+): Promise<V02IncrementalRefreshAdminOptions> {
+  let body: Record<string, unknown> = {};
+
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    const parsed = (await request.json().catch(() => null)) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Request body must be a JSON object.");
+    }
+
+    body = parsed as Record<string, unknown>;
+  }
+
+  const dryRun = parseBoolean(body.dry_run, true);
+  const confirmIncrementalRefresh = parseBoolean(
+    body.confirm_incremental_refresh,
+    false,
+  );
+  const dispatchClaude = parseBoolean(body.dispatch_claude, false);
+
+  if (!dryRun && !confirmIncrementalRefresh) {
+    throw new Error(
+      "live incremental refresh requires confirm_incremental_refresh=true.",
+    );
+  }
+
+  return {
+    dryRun,
+    confirmIncrementalRefresh,
+    targetWindowHours: parseBoundedHours(body.target_window_hours, 6, 1, 24),
+    lookbackHours: parseBoundedHours(body.lookback_hours, 24, 24, 72),
+    runMarketStories: parseBoolean(body.run_market_stories, true),
+    dispatchClaude,
+  };
+}
+
 function dateUtcForTarget(target: ClaudeEnrichmentTargetV02): string {
   return target.payload.date_utc;
 }
@@ -768,6 +836,20 @@ async function diagnosticsResponse(env: Env): Promise<Response> {
       enable_v02_claude_sample_tools: isV02ClaudeSampleToolsEnabled(env),
       enable_v02_refresh_workflow_dispatch:
         isV02RefreshWorkflowDispatchEnabled(env),
+      enable_v02_incremental_refresh: parseBooleanFlag(
+        env.ENABLE_V02_INCREMENTAL_REFRESH,
+      ),
+      enable_v02_incremental_signals:
+        env.ENABLE_V02_INCREMENTAL_SIGNALS === undefined
+          ? true
+          : parseBooleanFlag(env.ENABLE_V02_INCREMENTAL_SIGNALS),
+      enable_v02_incremental_market_stories:
+        env.ENABLE_V02_INCREMENTAL_MARKET_STORIES === undefined
+          ? true
+          : parseBooleanFlag(env.ENABLE_V02_INCREMENTAL_MARKET_STORIES),
+      enable_v02_signal_claude_workflow_dispatch: parseBooleanFlag(
+        env.ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH,
+      ),
     },
     candles: {
       by_symbol: candleBounds,
@@ -1322,6 +1404,49 @@ export async function adminResponse(
     response.counts_after = countsAfter;
 
     return json(response);
+  }
+
+  if (url.pathname === "/api/admin/v02/run-incremental-refresh") {
+    if (request.method !== "POST") {
+      return methodNotAllowed();
+    }
+
+    if (!isMaintenanceEnabled(env)) {
+      return notFound();
+    }
+
+    if (!isV02AdminToolsEnabled(env)) {
+      return notFound();
+    }
+
+    let options: V02IncrementalRefreshAdminOptions;
+
+    try {
+      options = await readV02IncrementalRefreshOptions(request);
+    } catch (error) {
+      return jsonError(400, "invalid_request", safeErrorMessage(error));
+    }
+
+    const requestId = crypto.randomUUID();
+    const result = await runIncrementalRefreshV02(env.DB, env, {
+      dryRun: options.dryRun,
+      requestId,
+      triggerSource: "admin_canary",
+      targetWindowHours: options.targetWindowHours,
+      lookbackHours: options.lookbackHours,
+      runSignals: true,
+      runMarketStories: options.runMarketStories,
+      dispatchClaude: options.dispatchClaude,
+    });
+
+    return json({
+      ok: result.status !== "failed",
+      dry_run: options.dryRun,
+      confirm_incremental_refresh: options.confirmIncrementalRefresh,
+      dispatch_claude_requested: options.dispatchClaude,
+      request_id: requestId,
+      result,
+    });
   }
 
   if (url.pathname === "/api/admin/v02/dispatch-refresh-workflow") {
