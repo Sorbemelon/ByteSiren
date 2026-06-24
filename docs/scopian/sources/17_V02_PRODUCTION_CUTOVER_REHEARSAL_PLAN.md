@@ -327,7 +327,7 @@ The refresh must:
 - temporarily use `FEED_VERSION=v01` during the reset/import window to avoid exposing an empty v02 feed
 - restore `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true` after a clean v02 API smoke
 
-`.github/workflows/v02-snapshot-refresh.yml` is available for manual `workflow_dispatch`. Daily schedule remains pending until the manual refresh and GitHub secret setup are confirmed. Claude remains disabled and separate.
+`.github/workflows/v02-snapshot-refresh.yml` is available for manual `workflow_dispatch` and, after Phase D2 proof, a daily GitHub Actions cron at `30 1 * * *` UTC. The proof run was `28066280181` on `main`. Required GitHub secret: `CLOUDFLARE_API_TOKEN`. Do not add `ANTHROPIC_API_KEY`; Claude remains disabled and separate.
 
 Verify counts after pipeline:
 

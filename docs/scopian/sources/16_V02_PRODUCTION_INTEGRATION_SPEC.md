@@ -289,7 +289,7 @@ The refresh path must never touch:
 - `public_view_counts`
 - `job_runs`
 
-The manual workflow is `.github/workflows/v02-snapshot-refresh.yml`. It is `workflow_dispatch` only until a clean manual proof and repository secret review justify enabling a daily cron. No Claude secrets are required or allowed for deterministic snapshot refresh.
+The workflow is `.github/workflows/v02-snapshot-refresh.yml`. Phase D2 proved it with `workflow_dispatch` run `28066280181` on `main` and enabled a daily GitHub Actions cron at `30 1 * * *` UTC. `workflow_dispatch` remains available for owner-supervised refreshes. The workflow requires the repository secret `CLOUDFLARE_API_TOKEN`, uses concurrency to avoid overlapping refreshes, and must not use or require `ANTHROPIC_API_KEY`. No Claude secrets are required or allowed for deterministic snapshot refresh.
 
 The protected local v0.2 pipeline endpoint may run these explicit steps:
 

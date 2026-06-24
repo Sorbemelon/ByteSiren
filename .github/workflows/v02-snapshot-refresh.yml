@@ -27,6 +27,12 @@ on:
         options:
           - "false"
           - "true"
+  schedule:
+    - cron: "30 1 * * *"
+
+concurrency:
+  group: v02-snapshot-refresh
+  cancel-in-progress: false
 
 jobs:
   refresh:

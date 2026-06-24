@@ -575,7 +575,9 @@ Before every live import, create rollback artifacts under `.tmp/v02-refresh-roll
 4. Deploy the normal tracked Worker config with `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true`.
 5. Smoke the v02 API and confirm public Audit Events and source count are both zero.
 
-`.github/workflows/v02-snapshot-refresh.yml` is the manual workflow-dispatch wrapper. Keep it manual-only until the first manual refresh proves clean and required Cloudflare repository secrets are confirmed. Do not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase.
+`.github/workflows/v02-snapshot-refresh.yml` is the deterministic v0.2 snapshot refresh workflow. Phase D2 proved the workflow with `workflow_dispatch` run `28066280181` on `main`, then enabled a daily GitHub Actions cron at `30 1 * * *` UTC. Keep `workflow_dispatch` available for owner-supervised refreshes. The workflow requires the GitHub repository secret `CLOUDFLARE_API_TOKEN` and must not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase. It uses a concurrency group so daily and manual refreshes do not overlap.
+
+The v0.1 market-ingest workflow remains Cloudflare-Cron-dispatched and should keep its existing `workflow_dispatch`-only pattern. The v0.2 snapshot refresh cron is separate and may be revisited later if the owner wants Cloudflare Cron to dispatch it too.
 
 ## K. SEO asset note
 
