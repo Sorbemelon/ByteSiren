@@ -312,6 +312,10 @@ const SOURCELESS_SIGNAL_COPY_PATTERNS = [
   /\bsource(?:s)?\b/i,
   /\barticle(?:s)?\b/i,
   /\bpublisher(?:s)?\b/i,
+  /\bnews\b/i,
+  /\breported\b/i,
+  /\bconfirmed catalyst\b/i,
+  /\b(?:fed|fomc|cpi|ppi|jobs report)\b.*\b(?:drove|caused|triggered)\b/i,
   /\breuters\b/i,
   /\bcoindesk\b/i,
   /\bcointelegraph\b/i,
@@ -435,6 +439,17 @@ function textContainsRejectedSourceReference(
   });
 }
 
+function sourceFreeSignalTextNeedsReplacement(input: {
+  text: string;
+  sourceInputs: SourceReferenceInputV02[];
+}): boolean {
+  return (
+    SOURCELESS_SIGNAL_COPY_PATTERNS.some((pattern) =>
+      pattern.test(input.text),
+    ) || textContainsRejectedSourceReference(input.text, input.sourceInputs)
+  );
+}
+
 function noSourceSignalCopyNeedsReplacement(input: {
   result: SignalEventClaudeResultV02;
   sourceInputs: SourceReferenceInputV02[];
@@ -446,32 +461,51 @@ function noSourceSignalCopyNeedsReplacement(input: {
     input.result.why_this_classification,
   ].join("\n");
 
-  return (
-    SOURCELESS_SIGNAL_COPY_PATTERNS.some((pattern) => pattern.test(text)) ||
-    textContainsRejectedSourceReference(text, input.sourceInputs)
-  );
+  return sourceFreeSignalTextNeedsReplacement({
+    text,
+    sourceInputs: input.sourceInputs,
+  });
 }
 
 function noAcceptedSignalSourceResult(input: {
   result: SignalEventClaudeResultV02;
   payload: SignalEventClaudePayloadV02;
+  sourceInputs: SourceReferenceInputV02[];
 }): SignalEventClaudeResultV02 {
+  const sourceFreeInsight =
+    input.result.source_free_signal_insight &&
+    !sourceFreeSignalTextNeedsReplacement({
+      text: input.result.source_free_signal_insight,
+      sourceInputs: input.sourceInputs,
+    })
+      ? input.result.source_free_signal_insight
+      : null;
+  const headline = sourceFreeSignalTextNeedsReplacement({
+    text: input.result.headline,
+    sourceInputs: input.sourceInputs,
+  })
+    ? "No clear public catalyst"
+    : input.result.headline;
+
   return {
     ...input.result,
     classification: "No Clear Cause",
-    headline: "No clear public catalyst",
-    collapsed_summary: signalEvidenceOnlyNoClearCauseSummary(input.payload),
+    headline,
+    collapsed_summary:
+      sourceFreeInsight ?? signalEvidenceOnlyNoClearCauseSummary(input.payload),
     context_details: null,
     source_support: "none",
     source_timing_alignment: "none",
     validation_flags: {
       ...input.result.validation_flags,
       source_policy_no_accepted_sources: true,
+      source_policy_used_source_free_signal_insight: Boolean(sourceFreeInsight),
     },
     detector_feedback: {
       ...input.result.detector_feedback,
-      source_policy_note:
-        "Signal Event brief text was replaced because no accepted time-aligned source remained after source policy.",
+      source_policy_note: sourceFreeInsight
+        ? "Signal Event public brief used Claude's source-free chart/evidence insight because no accepted time-aligned source remained after source policy."
+        : "Signal Event brief text was replaced because no accepted time-aligned source remained after source policy.",
     },
   };
 }
@@ -496,6 +530,7 @@ function normalizeSignalResultAfterSourcePolicy(input: {
     return noAcceptedSignalSourceResult({
       result: input.result,
       payload: input.payload,
+      sourceInputs: input.sourceInputs,
     });
   }
 

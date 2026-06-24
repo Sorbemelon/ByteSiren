@@ -300,7 +300,13 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
   assert.match(signalPrompt, /Claude Limited is a scheduler\/quota state/);
   assert.match(
     signalPrompt,
-    /do not mention sources, articles, or publishers in public fields/,
+    /source_free_signal_insight must not mention sources, articles, publishers/,
+  );
+  assert.match(signalPrompt, /Always fill source_free_signal_insight/);
+  assert.match(signalPrompt, /brief source-free chart\/evidence insight/);
+  assert.match(
+    signalPrompt,
+    /summarize chart\/evidence insight rather than listing metrics/,
   );
   assert.match(signalPrompt, /catalyst_time_utc/);
   assert.match(signalPrompt, /chart context only as descriptive evidence/i);
@@ -407,6 +413,8 @@ test("v0.2 validators strip citation and tag markup from public strings", () => 
     headline: '<cite index="0-0">Catalyst headline</cite>',
     collapsed_summary:
       'Public context <cite index="0-3">lined up</cite> with the move.',
+    source_free_signal_insight:
+      '<cite index="0-0">Breadth stayed coherent while the external driver remained unconfirmed.</cite>',
     context_details: "<p>Readable detail</p>",
     why_this_classification:
       'A focused source <cite index="1-1">matched</cite> the window.',
@@ -448,6 +456,10 @@ test("v0.2 validators strip citation and tag markup from public strings", () => 
   assert.equal(
     signal.collapsed_summary,
     "Public context lined up with the move.",
+  );
+  assert.equal(
+    signal.source_free_signal_insight,
+    "Breadth stayed coherent while the external driver remained unconfirmed.",
   );
   assert.equal(signal.context_details, "Readable detail");
   assert.equal(
@@ -498,6 +510,15 @@ test("v0.2 Signal Event validator rejects public web-search-limit wording", () =
         source_timing_alignment: "none",
         collapsed_summary:
           "No source-backed context is available because web search was unavailable during validation.",
+      }),
+    /public tool-limit wording/,
+  );
+  assert.throws(
+    () =>
+      validateSignalEventClaudeResultV02({
+        ...validSignalResult(),
+        source_free_signal_insight:
+          "External source validation could not be completed due to a web search tool limit error.",
       }),
     /public tool-limit wording/,
   );

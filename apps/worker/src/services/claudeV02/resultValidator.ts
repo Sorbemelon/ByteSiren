@@ -285,11 +285,19 @@ export function validateSignalEventClaudeResultV02(
 
   const headline = stringField(input, "headline");
   const collapsedSummary = stringField(input, "collapsed_summary");
+  const sourceFreeSignalInsight = optionalStringField(
+    input,
+    "source_free_signal_insight",
+  );
   const contextDetails = optionalStringField(input, "context_details");
   const whyThisClassification = stringField(input, "why_this_classification");
 
   assertNoPublicOperationalLimitText(headline, "headline");
   assertNoPublicOperationalLimitText(collapsedSummary, "collapsed_summary");
+  assertNoPublicOperationalLimitText(
+    sourceFreeSignalInsight,
+    "source_free_signal_insight",
+  );
   assertNoPublicOperationalLimitText(contextDetails, "context_details");
   assertNoPublicOperationalLimitText(
     whyThisClassification,
@@ -307,6 +315,7 @@ export function validateSignalEventClaudeResultV02(
     confidence: confidence(stringField(input, "confidence")),
     headline,
     collapsed_summary: collapsedSummary,
+    source_free_signal_insight: sourceFreeSignalInsight,
     context_details: contextDetails,
     why_this_classification: whyThisClassification,
     source_support: sourceSupport(stringField(input, "source_support")),

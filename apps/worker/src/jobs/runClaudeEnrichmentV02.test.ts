@@ -212,6 +212,7 @@ function signalResult(
     confidence: "medium",
     headline: "Signal context",
     collapsed_summary: "Short signal context.",
+    source_free_signal_insight: null as string | null,
     context_details: "Long signal context.",
     why_this_classification: "A public source matched the event context.",
     source_support: classification === "No Clear Cause" ? "none" : "medium",
@@ -808,7 +809,7 @@ test("v0.2 enrichment preserves genuine Signal No Clear Cause analysis without a
   assert.equal(tables.source_references_v02.length, 0);
 });
 
-test("v0.2 enrichment replaces source-referencing No Clear Cause copy after source policy rejects rows", async () => {
+test("v0.2 enrichment uses Claude source-free Signal insight after source policy rejects rows", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
     signal_event_symbols_v02: [signalSymbol("sig_public")],
@@ -819,6 +820,8 @@ test("v0.2 enrichment replaces source-referencing No Clear Cause copy after sour
     "No time-aligned public source was accepted for this signal event. Reuters described a possible Fed catalyst in an older article.";
   noClearCause.context_details =
     "Reuters and other articles did not line up with this Signal Event.";
+  noClearCause.source_free_signal_insight =
+    "The move reads as downside pressure with SOLUSDT setting the pace while breadth across the basket confirms the detector signal; the external driver remains unconfirmed.";
   noClearCause.sources = [
     {
       title: "Old catalyst recap",
@@ -846,11 +849,11 @@ test("v0.2 enrichment replaces source-referencing No Clear Cause copy after sour
   const brief = tables.claude_briefs_v02[0];
   assert.equal(brief.status, "no_clear_cause");
   assert.equal(brief.headline, "No clear public catalyst");
+  assert.match(brief.collapsed_summary ?? "", /SOLUSDT setting the pace/);
   assert.match(
     brief.collapsed_summary ?? "",
-    /No clear public catalyst stands out/,
+    /external driver remains unconfirmed/,
   );
-  assert.match(brief.collapsed_summary ?? "", /confirmed news-driven move/);
   assert.doesNotMatch(brief.collapsed_summary ?? "", /Signal Event reads as/);
   assert.equal(
     /source|article|publisher|Reuters|Fed/i.test(
@@ -859,6 +862,11 @@ test("v0.2 enrichment replaces source-referencing No Clear Cause copy after sour
     false,
   );
   assert.equal(brief.context_details, null);
+  assert.equal(
+    JSON.parse(brief.validation_flags_json)
+      .source_policy_used_source_free_signal_insight,
+    true,
+  );
   assert.equal(tables.source_references_v02.length, 1);
   assert.equal(tables.source_references_v02[0].accepted, 0);
 });
