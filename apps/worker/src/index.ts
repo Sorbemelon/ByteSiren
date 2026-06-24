@@ -4,6 +4,7 @@ import {
   DETECTOR_CRON,
   GITHUB_INGEST_DISPATCH_CRON,
   LEGACY_POLL_MARKET_CRON,
+  parseBooleanFlag,
 } from "./config.ts";
 import { cleanupOldData } from "./jobs/cleanupOldData.ts";
 import { dispatchGitHubIngest } from "./jobs/dispatchGitHubIngest.ts";
@@ -165,6 +166,9 @@ export default {
       if (isV02IncrementalRefreshEnabled(env)) {
         await runIncrementalRefreshV02(env.DB, env, {
           triggerSource: "cloudflare_cron",
+          dispatchClaude: parseBooleanFlag(
+            env.ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH,
+          ),
         });
       }
 

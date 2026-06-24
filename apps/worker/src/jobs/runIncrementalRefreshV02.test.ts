@@ -174,3 +174,64 @@ test("runIncrementalRefreshV02 does not dispatch Claude when scaffold flag is di
   assert.equal(result.claude_dispatch?.dispatch_status, "skipped_disabled");
   assert.equal(result.claude_dispatch?.dispatch_attempted, false);
 });
+
+test("runIncrementalRefreshV02 dispatches bounded Signal Claude workflow when enabled", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: candlesForAllSymbols(),
+  });
+  const originalFetch = globalThis.fetch;
+  let capturedUrl = "";
+  let capturedBody: {
+    ref?: unknown;
+    inputs?: Record<string, unknown>;
+  } = {};
+  globalThis.fetch = async (input, init) => {
+    capturedUrl = String(input);
+    capturedBody = JSON.parse(String(init?.body ?? "{}"));
+    return new Response(null, { status: 204 });
+  };
+
+  try {
+    const result = await runIncrementalRefreshV02(
+      db,
+      env({
+        ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH: "true",
+        GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
+        GITHUB_REFRESH_WORKFLOW_REPO: "Sorbemelon/ByteSiren",
+        V02_SIGNAL_CLAUDE_WORKFLOW_FILE: "v02-claude-enrichment.yml",
+        V02_SIGNAL_CLAUDE_WORKFLOW_REF: "main",
+        V02_SIGNAL_CLAUDE_DISPATCH_LIMIT: "3",
+      }),
+      {
+        now,
+        dryRun: false,
+        targetWindowHours: 6,
+        lookbackHours: 24,
+        runMarketStories: false,
+        dispatchClaude: true,
+        triggerSource: "cloudflare_cron",
+      },
+    );
+
+    const inputs = capturedBody.inputs ?? {};
+
+    assert.equal(result.status, "success");
+    assert.equal(result.claude_dispatch?.dispatch_status, "dispatched");
+    assert.equal(result.claude_dispatch?.dispatch_attempted, true);
+    assert.match(capturedUrl, /v02-claude-enrichment\.yml\/dispatches$/);
+    assert.equal(capturedBody?.ref, "main");
+    assert.equal(inputs.trigger_source, "cloudflare_cron");
+    assert.equal(inputs.dry_run, "false");
+    assert.equal(inputs.confirm_live, "true");
+    assert.equal(typeof inputs.signal_event_ids, "string");
+    assert.match(String(inputs.signal_event_ids), /^signal_v02_/);
+    assert.equal(tables.claude_briefs_v02.length, 0);
+    assert.equal(tables.source_references_v02.length, 0);
+    assert.equal(
+      JSON.stringify(capturedBody).includes("secret-github-token"),
+      false,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
