@@ -455,7 +455,7 @@ The v0.2 real-API smoke should confirm:
 - v0.2 queued/not-yet-enriched items display `No context yet`.
 - Signal Event Focused/Likely sources are limited to the approved 6-hour catalyst window unless a later article clearly describes an in-window catalyst.
 - Signal Event and Daily Overview cards use the collapsed brief as the readable context and do not duplicate expanded Context Details / Context summary or Sources blocks.
-- Source chips stay in the main card source row, use `+N` expansion for the full accepted list, and chart source markers are visible for Claude-backed Daily Overview and Signal Event public sources with usable `published_at`. Source markers are not globally de-duplicated by URL, use only the honest article publication timestamp without event/peak/day fallback substitution, and vertically separate same-time markers without shifting the chart time coordinate. Sources without usable publication time may remain as card chips if policy allows them, but do not produce chart markers.
+- Source chips stay in the main card source row, use `+N` expansion for the full accepted list, and chart source markers are visible for every accepted Claude-backed Daily Overview and Signal Event public source, including Backdrop sources. Source markers are not de-duplicated by URL. Signal Event source markers use the parent Signal start time; Daily Overview source markers use the Daily range end. Same-time markers vertically separate without shifting the chart time coordinate.
 
 Do not use production tokens for this flow. Do not run live Claude for this smoke.
 

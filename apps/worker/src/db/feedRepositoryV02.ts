@@ -498,6 +498,47 @@ function dailyLabel(): string {
   return "Daily Overview";
 }
 
+const PUBLIC_OPERATIONAL_LIMIT_PATTERNS_V02 = [
+  /\bexternal source validation\b/i,
+  /\bweb search tool limit\b/i,
+  /\bsearch tool limit\b/i,
+  /\bsearch limit error\b/i,
+  /\btool limit error\b/i,
+  /\bmax[_\s-]?uses\b/i,
+  /\bsearches?\s+(?:were\s+)?exhausted\b/i,
+  /\bcould not be completed\b.*\b(?:web\s+)?search\b/i,
+] as const;
+
+const SOURCELESS_SIGNAL_COPY_PATTERNS_V02 = [
+  /\bno (?:accepted )?(?:time[- ]aligned )?public source\b/i,
+  /\btime[- ]aligned (?:public )?source\b/i,
+  /\baccepted (?:public )?source\b/i,
+  /\breturned (?:public )?source\b/i,
+  /\brejected(?: or ignored)? (?:public )?source\b/i,
+  /\bsource(?:s)?\b/i,
+  /\barticle(?:s)?\b/i,
+  /\bpublisher(?:s)?\b/i,
+  /\breuters\b/i,
+  /\bcoindesk\b/i,
+  /\bcointelegraph\b/i,
+  /\bbloomberg\b/i,
+  /\bcnbc\b/i,
+  /\bthe block\b/i,
+  /\bdecrypt\b/i,
+] as const;
+
+function publicBriefText(value: string | null): string | null {
+  if (!value) {
+    return value;
+  }
+
+  return PUBLIC_OPERATIONAL_LIMIT_PATTERNS_V02.some((pattern) =>
+    pattern.test(value),
+  )
+    ? null
+    : value;
+}
+
 function publicBrief(row: ClaudeBriefV02FeedRow): ClaudeBriefPublicV02 {
   return {
     id: row.id,
@@ -505,9 +546,9 @@ function publicBrief(row: ClaudeBriefV02FeedRow): ClaudeBriefPublicV02 {
     public_label: row.public_label,
     classification: row.classification,
     confidence: row.confidence,
-    headline: row.headline,
-    collapsed_summary: row.collapsed_summary,
-    context_details: row.context_details,
+    headline: publicBriefText(row.headline),
+    collapsed_summary: publicBriefText(row.collapsed_summary),
+    context_details: publicBriefText(row.context_details),
     source_support: row.source_support,
     source_timing_alignment: row.source_timing_alignment,
     prompt_version: row.prompt_version,
@@ -535,38 +576,76 @@ function publicSources(rows: SourceReferenceV02FeedRow[]): PublicSourceV02[] {
   });
 }
 
-function timeRangeLabel(startIso: string, endIso: string): string {
-  const start = new Date(startIso);
-  const end = new Date(endIso);
-
-  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
-    return "this Signal Event";
+function cleanSignalContextLabel(
+  value: string | null | undefined,
+): string | null {
+  if (!value) {
+    return null;
   }
 
-  return `${String(start.getUTCHours()).padStart(2, "0")}:${String(
-    start.getUTCMinutes(),
-  ).padStart(2, "0")} - ${String(end.getUTCHours()).padStart(2, "0")}:${String(
-    end.getUTCMinutes(),
-  ).padStart(2, "0")} UTC`;
+  const cleaned = value
+    .replace(/_/g, " ")
+    .replace(/\bup\b/g, "upside")
+    .replace(/\bdown\b/g, "downside")
+    .trim();
+
+  return cleaned || null;
 }
 
-function signedPercent(value: number | null): string {
+function signalDirectionPhrase(direction: string): string {
+  if (direction.includes("down")) return "downside";
+  if (direction.includes("up")) return "upside";
+  return "mixed-direction";
+}
+
+function signedPercent(value: number | null): string | null {
   if (value === null || !Number.isFinite(value)) {
-    return "unavailable";
+    return null;
   }
 
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
-function movementDescription(row: SignalEventV02FeedRow): string {
-  if (row.avg_change_pct !== null) {
-    if (row.avg_change_pct > 0) return "upside move";
-    if (row.avg_change_pct < 0) return "downside move";
-  }
+function signalEvidenceOnlyNoClearCauseSummary(
+  row: SignalEventV02FeedRow,
+): string {
+  const context =
+    cleanSignalContextLabel(row.event_story_type) ??
+    cleanSignalContextLabel(row.momentum_context) ??
+    cleanSignalContextLabel(row.volatility_context) ??
+    cleanSignalContextLabel(row.trend_context) ??
+    cleanSignalContextLabel(row.event_range_context) ??
+    cleanSignalContextLabel(row.chart_context_label);
+  const avgChange = signedPercent(row.avg_change_pct);
+  const breadth = `${row.signals_count}/${row.n_tracked}`;
+  const direction = signalDirectionPhrase(row.direction);
+  const pressure =
+    context && context.includes(direction)
+      ? `${context} pressure`
+      : `${context ? `${context} ` : ""}${direction} pressure`;
 
-  if (row.direction.includes("up")) return "upside move";
-  if (row.direction.includes("down")) return "downside move";
-  return "multi-direction move";
+  return [
+    "No clear public catalyst was identified.",
+    `The Signal Event reads as ${pressure} across ${breadth} tracked symbols`,
+    avgChange ? ` with Avg Change ${avgChange}` : "",
+    ", rather than a confirmed external driver.",
+  ]
+    .join("")
+    .replace("identified.The", "identified. The");
+}
+
+function noSourceSignalCopyNeedsReplacement(
+  brief: ClaudeBriefPublicV02,
+): boolean {
+  const text = [
+    brief.headline ?? "",
+    brief.collapsed_summary ?? "",
+    brief.context_details ?? "",
+  ].join("\n");
+
+  return SOURCELESS_SIGNAL_COPY_PATTERNS_V02.some((pattern) =>
+    pattern.test(text),
+  );
 }
 
 function signalBriefWithoutAcceptedSources(
@@ -585,24 +664,31 @@ function signalBriefWithoutAcceptedSources(
     };
   }
 
-  const windowLabel = timeRangeLabel(row.event_start, row.event_end);
-  const avgChange = signedPercent(row.avg_change_pct);
+  if (
+    brief.classification === "No Clear Cause" &&
+    !noSourceSignalCopyNeedsReplacement(brief)
+  ) {
+    return {
+      ...brief,
+      source_support: "none",
+      source_timing_alignment: "none",
+    };
+  }
 
   return {
     ...brief,
     public_label: "No Clear Cause",
     classification: "No Clear Cause",
-    headline: "No accepted time-aligned public source",
-    collapsed_summary:
-      `No accepted time-aligned public source remained for the ${windowLabel} Signal Event. ` +
-      `ByteSiren still detected a ${movementDescription(row)} across ${row.signals_count} of ${row.n_tracked} tracked symbols` +
-      (avgChange === "unavailable" ? "." : ` with Avg Change ${avgChange}.`),
+    headline: "No clear public catalyst",
+    collapsed_summary: signalEvidenceOnlyNoClearCauseSummary(row),
+    context_details: null,
     source_support: "none",
     source_timing_alignment: "none",
   };
 }
 
 const SIGNAL_PUBLIC_SOURCE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
+const SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS = 30 * 60 * 60 * 1000;
 
 function parsedTime(value: string | null | undefined): number | null {
   if (!value) {
@@ -619,6 +705,27 @@ function isWithinWindow(value: number, start: number, end: number): boolean {
 
 function utcDay(ms: number): string {
   return new Date(ms).toISOString().slice(0, 10);
+}
+
+function isNearbySignalBackdropRecap(input: {
+  publishedAt: number | null;
+  catalystTime: number | null;
+  eventStart: number;
+  eventEnd: number;
+}): boolean {
+  if (input.publishedAt === null) {
+    return false;
+  }
+
+  const eventDay = utcDay(input.eventStart);
+  const catalystIsSameEventDay =
+    input.catalystTime !== null && utcDay(input.catalystTime) === eventDay;
+
+  return (
+    input.publishedAt >= input.eventStart &&
+    input.publishedAt <= input.eventEnd + SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS &&
+    (input.catalystTime === null || catalystIsSameEventDay)
+  );
 }
 
 function signalPublicSourceRows(
@@ -668,6 +775,18 @@ function signalPublicSourceRows(
       row.source_role === "Backdrop source" &&
       sameDayTime !== null &&
       utcDay(sameDayTime) === eventDay
+    ) {
+      return true;
+    }
+
+    if (
+      row.source_role === "Backdrop source" &&
+      isNearbySignalBackdropRecap({
+        publishedAt,
+        catalystTime,
+        eventStart,
+        eventEnd,
+      })
     ) {
       return true;
     }

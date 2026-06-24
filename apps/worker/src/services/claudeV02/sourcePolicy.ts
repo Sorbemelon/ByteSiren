@@ -66,6 +66,7 @@ const SIGNAL_CAUSE_TAGS = new Set<SignalEventSourceTagV02>([
   "Likely cause source",
 ]);
 const SIGNAL_CAUSE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
+const SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS = 30 * 60 * 60 * 1000;
 export const MAX_PUBLIC_SOURCES_PER_BRIEF_V02 = 3;
 
 function assertClaudeBackedTarget(
@@ -121,6 +122,28 @@ function inWindow(value: number, start: number, end: number): boolean {
 
 function utcDay(ms: number): string {
   return new Date(ms).toISOString().slice(0, 10);
+}
+
+function isNearbySignalBackdropRecap(input: {
+  publishedAt: number | null;
+  catalystTime: number | null;
+  eventStart: number;
+  eventEnd: number;
+}): boolean {
+  if (input.publishedAt === null) {
+    return false;
+  }
+
+  const eventDay = utcDay(input.eventStart);
+  const nextDayEnd = input.eventEnd + SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS;
+  const catalystIsSameEventDay =
+    input.catalystTime !== null && utcDay(input.catalystTime) === eventDay;
+
+  return (
+    input.publishedAt >= input.eventStart &&
+    input.publishedAt <= nextDayEnd &&
+    (input.catalystTime === null || catalystIsSameEventDay)
+  );
 }
 
 function signalSourceRoleAfterTiming(input: {
@@ -198,6 +221,26 @@ function signalSourceRoleAfterTiming(input: {
     return {
       tag: "Backdrop source",
       timingPolicyNote: "signal_source_same_utc_day_backdrop",
+      rejectionReason: null,
+    };
+  }
+
+  // A near next-day article can still be useful public context for the same
+  // Signal Event, especially for late-UTC moves that only receive recap
+  // coverage after midnight. Keep it as Backdrop so the UI can show a source
+  // chip for Market Backdrop, but never promote it into Focused/Likely cause.
+  if (
+    downgradedTag === "Backdrop source" &&
+    isNearbySignalBackdropRecap({
+      publishedAt,
+      catalystTime,
+      eventStart,
+      eventEnd,
+    })
+  ) {
+    return {
+      tag: "Backdrop source",
+      timingPolicyNote: "signal_source_nearby_backdrop_recap",
       rejectionReason: null,
     };
   }

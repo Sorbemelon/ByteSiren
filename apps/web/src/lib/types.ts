@@ -551,8 +551,8 @@ export interface ChartSourceMarkerViewV02 {
   publisher: string | null;
   url: string;
   selected: boolean;
-  // false when `time` is the analyzed item's anchor (no honest article/catalyst
-  // timestamp) — rendered hollow to signal the marker is not at a source time.
+  // Source markers are filled. Signals anchor to the Signal start; Daily
+  // Overview markers anchor to the Daily range end.
   filled: boolean;
 }
 

@@ -390,8 +390,10 @@ function SourceExampleChip({
       color: "var(--source-support-text)",
     },
     backdrop: {
-      borderColor: "rgba(148, 163, 184, 0.3)",
-      background: "rgba(148, 163, 184, 0.08)",
+      borderColor:
+        "color-mix(in srgb, var(--source-backdrop-text) 42%, transparent)",
+      background:
+        "color-mix(in srgb, var(--source-backdrop-text) 12%, transparent)",
       color: "var(--source-backdrop-text)",
     },
     price: {
@@ -539,12 +541,13 @@ export default function BottomAccordions({
             detail, so a separate Context Details section is not needed.
           </DefinitionCard>
           <DefinitionCard term="Source markers">
-            Chart markers for accepted sources on Claude-backed Daily Overview
-            or Signal Event cards. Filled markers use a specific article or
-            catalyst timestamp. No-fill markers mean the source has no specific
-            timestamp, so ByteSiren places it at the source date&apos;s 00:00
-            UTC point. When times overlap, markers stack vertically without
-            shifting chart time. They never appear for Market Story.
+            Filled chart markers for every accepted source on Claude-backed
+            Daily Overview or Signal Event cards. Signal Event source markers
+            sit at the Signal Event start time. Daily Overview source markers
+            sit at the end of the Daily Overview range. Backdrop sources are
+            included as source markers. When markers share the same time, they
+            stack vertically without shifting chart time. They never appear for
+            Market Story.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>
@@ -602,7 +605,7 @@ export default function BottomAccordions({
           </DefinitionCard>
           <DefinitionCard
             term={
-              <StatusTextLabel color="var(--status-moving)" Icon={Clock}>
+              <StatusTextLabel color="var(--text-primary)" Icon={Clock}>
                 No context yet
               </StatusTextLabel>
             }
@@ -902,8 +905,9 @@ export default function BottomAccordions({
               <SourceExampleChip role="backdrop">Backdrop</SourceExampleChip>
             }
           >
-            A broader context source that should not be promoted into a direct
-            cause.
+            A broader context source for Market Backdrop. It may explain the
+            surrounding market conditions or a near recap of the same UTC-day
+            move, but it is not promoted into a direct cause.
           </DefinitionCard>
           <DefinitionCard
             term={<SourceExampleChip role="price">Price</SourceExampleChip>}
@@ -914,10 +918,10 @@ export default function BottomAccordions({
           <DefinitionCard term="Clickable source link" Icon={ExternalLink}>
             The visible publisher name opens the exact article URL in a new tab.
           </DefinitionCard>
-          <DefinitionCard term="No-fill source marker">
-            A hollow chart source marker means the accepted source has no
-            specific timestamp. ByteSiren marks it at that source date&apos;s
-            00:00 UTC instead of inventing an exact time.
+          <DefinitionCard term="Chart source marker time">
+            Source marker time comes from the parent card, not the article
+            publication time. Signal sources mark the Signal start. Daily
+            sources mark the end of the Daily range.
           </DefinitionCard>
         </DefinitionGrid>
       </Accordion>

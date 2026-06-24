@@ -228,7 +228,7 @@ Left accent by Claude label:
 ```text
 Focused Cause: emerald
 Likely Cause: teal
-Market Backdrop: blue-gray
+Market Backdrop: brown
 No Clear Cause: slate
 Claude Limited: violet
 ```
@@ -248,7 +248,7 @@ Role colors:
 ```text
 focused_catalyst: emerald outline
 likely_cause: teal outline
-backdrop: blue-gray outline
+backdrop: lighter brown outline
 price_check: amber outline
 ```
 

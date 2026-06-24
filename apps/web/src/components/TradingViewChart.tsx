@@ -575,6 +575,9 @@ export default function TradingViewChart({
   const hasSelectedSourceMarker = v02SourceMarkers.some(
     (marker) => marker.selected,
   );
+  const hasSelectedV02Item = v02Highlights.some(
+    (highlight) => highlight.selected,
+  );
 
   const initChart = useCallback(() => {
     const el = containerRef.current;
@@ -884,13 +887,15 @@ export default function TradingViewChart({
         }}
       >
         {v02SourceOverlays.map((overlay) => {
-          const muted = hasSelectedSourceMarker && !overlay.marker.selected;
-          const markerSize = overlay.marker.selected ? 14 : muted ? 8 : 10;
+          const muted =
+            (hasSelectedSourceMarker || hasSelectedV02Item) &&
+            !overlay.marker.selected;
+          const markerSize = overlay.marker.selected ? 15 : muted ? 6 : 10;
           const markerBorderWidth = overlay.marker.filled
             ? overlay.marker.selected
               ? 2
               : muted
-                ? 1
+                ? 0
                 : 1.4
             : overlay.marker.selected
               ? 3
@@ -924,7 +929,7 @@ export default function TradingViewChart({
                 left: overlay.left,
                 top: overlay.top,
                 color: sourceMarkerTone(overlay.marker),
-                opacity: muted ? 0.36 : 1,
+                opacity: muted ? 0.42 : 1,
               }}
             >
               <span
@@ -945,6 +950,8 @@ export default function TradingViewChart({
                   boxShadow: overlay.marker.selected
                     ? `0 0 0 2px color-mix(in srgb, ${sourceMarkerTone(overlay.marker)} 22%, transparent)`
                     : "none",
+                  transition:
+                    "width 160ms ease-out, height 160ms ease-out, opacity 160ms ease-out",
                 }}
               />
             </button>

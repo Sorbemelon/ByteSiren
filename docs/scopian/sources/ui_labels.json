@@ -108,7 +108,7 @@
       "backdrop_source": {
         "prompt_tag": "Backdrop source",
         "chip_label": "Backdrop",
-        "meaning": "Accepted source for broader context, not a direct cause."
+        "meaning": "Accepted source for broader Market Backdrop context or a near recap of the same UTC-day move; not a direct cause."
       },
       "price_check_source": {
         "prompt_tag": "Price check source",
@@ -130,7 +130,7 @@
       "backdrop_source": {
         "prompt_tag": "Backdrop source",
         "chip_label": "Backdrop",
-        "meaning": "Accepted broader daily backdrop source."
+        "meaning": "Accepted broader daily backdrop source. It can appear as a source chip and as a filled Daily Overview source marker at the Daily range end."
       },
       "price_check_source": {
         "prompt_tag": "Price check source",

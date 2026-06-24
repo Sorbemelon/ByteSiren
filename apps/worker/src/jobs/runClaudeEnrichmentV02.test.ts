@@ -751,19 +751,156 @@ test("v0.2 enrichment replaces Signal news copy when no accepted source survives
   assert.equal(tables.claude_briefs_v02.length, 1);
   const brief = tables.claude_briefs_v02[0];
   assert.equal(brief.status, "no_clear_cause");
-  assert.equal(brief.headline, "No accepted time-aligned public source");
-  assert.ok(brief.collapsed_summary);
+  assert.equal(brief.headline, "No clear public catalyst");
   assert.match(
-    brief.collapsed_summary,
-    /No accepted time-aligned public source remained/,
+    brief.collapsed_summary ?? "",
+    /range break upside pressure across 4\/5 tracked symbols/,
   );
-  assert.match(brief.collapsed_summary, /Avg Change/);
-  assert.equal(brief.collapsed_summary.includes("Fed news"), false);
+  assert.match(brief.collapsed_summary ?? "", /led by BTCUSDT/);
+  assert.match(brief.collapsed_summary ?? "", /Avg Change \+1\.80%/);
+  assert.equal(
+    /source|article|publisher|Reuters|Fed news/i.test(
+      brief.collapsed_summary ?? "",
+    ),
+    false,
+  );
   assert.equal(tables.source_references_v02.length, 1);
   assert.equal(tables.source_references_v02[0].accepted, 0);
   assert.equal(
     tables.source_references_v02[0].rejection_reason,
     "signal_source_outside_6h_event_window",
+  );
+});
+
+test("v0.2 enrichment preserves genuine Signal No Clear Cause analysis without accepted sources", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+  });
+  const noClearCause = signalResult("No Clear Cause");
+  noClearCause.headline = "No clear cause in public context";
+  noClearCause.collapsed_summary =
+    "Claude did not identify a reliable public driver for this Signal Event.";
+  noClearCause.why_this_classification =
+    "No reliable external driver was identified for this Signal Event.";
+  const mock = new MockClaudeClient([okResult(noClearCause)]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+      ENABLE_DAILY_CLAUDE: "false",
+    }),
+    { now, client: mock },
+  );
+
+  assert.equal(result.status, "success");
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  const brief = tables.claude_briefs_v02[0];
+  assert.equal(brief.status, "no_clear_cause");
+  assert.equal(brief.classification, "No Clear Cause");
+  assert.equal(brief.headline, "No clear cause in public context");
+  assert.match(brief.collapsed_summary ?? "", /reliable public driver/);
+  assert.equal(brief.source_support, "none");
+  assert.equal(brief.source_timing_alignment, "none");
+  assert.equal(tables.source_references_v02.length, 0);
+});
+
+test("v0.2 enrichment replaces source-referencing No Clear Cause copy after source policy rejects rows", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+  });
+  const noClearCause = signalResult("No Clear Cause");
+  noClearCause.headline = "No time-aligned public source";
+  noClearCause.collapsed_summary =
+    "No time-aligned public source was accepted for this signal event. Reuters described a possible Fed catalyst in an older article.";
+  noClearCause.context_details =
+    "Reuters and other articles did not line up with this Signal Event.";
+  noClearCause.sources = [
+    {
+      title: "Old catalyst recap",
+      publisher: "Reuters",
+      url: "https://www.reuters.com/markets/2026/06/17/old-catalyst-recap/",
+      published_at: "2026-06-17T02:00:00.000Z",
+      catalyst_time_utc: "2026-06-17T02:00:00.000Z",
+      tag: "Backdrop source",
+      why_relevant: "Older macro context from a prior UTC day.",
+    },
+  ];
+  const mock = new MockClaudeClient([okResult(noClearCause)]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+      ENABLE_DAILY_CLAUDE: "false",
+    }),
+    { now, client: mock },
+  );
+
+  assert.equal(result.status, "success");
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  const brief = tables.claude_briefs_v02[0];
+  assert.equal(brief.status, "no_clear_cause");
+  assert.equal(brief.headline, "No clear public catalyst");
+  assert.match(brief.collapsed_summary ?? "", /Signal Event reads as/);
+  assert.equal(
+    /source|article|publisher|Reuters|Fed/i.test(
+      `${brief.headline} ${brief.collapsed_summary} ${brief.context_details ?? ""}`,
+    ),
+    false,
+  );
+  assert.equal(brief.context_details, null);
+  assert.equal(tables.source_references_v02.length, 1);
+  assert.equal(tables.source_references_v02[0].accepted, 0);
+});
+
+test("v0.2 enrichment keeps Market Backdrop with a nearby Backdrop source", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+  });
+  const backdrop = signalResult("Market Backdrop");
+  backdrop.headline = "Market backdrop around the move";
+  backdrop.collapsed_summary =
+    "A near next-day recap described same-day risk-off conditions around the Signal Event.";
+  backdrop.context_details = "";
+  backdrop.sources = [
+    {
+      title: "Next-day risk recap",
+      publisher: "Yahoo Finance",
+      url: "https://finance.yahoo.com/markets/crypto/articles/next-day-risk-recap.html",
+      published_at: "2026-06-20T02:00:00.000Z",
+      catalyst_time_utc: "",
+      tag: "Backdrop source",
+      why_relevant:
+        "Near next-day recap of the same UTC-day move without a pinpoint catalyst time.",
+    },
+  ];
+  const mock = new MockClaudeClient([okResult(backdrop)]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_SIGNAL_CLAUDE_V02: "true",
+      ENABLE_DAILY_CLAUDE: "false",
+    }),
+    { now, client: mock },
+  );
+
+  assert.equal(result.status, "success");
+  assert.equal(result.context_only_count, 1);
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  assert.equal(tables.claude_briefs_v02[0].status, "context_only");
+  assert.equal(tables.claude_briefs_v02[0].public_label, "Market Backdrop");
+  assert.equal(tables.claude_briefs_v02[0].classification, "Market Backdrop");
+  assert.equal(tables.source_references_v02.length, 1);
+  assert.equal(tables.source_references_v02[0].accepted, 1);
+  assert.equal(tables.source_references_v02[0].source_role, "Backdrop source");
+  assert.match(
+    tables.source_references_v02[0].metadata_json,
+    /signal_source_nearby_backdrop_recap/,
   );
 });
 
@@ -795,6 +932,37 @@ test("v0.2 enrichment writes Daily Overview brief and sources only when daily fl
   );
   assert.equal(tables.claude_briefs.length, 0);
   assert.equal(tables.source_references.length, 0);
+});
+
+test("v0.2 Daily enrichment rejects public web-search-limit copy as retryable", async () => {
+  const { db, tables } = createMemoryD1({
+    daily_overviews_v02: [dailyOverview()],
+    market_stories_v02: [marketStory()],
+  });
+  const limitedDaily = dailyResult();
+  limitedDaily.collapsed_summary =
+    "External source validation could not be completed this session due to a web search tool limit error.";
+  const mock = new MockClaudeClient([okResult(limitedDaily)]);
+  const result = await runClaudeEnrichmentV02(
+    db,
+    env({
+      DB: db,
+      ENABLE_DAILY_CLAUDE: "true",
+      ENABLE_SIGNAL_CLAUDE_V02: "false",
+    }),
+    { now, client: mock },
+  );
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.daily_processed, 1);
+  assert.equal(result.brief_ready_count, 0);
+  assert.equal(result.failed_retryable_count, 1);
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  assert.equal(tables.claude_briefs_v02[0].target_type, "daily_overview_v02");
+  assert.equal(tables.claude_briefs_v02[0].status, "failed_retryable");
+  assert.equal(tables.claude_briefs_v02[0].error_code, "validation_error");
+  assert.equal(tables.claude_briefs_v02[0].collapsed_summary, null);
+  assert.equal(tables.source_references_v02.length, 0);
 });
 
 test("v0.2 enrichment skips safely when API key is missing", async () => {

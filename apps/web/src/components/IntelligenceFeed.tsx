@@ -72,8 +72,9 @@ const SOURCE_CHIP_STYLES: Record<
     color: "var(--source-likely-text)",
   },
   backdrop: {
-    border: "rgba(148, 163, 184, 0.3)",
-    background: "rgba(148, 163, 184, 0.08)",
+    border: "color-mix(in srgb, var(--source-backdrop-text) 42%, transparent)",
+    background:
+      "color-mix(in srgb, var(--source-backdrop-text) 12%, transparent)",
     color: "var(--source-backdrop-text)",
   },
   price_check: {

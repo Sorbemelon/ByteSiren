@@ -411,31 +411,17 @@ function validIsoOrNull(value: string | null | undefined): string | null {
   return Number.isFinite(time) ? value : null;
 }
 
-// A date-only timestamp (exactly 00:00:00.000 UTC) means only the publication
-// date is known, not a precise time. Such markers render hollow so the chart
-// never implies a precise time the source does not actually have.
-function isDateOnly(iso: string): boolean {
-  const time = Date.parse(iso);
-  if (!Number.isFinite(time)) {
-    return false;
+function sectionSourceMarkerAnchor(
+  section: NormalizedFeedSection,
+): string | null {
+  const window = sectionWindow(section);
+  if (!window) {
+    return null;
   }
-  const date = new Date(time);
-  return (
-    date.getUTCHours() === 0 &&
-    date.getUTCMinutes() === 0 &&
-    date.getUTCSeconds() === 0 &&
-    date.getUTCMilliseconds() === 0
-  );
-}
 
-// Date-level marker position for accepted sources that have no honest
-// article/catalyst timestamp. They render hollow at 00:00 UTC so every accepted
-// source gets a marker without inventing a precise source time.
-function sectionDateStartAnchor(section: NormalizedFeedSection): string | null {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(section.dateUtc)) {
-    return validIsoOrNull(`${section.dateUtc}T00:00:00.000Z`);
-  }
-  return validIsoOrNull(section.chart?.highlight_start);
+  return validIsoOrNull(
+    section.itemType === "daily_overview" ? window.end : window.start,
+  );
 }
 
 export function buildChartSourceMarkersV02(
@@ -461,29 +447,9 @@ export function buildChartSourceMarkersV02(
       }
 
       const selected = isSectionSelectedV02(selection, section);
-      const dateStartAnchor = sectionDateStartAnchor(section);
-      const seenUrls = new Set<string>();
 
       for (const [index, source] of section.sources.entries()) {
-        if (seenUrls.has(source.url)) {
-          continue;
-        }
-        seenUrls.add(source.url);
-
-        // Pick the most honest time. Signals prefer the catalyst time, daily
-        // prefers the article publication time. A precise (non-midnight) time
-        // makes a filled marker; a date-only time or date-start fallback makes
-        // a hollow marker so the chart never implies a precise time the source
-        // does not have.
-        const catalyst = validIsoOrNull(source.catalyst_time_utc);
-        const published = validIsoOrNull(source.published_at);
-        const order =
-          section.itemType === "signal_event"
-            ? [catalyst, published]
-            : [published, catalyst];
-        const precise = order.find((t) => t !== null && !isDateOnly(t)) ?? null;
-        const dateOnly = order.find((t) => t !== null) ?? null;
-        const time = precise ?? dateOnly ?? dateStartAnchor;
+        const time = sectionSourceMarkerAnchor(section);
 
         if (!source.url || !time) {
           continue;
@@ -501,7 +467,7 @@ export function buildChartSourceMarkersV02(
           publisher: source.publisher ?? source.title ?? null,
           url: source.url,
           selected,
-          filled: precise !== null,
+          filled: true,
           sourceOrder: sourceOrder++,
           itemRank: section.itemType === "signal_event" ? 0 : 1,
         });

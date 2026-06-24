@@ -518,7 +518,7 @@ Verify after sample:
 - Signal Event and Daily Overview can show sources if accepted rows exist.
 - v0.2 queued items show `No context yet` until context exists.
 - Signal Event and Daily Overview cards use the collapsed brief as the main readable context, without duplicate expanded Context Details / Context summary blocks.
-- Source chips appear in the main card source row with `+N` expansion, and chart source markers are visible for Claude-backed Daily Overview or Signal Event public sources with usable `published_at`. Markers are not globally de-duplicated by exact URL, marker time uses only the honest article publication timestamp without event/peak/day fallback substitution, and overlapping markers are separated vertically without shifting chart time. Sources without usable publication time may remain as card chips if policy allows them, but do not produce chart markers.
+- Source chips appear in the main card source row with `+N` expansion, and chart source markers are visible for every accepted Claude-backed Daily Overview or Signal Event public source, including Backdrop sources. Markers are not de-duplicated by exact URL. Signal Event source markers use the parent Signal start time; Daily Overview source markers use the Daily range end. Overlapping markers are separated vertically without shifting chart time.
 - Market Story still has no sources, source markers, Claude status, Claude result, or Public Context status.
 - No raw Claude traces are public.
 - No public budget/search/token counts are public.

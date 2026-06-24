@@ -295,6 +295,10 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
     signalPrompt,
     /collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources/,
   );
+  assert.match(
+    signalPrompt,
+    /do not mention sources, articles, or publishers in public fields/,
+  );
   assert.match(signalPrompt, /catalyst_time_utc/);
   assert.match(signalPrompt, /chart context only as descriptive evidence/i);
   assert.match(signalPrompt, /collapsed_summary is the main public brief/);
@@ -310,6 +314,7 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
     dailyPrompt,
     /collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources/,
   );
+  assert.match(dailyPrompt, /Do not mention web-search limits/);
   assert.doesNotMatch(dailyPrompt, /"context_details"/);
   assert.match(dailyPrompt, /Do not provide trading advice/);
 
@@ -333,6 +338,8 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
     /never move published_at to a different calendar day/i,
   );
   assert.match(signalPrompt, /Prefer Market Backdrop over No Clear Cause/);
+  assert.match(signalPrompt, /near next-day recap/);
+  assert.match(signalPrompt, /cannot be Focused\/Likely/);
   // Daily sourcing must stay within the UTC day.
   assert.match(dailyPrompt, /Sources must fall within this UTC day/);
 
@@ -380,6 +387,18 @@ test("v0.2 validators allow omitted long context details", () => {
   assert.equal(
     validateDailyOverviewClaudeResultV02(daily).context_details,
     null,
+  );
+});
+
+test("v0.2 Daily validator rejects public web-search-limit wording", () => {
+  assert.throws(
+    () =>
+      validateDailyOverviewClaudeResultV02({
+        ...validDailyResult(),
+        collapsed_summary:
+          "External source validation could not be completed this session due to a web search tool limit error.",
+      }),
+    /public tool-limit wording/,
   );
 });
 
@@ -660,6 +679,42 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
       },
     ],
   });
+  const nextDayBackdropRecap = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    includeRejected: true,
+    sources: [
+      {
+        title: "Next-day market recap",
+        publisher: "Yahoo Finance",
+        url: "https://finance.yahoo.com/markets/crypto/articles/next-day-market-recap.html",
+        published_at: "2026-06-20T02:00:00.000Z",
+        catalyst_time_utc: null,
+        tag: "Backdrop source",
+        why_relevant:
+          "Near next-day recap of the same UTC-day crypto move without a pinpoint catalyst time.",
+      },
+    ],
+  });
+  const nextDayCauseDowngraded = toSourceReferenceInputsV02({
+    target_type: "signal_event_v02",
+    target_id: "sig_public",
+    signalEventWindow: window,
+    includeRejected: true,
+    sources: [
+      {
+        title: "Next-day cause claim without in-window time",
+        publisher: "Yahoo Finance",
+        url: "https://finance.yahoo.com/markets/crypto/articles/next-day-cause-claim.html",
+        published_at: "2026-06-20T02:00:00.000Z",
+        catalyst_time_utc: null,
+        tag: "Likely cause source",
+        why_relevant:
+          "Near next-day recap of the same UTC-day move, but no in-window catalyst time.",
+      },
+    ],
+  });
 
   assert.equal(stale[0].accepted, false);
   assert.equal(stale[0].source_role, "Backdrop source");
@@ -705,5 +760,17 @@ test("v0.2 Signal source policy downgrades stale cause sources but allows aligne
   assert.equal(
     sameDayCauseDowngraded[0].metadata.timing_policy_note,
     "signal_source_same_utc_day_backdrop",
+  );
+  assert.equal(nextDayBackdropRecap[0].accepted, true);
+  assert.equal(nextDayBackdropRecap[0].source_role, "Backdrop source");
+  assert.equal(
+    nextDayBackdropRecap[0].metadata.timing_policy_note,
+    "signal_source_nearby_backdrop_recap",
+  );
+  assert.equal(nextDayCauseDowngraded[0].accepted, true);
+  assert.equal(nextDayCauseDowngraded[0].source_role, "Backdrop source");
+  assert.equal(
+    nextDayCauseDowngraded[0].metadata.timing_policy_note,
+    "signal_source_nearby_backdrop_recap",
   );
 });

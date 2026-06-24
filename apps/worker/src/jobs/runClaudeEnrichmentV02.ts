@@ -307,59 +307,161 @@ function hasAcceptedSignalCauseSource(
   );
 }
 
-function signalWindowLabel(payload: SignalEventClaudePayloadV02): string {
-  const start = new Date(payload.evidence_window.start);
-  const end = new Date(payload.evidence_window.end);
+const SOURCELESS_SIGNAL_COPY_PATTERNS = [
+  /\bno (?:accepted )?(?:time[- ]aligned )?public source\b/i,
+  /\btime[- ]aligned (?:public )?source\b/i,
+  /\baccepted (?:public )?source\b/i,
+  /\breturned (?:public )?source\b/i,
+  /\brejected(?: or ignored)? (?:public )?source\b/i,
+  /\bsource(?:s)?\b/i,
+  /\barticle(?:s)?\b/i,
+  /\bpublisher(?:s)?\b/i,
+  /\breuters\b/i,
+  /\bcoindesk\b/i,
+  /\bcointelegraph\b/i,
+  /\bbloomberg\b/i,
+  /\bcnbc\b/i,
+  /\bthe block\b/i,
+  /\bdecrypt\b/i,
+] as const;
 
-  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
-    return "this Signal Event";
+function cleanSignalContextLabel(
+  value: string | null | undefined,
+): string | null {
+  if (!value) {
+    return null;
   }
 
-  const startLabel = `${String(start.getUTCHours()).padStart(2, "0")}:${String(
-    start.getUTCMinutes(),
-  ).padStart(2, "0")}`;
-  const endLabel = `${String(end.getUTCHours()).padStart(2, "0")}:${String(
-    end.getUTCMinutes(),
-  ).padStart(2, "0")}`;
+  const cleaned = value
+    .replace(/_/g, " ")
+    .replace(/\bup\b/g, "upside")
+    .replace(/\bdown\b/g, "downside")
+    .trim();
 
-  return `${startLabel} - ${endLabel} UTC`;
+  return cleaned || null;
 }
 
-function signedPercent(value: number | null): string {
+function signalDirectionPhrase(direction: string): string {
+  if (direction.includes("down")) return "downside";
+  if (direction.includes("up")) return "upside";
+  return "mixed-direction";
+}
+
+function signedPercent(value: number | null): string | null {
   if (value === null || !Number.isFinite(value)) {
-    return "unavailable";
+    return null;
   }
 
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
-function signalMovementDescription(
-  payload: SignalEventClaudePayloadV02,
-): string {
-  if (payload.avg_change_pct !== null) {
-    if (payload.avg_change_pct > 0) return "upside move";
-    if (payload.avg_change_pct < 0) return "downside move";
+function leadSymbol(payload: SignalEventClaudePayloadV02): string | null {
+  const explicit = payload.per_symbol_evidence.find(
+    (symbol) => symbol.is_lead_mover,
+  );
+
+  if (explicit) {
+    return explicit.symbol;
   }
 
-  if (payload.direction.includes("up")) return "upside move";
-  if (payload.direction.includes("down")) return "downside move";
-  return "multi-direction move";
+  let strongest: { symbol: string; value: number } | null = null;
+
+  for (const symbol of payload.per_symbol_evidence) {
+    if (
+      symbol.window_change_pct === null ||
+      !Number.isFinite(symbol.window_change_pct)
+    ) {
+      continue;
+    }
+
+    if (
+      !strongest ||
+      Math.abs(symbol.window_change_pct) > Math.abs(strongest.value)
+    ) {
+      strongest = {
+        symbol: symbol.symbol,
+        value: symbol.window_change_pct,
+      };
+    }
+  }
+
+  return strongest?.symbol ?? null;
+}
+
+function signalEvidenceOnlyNoClearCauseSummary(
+  payload: SignalEventClaudePayloadV02,
+): string {
+  const direction = signalDirectionPhrase(payload.direction);
+  const context =
+    cleanSignalContextLabel(payload.chart_context.event_story_type) ??
+    cleanSignalContextLabel(payload.chart_context.momentum_context) ??
+    cleanSignalContextLabel(payload.chart_context.volatility_context) ??
+    cleanSignalContextLabel(payload.chart_context.trend_context) ??
+    cleanSignalContextLabel(payload.chart_context.event_range_context) ??
+    cleanSignalContextLabel(payload.chart_context.chart_context_label);
+  const avgChange = signedPercent(payload.avg_change_pct);
+  const lead = leadSymbol(payload);
+  const breadth = `${payload.signals_count}/${payload.n_tracked}`;
+  const pressure =
+    context && context.includes(direction)
+      ? `${context} pressure`
+      : `${context ? `${context} ` : ""}${direction} pressure`;
+
+  return [
+    "No clear public catalyst was identified.",
+    `The Signal Event reads as ${pressure} across ${breadth} tracked symbols`,
+    lead ? `, led by ${lead}` : "",
+    avgChange ? ` with Avg Change ${avgChange}` : "",
+    ", rather than a confirmed external driver.",
+  ]
+    .join("")
+    .replace("identified.The", "identified. The");
+}
+
+function textContainsRejectedSourceReference(
+  text: string,
+  sources: SourceReferenceInputV02[],
+): boolean {
+  const normalized = text.toLowerCase();
+
+  return rejectedSources(sources).some((source) => {
+    const publisher = source.publisher?.trim().toLowerCase();
+    const title = source.title?.trim().toLowerCase();
+
+    return Boolean(
+      (publisher && publisher.length >= 4 && normalized.includes(publisher)) ||
+      (title && title.length >= 12 && normalized.includes(title)),
+    );
+  });
+}
+
+function noSourceSignalCopyNeedsReplacement(input: {
+  result: SignalEventClaudeResultV02;
+  sourceInputs: SourceReferenceInputV02[];
+}): boolean {
+  const text = [
+    input.result.headline,
+    input.result.collapsed_summary,
+    input.result.context_details ?? "",
+    input.result.why_this_classification,
+  ].join("\n");
+
+  return (
+    SOURCELESS_SIGNAL_COPY_PATTERNS.some((pattern) => pattern.test(text)) ||
+    textContainsRejectedSourceReference(text, input.sourceInputs)
+  );
 }
 
 function noAcceptedSignalSourceResult(input: {
   result: SignalEventClaudeResultV02;
   payload: SignalEventClaudePayloadV02;
 }): SignalEventClaudeResultV02 {
-  const avgChange = signedPercent(input.payload.avg_change_pct);
-
   return {
     ...input.result,
     classification: "No Clear Cause",
-    headline: "No accepted time-aligned public source",
-    collapsed_summary:
-      `No accepted time-aligned public source remained for the ${signalWindowLabel(input.payload)} Signal Event. ` +
-      `ByteSiren still detected a ${signalMovementDescription(input.payload)} across ${input.payload.signals_count} of ${input.payload.n_tracked} tracked symbols` +
-      (avgChange === "unavailable" ? "." : ` with Avg Change ${avgChange}.`),
+    headline: "No clear public catalyst",
+    collapsed_summary: signalEvidenceOnlyNoClearCauseSummary(input.payload),
+    context_details: null,
     source_support: "none",
     source_timing_alignment: "none",
     validation_flags: {
@@ -380,6 +482,25 @@ function normalizeSignalResultAfterSourcePolicy(input: {
   payload: SignalEventClaudePayloadV02;
 }): SignalEventClaudeResultV02 {
   if (acceptedSources(input.sourceInputs).length === 0) {
+    if (input.result.classification === "Claude Limited") {
+      return {
+        ...input.result,
+        source_support: "none",
+        source_timing_alignment: "none",
+      };
+    }
+
+    if (
+      input.result.classification === "No Clear Cause" &&
+      !noSourceSignalCopyNeedsReplacement(input)
+    ) {
+      return {
+        ...input.result,
+        source_support: "none",
+        source_timing_alignment: "none",
+      };
+    }
+
     return noAcceptedSignalSourceResult({
       result: input.result,
       payload: input.payload,

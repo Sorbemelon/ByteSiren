@@ -195,14 +195,14 @@ Signal Event public source timing is stricter in v0.2:
 - an article may be published after the Signal Event only if it clearly describes a catalyst inside the allowed catalyst window and supplies an in-window `catalyst_time_utc`
 - if `catalyst_time_utc` is unknown, Focused/Likely use is allowed only when the article publication itself is inside the catalyst window and the article describes a catalyst tied to this exact event
 - broad older context outside the Signal source window belongs in Daily Overview context, not as a public Signal Event source
-- later recaps without an in-window catalyst time should be omitted or rejected for Signal Event public sources
+- near recaps of the same UTC-day move without an in-window catalyst time may remain as `Backdrop source` / `Market Backdrop`; older or unrelated recaps should be omitted or rejected for Signal Event public sources
 - price-check sources can confirm market data but must not establish Focused/Likely cause
 
 ## Source Display and Chart Markers
 
 Frontend source chips live in the main card source row for Claude-backed Daily Overview and Signal Event cards. Compact rows may hide extra chips behind `+N`; expanding the row/card shows the full accepted list in that same main source area. Expanded detail sections should not duplicate a separate Sources block.
 
-Chart source markers are visible for Claude-backed Daily Overview and Signal Event accepted public sources that have a usable `published_at`. Source markers are not globally de-duplicated by URL; if two cards legitimately reference the same article, each source row can produce its own marker. Source markers use the honest `published_at` article publication timestamp and do not substitute event time, chart peak, or day-boundary fallback times. Sources without a usable publication timestamp may still appear as card source chips if policy allows them, but they do not produce chart source markers. Markers that share or nearly share a source time are separated vertically only so overlap handling does not bias the chart time coordinate. Market Story and Audit Event must not produce source markers.
+Chart source markers are visible for every accepted public source on Claude-backed Daily Overview and Signal Event cards, including `Backdrop source` context rows for `Market Backdrop`. Signal Event source markers are placed at the parent Signal Event start time. Daily Overview source markers are placed at the end of the Daily Overview range. There is no hollow marker state. Source markers are not de-duplicated by URL; each accepted source row can produce its own marker. Markers that share the same parent-card time are separated vertically only so overlap handling does not bias the chart time coordinate. Market Story and Audit Event must not produce source markers.
 
 While public v0.2 remains Claude-disabled and `source_references_v02` is empty, Daily Overview and Signal Event cards should present the missing-context state as `No context yet` instead of a broken or loading state. The frontend should not show empty source chips. Market Story remains deterministic-only with no source/status/Claude labels.
 
@@ -688,7 +688,7 @@ v0.2I7B2 refines v0.2 Claude context and source display after the controlled sam
 - Signal Event and Daily Overview prompts treat `collapsed_summary` as the main public brief
 - separate expanded `Context Details` / `Context summary` blocks are removed from the v0.2 feed UI
 - source chips stay in the main card source row, with `+N` expansion for the full accepted source list
-- chart source markers are visible for Claude-backed Daily Overview and Signal Event public sources with usable `published_at`, are not globally de-duplicated by URL, use only honest article publication time without fallback substitution, are vertically separated when times overlap without shifting chart time, and are never shown for Market Story
+- chart source markers are visible for every accepted Claude-backed Daily Overview and Signal Event public source, including `Backdrop source` context rows, are not de-duplicated by URL, anchor Signal markers to the parent Signal start, anchor Daily markers to the Daily range end, are always filled, are vertically separated when times overlap without shifting chart time, and are never shown for Market Story
 
 v0.2I6A does not:
 

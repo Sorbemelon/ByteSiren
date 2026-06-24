@@ -166,7 +166,7 @@ const STATUS_META: Record<
   },
   queued_for_analysis: {
     Icon: Clock,
-    color: "var(--status-moving)",
+    color: "var(--text-primary)",
     label: "No context yet",
   },
   brief_ready: {
@@ -219,8 +219,10 @@ const SOURCE_STYLE: Record<string, React.CSSProperties> = {
   },
   backdrop: {
     color: "var(--source-backdrop-text)",
-    borderColor: "rgba(148, 163, 184, 0.3)",
-    background: "rgba(148, 163, 184, 0.08)",
+    borderColor:
+      "color-mix(in srgb, var(--source-backdrop-text) 42%, transparent)",
+    background:
+      "color-mix(in srgb, var(--source-backdrop-text) 12%, transparent)",
   },
   price: {
     color: "var(--source-price-text)",
@@ -1384,7 +1386,7 @@ function DailyOverviewSection({
       <div className="grid gap-2.5">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(132px,22%)]">
           <div className="min-w-0 space-y-1.5">
-            {summary ? (
+            {summary && (
               <p
                 className="text-[12.5px] leading-snug"
                 style={{
@@ -1396,13 +1398,6 @@ function DailyOverviewSection({
                 }}
               >
                 {summary}
-              </p>
-            ) : (
-              <p
-                className="text-[12px] leading-snug"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Daily context has not been added yet.
               </p>
             )}
             {hasDetails && (
@@ -1421,7 +1416,7 @@ function DailyOverviewSection({
               className="text-[12px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
             >
-              {section.sources.length > 0 ? "Sources" : "Context"}
+              Sources
             </p>
             {section.sources.length > 0 ? (
               <SourceChipRow
@@ -1432,9 +1427,9 @@ function DailyOverviewSection({
             ) : (
               <span
                 className="text-[11px]"
-                style={{ color: "var(--text-muted)" }}
+                style={{ color: "var(--text-primary)" }}
               >
-                No context yet
+                -
               </span>
             )}
           </div>
@@ -2106,7 +2101,7 @@ function SignalEventSection({
               </span>
             </div>
           )}
-          {summary ? (
+          {summary && (
             <p
               className="text-[12.5px] leading-snug"
               style={{
@@ -2119,13 +2114,6 @@ function SignalEventSection({
             >
               {summary}
             </p>
-          ) : (
-            <p
-              className="text-[12px] leading-snug"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Source-backed context has not been added yet.
-            </p>
           )}
         </div>
 
@@ -2134,7 +2122,7 @@ function SignalEventSection({
             className="text-[12px] font-semibold"
             style={{ color: "var(--text-secondary)" }}
           >
-            {section.sources.length > 0 ? "Sources" : "Context"}
+            Sources
           </p>
           {section.sources.length > 0 ? (
             <SourceChipRow
@@ -2145,9 +2133,9 @@ function SignalEventSection({
           ) : (
             <span
               className="text-[11px]"
-              style={{ color: "var(--text-muted)" }}
+              style={{ color: "var(--text-primary)" }}
             >
-              No context yet
+              -
             </span>
           )}
         </div>
@@ -2231,6 +2219,63 @@ function marketStoryMovementStatus(row: MarketStorySymbolEvidenceV02): string {
   return textOrNull(row.movement_status) ?? "No bar data";
 }
 
+function strongestMarketStoryChangeSymbol(
+  rows: MarketStorySymbolEvidenceV02[],
+): string | null {
+  let strongest: { symbol: string; value: number } | null = null;
+
+  for (const row of rows) {
+    if (row.avg_change_pct === null || row.avg_change_pct === undefined) {
+      continue;
+    }
+
+    if (
+      !strongest ||
+      Math.abs(row.avg_change_pct) > Math.abs(strongest.value)
+    ) {
+      strongest = { symbol: row.symbol, value: row.avg_change_pct };
+    }
+  }
+
+  return strongest?.symbol ?? null;
+}
+
+function widestMarketStoryRangeSymbol(
+  rows: MarketStorySymbolEvidenceV02[],
+): string | null {
+  let widest: { symbol: string; value: number } | null = null;
+
+  for (const row of rows) {
+    if (row.range_pct === null || row.range_pct === undefined) {
+      continue;
+    }
+
+    if (!widest || row.range_pct > widest.value) {
+      widest = { symbol: row.symbol, value: row.range_pct };
+    }
+  }
+
+  return widest?.symbol ?? null;
+}
+
+function highestMarketStorySwingSymbol(
+  rows: MarketStorySymbolEvidenceV02[],
+): string | null {
+  let strongest: { symbol: string; value: number } | null = null;
+
+  for (const row of rows) {
+    if (row.swing_score === null || row.swing_score === undefined) {
+      continue;
+    }
+
+    if (!strongest || row.swing_score > strongest.value) {
+      strongest = { symbol: row.symbol, value: row.swing_score };
+    }
+  }
+
+  return strongest?.symbol ?? null;
+}
+
 function MarketStoryEvidenceTable({
   rows,
 }: {
@@ -2239,6 +2284,10 @@ function MarketStoryEvidenceTable({
   if (rows.length === 0) {
     return null;
   }
+
+  const leadSymbol = strongestMarketStoryChangeSymbol(rows);
+  const widestRangeSymbol = widestMarketStoryRangeSymbol(rows);
+  const highestSwingSymbol = highestMarketStorySwingSymbol(rows);
 
   return (
     <div>
@@ -2267,64 +2316,95 @@ function MarketStoryEvidenceTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.symbol}
-                style={{
-                  borderTop: "1px solid var(--border-row)",
-                  background: "var(--bg-panel)",
-                }}
-              >
-                <td
-                  className="px-3 py-2 font-semibold"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {row.symbol}
-                </td>
-                <td
-                  className="px-3 py-2"
+            {rows.map((row) => {
+              const isLead = row.symbol === leadSymbol;
+              const isWidestRange = row.symbol === widestRangeSymbol;
+              const isHighestSwing = row.symbol === highestSwingSymbol;
+
+              return (
+                <tr
+                  key={row.symbol}
                   style={{
-                    color:
-                      row.avg_change_pct == null
-                        ? "var(--text-muted)"
-                        : row.avg_change_pct >= 0
-                          ? "var(--up)"
-                          : "var(--down)",
+                    borderTop: "1px solid var(--border-row)",
+                    background: isLead
+                      ? "color-mix(in srgb, var(--brand-orange) 8%, transparent)"
+                      : "var(--bg-panel)",
                   }}
                 >
-                  {safeFormatPercent(row.avg_change_pct)}
-                </td>
-                <td
-                  className="px-3 py-2"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {safeFormatUnsignedPercent(row.range_pct)}
-                </td>
-                <td
-                  className="px-3 py-2 font-medium"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {safeFormatScore(row.swing_score)}
-                </td>
-                <td
-                  className="px-3 py-2"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {row.volume_ratio === null || row.volume_ratio === undefined
-                    ? "—"
-                    : `${row.volume_ratio.toFixed(2)}x`}
-                </td>
-                <td
-                  className="px-3 py-2"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {marketStoryMovementStatus(row)}
-                </td>
-              </tr>
-            ))}
+                  <td
+                    className="px-3 py-2 font-semibold"
+                    style={{
+                      color: isLead
+                        ? "var(--status-strong)"
+                        : "var(--text-primary)",
+                    }}
+                  >
+                    {row.symbol}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{
+                      color:
+                        row.avg_change_pct == null
+                          ? "var(--text-muted)"
+                          : row.avg_change_pct >= 0
+                            ? "var(--up)"
+                            : "var(--down)",
+                    }}
+                  >
+                    {safeFormatPercent(row.avg_change_pct)}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{
+                      background: isWidestRange
+                        ? "color-mix(in srgb, var(--status-strong) 10%, transparent)"
+                        : "transparent",
+                      color: isWidestRange
+                        ? "var(--status-strong)"
+                        : "var(--text-secondary)",
+                    }}
+                  >
+                    {safeFormatUnsignedPercent(row.range_pct)}
+                  </td>
+                  <td
+                    className="px-3 py-2 font-medium"
+                    style={{
+                      background: isHighestSwing
+                        ? "color-mix(in srgb, var(--status-strong) 14%, transparent)"
+                        : "transparent",
+                      color: isHighestSwing
+                        ? "var(--status-strong)"
+                        : "var(--text-primary)",
+                    }}
+                  >
+                    {safeFormatScore(row.swing_score)}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {row.volume_ratio === null || row.volume_ratio === undefined
+                      ? "—"
+                      : `${row.volume_ratio.toFixed(2)}x`}
+                  </td>
+                  <td
+                    className="px-3 py-2"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {marketStoryMovementStatus(row)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+      <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
+        Strongest story mover is highlighted in the Symbol column. Widest range
+        is highlighted in the Range column. Highest volatility score is
+        highlighted in the Volatility Score column.
+      </p>
     </div>
   );
 }

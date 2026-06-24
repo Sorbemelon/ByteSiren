@@ -446,7 +446,7 @@ test("Signal Event feed item exposes evidence labels, highlights, brief, and acc
   );
 });
 
-test("Signal Event feed item keeps in-window and same-UTC-day sources but hides prior-day sources", async () => {
+test("Signal Event feed item keeps in-window and nearby Backdrop sources but hides stale sources", async () => {
   const { db } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_late", "2026-06-19T14:00:00.000Z")],
     claude_briefs_v02: [
@@ -493,9 +493,23 @@ test("Signal Event feed item keeps in-window and same-UTC-day sources but hides 
           }),
         },
       ),
-      // Prior UTC day, well outside the window → dropped.
+      // Nearby next-day recap within the accepted Backdrop window.
       sourceReference(
-        "src_d_prior_day",
+        "src_b_next_day_backdrop",
+        "signal_event_v02",
+        "sig_late",
+        "https://finance.yahoo.com/markets/crypto/articles/next-day-market-recap.html",
+        {
+          published_at: "2026-06-20T02:00:00.000Z",
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: null,
+          }),
+        },
+      ),
+      sourceReference(
+        "src_e_prior_day",
         "signal_event_v02",
         "sig_late",
         "https://www.reuters.com/markets/2026/06/17/prior-day-context/",
@@ -522,13 +536,64 @@ test("Signal Event feed item keeps in-window and same-UTC-day sources but hides 
     signal.sources.map((source) => source.url).sort(),
     [
       "https://blockchainreporter.net/markets/2026/06/19/roundup/",
+      "https://finance.yahoo.com/markets/crypto/articles/next-day-market-recap.html",
       "https://www.reuters.com/markets/2026/06/19/in-window-context/",
-      "https://www.reuters.com/markets/2026/06/19/later-with-catalyst/",
     ].sort(),
   );
 });
 
-test("Signal Event feed item replaces source-free news brief with honest no-source copy", async () => {
+test("Signal Event feed item keeps Market Backdrop copy with a nearby Backdrop source", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [
+      signalEvent("sig_backdrop_recap", "2026-06-19T14:00:00.000Z"),
+    ],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_backdrop_recap", {
+        status: "context_only",
+        public_label: "Market Backdrop",
+        classification: "Market Backdrop",
+        headline: "Crypto moved against a broader risk backdrop",
+        collapsed_summary:
+          "A near next-day recap described broader risk-off conditions around the same UTC-day move.",
+        source_support: "low",
+        source_timing_alignment: "broad",
+      }),
+    ],
+    source_references_v02: [
+      sourceReference(
+        "src_next_day_backdrop",
+        "signal_event_v02",
+        "sig_backdrop_recap",
+        "https://finance.yahoo.com/markets/crypto/articles/next-day-risk-recap.html",
+        {
+          published_at: "2026-06-20T02:00:00.000Z",
+          source_role: "Backdrop source",
+          used_for: "backdrop",
+          accepted: 1,
+          metadata_json: JSON.stringify({
+            catalyst_time_utc: null,
+            timing_policy_note: "signal_source_nearby_backdrop_recap",
+          }),
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  assert.equal(signal.sources.length, 1);
+  assert.equal(signal.sources[0].tag, "Backdrop source");
+  assert.equal(signal.brief?.public_label, "Market Backdrop");
+  assert.equal(signal.brief?.classification, "Market Backdrop");
+  assert.match(signal.brief?.collapsed_summary ?? "", /risk-off conditions/);
+});
+
+test("Signal Event feed item preserves source-free No Clear Cause analysis", async () => {
   const { db } = createMemoryD1({
     signal_events_v02: [
       signalEvent("sig_no_source", "2026-06-19T14:00:00.000Z", {
@@ -541,9 +606,9 @@ test("Signal Event feed item replaces source-free news brief with honest no-sour
         status: "no_clear_cause",
         public_label: "No Clear Cause",
         classification: "No Clear Cause",
-        headline: "Fed news drove the move",
+        headline: "No clear cause in the evidence window",
         collapsed_summary:
-          "Reuters and Binance news explained this Signal Event, but the source rows were rejected.",
+          "Claude did not find a reliable public explanation for this Signal Event.",
         source_support: "none",
         source_timing_alignment: "none",
       }),
@@ -575,17 +640,68 @@ test("Signal Event feed item replaces source-free news brief with honest no-sour
   }
 
   assert.equal(signal.sources.length, 0);
-  assert.equal(
-    signal.brief?.headline,
-    "No accepted time-aligned public source",
-  );
+  assert.equal(signal.brief?.headline, "No clear cause in the evidence window");
   assert.match(
     signal.brief?.collapsed_summary ?? "",
-    /No accepted time-aligned public source remained/,
+    /did not find a reliable public explanation/,
   );
-  assert.match(signal.brief?.collapsed_summary ?? "", /Avg Change -1.40%/);
+  assert.equal(signal.brief?.source_support, "none");
+  assert.equal(signal.brief?.source_timing_alignment, "none");
+});
+
+test("Signal Event feed item replaces source-referencing No Clear Cause copy when no sources survive", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [
+      signalEvent("sig_no_clear_sourcey", "2026-06-19T14:00:00.000Z"),
+    ],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_no_clear_sourcey", {
+        status: "no_clear_cause",
+        public_label: "No Clear Cause",
+        classification: "No Clear Cause",
+        headline: "No time-aligned public source",
+        collapsed_summary:
+          "No time-aligned public source was accepted for this signal event. Reuters described a possible Fed catalyst in an older article.",
+        context_details:
+          "Reuters and other articles did not line up with this Signal Event.",
+        source_support: "none",
+        source_timing_alignment: "none",
+      }),
+    ],
+    source_references_v02: [
+      sourceReference(
+        "src_rejected",
+        "signal_event_v02",
+        "sig_no_clear_sourcey",
+        "https://www.reuters.com/markets/2026/06/17/old-context/",
+        {
+          published_at: "2026-06-17T02:00:00.000Z",
+          source_role: "Backdrop source",
+          accepted: 0,
+          rejection_reason: "signal_source_outside_6h_event_window",
+        },
+      ),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  assert.equal(signal.sources.length, 0);
+  assert.equal(signal.brief?.headline, "No clear public catalyst");
+  assert.match(
+    signal.brief?.collapsed_summary ?? "",
+    /range break upside pressure across 4\/5 tracked symbols/,
+  );
+  assert.equal(signal.brief?.context_details, null);
   assert.equal(
-    (signal.brief?.collapsed_summary ?? "").includes("Reuters and Binance"),
+    /source|article|publisher|Reuters|Fed/i.test(
+      `${signal.brief?.headline ?? ""} ${signal.brief?.collapsed_summary ?? ""} ${signal.brief?.context_details ?? ""}`,
+    ),
     false,
   );
 });
@@ -641,16 +757,22 @@ test("Signal Event with high source_support but zero in-window rows drops to No 
   assert.equal(signal.sources.length, 0);
   assert.equal(signal.brief?.public_label, "No Clear Cause");
   assert.equal(signal.brief?.classification, "No Clear Cause");
-  assert.equal(
-    signal.brief?.headline,
-    "No accepted time-aligned public source",
+  assert.equal(signal.brief?.headline, "No clear public catalyst");
+  assert.match(
+    signal.brief?.collapsed_summary ?? "",
+    /range break upside pressure across 4\/5 tracked symbols/,
   );
+  assert.match(signal.brief?.collapsed_summary ?? "", /Avg Change \+2\.10%/);
   assert.equal(
     (signal.brief?.collapsed_summary ?? "").includes("Fed decision"),
     false,
   );
   assert.equal(
     (signal.brief?.collapsed_summary ?? "").includes("Reuters"),
+    false,
+  );
+  assert.equal(
+    /source|article|publisher/i.test(signal.brief?.collapsed_summary ?? ""),
     false,
   );
 });
@@ -763,6 +885,33 @@ test("Daily Overview sources stay within the UTC day plus a short overnight look
       "https://www.coindesk.com/markets/2026/06/19/in-day/",
     ].sort(),
   );
+});
+
+test("Daily Overview public brief hides stored web-search-limit prose", async () => {
+  const { db } = createMemoryD1({
+    daily_overviews_v02: [dailyOverview()],
+    claude_briefs_v02: [
+      claudeBrief("brief_day", "daily_overview_v02", "daily_2026-06-19", {
+        headline: "Daily context",
+        collapsed_summary:
+          "External source validation could not be completed this session due to a web search tool limit error.",
+        context_details:
+          "This context could not be completed because web search was exhausted.",
+      }),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const daily = feed.day_groups[0].items[0];
+
+  assert.equal(daily.item_type, "daily_overview");
+  if (daily.item_type !== "daily_overview") {
+    throw new Error("expected daily overview item");
+  }
+
+  assert.equal(daily.brief?.headline, "Daily context");
+  assert.equal(daily.brief?.collapsed_summary, null);
+  assert.equal(daily.brief?.context_details, null);
+  assert.equal(daily.sources.length, 0);
 });
 
 test("public sources expose catalyst_time_utc from metadata", async () => {

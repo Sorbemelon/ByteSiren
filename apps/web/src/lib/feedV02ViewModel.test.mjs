@@ -679,8 +679,16 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
     defaultMarkers.map((marker) => marker.itemType),
     ["daily_overview", "signal_event"],
   );
+  assert.deepEqual(
+    defaultMarkers.map((marker) => marker.time),
+    ["2026-06-20T23:59:59.999Z", "2026-06-20T15:15:00.000Z"],
+  );
   assert.equal(
     defaultMarkers.every((marker) => marker.selected === false),
+    true,
+  );
+  assert.equal(
+    defaultMarkers.every((marker) => marker.filled === true),
     true,
   );
 
@@ -701,6 +709,8 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
   assert.equal(selectedSignalMarker?.label, "Likely");
   assert.equal(selectedSignalMarker?.tone, "likely");
   assert.equal(selectedSignalMarker?.selected, true);
+  assert.equal(selectedSignalMarker?.time, "2026-06-20T15:15:00.000Z");
+  assert.equal(selectedSignalMarker?.filled, true);
   assert.equal(
     selectedSignalMarker?.url,
     "https://www.reuters.com/markets/2026/06/20/signal-fixture/",
@@ -723,6 +733,8 @@ test("v0.2 chart source markers are built for Claude-backed items", () => {
   assert.equal(selectedDailyMarker?.label, "Main");
   assert.equal(selectedDailyMarker?.tone, "main");
   assert.equal(selectedDailyMarker?.selected, true);
+  assert.equal(selectedDailyMarker?.time, "2026-06-20T23:59:59.999Z");
+  assert.equal(selectedDailyMarker?.filled, true);
 
   const storyMarkers = buildChartSourceMarkersV02(
     feed,
@@ -834,45 +846,71 @@ test("v0.2 chart source markers keep duplicate URLs visible per source row", () 
     ),
   );
 
-  assert.equal(defaultMarkers.length, 6);
+  assert.equal(defaultMarkers.length, 8);
   assert.equal(new Set(defaultMarkers.map((marker) => marker.url)).size, 5);
   assert.equal(
     defaultMarkers.filter((marker) => marker.url.endsWith("/signal-fixture/"))
       .length,
-    2,
+    3,
   );
-  assert.equal(signalMarkers.length, 6);
+  assert.equal(signalMarkers.length, 8);
   assert.deepEqual(
     signalMarkers
       .filter((marker) => marker.itemId === signalSection.id)
       .map((marker) => marker.label),
-    ["Likely", "Backdrop", "Price"],
+    ["Likely", "Likely", "Backdrop", "Price"],
   );
   assert.deepEqual(
     signalMarkers
       .filter((marker) => marker.itemId === signalSection.id)
       .map((marker) => marker.tone),
-    ["likely", "backdrop", "price"],
+    ["likely", "likely", "backdrop", "price"],
   );
   assert.deepEqual(
     signalMarkers
       .filter((marker) => marker.itemId === dailySection.id)
       .map((marker) => marker.tone),
-    ["main", "support", "support"],
+    ["main", "main", "support", "support"],
+  );
+  assert.deepEqual(
+    signalMarkers
+      .filter((marker) => marker.itemId === signalSection.id)
+      .map((marker) => marker.time),
+    [
+      "2026-06-20T15:15:00.000Z",
+      "2026-06-20T15:15:00.000Z",
+      "2026-06-20T15:15:00.000Z",
+      "2026-06-20T15:15:00.000Z",
+    ],
+  );
+  assert.deepEqual(
+    signalMarkers
+      .filter((marker) => marker.itemId === dailySection.id)
+      .map((marker) => marker.time),
+    [
+      "2026-06-20T23:59:59.999Z",
+      "2026-06-20T23:59:59.999Z",
+      "2026-06-20T23:59:59.999Z",
+      "2026-06-20T23:59:59.999Z",
+    ],
+  );
+  assert.equal(
+    signalMarkers.every((marker) => marker.filled === true),
+    true,
   );
   assert.equal(new Set(signalMarkers.map((marker) => marker.url)).size, 5);
   assert.equal(
     signalMarkers.filter((marker) => marker.itemId === signalSection.id).length,
-    3,
+    4,
   );
   assert.equal(
     signalMarkers.filter((marker) => marker.itemId === dailySection.id).length,
-    3,
+    4,
   );
   assert.equal(
     dailyMarkers.filter((marker) => marker.url.endsWith("/signal-fixture/"))
       .length,
-    2,
+    3,
   );
   assert.equal(
     dailyMarkers.some(
@@ -894,7 +932,7 @@ test("v0.2 chart source markers keep duplicate URLs visible per source row", () 
   );
 });
 
-test("v0.2 chart source markers keep source timestamps stable when available", () => {
+test("v0.2 chart source markers anchor to the parent card window", () => {
   const timestampFeed = structuredClone(v02Feed);
   const signal = timestampFeed.day_groups[0].items.find(
     (item) => item.item_type === "signal_event",
@@ -978,11 +1016,11 @@ test("v0.2 chart source markers keep source timestamps stable when available", (
     [
       {
         itemId: dailySection.id,
-        time: "2026-06-20T19:30:00.000Z",
+        time: "2026-06-20T23:59:59.999Z",
       },
       {
         itemId: signalSection.id,
-        time: "2026-06-20T18:15:00.000Z",
+        time: "2026-06-20T15:15:00.000Z",
       },
     ],
   );
@@ -996,19 +1034,23 @@ test("v0.2 chart source markers keep source timestamps stable when available", (
       {
         itemId: dailySection.id,
         selected: true,
-        time: "2026-06-20T19:30:00.000Z",
+        time: "2026-06-20T23:59:59.999Z",
       },
       {
         itemId: signalSection.id,
         selected: false,
-        time: "2026-06-20T18:15:00.000Z",
+        time: "2026-06-20T15:15:00.000Z",
       },
     ],
   );
-  assert.equal(signalSelectedSharedMarker?.time, "2026-06-20T18:15:00.000Z");
+  assert.equal(signalSelectedSharedMarker?.time, "2026-06-20T15:15:00.000Z");
+  assert.equal(
+    defaultMarkers.every((marker) => marker.filled === true),
+    true,
+  );
 });
 
-test("v0.2 chart source markers show honest published_at even outside the item window", () => {
+test("v0.2 chart source markers ignore source timestamps outside the item window", () => {
   const farTimestampFeed = structuredClone(v02Feed);
   const signal = farTimestampFeed.day_groups[0].items.find(
     (item) => item.item_type === "signal_event",
@@ -1049,19 +1091,19 @@ test("v0.2 chart source markers show honest published_at even outside the item w
 
   assert.equal(
     dailyMarker?.time,
-    "2026-06-21T10:00:00.000Z",
-    "Daily source marker should preserve the exact article timestamp",
+    "2026-06-20T23:59:59.999Z",
+    "Daily source marker should anchor to the Daily range end",
   );
   assert.equal(dailyMarker?.filled, true);
   assert.equal(
     signalMarker?.time,
-    "2026-06-21T10:00:00.000Z",
-    "Signal source marker should preserve the exact article timestamp",
+    "2026-06-20T15:15:00.000Z",
+    "Signal source marker should anchor to the Signal start",
   );
   assert.equal(signalMarker?.filled, true);
 });
 
-test("v0.2 chart source markers fall back to catalyst time, then a hollow day-start marker", () => {
+test("v0.2 chart source markers are filled even when source timestamps are missing", () => {
   const fallbackFeed = structuredClone(v02Feed);
   const signal = fallbackFeed.day_groups[0].items.find(
     (item) => item.item_type === "signal_event",
@@ -1113,23 +1155,21 @@ test("v0.2 chart source markers fall back to catalyst time, then a hollow day-st
     marker.url.includes("daily-article"),
   );
 
-  // No honest time → still rendered, hollow, anchored to the analyzed item.
+  // Source-time metadata does not control marker placement.
   assert.ok(priceMarker, "time-less source should still produce a marker");
-  assert.equal(priceMarker.filled, false);
-  assert.equal(priceMarker.time, "2026-06-20T00:00:00.000Z");
+  assert.equal(priceMarker.filled, true);
+  assert.equal(priceMarker.time, "2026-06-20T15:15:00.000Z");
 
-  // catalyst_time_utc fallback → filled marker at the catalyst time.
   assert.ok(catalystMarker);
   assert.equal(catalystMarker.filled, true);
-  assert.equal(catalystMarker.time, "2026-06-20T05:00:00.000Z");
+  assert.equal(catalystMarker.time, "2026-06-20T15:15:00.000Z");
 
-  // Honest published_at → filled marker at the article time.
   assert.ok(dailyMarker);
   assert.equal(dailyMarker.filled, true);
-  assert.equal(dailyMarker.time, "2026-06-20T20:30:00.000Z");
+  assert.equal(dailyMarker.time, "2026-06-20T23:59:59.999Z");
 });
 
-test("v0.2 chart source markers render date-only timestamps as hollow at the date", () => {
+test("v0.2 chart source markers include Backdrop sources", () => {
   const dateOnlyFeed = structuredClone(v02Feed);
   const signal = dateOnlyFeed.day_groups[0].items.find(
     (item) => item.item_type === "signal_event",
@@ -1149,16 +1189,21 @@ test("v0.2 chart source markers render date-only timestamps as hollow at the dat
 
   const feed = normalizeFeedV02(dateOnlyFeed);
   const markers = buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02);
-  const marker = markers.find((m) => m.url.includes("roundup"));
+  const signalSection = feed.dayPosts[0].sections.find(
+    (section) => section.itemType === "signal_event",
+  );
 
-  assert.ok(marker, "date-only source should still produce a marker");
-  assert.equal(marker.filled, false);
-  assert.equal(marker.time, "2026-06-20T00:00:00.000Z");
-  assert.equal(marker.tone, "backdrop");
+  assert.equal(signalSection?.sources.length, 1);
+  assert.equal(signalSection?.sources[0].tag, "Backdrop source");
+  const marker = markers.find((m) => m.url.includes("roundup"));
+  assert.ok(marker);
   assert.equal(marker.label, "Backdrop");
+  assert.equal(marker.tone, "backdrop");
+  assert.equal(marker.time, "2026-06-20T15:15:00.000Z");
+  assert.equal(marker.filled, true);
 });
 
-test("acceptance: each accepted source shows in the chart with its own role and corrected timestamp", () => {
+test("acceptance: every accepted Signal and Daily source gets a filled chart marker", () => {
   const acceptanceFeed = structuredClone(v02Feed);
   const signal = acceptanceFeed.day_groups[0].items.find(
     (item) => item.item_type === "signal_event",
@@ -1220,6 +1265,11 @@ test("acceptance: each accepted source shows in the chart with its own role and 
   const feed = normalizeFeedV02(acceptanceFeed);
   const markers = buildChartSourceMarkersV02(feed, EMPTY_FEED_SELECTION_V02);
   const by = (fragment) => markers.find((m) => m.url.includes(fragment));
+  const signalSection = feed.dayPosts[0].sections.find(
+    (section) => section.itemType === "signal_event",
+  );
+
+  assert.equal(signalSection?.sources.length, 3);
 
   // Every accepted source is shown in the chart (none silently missing).
   for (const fragment of [
@@ -1244,18 +1294,15 @@ test("acceptance: each accepted source shows in the chart with its own role and 
   assert.equal(by("src-support").tone, "support");
   assert.equal(by("src-support").label, "Support");
 
-  // Corrected/honest timestamps: precise → filled at that time; date-only and
-  // no-time → hollow.
-  assert.equal(by("src-focused").filled, true);
-  assert.equal(by("src-focused").time, "2026-06-20T05:15:00.000Z");
-  assert.equal(by("src-backdrop").filled, false);
-  assert.equal(by("src-backdrop").time, "2026-06-20T00:00:00.000Z");
-  assert.equal(by("src-price").filled, false);
-  assert.equal(by("src-price").time, "2026-06-20T00:00:00.000Z");
-  assert.equal(by("src-main").filled, true);
-  assert.equal(by("src-main").time, "2026-06-20T09:30:00.000Z");
-  assert.equal(by("src-support").filled, false);
-  assert.equal(by("src-support").time, "2026-06-20T00:00:00.000Z");
+  for (const fragment of ["src-focused", "src-backdrop", "src-price"]) {
+    assert.equal(by(fragment).filled, true);
+    assert.equal(by(fragment).time, "2026-06-20T15:15:00.000Z");
+  }
+
+  for (const fragment of ["src-main", "src-support"]) {
+    assert.equal(by(fragment).filled, true);
+    assert.equal(by(fragment).time, "2026-06-20T23:59:59.999Z");
+  }
 
   // Roles are genuinely distinct (sanity check against "everything is backdrop").
   const distinctTones = new Set(

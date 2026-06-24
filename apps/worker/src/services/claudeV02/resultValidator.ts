@@ -46,6 +46,16 @@ const DAILY_LABELS = new Set<string>([
 ]);
 const SIGNAL_SOURCE_TAGS = new Set<string>(SIGNAL_EVENT_SOURCE_TAGS_V02);
 const DAILY_SOURCE_TAGS = new Set<string>(DAILY_OVERVIEW_SOURCE_TAGS_V02);
+const PUBLIC_OPERATIONAL_LIMIT_PATTERNS = [
+  /\bexternal source validation\b/i,
+  /\bweb search tool limit\b/i,
+  /\bsearch tool limit\b/i,
+  /\bsearch limit error\b/i,
+  /\btool limit error\b/i,
+  /\bmax[_\s-]?uses\b/i,
+  /\bsearches?\s+(?:were\s+)?exhausted\b/i,
+  /\bcould not be completed\b.*\b(?:web\s+)?search\b/i,
+] as const;
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -104,6 +114,23 @@ function optionalStringArray(value: unknown): string[] {
   return value.filter(
     (item): item is string => typeof item === "string" && Boolean(item.trim()),
   );
+}
+
+function assertNoPublicOperationalLimitText(
+  value: string | null | undefined,
+  fieldName: string,
+) {
+  if (!value) {
+    return;
+  }
+
+  for (const pattern of PUBLIC_OPERATIONAL_LIMIT_PATTERNS) {
+    if (pattern.test(value)) {
+      throw new ClaudeResultValidationErrorV02(
+        `${fieldName} contains public tool-limit wording.`,
+      );
+    }
+  }
 }
 
 function objectField(
@@ -234,6 +261,19 @@ export function validateSignalEventClaudeResultV02(
     sources: validatedSources,
   });
 
+  const headline = stringField(input, "headline");
+  const collapsedSummary = stringField(input, "collapsed_summary");
+  const contextDetails = optionalStringField(input, "context_details");
+  const whyThisClassification = stringField(input, "why_this_classification");
+
+  assertNoPublicOperationalLimitText(headline, "headline");
+  assertNoPublicOperationalLimitText(collapsedSummary, "collapsed_summary");
+  assertNoPublicOperationalLimitText(contextDetails, "context_details");
+  assertNoPublicOperationalLimitText(
+    whyThisClassification,
+    "why_this_classification",
+  );
+
   return {
     mode: "signal_event",
     item_id: itemId,
@@ -243,10 +283,10 @@ export function validateSignalEventClaudeResultV02(
         : itemId,
     classification: validatedClassification,
     confidence: confidence(stringField(input, "confidence")),
-    headline: stringField(input, "headline"),
-    collapsed_summary: stringField(input, "collapsed_summary"),
-    context_details: optionalStringField(input, "context_details"),
-    why_this_classification: stringField(input, "why_this_classification"),
+    headline,
+    collapsed_summary: collapsedSummary,
+    context_details: contextDetails,
+    why_this_classification: whyThisClassification,
     source_support: sourceSupport(stringField(input, "source_support")),
     source_timing_alignment: sourceTiming(
       stringField(input, "source_timing_alignment"),
@@ -280,13 +320,32 @@ export function validateDailyOverviewClaudeResultV02(
   const drivers = Array.isArray(input.notable_drivers)
     ? input.notable_drivers.map((item) => {
         const driver = record(item);
+        const driverName = stringField(driver, "driver");
+        const whyRelevant = stringField(driver, "why_relevant");
+
+        assertNoPublicOperationalLimitText(driverName, "notable_driver.driver");
+        assertNoPublicOperationalLimitText(
+          whyRelevant,
+          "notable_driver.why_relevant",
+        );
+
         return {
-          driver: stringField(driver, "driver"),
+          driver: driverName,
           source_support: sourceSupport(stringField(driver, "source_support")),
-          why_relevant: stringField(driver, "why_relevant"),
+          why_relevant: whyRelevant,
         };
       })
     : [];
+  const headline = stringField(input, "headline");
+  const collapsedSummary = stringField(input, "collapsed_summary");
+  const contextDetails = optionalStringField(input, "context_details");
+  const marketToneSummary = stringField(input, "market_tone_summary");
+  const validatedSources = sources(input.sources, DAILY_SOURCE_TAGS);
+
+  assertNoPublicOperationalLimitText(headline, "headline");
+  assertNoPublicOperationalLimitText(collapsedSummary, "collapsed_summary");
+  assertNoPublicOperationalLimitText(contextDetails, "context_details");
+  assertNoPublicOperationalLimitText(marketToneSummary, "market_tone_summary");
 
   return {
     mode: "daily_overview",
@@ -297,12 +356,12 @@ export function validateDailyOverviewClaudeResultV02(
         : itemId,
     date_utc: stringField(input, "date_utc"),
     confidence: confidence(stringField(input, "confidence")),
-    headline: stringField(input, "headline"),
-    collapsed_summary: stringField(input, "collapsed_summary"),
-    context_details: optionalStringField(input, "context_details"),
-    market_tone_summary: stringField(input, "market_tone_summary"),
+    headline,
+    collapsed_summary: collapsedSummary,
+    context_details: contextDetails,
+    market_tone_summary: marketToneSummary,
     notable_drivers: drivers,
-    sources: sources(input.sources, DAILY_SOURCE_TAGS),
+    sources: validatedSources,
     validation_flags: objectField(input, "validation_flags"),
     detector_feedback: objectField(input, "detector_feedback"),
   };
