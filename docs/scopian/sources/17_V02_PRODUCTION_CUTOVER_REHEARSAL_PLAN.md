@@ -342,7 +342,7 @@ ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=false
 Normal v0.2 refresh is incremental. The existing market ingest workflow continues on the 15-minute cadence. The existing Worker detector cron may run bounded v0.2 incremental Signal/Audit detection and current/open Market Story refresh only when `ENABLE_V02_INCREMENTAL_REFRESH=true`:
 
 ```text
-ENABLE_V02_INCREMENTAL_REFRESH=false initially, true only after canary
+ENABLE_V02_INCREMENTAL_REFRESH=true after D5 canary
 ENABLE_V02_INCREMENTAL_SIGNALS=true
 ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
 V02_INCREMENTAL_TARGET_WINDOW_HOURS=6

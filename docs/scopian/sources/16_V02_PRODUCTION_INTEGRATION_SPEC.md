@@ -310,7 +310,7 @@ Normal production refresh is incremental and Worker-bounded:
 Incremental flags:
 
 ```text
-ENABLE_V02_INCREMENTAL_REFRESH=false initially, true after canary
+ENABLE_V02_INCREMENTAL_REFRESH=true after D5 canary
 ENABLE_V02_INCREMENTAL_SIGNALS=true
 ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
 V02_INCREMENTAL_TARGET_WINDOW_HOURS=6

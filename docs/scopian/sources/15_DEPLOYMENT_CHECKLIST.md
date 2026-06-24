@@ -596,10 +596,11 @@ Incremental v0.2 refresh runs from the existing detector cron after market inges
 Cloudflare Cron market ingest dispatch -> GitHub market-ingest workflow -> Worker detector cron -> bounded v0.2 incremental refresh
 ```
 
-Tracked defaults keep the incremental path off until the remote canary passes:
+Tracked production defaults enable the incremental path after the D5 protected
+canary passed:
 
 ```text
-ENABLE_V02_INCREMENTAL_REFRESH=false
+ENABLE_V02_INCREMENTAL_REFRESH=true
 ENABLE_V02_INCREMENTAL_SIGNALS=true
 ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
 V02_INCREMENTAL_TARGET_WINDOW_HOURS=6
@@ -607,7 +608,7 @@ V02_INCREMENTAL_LOOKBACK_HOURS=24
 V02_MARKET_STORY_OPEN_TTL_HOURS=24
 ```
 
-After the protected canary passes, production may set `ENABLE_V02_INCREMENTAL_REFRESH=true`. The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. It must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
+The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. It must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
 
 Claude triggering for new Signal Events is a future GitHub-executed phase. The D5 scaffold is bounded and disabled by default:
 
