@@ -500,6 +500,7 @@ export async function runRealApiSmoke(options) {
       const story = document.querySelector('[data-item-type="market_story"]')?.innerText ?? "";
       const stories = Array.from(document.querySelectorAll('[data-item-type="market_story"]')).map((section) => section.innerText).join("\\n");
       const daily = document.querySelector('[data-item-type="daily_overview"]')?.innerText ?? "";
+      const dailies = Array.from(document.querySelectorAll('[data-item-type="daily_overview"]')).map((section) => section.innerText).join("\\n");
       const feed = document.querySelector('[data-testid="intelligence-feed-v02"]');
       const leftSection = document.querySelector('[data-testid="dashboard-left-section"]');
       const feedPanel = document.querySelector('[data-testid="dashboard-feed-panel"]');
@@ -563,10 +564,10 @@ export async function runRealApiSmoke(options) {
         storiesHaveVolatilityScore: stories.includes('Volatility Score'),
         storiesHaveSwingChange: stories.includes('Swing Change'),
         storiesHaveAvgChange: stories.includes('Avg Change'),
-        dailyHasTopDailyMover: daily.includes('Top daily mover'),
-        dailyHasWidestRange: daily.includes('Widest range'),
-        dailyHasLeadLabel: /(^|\\n)\\s*Lead\\s*:/.test(daily),
-        dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(daily),
+        dailyHasTopDailyMover: dailies.includes('Top daily mover'),
+        dailyHasWidestRange: dailies.includes('Widest range'),
+        dailyHasLeadLabel: /(^|\\n)\\s*Lead\\s*:/.test(dailies),
+        dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(dailies),
         hasMarketStoryContinues: stories.includes('Market Story continues'),
         hasOldMarketStoryContinue: stories.includes('Market Story (Continue)'),
         hasWaitingForClaude: body.includes('Waiting for Claude'),

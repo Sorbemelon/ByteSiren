@@ -788,6 +788,7 @@ async function runBrowserSmoke() {
     const initial = await session.evaluate(`(() => {
       const body = document.body.innerText;
       const daily = document.querySelector('[data-item-type="daily_overview"]')?.innerText ?? "";
+      const dailies = Array.from(document.querySelectorAll('[data-item-type="daily_overview"]')).map((section) => section.innerText).join("\\n");
       const story = document.querySelector('[data-item-type="market_story"]')?.innerText ?? "";
       const signal = document.querySelector('[data-item-type="signal_event"]')?.innerText ?? "";
       return {
@@ -796,10 +797,10 @@ async function runBrowserSmoke() {
         hasAvgChange: body.toLowerCase().includes('avg change'),
         storyHasVolatilityScore: story.includes('Volatility Score'),
         storyHasSwingChange: story.includes('Swing Change'),
-        dailyHasTopDailyMover: daily.includes('Top daily mover'),
-        dailyHasWidestRange: daily.includes('Widest range'),
-        dailyHasLeadLabel: /(^|\\n)\\s*Lead\\s*:/.test(daily),
-        dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(daily),
+        dailyHasTopDailyMover: dailies.includes('Top daily mover'),
+        dailyHasWidestRange: dailies.includes('Widest range'),
+        dailyHasLeadLabel: /(^|\\n)\\s*Lead\\s*:/.test(dailies),
+        dailyHasStandalonePeakLabel: /(^|\\n)\\s*Peak\\s*:/.test(dailies),
         hasOldMarketStoryContinue: body.includes('Market Story (Continue)'),
         hasWaitingForClaude: body.includes('Waiting for Claude'),
         sectionCount: document.querySelectorAll('[data-testid="feed-section-v02"]').length,
