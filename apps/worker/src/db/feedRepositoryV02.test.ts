@@ -437,6 +437,8 @@ test("Signal Event feed item exposes evidence labels, highlights, brief, and acc
   ]);
   assert.equal(signal.brief?.public_label, "Likely Cause");
   assert.equal(signal.public_context_status, "brief_ready");
+  assert.equal(Object.hasOwn(signal.brief ?? {}, "validation_flags"), false);
+  assert.equal(Object.hasOwn(signal.brief ?? {}, "detector_feedback"), false);
   assert.equal(signal.sources.length, 1);
   assert.equal(
     signal.sources[0].url,

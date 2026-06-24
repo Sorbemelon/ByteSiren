@@ -183,8 +183,6 @@ export interface ClaudeBriefPublicV02 {
   context_details: string | null;
   source_support: string | null;
   source_timing_alignment: string | null;
-  validation_flags: Record<string, unknown>;
-  detector_feedback: Record<string, unknown>;
   prompt_version: string | null;
   updated_at: string;
 }
@@ -512,8 +510,6 @@ function publicBrief(row: ClaudeBriefV02FeedRow): ClaudeBriefPublicV02 {
     context_details: row.context_details,
     source_support: row.source_support,
     source_timing_alignment: row.source_timing_alignment,
-    validation_flags: parseJsonObject(row.validation_flags_json),
-    detector_feedback: parseJsonObject(row.detector_feedback_json),
     prompt_version: row.prompt_version,
     updated_at: row.updated_at,
   };
