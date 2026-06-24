@@ -1,8 +1,8 @@
 <p align="center">
   <img
-    src="apps/web/public/brand/bytesiren_logo-name_transparent.png"
-    alt="ByteSiren"
-    width="360"
+    src="https://raw.githubusercontent.com/Sorbemelon/ByteSiren/main/apps/web/public/brand/bytesiren_logo_transparent.png"
+    alt="ByteSiren logo"
+    width="140"
   />
 </p>
 
