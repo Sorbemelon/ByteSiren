@@ -579,7 +579,11 @@ Before every live import, create rollback artifacts under `.tmp/v02-refresh-roll
 
 The v0.1 market-ingest workflow remains Cloudflare-Cron-dispatched and should keep its existing `workflow_dispatch`-only pattern. The v0.2 snapshot refresh cron is separate and may be revisited later if the owner wants Cloudflare Cron to dispatch it too.
 
-## K. SEO asset note
+## K. Public v0.2 hosted smoke
+
+Phase E stabilizes the hosted v0.2 browser smoke after public cutover. The smoke should prove that the app shell, chart, grouped v0.2 feed, desktop layout, and mobile feed render against the production API. For selected-section behavior, trigger a chart highlight when available and assert the matching feed section is selected and visible inside the feed viewport. Do not require an exact pixel scroll offset. The zero-source public state is intentional while Claude remains disabled: Daily Overview and Signal Event cards may show `No context yet`, Market Story remains deterministic-only, and source chips should not appear when source count is 0.
+
+## L. SEO asset note
 
 Create these later using the ByteSiren full logo:
 

@@ -3,7 +3,9 @@ import test from "node:test";
 
 import {
   countItems,
+  parseRealApiSmokeArgs,
   renderedUniqueCountsFromEntries,
+  selectedSectionVisibilityMetrics,
   webUrlUsageReport,
 } from "./v02-real-api-smoke.mjs";
 
@@ -75,5 +77,57 @@ test("real API smoke reports requested versus actual web URL", () => {
       server_mode: "started_by_smoke",
       started_server: true,
     },
+  );
+});
+
+test("real API smoke accepts explicit screenshot paths", () => {
+  assert.deepEqual(
+    parseRealApiSmokeArgs(
+      [
+        "--api-base",
+        "https://api.example.test",
+        "--web-url",
+        "https://web.example.test",
+        "--desktop-screenshot",
+        ".tmp/desktop.png",
+        "--mobile-screenshot",
+        ".tmp/mobile.png",
+      ],
+      {},
+    ),
+    {
+      apiBase: "https://api.example.test",
+      webUrl: "https://web.example.test",
+      headless: true,
+      desktopScreenshot: ".tmp/desktop.png",
+      mobileScreenshot: ".tmp/mobile.png",
+    },
+  );
+});
+
+test("real API smoke treats selected section as visible without exact top alignment", () => {
+  assert.deepEqual(
+    selectedSectionVisibilityMetrics({
+      scrollerTop: 100,
+      scrollerBottom: 500,
+      selectedTop: 420,
+      selectedBottom: 620,
+    }),
+    {
+      selectedHeight: 200,
+      visibleHeight: 80,
+      visibleRatio: 0.4,
+      isVisible: true,
+    },
+  );
+
+  assert.equal(
+    selectedSectionVisibilityMetrics({
+      scrollerTop: 100,
+      scrollerBottom: 500,
+      selectedTop: 510,
+      selectedBottom: 690,
+    }).isVisible,
+    false,
   );
 });

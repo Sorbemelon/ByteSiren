@@ -534,8 +534,10 @@ Public web smoke checks:
 - Daily Overview renders.
 - Market Story renders.
 - Signal Event renders.
+- Chart highlight selection selects the matching feed section and leaves it visible in the feed viewport.
 - Source chips open exact source URLs.
 - Market Story has no sources/status/Claude fields.
+- When source count is 0, Daily Overview and Signal Event cards show an intentional `No context yet` state without fake source chips.
 - Mobile layout works.
 - No raw Claude traces are visible.
 - No token/budget/search counts are visible.

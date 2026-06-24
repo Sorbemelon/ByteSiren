@@ -1421,7 +1421,7 @@ function DailyOverviewSection({
               className="text-[12px] font-semibold"
               style={{ color: "var(--text-secondary)" }}
             >
-              Sources
+              {section.sources.length > 0 ? "Sources" : "Context"}
             </p>
             {section.sources.length > 0 ? (
               <SourceChipRow
@@ -1434,7 +1434,7 @@ function DailyOverviewSection({
                 className="text-[11px]"
                 style={{ color: "var(--text-muted)" }}
               >
-                No source
+                No context yet
               </span>
             )}
           </div>
@@ -2134,7 +2134,7 @@ function SignalEventSection({
             className="text-[12px] font-semibold"
             style={{ color: "var(--text-secondary)" }}
           >
-            Sources
+            {section.sources.length > 0 ? "Sources" : "Context"}
           </p>
           {section.sources.length > 0 ? (
             <SourceChipRow
@@ -2147,7 +2147,7 @@ function SignalEventSection({
               className="text-[11px]"
               style={{ color: "var(--text-muted)" }}
             >
-              No source
+              No context yet
             </span>
           )}
         </div>
@@ -2493,6 +2493,8 @@ function FeedSection({
         data-section-id={section.id}
         data-day-post-id={dayPostId}
         data-selected={String(isSelected)}
+        data-selected-section-v02={isSelected ? "true" : undefined}
+        aria-current={isSelected ? "true" : undefined}
         tabIndex={0}
         onClick={onSelect}
         onKeyDown={handleKeyDown}
@@ -2519,6 +2521,8 @@ function FeedSection({
       data-section-id={section.id}
       data-day-post-id={dayPostId}
       data-selected={String(isSelected)}
+      data-selected-section-v02={isSelected ? "true" : undefined}
+      aria-current={isSelected ? "true" : undefined}
       tabIndex={0}
       onClick={onSelect}
       onKeyDown={handleKeyDown}
@@ -2770,8 +2774,8 @@ export default function IntelligenceFeedV02({
               className="mt-0.5 h-3.5 w-3.5 shrink-0"
             />
             <span>
-              Claude context appears on Daily Overview and Signal Event sections
-              when source-backed analysis exists.
+              Source-backed context appears on Daily Overview and Signal Event
+              sections when it exists.
             </span>
           </p>
         </div>

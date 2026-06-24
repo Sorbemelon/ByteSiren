@@ -204,6 +204,10 @@ Frontend source chips live in the main card source row for Claude-backed Daily O
 
 Chart source markers are visible for Claude-backed Daily Overview and Signal Event accepted public sources that have a usable `published_at`. Source markers are not globally de-duplicated by URL; if two cards legitimately reference the same article, each source row can produce its own marker. Source markers use the honest `published_at` article publication timestamp and do not substitute event time, chart peak, or day-boundary fallback times. Sources without a usable publication timestamp may still appear as card source chips if policy allows them, but they do not produce chart source markers. Markers that share or nearly share a source time are separated vertically only so overlap handling does not bias the chart time coordinate. Market Story and Audit Event must not produce source markers.
 
+While public v0.2 remains Claude-disabled and `source_references_v02` is empty, Daily Overview and Signal Event cards should present the missing-context state as `No context yet` instead of a broken or loading state. The frontend should not show empty source chips. Market Story remains deterministic-only with no source/status/Claude labels.
+
+The real-API frontend smoke should validate chart-to-feed selection by clicking a chart highlight when available, then asserting the matching feed section is selected and visible inside the feed viewport. It should not depend on an exact scroll offset; visible selected state is the user-facing contract.
+
 ## Planned Feature Flags
 
 Runtime flags originally kept v0.1 as the default path until v0.2 was validated. After Phase C, the public production feed default is `FEED_VERSION=v02`; v0.1 remains available as `FEED_VERSION=v01` rollback:

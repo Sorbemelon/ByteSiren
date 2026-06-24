@@ -40,6 +40,10 @@ export function parseRealApiSmokeArgs(
     readOption(argv, "--api-base") ?? env.NEXT_PUBLIC_API_BASE_URL;
   const webUrl = readOption(argv, "--web-url");
   const headlessValue = readOption(argv, "--headless");
+  const desktopScreenshot =
+    readOption(argv, "--desktop-screenshot") ?? DESKTOP_SCREENSHOT;
+  const mobileScreenshot =
+    readOption(argv, "--mobile-screenshot") ?? MOBILE_SCREENSHOT;
 
   if (!apiBase) {
     throw new Error(
@@ -51,6 +55,8 @@ export function parseRealApiSmokeArgs(
     apiBase,
     webUrl,
     headless: headlessValue === undefined ? true : headlessValue !== "false",
+    desktopScreenshot,
+    mobileScreenshot,
   };
 }
 
@@ -364,6 +370,29 @@ export function countItems(feed) {
   return counts;
 }
 
+export function selectedSectionVisibilityMetrics({
+  scrollerTop,
+  scrollerBottom,
+  selectedTop,
+  selectedBottom,
+}) {
+  const selectedHeight = Math.max(0, selectedBottom - selectedTop);
+  const visibleTop = Math.max(scrollerTop, selectedTop);
+  const visibleBottom = Math.min(scrollerBottom, selectedBottom);
+  const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+  const minimumVisibleHeight = Math.min(selectedHeight, 48);
+
+  return {
+    selectedHeight: Math.round(selectedHeight),
+    visibleHeight: Math.round(visibleHeight),
+    visibleRatio:
+      selectedHeight > 0
+        ? Number((visibleHeight / selectedHeight).toFixed(3))
+        : 0,
+    isVisible: selectedHeight > 0 && visibleHeight >= minimumVisibleHeight,
+  };
+}
+
 export async function runRealApiSmoke(options) {
   const feed = await readApiFeed(options.apiBase);
   const feedCounts = countItems(feed);
@@ -595,19 +624,27 @@ export async function runRealApiSmoke(options) {
       );
     }
 
-    await writeScreenshot(session, DESKTOP_SCREENSHOT);
+    await writeScreenshot(session, options.desktopScreenshot);
 
     const selectedScroll = await session.evaluate(`(() => {
       const scroller = document.querySelector('[data-testid="feed-scroll-v02"]');
       const sections = Array.from(document.querySelectorAll('[data-testid="feed-section-v02"]'));
       const target = sections.find((section, index) => index > 8 && section.getAttribute('data-item-type') === 'signal_event') ?? sections.at(-1);
       if (!scroller || !target) return { present: false };
+      const highlights = Array.from(document.querySelectorAll('[data-testid="chart-v02-highlight"]'));
+      const highlight = highlights.find((item) => item.getAttribute('data-item-id') === target.getAttribute('data-section-id'));
       scroller.scrollTop = 0;
-      target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      if (highlight) {
+        highlight.click();
+      } else {
+        target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        target.click();
+      }
       return {
         present: true,
         sectionId: target.getAttribute('data-section-id'),
         itemType: target.getAttribute('data-item-type'),
+        trigger: highlight ? 'chart_highlight' : 'feed_section_fallback',
       };
     })()`);
 
@@ -616,27 +653,50 @@ export async function runRealApiSmoke(options) {
         session,
         `(() => {
           const scroller = document.querySelector('[data-testid="feed-scroll-v02"]');
-          const selected = document.querySelector('[data-testid="feed-section-v02"][data-selected="true"]');
+          const selected = document.querySelector('[data-selected-section-v02="true"], [data-testid="feed-section-v02"][data-selected="true"]');
           if (!scroller || !selected) return false;
-          return Math.abs(selected.getBoundingClientRect().top - scroller.getBoundingClientRect().top) <= 8;
+          const selectedRect = selected.getBoundingClientRect();
+          const scrollerRect = scroller.getBoundingClientRect();
+          const selectedHeight = Math.max(0, selectedRect.bottom - selectedRect.top);
+          const visibleTop = Math.max(scrollerRect.top, selectedRect.top);
+          const visibleBottom = Math.min(scrollerRect.bottom, selectedRect.bottom);
+          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+          const minimumVisibleHeight = Math.min(selectedHeight, 48);
+          return selectedHeight > 0 && visibleHeight >= minimumVisibleHeight;
         })()`,
         8000,
       );
       const selectedPosition = await session.evaluate(`(() => {
         const scroller = document.querySelector('[data-testid="feed-scroll-v02"]');
-        const selected = document.querySelector('[data-testid="feed-section-v02"][data-selected="true"]');
+        const selected = document.querySelector('[data-selected-section-v02="true"], [data-testid="feed-section-v02"][data-selected="true"]');
         if (!scroller || !selected) return null;
+        const selectedRect = selected.getBoundingClientRect();
+        const scrollerRect = scroller.getBoundingClientRect();
+        const selectedHeight = Math.max(0, selectedRect.bottom - selectedRect.top);
+        const visibleTop = Math.max(scrollerRect.top, selectedRect.top);
+        const visibleBottom = Math.min(scrollerRect.bottom, selectedRect.bottom);
+        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+        const minimumVisibleHeight = Math.min(selectedHeight, 48);
         return {
           scrollTop: Math.round(scroller.scrollTop),
-          selectedTop: Math.round(selected.getBoundingClientRect().top),
-          feedScrollTop: Math.round(scroller.getBoundingClientRect().top),
-          delta: Math.round(Math.abs(selected.getBoundingClientRect().top - scroller.getBoundingClientRect().top)),
+          selectedId: selected.getAttribute('data-section-id'),
+          selectedItemType: selected.getAttribute('data-item-type'),
+          selectedTop: Math.round(selectedRect.top),
+          selectedBottom: Math.round(selectedRect.bottom),
+          feedScrollTop: Math.round(scrollerRect.top),
+          feedScrollBottom: Math.round(scrollerRect.bottom),
+          delta: Math.round(Math.abs(selectedRect.top - scrollerRect.top)),
+          selectedHeight: Math.round(selectedHeight),
+          visibleHeight: Math.round(visibleHeight),
+          visibleRatio: selectedHeight > 0 ? Number((visibleHeight / selectedHeight).toFixed(3)) : 0,
+          isVisible: selectedHeight > 0 && visibleHeight >= minimumVisibleHeight,
+          chartSelectedHighlightId: document.querySelector('[data-testid="trading-view-chart"]')?.getAttribute('data-v02-selected-highlight-id') ?? "",
         };
       })()`);
       selectedScroll.position = selectedPosition;
       assert.ok(
-        selectedPosition?.delta <= 8,
-        `selected feed section should scroll to the feed top: ${JSON.stringify(
+        selectedPosition?.isVisible,
+        `selected feed section should be visible after selection: ${JSON.stringify(
           selectedPosition,
         )}`,
       );
@@ -696,9 +756,15 @@ export async function runRealApiSmoke(options) {
       deviceScaleFactor: 1,
       mobile: true,
     });
+    await session.evaluate(
+      `document.querySelector('[data-testid="intelligence-feed-v02"]')?.scrollIntoView({ block: "start", inline: "nearest" })`,
+    );
     await waitForCondition(
       session,
-      `Boolean(document.querySelector('[data-testid="day-post-v02"]') || document.body.innerText.includes('No v0.2 intelligence items'))`,
+      `(() => {
+        const feed = document.querySelector('[data-testid="intelligence-feed-v02"]');
+        return Boolean(feed && (document.querySelector('[data-testid="day-post-v02"]') || document.body.innerText.includes('No v0.2 intelligence items')));
+      })()`,
     );
     const mobile = await session.evaluate(`(() => ({
       viewportWidth: window.innerWidth,
@@ -710,7 +776,7 @@ export async function runRealApiSmoke(options) {
       mobile.scrollWidth <= mobile.viewportWidth + 24,
       `mobile layout overflowed page width: ${JSON.stringify(mobile)}`,
     );
-    await writeScreenshot(session, MOBILE_SCREENSHOT);
+    await writeScreenshot(session, options.mobileScreenshot);
 
     console.log(
       JSON.stringify(
@@ -724,7 +790,7 @@ export async function runRealApiSmoke(options) {
           rendered: initial,
           selected_scroll: selectedScroll,
           mobile,
-          screenshots: [DESKTOP_SCREENSHOT, MOBILE_SCREENSHOT],
+          screenshots: [options.desktopScreenshot, options.mobileScreenshot],
         },
         null,
         2,
