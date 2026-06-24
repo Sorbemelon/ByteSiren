@@ -1977,6 +1977,7 @@ test("admin v0.2 incremental refresh dry-run writes no rows", async () => {
         dry_run: true,
         target_window_hours: 6,
         lookback_hours: 24,
+        market_story_open_ttl_hours: 72,
         run_market_stories: true,
         dispatch_claude: false,
       }),
@@ -1994,6 +1995,15 @@ test("admin v0.2 incremental refresh dry-run writes no rows", async () => {
   assert.equal(response.status, 200);
   assert.equal(body.ok, true);
   assert.equal(body.dry_run, true);
+  assert.equal(
+    (
+      (body.result as Record<string, unknown>).market_stories as Record<
+        string,
+        unknown
+      >
+    ).open_ttl_hours,
+    72,
+  );
   assert.equal(serialized.includes("test-admin-token"), false);
   assert.equal(tables.signal_events_v02.length, 0);
   assert.equal(tables.market_stories_v02.length, 0);

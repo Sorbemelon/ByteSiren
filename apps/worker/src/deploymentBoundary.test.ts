@@ -31,6 +31,7 @@ test("deployment boundary keeps active Wrangler configs app-local", () => {
     /ENABLE_V02_REFRESH_WORKFLOW_DISPATCH = "false"/,
   );
   assert.match(workerWrangler, /ENABLE_V02_INCREMENTAL_REFRESH = "true"/);
+  assert.match(workerWrangler, /V02_MARKET_STORY_OPEN_TTL_HOURS = "72"/);
   assert.equal(workerWrangler.includes('"*/5 * * * *"'), false);
   assert.match(webWrangler, /pages_build_output_dir = "out"/);
   assert.equal(webWrangler.includes('binding = "DB"'), false);

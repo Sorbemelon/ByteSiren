@@ -93,6 +93,7 @@ interface V02IncrementalRefreshAdminOptions {
   confirmIncrementalRefresh: boolean;
   targetWindowHours: number;
   lookbackHours: number;
+  marketStoryOpenTtlHours: number;
   runMarketStories: boolean;
   dispatchClaude: boolean;
 }
@@ -508,6 +509,12 @@ async function readV02IncrementalRefreshOptions(
     confirmIncrementalRefresh,
     targetWindowHours: parseBoundedHours(body.target_window_hours, 6, 1, 24),
     lookbackHours: parseBoundedHours(body.lookback_hours, 24, 24, 72),
+    marketStoryOpenTtlHours: parseBoundedHours(
+      body.market_story_open_ttl_hours,
+      72,
+      1,
+      72,
+    ),
     runMarketStories: parseBoolean(body.run_market_stories, true),
     dispatchClaude,
   };
@@ -1434,6 +1441,7 @@ export async function adminResponse(
       triggerSource: "admin_canary",
       targetWindowHours: options.targetWindowHours,
       lookbackHours: options.lookbackHours,
+      marketStoryOpenTtlHours: options.marketStoryOpenTtlHours,
       runSignals: true,
       runMarketStories: options.runMarketStories,
       dispatchClaude: options.dispatchClaude,

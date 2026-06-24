@@ -69,7 +69,7 @@ function env(overrides: Partial<Env> = {}): Env {
     ENABLE_V02_INCREMENTAL_MARKET_STORIES: "true",
     V02_INCREMENTAL_TARGET_WINDOW_HOURS: "6",
     V02_INCREMENTAL_LOOKBACK_HOURS: "24",
-    V02_MARKET_STORY_OPEN_TTL_HOURS: "24",
+    V02_MARKET_STORY_OPEN_TTL_HOURS: "72",
     ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH: "false",
     ...overrides,
   };
@@ -125,6 +125,8 @@ test("runIncrementalRefreshV02 live run is bounded, idempotent, and Claude-free"
 
   assert.equal(first.status, "success");
   assert.equal(second.status, "success");
+  assert.equal(first.market_stories?.open_ttl_hours, 72);
+  assert.equal(second.market_stories?.open_ttl_hours, 72);
   assert.ok(signalCount > 0);
   assert.equal(tables.signal_events_v02.length, signalCount);
   assert.equal(tables.market_stories_v02.length, storyCount);

@@ -291,6 +291,8 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
     /Sources too far from the event should be omitted or rejected/,
   );
   assert.match(signalPrompt, /Return no more than 3 sources total/);
+  assert.match(signalPrompt, /Do not include citation markup/);
+  assert.match(signalPrompt, /Put source metadata only in the sources array/);
   assert.match(
     signalPrompt,
     /collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources/,
@@ -310,6 +312,8 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
   assert.doesNotMatch(dailyPrompt, /daily_label:/);
   assert.match(dailyPrompt, /collapsed_summary is the main public brief/);
   assert.match(dailyPrompt, /Return no more than 3 sources total/);
+  assert.match(dailyPrompt, /Do not include citation markup/);
+  assert.match(dailyPrompt, /Put source metadata only in the sources array/);
   assert.match(
     dailyPrompt,
     /collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources/,
@@ -388,6 +392,80 @@ test("v0.2 validators allow omitted long context details", () => {
     validateDailyOverviewClaudeResultV02(daily).context_details,
     null,
   );
+});
+
+test("v0.2 validators strip citation and tag markup from public strings", () => {
+  const signal = validateSignalEventClaudeResultV02({
+    ...validSignalResult(),
+    headline: '<cite index="0-0">Catalyst headline</cite>',
+    collapsed_summary:
+      'Public context <cite index="0-3">lined up</cite> with the move.',
+    context_details: "<p>Readable detail</p>",
+    why_this_classification:
+      'A focused source <cite index="1-1">matched</cite> the window.',
+    rejected_or_ignored_source_notes: [
+      '<cite index="2-2">Ignored duplicate recap.</cite>',
+    ],
+    sources: [
+      {
+        ...validSignalResult().sources[0],
+        title: '<cite index="0-0">Crypto market context</cite>',
+        why_relevant:
+          'Published inside the window <cite index="0-0">with catalyst timing</cite>.',
+      },
+    ],
+  });
+  const daily = validateDailyOverviewClaudeResultV02({
+    ...validDailyResult(),
+    collapsed_summary:
+      'Daily context <cite index="0-3">was source-backed</cite>.',
+    context_details: '<cite index="1-1">Context stays readable.</cite>',
+    market_tone_summary: "<b>Volatile but readable.</b>",
+    notable_drivers: [
+      {
+        driver: '<cite index="0-0">Macro backdrop</cite>',
+        source_support: "medium",
+        why_relevant:
+          'Same-day context <cite index="0-0">supported the driver</cite>.',
+      },
+    ],
+    sources: [
+      {
+        ...validDailyResult().sources[0],
+        title: '<cite index="0-0">Daily crypto market context</cite>',
+      },
+    ],
+  });
+
+  assert.equal(signal.headline, "Catalyst headline");
+  assert.equal(
+    signal.collapsed_summary,
+    "Public context lined up with the move.",
+  );
+  assert.equal(signal.context_details, "Readable detail");
+  assert.equal(
+    signal.why_this_classification,
+    "A focused source matched the window.",
+  );
+  assert.deepEqual(signal.rejected_or_ignored_source_notes, [
+    "Ignored duplicate recap.",
+  ]);
+  assert.equal(signal.sources[0].title, "Crypto market context");
+  assert.equal(
+    signal.sources[0].why_relevant,
+    "Published inside the window with catalyst timing.",
+  );
+  assert.equal(daily.collapsed_summary, "Daily context was source-backed.");
+  assert.equal(daily.context_details, "Context stays readable.");
+  assert.equal(daily.market_tone_summary, "Volatile but readable.");
+  assert.equal(daily.notable_drivers[0].driver, "Macro backdrop");
+  assert.equal(
+    daily.notable_drivers[0].why_relevant,
+    "Same-day context supported the driver.",
+  );
+  assert.equal(daily.sources[0].title, "Daily crypto market context");
+  assert.equal(JSON.stringify(signal).includes("<cite"), false);
+  assert.equal(JSON.stringify(daily).includes("<cite"), false);
 });
 
 test("v0.2 Daily validator rejects public web-search-limit wording", () => {

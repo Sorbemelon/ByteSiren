@@ -315,11 +315,11 @@ ENABLE_V02_INCREMENTAL_SIGNALS=true
 ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
 V02_INCREMENTAL_TARGET_WINDOW_HOURS=6
 V02_INCREMENTAL_LOOKBACK_HOURS=24
-V02_MARKET_STORY_OPEN_TTL_HOURS=24
+V02_MARKET_STORY_OPEN_TTL_HOURS=72
 V02_INCREMENTAL_MAX_SIGNALS_PER_RUN=25
 ```
 
-The incremental path must not run historical rebuilds, clear all v0.2 tables, write old v0.1 incident/Claude/source tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add source/Claude fields to Market Story. `DETECTOR_VERSION=v01` is not the public feed version; public feed selection is controlled by `FEED_VERSION=v02`.
+The 72-hour Market Story open TTL is a bounded rolling window for multi-day Signal clusters. It lets current/open stories be created or refreshed when related source events are older than the 24-hour Signal target window, without using the historical Worker rebuild. The incremental path must not run historical rebuilds, clear all v0.2 tables, write old v0.1 incident/Claude/source tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add source/Claude fields to Market Story. `DETECTOR_VERSION=v01` is not the public feed version; public feed selection is controlled by `FEED_VERSION=v02`.
 
 Phase G implements v0.2 Claude enrichment as a GitHub-executed workflow, not a Worker-side long-running job. `.github/workflows/v02-claude-enrichment.yml` is `workflow_dispatch` only and runs `scripts/v02-claude-enrichment.mjs`; the script reuses the existing v0.2 payload builders, prompts, result validators, terminal overwrite protection, and source policy. It may enrich only `signal_event_v02` and `daily_overview_v02` targets and may write only `claude_briefs_v02` and `source_references_v02`. It must not write old v0.1 Claude/source tables, run deterministic snapshot refresh, reset v0.2 deterministic rows, or create Market Story/Audit Claude rows.
 

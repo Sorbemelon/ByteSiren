@@ -57,6 +57,14 @@ const PUBLIC_OPERATIONAL_LIMIT_PATTERNS = [
   /\bcould not be completed\b.*\b(?:web\s+)?search\b/i,
 ] as const;
 
+function cleanPublicString(value: string): string {
+  return value
+    .replace(/<\/?cite\b[^>]*>/gi, "")
+    .replace(/<\/?[a-z][^>]*>/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new ClaudeResultValidationErrorV02(
@@ -77,7 +85,13 @@ function stringField(
     throw new ClaudeResultValidationErrorV02(`${fieldName} is required.`);
   }
 
-  return value.trim();
+  const cleaned = cleanPublicString(value);
+
+  if (!cleaned) {
+    throw new ClaudeResultValidationErrorV02(`${fieldName} is required.`);
+  }
+
+  return cleaned;
 }
 
 function nullableString(value: unknown): string | null {
@@ -85,7 +99,12 @@ function nullableString(value: unknown): string | null {
     return null;
   }
 
-  return typeof value === "string" ? value.trim() : null;
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const cleaned = cleanPublicString(value);
+  return cleaned ? cleaned : null;
 }
 
 function optionalStringField(
@@ -102,8 +121,8 @@ function optionalStringField(
     throw new ClaudeResultValidationErrorV02(`${fieldName} must be a string.`);
   }
 
-  const trimmed = value.trim();
-  return trimmed ? trimmed : null;
+  const cleaned = cleanPublicString(value);
+  return cleaned ? cleaned : null;
 }
 
 function optionalStringArray(value: unknown): string[] {
@@ -111,9 +130,10 @@ function optionalStringArray(value: unknown): string[] {
     return [];
   }
 
-  return value.filter(
-    (item): item is string => typeof item === "string" && Boolean(item.trim()),
-  );
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => cleanPublicString(item))
+    .filter(Boolean);
 }
 
 function assertNoPublicOperationalLimitText(

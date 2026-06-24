@@ -605,10 +605,10 @@ ENABLE_V02_INCREMENTAL_SIGNALS=true
 ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
 V02_INCREMENTAL_TARGET_WINDOW_HOURS=6
 V02_INCREMENTAL_LOOKBACK_HOURS=24
-V02_MARKET_STORY_OPEN_TTL_HOURS=24
+V02_MARKET_STORY_OPEN_TTL_HOURS=72
 ```
 
-The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. It must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
+The 72-hour Market Story open TTL is still a bounded incremental window. It exists so multi-day Signal clusters can form or refresh after their last Signal without falling back to a full historical rebuild. The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. It must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
 
 Phase G adds the GitHub-executed v0.2 Claude enrichment path for missing Signal/Daily context. GitHub Actions runs `.github/workflows/v02-claude-enrichment.yml` by `workflow_dispatch`; the Node executor is `scripts/v02-claude-enrichment.mjs`. The workflow reads remote D1, calls Claude only from GitHub Actions, and writes only `claude_briefs_v02` and `source_references_v02` through the existing v0.2 prompt, validator, terminal-status, and source-policy code. It must never call Worker-side long-running Claude, write old `claude_briefs` or `source_references`, or select Market Story/Audit targets.
 
