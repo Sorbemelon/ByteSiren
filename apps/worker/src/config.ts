@@ -28,6 +28,8 @@ export type DetectorVersion = "v01" | "v02";
 export type FeedVersion = "v01" | "v02";
 export const DEFAULT_CLAUDE_CATCHUP_LIMIT = 5;
 export const MAX_CLAUDE_CATCHUP_LIMIT = 10;
+export const DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS = 120_000;
+export const MAX_CLAUDE_REQUEST_TIMEOUT_MS = 600_000;
 
 const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);
 
@@ -70,6 +72,16 @@ export function parseClaudeCatchupLimit(value?: string | null): number {
   }
 
   return Math.min(parsed, MAX_CLAUDE_CATCHUP_LIMIT);
+}
+
+export function parseClaudeRequestTimeoutMs(value?: string | null): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS;
+  }
+
+  return Math.min(parsed, MAX_CLAUDE_REQUEST_TIMEOUT_MS);
 }
 
 export function isoDaysAgo(days: number, now = new Date()): string {

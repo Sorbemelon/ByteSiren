@@ -159,9 +159,11 @@ test("AnthropicClient posts a non-streaming Messages request with configured too
 });
 
 test("AnthropicClient treats fetch exceptions as retryable unavailable errors", async () => {
+  let callCount = 0;
   const client = new AnthropicClient({
     apiKey: "test-key",
     fetcher: async () => {
+      callCount += 1;
       const error = new Error("network timeout sk-ant-secret");
       Object.assign(error, {
         code: "ETIMEDOUT",
@@ -169,12 +171,13 @@ test("AnthropicClient treats fetch exceptions as retryable unavailable errors", 
       });
       throw error;
     },
-    retries: 0,
+    retries: 2,
     now: () => new Date("2026-06-16T12:00:00.000Z"),
   });
 
   const result = await client.createIncidentBrief(request());
 
+  assert.equal(callCount, 1);
   assert.equal(result.ok, false);
   assert.equal(result.parsed.retryable, true);
   assert.equal(result.parsed.metadata.error_code, "unavailable");

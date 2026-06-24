@@ -410,6 +410,10 @@ function safeEnvForRunner(db, wranglerVars) {
     ...wranglerVars,
     DB: db,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? "",
+    CLAUDE_REQUEST_TIMEOUT_MS:
+      process.env.CLAUDE_REQUEST_TIMEOUT_MS ??
+      wranglerVars.CLAUDE_REQUEST_TIMEOUT_MS ??
+      "",
     ENABLE_SIGNAL_CLAUDE_V02: "false",
     ENABLE_DAILY_CLAUDE: "false",
     ENABLE_V02_CLAUDE_SAMPLE_TOOLS: "false",

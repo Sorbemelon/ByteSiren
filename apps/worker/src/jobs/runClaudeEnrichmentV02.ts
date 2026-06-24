@@ -3,6 +3,7 @@ import {
   VISIBLE_RANGE_DAYS,
   parseBooleanFlag,
   parseClaudeCatchupLimit,
+  parseClaudeRequestTimeoutMs,
 } from "../config.ts";
 import {
   claimClaudeBriefV02Target,
@@ -967,6 +968,7 @@ export async function runClaudeEnrichmentV02(
     options.client ??
     new AnthropicClient({
       apiKey: apiKey ?? "",
+      timeoutMs: parseClaudeRequestTimeoutMs(env.CLAUDE_REQUEST_TIMEOUT_MS),
     });
   const result = emptyResult({
     status: "success",

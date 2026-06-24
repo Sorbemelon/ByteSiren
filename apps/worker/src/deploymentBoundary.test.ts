@@ -71,6 +71,7 @@ test("v0.2 Claude enrichment workflow is manual-only and bounded to Signal/Daily
 
   assert.match(workflow, /workflow_dispatch:/);
   assert.equal(workflow.includes("schedule:"), false);
+  assert.match(workflow, /timeout-minutes: 15/);
   assert.match(
     workflow,
     /ANTHROPIC_API_KEY: \$\{\{ secrets\.ANTHROPIC_API_KEY \}\}/,
@@ -84,6 +85,7 @@ test("v0.2 Claude enrichment workflow is manual-only and bounded to Signal/Daily
   assert.equal(workflow.includes("market_story_v02"), false);
   assert.equal(workflow.includes("audit_event_v02"), false);
   assert.match(workflow, /include-hidden-files: true/);
+  assert.match(workflow, /CLAUDE_REQUEST_TIMEOUT_MS: "600000"/);
 });
 
 test("Claude secrets stay out of frontend and no scripts depend on root Wrangler config", () => {

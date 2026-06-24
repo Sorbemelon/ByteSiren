@@ -3,9 +3,12 @@ import test from "node:test";
 
 import {
   DEFAULT_CLAUDE_CATCHUP_LIMIT,
+  DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS,
   MAX_CLAUDE_CATCHUP_LIMIT,
+  MAX_CLAUDE_REQUEST_TIMEOUT_MS,
   parseBooleanFlag,
   parseClaudeCatchupLimit,
+  parseClaudeRequestTimeoutMs,
   parseDetectorVersion,
   parseFeedVersion,
 } from "./config.ts";
@@ -100,4 +103,28 @@ test("CLAUDE_CATCHUP_LIMIT uses a bounded safe default", () => {
   assert.equal(parseClaudeCatchupLimit("0"), DEFAULT_CLAUDE_CATCHUP_LIMIT);
   assert.equal(parseClaudeCatchupLimit("3"), 3);
   assert.equal(parseClaudeCatchupLimit("99"), MAX_CLAUDE_CATCHUP_LIMIT);
+});
+
+test("CLAUDE_REQUEST_TIMEOUT_MS defaults safely and caps at ten minutes", () => {
+  assert.equal(
+    parseClaudeRequestTimeoutMs(),
+    DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS,
+  );
+  assert.equal(
+    parseClaudeRequestTimeoutMs(""),
+    DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS,
+  );
+  assert.equal(
+    parseClaudeRequestTimeoutMs("abc"),
+    DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS,
+  );
+  assert.equal(
+    parseClaudeRequestTimeoutMs("0"),
+    DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS,
+  );
+  assert.equal(parseClaudeRequestTimeoutMs("600000"), 600_000);
+  assert.equal(
+    parseClaudeRequestTimeoutMs("999999"),
+    MAX_CLAUDE_REQUEST_TIMEOUT_MS,
+  );
 });

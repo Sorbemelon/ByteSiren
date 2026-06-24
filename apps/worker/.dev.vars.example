@@ -10,6 +10,9 @@ CLAUDE_WEB_SEARCH_TOOL_TYPE=web_search_20260209
 CLAUDE_DEFAULT_MAX_USES=2
 CLAUDE_SECOND_SEARCH_MAX_USES=3
 CLAUDE_PUBLIC_DAILY_ANALYSIS_LIMIT=5
+# Optional request timeout for live Claude calls. GitHub v0.2 enrichment uses
+# 600000 so a single Claude request can run up to 10 minutes before aborting.
+CLAUDE_REQUEST_TIMEOUT_MS=120000
 CLAUDE_ALLOWED_DOMAINS=
 CLAUDE_BLOCKED_DOMAINS=coindcx.com,bitcoinfoundation.org,tradingkey.com,intellectia.ai,mexc.com,bitget.com,stealthex.io
 

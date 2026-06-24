@@ -12,7 +12,7 @@ import {
   type IncidentRow,
 } from "../db/incidentRepository.ts";
 import { recordJobRun } from "../db/marketRepository.ts";
-import type { MarketSymbol } from "../config.ts";
+import { parseClaudeRequestTimeoutMs, type MarketSymbol } from "../config.ts";
 import {
   AnthropicClient,
   buildClaudePrompt,
@@ -445,6 +445,7 @@ export async function enrichQueuedIncidents(
     options.client ??
     new AnthropicClient({
       apiKey,
+      timeoutMs: parseClaudeRequestTimeoutMs(env.CLAUDE_REQUEST_TIMEOUT_MS),
     });
   const blockedDomains = policy.blocked_domains;
   let processed = 0;

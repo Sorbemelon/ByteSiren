@@ -68,10 +68,6 @@ export class AnthropicClient {
           retryable: true,
         });
 
-        if (attempt < this.retries) {
-          continue;
-        }
-
         return lastResult;
       }
 

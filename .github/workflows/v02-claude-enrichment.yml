@@ -94,10 +94,11 @@ jobs:
   enrich:
     name: GitHub-executed v0.2 Claude enrichment
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CLAUDE_REQUEST_TIMEOUT_MS: "600000"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
