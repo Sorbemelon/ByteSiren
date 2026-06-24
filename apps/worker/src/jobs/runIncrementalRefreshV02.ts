@@ -200,7 +200,12 @@ function maxSignalsPerRun(env: Env): number {
 }
 
 function claudeDispatchLimit(env: Env): number {
-  return parsePositiveInt(env.V02_SIGNAL_CLAUDE_DISPATCH_LIMIT, 3, 10);
+  return parsePositiveInt(
+    env.V02_CLAUDE_SIGNAL_DISPATCH_LIMIT ??
+      env.V02_SIGNAL_CLAUDE_DISPATCH_LIMIT,
+    3,
+    10,
+  );
 }
 
 async function recordIncrementalJob(

@@ -263,6 +263,30 @@ test("claude_briefs_v02 claim skips terminal and processing targets", async () =
   assert.equal(isSelectableClaudeBriefV02(second.row), false);
 });
 
+test("claude_briefs_v02 claim force explicitly claims terminal target", async () => {
+  const { db } = createMemoryD1();
+  await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_force_claim",
+    prompt_mode: "signal_event",
+    status: "no_clear_cause",
+    updated_at: "2026-06-19T15:00:00.000Z",
+  });
+
+  const claim = await claimClaudeBriefV02Target(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_force_claim",
+    prompt_mode: "signal_event",
+    prompt_version: "v02-test",
+    model: "claude-test",
+    updated_at: "2026-06-19T15:10:00.000Z",
+    force: true,
+  });
+
+  assert.equal(claim.claimed, true);
+  assert.equal(claim.row.status, "processing");
+});
+
 test("source_references_v02 repository writes accepted and rejected v0.2 sources idempotently", async () => {
   const { db, tables } = createMemoryD1();
   const brief = await upsertClaudeBriefV02(db, {

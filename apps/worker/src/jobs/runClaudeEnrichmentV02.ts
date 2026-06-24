@@ -102,6 +102,8 @@ interface RunOptions {
   targetKinds?: TargetKindV02[];
   targetIds?: string[];
   bypassScheduleFlags?: boolean;
+  force?: boolean;
+  recordJobRun?: boolean;
   runSource?: "scheduled" | "admin_sample";
 }
 
@@ -165,6 +167,7 @@ export async function selectClaudeEnrichmentTargetsV02(
     targetKinds?: TargetKindV02[];
     targetIds?: string[];
     bypassScheduleFlags?: boolean;
+    force?: boolean;
   } = {},
 ): Promise<ClaudeEnrichmentTargetV02[]> {
   const now = options.now ?? new Date();
@@ -205,7 +208,7 @@ export async function selectClaudeEnrichmentTargetsV02(
         "signal_event",
       );
 
-      if (!isRetryableOrMissing(existing)) {
+      if (!options.force && !isRetryableOrMissing(existing)) {
         continue;
       }
 
@@ -244,7 +247,7 @@ export async function selectClaudeEnrichmentTargetsV02(
         "daily_overview",
       );
 
-      if (!isRetryableOrMissing(existing)) {
+      if (!options.force && !isRetryableOrMissing(existing)) {
         continue;
       }
 
@@ -719,6 +722,7 @@ export async function runClaudeEnrichmentV02(
   const dailyEnabled = parseBooleanFlag(env.ENABLE_DAILY_CLAUDE);
   const bypassScheduleFlags = options.bypassScheduleFlags === true;
   const runSource = options.runSource ?? "scheduled";
+  const shouldRecordJobRun = options.recordJobRun !== false;
 
   if (!signalEnabled && !dailyEnabled && !bypassScheduleFlags) {
     const result = emptyResult({
@@ -726,21 +730,23 @@ export async function runClaudeEnrichmentV02(
       message: "Claude v0.2 enrichment skipped: no v0.2 Claude flags enabled.",
       limit,
     });
-    await recordJobRun(
-      db,
-      JOB_NAME,
-      "skipped",
-      result.message,
-      {
-        ...result,
-        enable_signal_claude_v02: signalEnabled,
-        enable_daily_claude: dailyEnabled,
-        bypass_schedule_flags: false,
-        run_source: runSource,
-      },
-      startedAt,
-      new Date(),
-    );
+    if (shouldRecordJobRun) {
+      await recordJobRun(
+        db,
+        JOB_NAME,
+        "skipped",
+        result.message,
+        {
+          ...result,
+          enable_signal_claude_v02: signalEnabled,
+          enable_daily_claude: dailyEnabled,
+          bypass_schedule_flags: false,
+          run_source: runSource,
+        },
+        startedAt,
+        new Date(),
+      );
+    }
     return result;
   }
 
@@ -750,6 +756,7 @@ export async function runClaudeEnrichmentV02(
     targetKinds: options.targetKinds,
     targetIds: options.targetIds,
     bypassScheduleFlags,
+    force: options.force,
   });
 
   if (targets.length === 0) {
@@ -758,21 +765,23 @@ export async function runClaudeEnrichmentV02(
       message: "No eligible v0.2 Claude targets.",
       limit,
     });
-    await recordJobRun(
-      db,
-      JOB_NAME,
-      "skipped",
-      result.message,
-      {
-        ...result,
-        enable_signal_claude_v02: signalEnabled,
-        enable_daily_claude: dailyEnabled,
-        bypass_schedule_flags: bypassScheduleFlags,
-        run_source: runSource,
-      },
-      startedAt,
-      new Date(),
-    );
+    if (shouldRecordJobRun) {
+      await recordJobRun(
+        db,
+        JOB_NAME,
+        "skipped",
+        result.message,
+        {
+          ...result,
+          enable_signal_claude_v02: signalEnabled,
+          enable_daily_claude: dailyEnabled,
+          bypass_schedule_flags: bypassScheduleFlags,
+          run_source: runSource,
+        },
+        startedAt,
+        new Date(),
+      );
+    }
     return result;
   }
 
@@ -784,22 +793,24 @@ export async function runClaudeEnrichmentV02(
       message: "Claude v0.2 enrichment skipped: missing Worker API key.",
       limit,
     });
-    await recordJobRun(
-      db,
-      JOB_NAME,
-      "skipped",
-      result.message,
-      {
-        ...result,
-        eligible_targets: targets.length,
-        enable_signal_claude_v02: signalEnabled,
-        enable_daily_claude: dailyEnabled,
-        bypass_schedule_flags: bypassScheduleFlags,
-        run_source: runSource,
-      },
-      startedAt,
-      new Date(),
-    );
+    if (shouldRecordJobRun) {
+      await recordJobRun(
+        db,
+        JOB_NAME,
+        "skipped",
+        result.message,
+        {
+          ...result,
+          eligible_targets: targets.length,
+          enable_signal_claude_v02: signalEnabled,
+          enable_daily_claude: dailyEnabled,
+          bypass_schedule_flags: bypassScheduleFlags,
+          run_source: runSource,
+        },
+        startedAt,
+        new Date(),
+      );
+    }
     return result;
   }
 
@@ -825,6 +836,7 @@ export async function runClaudeEnrichmentV02(
         target.kind === "signal" ? SIGNAL_PROMPT_VERSION : DAILY_PROMPT_VERSION,
       model,
       updated_at: startedAt.toISOString(),
+      force: options.force,
     });
 
     if (!claim.claimed) {
@@ -909,24 +921,26 @@ export async function runClaudeEnrichmentV02(
         ? `Claude v0.2 enrichment processed ${result.processed} item(s).`
         : "Claude v0.2 enrichment could not validate any item.";
 
-  await recordJobRun(
-    db,
-    JOB_NAME,
-    result.status,
-    result.message,
-    {
-      ...result,
-      enable_signal_claude_v02: signalEnabled,
-      enable_daily_claude: dailyEnabled,
-      bypass_schedule_flags: bypassScheduleFlags,
-      run_source: runSource,
-      claude_model: model,
-      tool_type: policy.tool_type,
-      max_uses: policy.default_max_uses,
-    },
-    startedAt,
-    new Date(),
-  );
+  if (shouldRecordJobRun) {
+    await recordJobRun(
+      db,
+      JOB_NAME,
+      result.status,
+      result.message,
+      {
+        ...result,
+        enable_signal_claude_v02: signalEnabled,
+        enable_daily_claude: dailyEnabled,
+        bypass_schedule_flags: bypassScheduleFlags,
+        run_source: runSource,
+        claude_model: model,
+        tool_type: policy.tool_type,
+        max_uses: policy.default_max_uses,
+      },
+      startedAt,
+      new Date(),
+    );
+  }
 
   return result;
 }

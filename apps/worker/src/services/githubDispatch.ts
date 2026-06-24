@@ -288,9 +288,13 @@ function v02SignalClaudeDispatchConfig(
   return {
     ...repo,
     workflow:
+      env.V02_CLAUDE_WORKFLOW_FILE?.trim() ||
       env.V02_SIGNAL_CLAUDE_WORKFLOW_FILE?.trim() ||
       DEFAULT_V02_SIGNAL_CLAUDE_WORKFLOW,
-    ref: env.V02_SIGNAL_CLAUDE_WORKFLOW_REF?.trim() || DEFAULT_REF,
+    ref:
+      env.V02_CLAUDE_WORKFLOW_REF?.trim() ||
+      env.V02_SIGNAL_CLAUDE_WORKFLOW_REF?.trim() ||
+      DEFAULT_REF,
     token,
   };
 }

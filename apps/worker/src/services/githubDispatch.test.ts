@@ -41,6 +41,8 @@ function baseSignalClaudeEnv(overrides: Partial<Env> = {}): Env {
     DB: {} as D1Database,
     ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH: "true",
     GITHUB_REFRESH_WORKFLOW_REPO: "Sorbemelon/ByteSiren",
+    V02_CLAUDE_WORKFLOW_FILE: "v02-claude-enrichment.yml",
+    V02_CLAUDE_WORKFLOW_REF: "main",
     V02_SIGNAL_CLAUDE_WORKFLOW_FILE: "v02-claude-enrichment.yml",
     V02_SIGNAL_CLAUDE_WORKFLOW_REF: "main",
     GITHUB_INGEST_DISPATCH_TOKEN: "test-github-token",
@@ -397,6 +399,44 @@ test("v0.2 Signal Claude workflow dispatch posts only signal_event_v02 IDs", asy
       confirm_live: "true",
     },
   });
+});
+
+test("v0.2 Signal Claude workflow dispatch prefers Phase G config aliases", async () => {
+  let requestedUrl = "";
+  const requestedBodies: Array<{
+    ref: string;
+    inputs: Record<string, string>;
+  }> = [];
+  const result = await dispatchV02SignalClaudeWorkflow(
+    baseSignalClaudeEnv({
+      V02_CLAUDE_WORKFLOW_FILE: "v02-claude-enrichment.yml",
+      V02_CLAUDE_WORKFLOW_REF: "feature-ref",
+      V02_SIGNAL_CLAUDE_WORKFLOW_FILE: "legacy.yml",
+      V02_SIGNAL_CLAUDE_WORKFLOW_REF: "legacy-ref",
+    }),
+    ["signal_v02_a"],
+    {
+      now: new Date("2026-06-24T02:00:00.000Z"),
+      fetcher: async (input, init) => {
+        requestedUrl = String(input);
+        requestedBodies.push(
+          JSON.parse(String(init?.body)) as {
+            ref: string;
+            inputs: Record<string, string>;
+          },
+        );
+
+        return new Response(null, { status: 204 });
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(
+    requestedUrl,
+    "https://api.github.com/repos/Sorbemelon/ByteSiren/actions/workflows/v02-claude-enrichment.yml/dispatches",
+  );
+  assert.equal(requestedBodies[0]?.ref, "feature-ref");
 });
 
 test("v0.2 Signal Claude workflow dispatch failure redacts token", async () => {

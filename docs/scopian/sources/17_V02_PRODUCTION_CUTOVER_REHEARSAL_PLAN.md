@@ -352,15 +352,19 @@ V02_MARKET_STORY_OPEN_TTL_HOURS=24
 
 This incremental path must not run the historical detector rebuild, reset v0.2 tables, import snapshot SQL, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or mutate old v0.1 Claude/source tables. Market Story stays deterministic-only and source-free.
 
-The D5 Claude workflow dispatch scaffold is disabled and future-only:
+Phase G moves v0.2 Claude enrichment to GitHub Actions. The workflow `.github/workflows/v02-claude-enrichment.yml` remains manual `workflow_dispatch` until owner proof/backfill succeeds. It runs `scripts/v02-claude-enrichment.mjs`, selects only missing `signal_event_v02` and `daily_overview_v02` targets, calls Claude from GitHub Actions, and writes only `claude_briefs_v02` and `source_references_v02`. Market Story and Audit Event remain excluded from Claude/source targets.
+
+The D5/Phase G Signal dispatch scaffold is disabled by default:
 
 ```text
 ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=false
-V02_SIGNAL_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
-V02_SIGNAL_CLAUDE_DISPATCH_LIMIT=3
+V02_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
+V02_CLAUDE_WORKFLOW_REF=main
+V02_CLAUDE_SIGNAL_DISPATCH_LIMIT=3
+V02_CLAUDE_DISPATCH_COOLDOWN_MIN=15
 ```
 
-Do not enable it before an owner-approved Claude phase.
+Live workflow runs require `dry_run=false` and `confirm_live_claude=true`; dry-run must pass first. Required GitHub secrets are `ANTHROPIC_API_KEY` and `CLOUDFLARE_API_TOKEN`, with `CLOUDFLARE_ACCOUNT_ID` only if Wrangler needs it in the runner. Keep `ENABLE_SIGNAL_CLAUDE_V02=false`, `ENABLE_DAILY_CLAUDE=false`, `ENABLE_V02_ADMIN_TOOLS=false`, and `ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false`.
 
 Verify counts after pipeline:
 

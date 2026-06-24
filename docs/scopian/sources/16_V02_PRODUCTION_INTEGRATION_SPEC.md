@@ -321,16 +321,19 @@ V02_INCREMENTAL_MAX_SIGNALS_PER_RUN=25
 
 The incremental path must not run historical rebuilds, clear all v0.2 tables, write old v0.1 incident/Claude/source tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add source/Claude fields to Market Story. `DETECTOR_VERSION=v01` is not the public feed version; public feed selection is controlled by `FEED_VERSION=v02`.
 
-The Worker dispatch path for future Signal Claude enrichment is only a disabled scaffold in D5. If later enabled by owner-approved Phase G, it may dispatch a bounded GitHub workflow for new `signal_event_v02` IDs only:
+Phase G implements v0.2 Claude enrichment as a GitHub-executed workflow, not a Worker-side long-running job. `.github/workflows/v02-claude-enrichment.yml` is `workflow_dispatch` only and runs `scripts/v02-claude-enrichment.mjs`; the script reuses the existing v0.2 payload builders, prompts, result validators, terminal overwrite protection, and source policy. It may enrich only `signal_event_v02` and `daily_overview_v02` targets and may write only `claude_briefs_v02` and `source_references_v02`. It must not write old v0.1 Claude/source tables, run deterministic snapshot refresh, reset v0.2 deterministic rows, or create Market Story/Audit Claude rows.
+
+The Worker dispatch path for new Signal Claude enrichment remains bounded and disabled by default. If enabled after proof, it dispatches the GitHub workflow for new `signal_event_v02` IDs only:
 
 ```text
 ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=false
-V02_SIGNAL_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
-V02_SIGNAL_CLAUDE_WORKFLOW_REF=main
-V02_SIGNAL_CLAUDE_DISPATCH_LIMIT=3
+V02_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
+V02_CLAUDE_WORKFLOW_REF=main
+V02_CLAUDE_SIGNAL_DISPATCH_LIMIT=3
+V02_CLAUDE_DISPATCH_COOLDOWN_MIN=15
 ```
 
-The scaffold must never dispatch Market Story or Audit Event targets, must not require `ENABLE_SIGNAL_CLAUDE_V02` or `ENABLE_DAILY_CLAUDE`, and must not run Claude inside the Worker.
+The workflow requires GitHub secrets by name only: `ANTHROPIC_API_KEY` for live Claude and `CLOUDFLARE_API_TOKEN` for remote D1 access. `CLOUDFLARE_ACCOUNT_ID` may be required by the GitHub runner environment. The Worker scaffold must never dispatch Market Story or Audit Event targets, must not require `ENABLE_SIGNAL_CLAUDE_V02` or `ENABLE_DAILY_CLAUDE`, and must not run Claude inside the Worker.
 
 The protected local v0.2 pipeline endpoint may run these explicit steps:
 

@@ -405,6 +405,7 @@ export async function claimClaudeBriefV02Target(
     prompt_version?: string | null;
     model?: string | null;
     updated_at?: string;
+    force?: boolean;
   },
 ): Promise<ClaudeBriefClaimV02Result> {
   const existing = await getClaudeBriefV02ByTarget(
@@ -414,7 +415,11 @@ export async function claimClaudeBriefV02Target(
     input.prompt_mode,
   );
 
-  if (existing && isTerminalClaudeBriefStatusV02(existing.status)) {
+  if (
+    existing &&
+    !input.force &&
+    isTerminalClaudeBriefStatusV02(existing.status)
+  ) {
     return {
       claimed: false,
       row: existing,
@@ -422,7 +427,7 @@ export async function claimClaudeBriefV02Target(
     };
   }
 
-  if (existing?.status === "processing") {
+  if (existing?.status === "processing" && !input.force) {
     return {
       claimed: false,
       row: existing,
@@ -438,6 +443,7 @@ export async function claimClaudeBriefV02Target(
     prompt_version: input.prompt_version,
     model: input.model,
     updated_at: input.updated_at,
+    force: input.force,
   });
 
   return {

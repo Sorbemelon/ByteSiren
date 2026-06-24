@@ -1,0 +1,190 @@
+name: v02 Claude Enrichment
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_types:
+        description: "Target set to enrich."
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - signal
+          - daily
+          - both
+      mode:
+        description: "Selection mode."
+        required: true
+        default: "sample"
+        type: choice
+        options:
+          - sample
+          - backfill_missing
+          - ids
+      ids:
+        description: "Optional comma-separated Signal/Daily target IDs."
+        required: false
+        default: ""
+        type: string
+      signal_event_ids:
+        description: "Worker-dispatch compatibility input for Signal target IDs."
+        required: false
+        default: ""
+        type: string
+      limit:
+        description: "Maximum targets for this run."
+        required: true
+        default: "5"
+        type: string
+      batch_size:
+        description: "Maximum Claude calls per batch."
+        required: true
+        default: "5"
+        type: string
+      max_targets:
+        description: "Optional hard cap across batches."
+        required: false
+        default: ""
+        type: string
+      force:
+        description: "Force terminal target retry."
+        required: true
+        default: false
+        type: boolean
+      dry_run:
+        description: "Preview targets without calling Claude or writing D1."
+        required: true
+        default: true
+        type: boolean
+      confirm_live_claude:
+        description: "Must be true when dry_run is false."
+        required: true
+        default: false
+        type: boolean
+      confirm_live:
+        description: "Worker-dispatch compatibility confirmation."
+        required: false
+        default: false
+        type: boolean
+      trigger_source:
+        description: "Safe trigger source label."
+        required: false
+        default: "manual"
+        type: string
+      requested_at:
+        description: "Optional dispatch timestamp."
+        required: false
+        default: ""
+        type: string
+      stop_on_error:
+        description: "Stop after a failed batch."
+        required: true
+        default: true
+        type: boolean
+      allow_claude_limited_terminal:
+        description: "Allow Claude Limited as a terminal bounded result."
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  enrich:
+    name: GitHub-executed v0.2 Claude enrichment
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Verify required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "Missing required secret: CLOUDFLARE_API_TOKEN"
+            exit 1
+          fi
+          if [ "${{ inputs.dry_run }}" = "false" ] && [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "Missing required secret for live run: ANTHROPIC_API_KEY"
+            exit 1
+          fi
+          if [ "${{ inputs.dry_run }}" = "false" ] && [ "${{ inputs.confirm_live_claude }}" != "true" ] && [ "${{ inputs.confirm_live }}" != "true" ]; then
+            echo "Live Claude requires confirm_live_claude=true or confirm_live=true."
+            exit 1
+          fi
+
+      - name: Targeted safety tests
+        run: |
+          corepack pnpm --filter @bytesiren/worker exec node --test ../../scripts/v02-claude-enrichment.test.mjs
+          corepack pnpm --filter @bytesiren/worker exec node --test src/db/claudeRepositoryV02.test.ts src/jobs/runClaudeEnrichmentV02.test.ts src/services/claudeV02/claudeV02.test.ts src/services/githubDispatch.test.ts src/deploymentBoundary.test.ts
+
+      - name: Run v0.2 Claude enrichment
+        shell: bash
+        run: |
+          set -euo pipefail
+          ids="${{ inputs.ids }}"
+          signal_ids="${{ inputs.signal_event_ids }}"
+          mode="${{ inputs.mode }}"
+          target_types="${{ inputs.target_types }}"
+
+          if [ -z "$ids" ] && [ -n "$signal_ids" ]; then
+            ids="$signal_ids"
+          fi
+          if [ -n "$signal_ids" ] && [ "$mode" = "sample" ]; then
+            mode="ids"
+          fi
+          if [ -n "$signal_ids" ] && [ "$target_types" = "both" ]; then
+            target_types="signal"
+          fi
+
+          args=(
+            "scripts/v02-claude-enrichment.mjs"
+            "--remote"
+            "--target-types" "$target_types"
+            "--mode" "$mode"
+            "--limit" "${{ inputs.limit }}"
+            "--batch-size" "${{ inputs.batch_size }}"
+            "--dry-run" "${{ inputs.dry_run }}"
+            "--confirm-live-claude" "${{ inputs.confirm_live_claude }}"
+            "--confirm-live" "${{ inputs.confirm_live }}"
+            "--force" "${{ inputs.force }}"
+            "--stop-on-error" "${{ inputs.stop_on_error }}"
+            "--allow-claude-limited-terminal" "${{ inputs.allow_claude_limited_terminal }}"
+            "--report-dir" ".tmp"
+          )
+
+          if [ -n "$ids" ]; then
+            args+=("--ids" "$ids")
+          fi
+          if [ -n "${{ inputs.max_targets }}" ]; then
+            args+=("--max-targets" "${{ inputs.max_targets }}")
+          fi
+
+          node "${args[@]}"
+
+      - name: Upload Phase G reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v02-claude-enrichment-reports
+          path: |
+            .tmp/v02-phase-g-claude-enrichment-run-*.json
+            .tmp/v02-phase-g-claude-enrichment-run-*.md
+          if-no-files-found: warn

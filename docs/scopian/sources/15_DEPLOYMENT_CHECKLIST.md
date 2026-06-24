@@ -286,7 +286,7 @@ no root .env.example
 apps/worker/.dev.vars ignored and untracked
 apps/web/.env.local ignored and untracked
 .claude/settings.local.json ignored and untracked if present
-ANTHROPIC_API_KEY exists only as a Worker secret
+ANTHROPIC_API_KEY exists only as a Worker/GitHub Actions secret
 no NEXT_PUBLIC_ANTHROPIC_API_KEY
 no Worker secret in Pages config or frontend code
 D1 binding exists only in apps/worker/wrangler.toml
@@ -610,15 +610,19 @@ V02_MARKET_STORY_OPEN_TTL_HOURS=24
 
 The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. It must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
 
-Claude triggering for new Signal Events is a future GitHub-executed phase. The D5 scaffold is bounded and disabled by default:
+Phase G adds the GitHub-executed v0.2 Claude enrichment path for missing Signal/Daily context. GitHub Actions runs `.github/workflows/v02-claude-enrichment.yml` by `workflow_dispatch`; the Node executor is `scripts/v02-claude-enrichment.mjs`. The workflow reads remote D1, calls Claude only from GitHub Actions, and writes only `claude_briefs_v02` and `source_references_v02` through the existing v0.2 prompt, validator, terminal-status, and source-policy code. It must never call Worker-side long-running Claude, write old `claude_briefs` or `source_references`, or select Market Story/Audit targets.
+
+Worker triggering for newly detected Signal Events remains bounded and disabled unless the owner enables it after workflow proof:
 
 ```text
 ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=false
-V02_SIGNAL_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
-V02_SIGNAL_CLAUDE_DISPATCH_LIMIT=3
+V02_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
+V02_CLAUDE_WORKFLOW_REF=main
+V02_CLAUDE_SIGNAL_DISPATCH_LIMIT=3
+V02_CLAUDE_DISPATCH_COOLDOWN_MIN=15
 ```
 
-Do not enable this scaffold until the owner approves Phase G. Worker-side long-running Claude remains prohibited.
+Required GitHub secret names for live workflow runs are `ANTHROPIC_API_KEY` and `CLOUDFLARE_API_TOKEN` (plus `CLOUDFLARE_ACCOUNT_ID` only if the runner environment requires it). Do not print secret values. Manual backfill must be bounded with `dry_run=true` first, then `dry_run=false` only with `confirm_live_claude=true`. The legacy Worker flags `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE` stay `false`.
 
 ## K. Public v0.2 hosted smoke
 

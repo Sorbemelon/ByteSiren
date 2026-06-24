@@ -65,7 +65,26 @@ test("v0.2 snapshot refresh workflow remains manual-only", () => {
   assert.match(workflow, /idempotency_key:/);
 });
 
-test("Claude secrets stay Worker-only and no scripts depend on root Wrangler config", () => {
+test("v0.2 Claude enrichment workflow is manual-only and bounded to Signal/Daily", () => {
+  const workflow = readRepoFile(".github/workflows/v02-claude-enrichment.yml");
+
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.equal(workflow.includes("schedule:"), false);
+  assert.match(
+    workflow,
+    /ANTHROPIC_API_KEY: \$\{\{ secrets\.ANTHROPIC_API_KEY \}\}/,
+  );
+  assert.match(
+    workflow,
+    /CLOUDFLARE_API_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/,
+  );
+  assert.equal(workflow.includes("v02-snapshot-refresh.mjs"), false);
+  assert.equal(workflow.includes("v02-snapshot-refresh.yml"), false);
+  assert.equal(workflow.includes("market_story_v02"), false);
+  assert.equal(workflow.includes("audit_event_v02"), false);
+});
+
+test("Claude secrets stay out of frontend and no scripts depend on root Wrangler config", () => {
   const workerEnvExample = readRepoFile("apps/worker/.dev.vars.example");
   const webEnvExample = readRepoFile("apps/web/.env.local.example");
   const rootPackage = readRepoFile("package.json");
