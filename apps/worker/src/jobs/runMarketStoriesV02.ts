@@ -93,17 +93,13 @@ export async function runMarketStoriesV02(
     const sourceEvents = [...signalEvents, ...auditEvents];
 
     if (sourceEvents.length < 2) {
-      if (!dryRun) {
+      if (!dryRun && !range) {
         const emptyOutput = {
           market_stories: [],
           market_story_members: [],
         };
 
-        if (range) {
-          await upsertMarketStoryOutputV02ForRange(db, emptyOutput, range);
-        } else {
-          await upsertMarketStoryOutputV02(db, emptyOutput);
-        }
+        await upsertMarketStoryOutputV02(db, emptyOutput);
       }
 
       const message =

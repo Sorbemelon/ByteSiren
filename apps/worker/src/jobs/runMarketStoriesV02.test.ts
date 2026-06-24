@@ -346,6 +346,42 @@ test("runMarketStoriesV02 clears stale stories when generation is skipped", asyn
   assert.equal(tables.market_story_members_v02.length, 0);
 });
 
+test("runMarketStoriesV02 bounded skipped generation preserves existing stories", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [
+      signalRow(
+        "signal_a",
+        "2026-06-15T00:00:00.000Z",
+        "2026-06-15T01:00:00.000Z",
+      ),
+    ],
+    market_stories_v02: [
+      storedStoryRow(
+        "open_story",
+        "2026-06-15T00:00:00.000Z",
+        "2026-06-15T02:00:00.000Z",
+      ),
+    ],
+    market_story_members_v02: [storedStoryMemberRow("open_story", "signal_a")],
+  });
+
+  const result = await runMarketStoriesV02(db, {
+    now: new Date("2026-06-15T06:00:00.000Z"),
+    timeFrom: "2026-06-15T00:00:00.000Z",
+    timeTo: "2026-06-15T06:00:00.000Z",
+  });
+
+  assert.equal(result.status, "skipped");
+  assert.equal(result.bounded, true);
+  assert.equal(tables.market_stories_v02.length, 1);
+  assert.equal(tables.market_stories_v02[0].id, "open_story");
+  assert.equal(tables.market_story_members_v02.length, 1);
+  assert.equal(
+    tables.market_story_members_v02[0].market_story_id,
+    "open_story",
+  );
+});
+
 test("runMarketStoriesV02 can write audit-only strong context stories", async () => {
   const { db, tables } = createMemoryD1({
     audit_events_v02: [
