@@ -8,9 +8,9 @@
 
 # ByteSiren
 
-**AI-assisted crypto market monitoring for public market signals.**
+**Live public crypto market monitoring with deterministic signals and optional AI context.**
 
-ByteSiren monitors major Binance spot pairs, detects market-wide or symbol-level movement windows, groups them into UTC day posts, and can enrich Signal Event and Daily Overview context with bounded Claude-backed source summaries.
+ByteSiren is a live public beta for crypto market monitoring. It tracks major Binance spot pairs, detects market movement windows, groups them into day-level intelligence, and presents deterministic Signal Events, Market Stories, and Daily Overviews in a public web app.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111)
@@ -23,12 +23,13 @@ ByteSiren monitors major Binance spot pairs, detects market-wide or symbol-level
 ![Binance API](https://img.shields.io/badge/Binance_API-F0B90B?logo=binance&logoColor=111)
 ![Claude](https://img.shields.io/badge/Claude%20%2F%20Anthropic-optional-8A5A44)
 
-**Live Demo:** https://bytesiren.pages.dev  
+**Live App:** https://bytesiren.pages.dev
+
 **API Health:** https://bytesiren-api.nephilim.workers.dev/api/health
 
 ## What Is ByteSiren?
 
-ByteSiren is a public crypto market intelligence dashboard built as a portfolio/demo project. It watches major Binance spot pairs such as BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, and XRPUSDT, then presents deterministic market movement analysis in a public v0.2 day-post feed.
+ByteSiren is a portfolio-grade public crypto market monitoring app built on Cloudflare, Binance market data, deterministic signal detection, and optional AI context enrichment. It watches major Binance spot pairs such as BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, and XRPUSDT, then presents deterministic market movement analysis in a public v0.2 day-post feed.
 
 The v0.2 feed is organized around:
 
@@ -38,9 +39,9 @@ The v0.2 feed is organized around:
 
 Chart and feed selection are linked, and source markers appear only when accepted Claude-backed sources exist for Signal or Daily cards. Audit Events are internal/debug-only and are not public feed items.
 
-> Built to show deterministic market-data engineering, bounded AI enrichment, and production-safe demo deployment on Cloudflare.
+> Built to show deterministic market-data engineering, bounded AI enrichment, and production-safe public deployment on Cloudflare.
 
-ByteSiren is not a trading system, prediction engine, or investment advice product.
+ByteSiren is a public portfolio project for market monitoring and engineering demonstration. It is not financial advice, does not predict prices, and should not be used as a trading decision system.
 
 ## Why It Matters
 
@@ -60,7 +61,7 @@ ByteSiren is not a trading system, prediction engine, or investment advice produ
 - Daily Overview cards with day-level market movement fields.
 - Market Story cards for deterministic multi-window context.
 - Signal Event evidence tables with per-symbol metrics.
-- Responsive public demo hosted on Cloudflare Pages.
+- Responsive public app hosted on Cloudflare Pages.
 
 **Engineering**
 
@@ -72,7 +73,7 @@ ByteSiren is not a trading system, prediction engine, or investment advice produ
 - Feature flags for v01/v02 feed rollback and operational control.
 - Public API and hosted browser smoke tooling.
 
-## Demo Flow
+## App Flow
 
 | Step | Action                     | What To Notice                                                      |
 | ---- | -------------------------- | ------------------------------------------------------------------- |
@@ -155,7 +156,7 @@ Accepted sources are displayed only for Claude-backed Signal/Daily cards. When c
 
 | Highlight                   | Why It Matters                                                   |
 | --------------------------- | ---------------------------------------------------------------- |
-| Cloudflare-first deployment | Keeps the public demo inexpensive and edge-friendly              |
+| Cloudflare-first deployment | Keeps the public app inexpensive and edge-friendly               |
 | D1 v0.2 schema separation   | Lets v0.1 fallback and v0.2 feed data coexist safely             |
 | Incremental refresh         | Keeps recent Signal/Story rows fresher without full rebuilds     |
 | Offline snapshot refresh    | Avoids Worker limits for heavy historical rebuilds               |
@@ -164,7 +165,7 @@ Accepted sources are displayed only for Claude-backed Signal/Daily cards. When c
 | Smoke tooling               | Protects API shape, hosted rendering, and public data boundaries |
 | Source policy               | Keeps public sources bounded, accepted, and exact                |
 
-## Demo Limits / Safety
+## Limits / Safety
 
 | Area            | Current Limit                                                     |
 | --------------- | ----------------------------------------------------------------- |
@@ -175,7 +176,7 @@ Accepted sources are displayed only for Claude-backed Signal/Daily cards. When c
 | Audit Events    | Internal only                                                     |
 | Refresh         | Incremental production path plus manual/backstop snapshot refresh |
 
-ByteSiren uses public market data and may lag, miss context, or show temporary unavailable states. Signals are not predictions. Market Stories are deterministic context, not trading recommendations. The public demo is intentionally bounded to protect resources and keep operational behavior observable.
+ByteSiren uses public market data and may lag, miss context, or show temporary unavailable states. Signals are not predictions. Market Stories are deterministic context, not trading recommendations. ByteSiren is production-deployed, but intentionally bounded as a public portfolio project. Refresh cadence, AI context, and source coverage may be limited.
 
 ## Project Structure
 
@@ -268,7 +269,8 @@ Use `apps/worker/.dev.vars.example` and `apps/web/.env.local.example` as templat
 - Manual/backstop v0.2 snapshot refresh is available through GitHub workflow dispatch.
 - Claude enrichment is optional, bounded, and separate from the deterministic public feed.
 - Source context depends on the current Claude enrichment/backfill state.
-- This is a portfolio demo, not a production trading tool.
+- Status: live public beta.
+- This is a portfolio-grade public app, not a production trading tool.
 
 ## License
 
