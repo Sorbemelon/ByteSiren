@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     "Market Stories",
     "Daily Overviews",
   ],
+  verification: {
+    google: "-kINk9woHXDh283j11mZKy7QUlLMSvKKRvnJoS-bQvo",
+  },
   icons: {
     icon: "/brand/bytesiren_logo_transparent.png",
     apple: "/brand/bytesiren_logo_transparent.png",
