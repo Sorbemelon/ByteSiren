@@ -45,9 +45,6 @@ on:
         description: "Optional external idempotency key"
         required: false
         type: string
-  schedule:
-    - cron: "30 1 * * *"
-
 concurrency:
   group: v02-snapshot-refresh
   cancel-in-progress: false

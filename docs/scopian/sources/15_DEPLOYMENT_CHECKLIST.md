@@ -575,7 +575,7 @@ Before every live import, create rollback artifacts under `.tmp/v02-refresh-roll
 4. Deploy the normal tracked Worker config with `FEED_VERSION=v02` and `ENABLE_SCHEDULED_JOBS=true`.
 5. Smoke the v02 API and confirm public Audit Events and source count are both zero.
 
-`.github/workflows/v02-snapshot-refresh.yml` is the deterministic v0.2 snapshot refresh workflow. Phase D2 proved the workflow with `workflow_dispatch` run `28066280181` on `main`, but the follow-up E2 check found no GitHub native `schedule` run yet. Phase D3 therefore moves the scheduler to Cloudflare Cron while keeping GitHub Actions as the executor:
+`.github/workflows/v02-snapshot-refresh.yml` is the deterministic v0.2 snapshot refresh workflow. Phase D2 proved the workflow with `workflow_dispatch` run `28066280181` on `main`, but the follow-up E2 check found no GitHub native `schedule` run yet. Phase D3 therefore moved the scheduler to Cloudflare Cron while keeping GitHub Actions as the executor.
 
 ```text
 Cloudflare Cron -> Worker lightweight dispatch -> GitHub workflow_dispatch -> GitHub Actions offline rebuild/import
@@ -584,13 +584,13 @@ Cloudflare Cron -> Worker lightweight dispatch -> GitHub workflow_dispatch -> Gi
 The Worker must not run historical v0.2 detector/rebuild work. It only builds a safe dispatch payload, checks for an active queued/in-progress refresh run, and calls the GitHub workflow dispatch API using the existing Worker secret `GITHUB_INGEST_DISPATCH_TOKEN`. Required v0.2 refresh vars:
 
 ```text
-ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true after proof
+ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true
 GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren
 GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml
 GITHUB_REFRESH_WORKFLOW_REF=main
 ```
 
-The GitHub workflow requires the repository secret `CLOUDFLARE_API_TOKEN` and must not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase. Keep `workflow_dispatch` available for owner-supervised refreshes. After Cloudflare dispatch is proven, remove the GitHub native `schedule:` block to avoid duplicate refreshes.
+Phase D3 proof dispatched `workflow_dispatch` run `28068735301` from the protected Worker admin endpoint, and the run completed successfully on `main` commit `3d9e16d`. The GitHub workflow requires the repository secret `CLOUDFLARE_API_TOKEN` and must not add `ANTHROPIC_API_KEY`; Claude remains a separate future phase. Keep `workflow_dispatch` available for owner-supervised refreshes. The GitHub native `schedule:` block is intentionally removed to avoid duplicate refreshes; Cloudflare Cron is the scheduler.
 
 ## K. Public v0.2 hosted smoke
 

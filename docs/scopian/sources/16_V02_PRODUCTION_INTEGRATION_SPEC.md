@@ -302,6 +302,8 @@ The workflow is `.github/workflows/v02-snapshot-refresh.yml`. Phase D2 proved it
 
 The Worker dispatch path must be lightweight. It must not run detector, Market Story, Daily Overview, Claude, reset, import, or rebuild logic inside the Worker. It uses the existing Worker secret `GITHUB_INGEST_DISPATCH_TOKEN` only for the GitHub dispatch API call. Required dispatch vars are `GITHUB_REFRESH_WORKFLOW_REPO`, `GITHUB_REFRESH_WORKFLOW_FILE`, and `GITHUB_REFRESH_WORKFLOW_REF`. `workflow_dispatch` remains available for owner-supervised refreshes. The workflow requires the repository secret `CLOUDFLARE_API_TOKEN`, uses concurrency to avoid overlapping refreshes, and must not use or require `ANTHROPIC_API_KEY`. No Claude secrets are required or allowed for deterministic snapshot refresh.
 
+Phase D3 proof dispatched `workflow_dispatch` run `28068735301` from the protected Worker admin endpoint on `main` commit `3d9e16d`, and the run completed successfully. After that proof, tracked Worker config enables `ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true`, and the GitHub native `schedule:` block is removed so Cloudflare Cron is the only daily scheduler.
+
 The protected local v0.2 pipeline endpoint may run these explicit steps:
 
 - `detector`: runs the v0.2 Signal/Audit detector write path only.

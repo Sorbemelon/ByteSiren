@@ -333,7 +333,7 @@ The refresh must:
 Cloudflare Cron -> Worker lightweight dispatch -> GitHub workflow_dispatch -> GitHub Actions offline rebuild/import
 ```
 
-The Worker dispatch path requires `ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true`, `GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren`, `GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml`, `GITHUB_REFRESH_WORKFLOW_REF=main`, and the Worker secret `GITHUB_INGEST_DISPATCH_TOKEN`. It must dispatch only and must not run historical detector/rebuild work in the Worker. Required GitHub repository secret: `CLOUDFLARE_API_TOKEN`. Do not add `ANTHROPIC_API_KEY`; Claude remains disabled and separate. After Cloudflare dispatch is proven, remove the GitHub native `schedule:` block to avoid duplicate refreshes.
+The Worker dispatch path requires `ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=true`, `GITHUB_REFRESH_WORKFLOW_REPO=Sorbemelon/ByteSiren`, `GITHUB_REFRESH_WORKFLOW_FILE=v02-snapshot-refresh.yml`, `GITHUB_REFRESH_WORKFLOW_REF=main`, and the Worker secret `GITHUB_INGEST_DISPATCH_TOKEN`. It must dispatch only and must not run historical detector/rebuild work in the Worker. Required GitHub repository secret: `CLOUDFLARE_API_TOKEN`. Do not add `ANTHROPIC_API_KEY`; Claude remains disabled and separate. Phase D3 proof dispatched `workflow_dispatch` run `28068735301` on `main` commit `3d9e16d`, and the run completed successfully. The GitHub native `schedule:` block is removed after that proof to avoid duplicate refreshes; Cloudflare Cron is the daily scheduler.
 
 Verify counts after pipeline:
 

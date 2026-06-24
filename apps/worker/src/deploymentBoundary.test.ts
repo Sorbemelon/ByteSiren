@@ -23,8 +23,10 @@ test("deployment boundary keeps active Wrangler configs app-local", () => {
   assert.match(workerWrangler, /binding = "DB"/);
   assert.match(workerWrangler, /crons = \[/);
   assert.match(workerWrangler, /"2,17,32,47 \* \* \* \*"/);
+  assert.match(workerWrangler, /"30 1 \* \* \*"/);
   assert.match(workerWrangler, /"5,20,35,50 \* \* \* \*"/);
   assert.match(workerWrangler, /"10,25,40,55 \* \* \* \*"/);
+  assert.match(workerWrangler, /ENABLE_V02_REFRESH_WORKFLOW_DISPATCH = "true"/);
   assert.equal(workerWrangler.includes('"*/5 * * * *"'), false);
   assert.match(webWrangler, /pages_build_output_dir = "out"/);
   assert.equal(webWrangler.includes('binding = "DB"'), false);
@@ -47,6 +49,16 @@ test("market ingest workflow imports only and leaves detector to Worker cron", (
     /ByteSiren import-only run\. Detector is handled by Worker cron\./,
   );
   assert.equal(workflow.includes("--run-detector-last"), false);
+});
+
+test("v0.2 snapshot refresh workflow is dispatched by Cloudflare cron only", () => {
+  const workflow = readRepoFile(".github/workflows/v02-snapshot-refresh.yml");
+
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.equal(workflow.includes("schedule:"), false);
+  assert.equal(workflow.includes('cron: "30 1 * * *"'), false);
+  assert.match(workflow, /trigger_source:/);
+  assert.match(workflow, /idempotency_key:/);
 });
 
 test("Claude secrets stay Worker-only and no scripts depend on root Wrangler config", () => {
