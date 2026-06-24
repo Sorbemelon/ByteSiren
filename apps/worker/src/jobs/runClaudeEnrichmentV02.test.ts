@@ -754,10 +754,12 @@ test("v0.2 enrichment replaces Signal news copy when no accepted source survives
   assert.equal(brief.headline, "No clear public catalyst");
   assert.match(
     brief.collapsed_summary ?? "",
-    /range break upside pressure across 4\/5 tracked symbols/,
+    /range break upside pressure across 4 of 5 tracked symbols/,
   );
-  assert.match(brief.collapsed_summary ?? "", /led by BTCUSDT/);
-  assert.match(brief.collapsed_summary ?? "", /Avg Change \+1\.80%/);
+  assert.match(brief.collapsed_summary ?? "", /BTCUSDT leading the move/);
+  assert.match(brief.collapsed_summary ?? "", /average move of \+1\.80%/);
+  assert.doesNotMatch(brief.collapsed_summary ?? "", /Signal Event reads as/);
+  assert.doesNotMatch(brief.collapsed_summary ?? "", /Avg Change/);
   assert.equal(
     /source|article|publisher|Reuters|Fed news/i.test(
       brief.collapsed_summary ?? "",
@@ -844,7 +846,12 @@ test("v0.2 enrichment replaces source-referencing No Clear Cause copy after sour
   const brief = tables.claude_briefs_v02[0];
   assert.equal(brief.status, "no_clear_cause");
   assert.equal(brief.headline, "No clear public catalyst");
-  assert.match(brief.collapsed_summary ?? "", /Signal Event reads as/);
+  assert.match(
+    brief.collapsed_summary ?? "",
+    /No clear public catalyst stands out/,
+  );
+  assert.match(brief.collapsed_summary ?? "", /confirmed news-driven move/);
+  assert.doesNotMatch(brief.collapsed_summary ?? "", /Signal Event reads as/);
   assert.equal(
     /source|article|publisher|Reuters|Fed/i.test(
       `${brief.headline} ${brief.collapsed_summary} ${brief.context_details ?? ""}`,

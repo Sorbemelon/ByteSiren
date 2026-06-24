@@ -397,21 +397,25 @@ function signalEvidenceOnlyNoClearCauseSummary(
     cleanSignalContextLabel(payload.chart_context.chart_context_label);
   const avgChange = signedPercent(payload.avg_change_pct);
   const lead = leadSymbol(payload);
-  const breadth = `${payload.signals_count}/${payload.n_tracked}`;
+  const breadth =
+    payload.signals_count === payload.n_tracked
+      ? `all ${payload.n_tracked} tracked symbols`
+      : `${payload.signals_count} of ${payload.n_tracked} tracked symbols`;
   const pressure =
     context && context.includes(direction)
       ? `${context} pressure`
       : `${context ? `${context} ` : ""}${direction} pressure`;
 
   return [
-    "No clear public catalyst was identified.",
-    `The Signal Event reads as ${pressure} across ${breadth} tracked symbols`,
-    lead ? `, led by ${lead}` : "",
-    avgChange ? ` with Avg Change ${avgChange}` : "",
-    ", rather than a confirmed external driver.",
+    "No clear public catalyst stands out.",
+    ` This looks more like ${pressure} across ${breadth}`,
+    lead ? `, with ${lead} leading the move` : "",
+    avgChange ? ` and an average move of ${avgChange}` : "",
+    " than a confirmed news-driven move.",
   ]
     .join("")
-    .replace("identified.The", "identified. The");
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function textContainsRejectedSourceReference(
