@@ -169,6 +169,21 @@ const STATUS_META: Record<
     color: "var(--text-primary)",
     label: "No context yet",
   },
+  processing: {
+    Icon: Clock,
+    color: "var(--text-primary)",
+    label: "No context yet",
+  },
+  failed_retryable: {
+    Icon: Clock,
+    color: "var(--text-primary)",
+    label: "No context yet",
+  },
+  failed_terminal: {
+    Icon: Clock,
+    color: "var(--text-primary)",
+    label: "No context yet",
+  },
   brief_ready: {
     Icon: BadgeCheck,
     color: "var(--cause-focused)",

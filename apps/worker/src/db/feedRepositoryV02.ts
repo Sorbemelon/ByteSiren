@@ -527,22 +527,46 @@ const SOURCELESS_SIGNAL_COPY_PATTERNS_V02 = [
   /\bdecrypt\b/i,
 ] as const;
 
+const PUBLIC_UNRESOLVED_CLAUDE_STATUSES_V02 = new Set([
+  "queued_for_analysis",
+  "processing",
+  "failed_retryable",
+  "failed_terminal",
+]);
+
+function publicClaudeStatus(status: string | null | undefined): string {
+  if (!status || PUBLIC_UNRESOLVED_CLAUDE_STATUSES_V02.has(status)) {
+    return "queued_for_analysis";
+  }
+
+  return status;
+}
+
+function stripPublicCitationMarkup(value: string): string {
+  return value
+    .replace(/<\/?cite\b[^>]*>/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function publicBriefText(value: string | null): string | null {
   if (!value) {
     return value;
   }
 
+  const cleaned = stripPublicCitationMarkup(value);
+
   return PUBLIC_OPERATIONAL_LIMIT_PATTERNS_V02.some((pattern) =>
-    pattern.test(value),
+    pattern.test(cleaned),
   )
     ? null
-    : value;
+    : cleaned || null;
 }
 
 function publicBrief(row: ClaudeBriefV02FeedRow): ClaudeBriefPublicV02 {
   return {
     id: row.id,
-    status: row.status,
+    status: publicClaudeStatus(row.status),
     public_label: row.public_label,
     classification: row.classification,
     confidence: row.confidence,
@@ -576,64 +600,6 @@ function publicSources(rows: SourceReferenceV02FeedRow[]): PublicSourceV02[] {
   });
 }
 
-function cleanSignalContextLabel(
-  value: string | null | undefined,
-): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const cleaned = value
-    .replace(/_/g, " ")
-    .replace(/\bup\b/g, "upside")
-    .replace(/\bdown\b/g, "downside")
-    .trim();
-
-  return cleaned || null;
-}
-
-function signalDirectionPhrase(direction: string): string {
-  if (direction.includes("down")) return "downside";
-  if (direction.includes("up")) return "upside";
-  return "mixed-direction";
-}
-
-function signedPercent(value: number | null): string | null {
-  if (value === null || !Number.isFinite(value)) {
-    return null;
-  }
-
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
-}
-
-function signalEvidenceOnlyNoClearCauseSummary(
-  row: SignalEventV02FeedRow,
-): string {
-  const context =
-    cleanSignalContextLabel(row.event_story_type) ??
-    cleanSignalContextLabel(row.momentum_context) ??
-    cleanSignalContextLabel(row.volatility_context) ??
-    cleanSignalContextLabel(row.trend_context) ??
-    cleanSignalContextLabel(row.event_range_context) ??
-    cleanSignalContextLabel(row.chart_context_label);
-  const avgChange = signedPercent(row.avg_change_pct);
-  const breadth = `${row.signals_count}/${row.n_tracked}`;
-  const direction = signalDirectionPhrase(row.direction);
-  const pressure =
-    context && context.includes(direction)
-      ? `${context} pressure`
-      : `${context ? `${context} ` : ""}${direction} pressure`;
-
-  return [
-    "No clear public catalyst was identified.",
-    `The Signal Event reads as ${pressure} across ${breadth} tracked symbols`,
-    avgChange ? ` with Avg Change ${avgChange}` : "",
-    ", rather than a confirmed external driver.",
-  ]
-    .join("")
-    .replace("identified.The", "identified. The");
-}
-
 function noSourceSignalCopyNeedsReplacement(
   brief: ClaudeBriefPublicV02,
 ): boolean {
@@ -650,7 +616,6 @@ function noSourceSignalCopyNeedsReplacement(
 
 function signalBriefWithoutAcceptedSources(
   brief: ClaudeBriefPublicV02,
-  row: SignalEventV02FeedRow,
 ): ClaudeBriefPublicV02 {
   // This is only reached when zero public source rows survive the window filter,
   // so any source-backed copy in the stored brief is now unsupported and must be
@@ -659,6 +624,20 @@ function signalBriefWithoutAcceptedSources(
   if (brief.classification === "Claude Limited") {
     return {
       ...brief,
+      source_support: "none",
+      source_timing_alignment: "none",
+    };
+  }
+
+  if (PUBLIC_UNRESOLVED_CLAUDE_STATUSES_V02.has(brief.status)) {
+    return {
+      ...brief,
+      status: "queued_for_analysis",
+      public_label: null,
+      classification: null,
+      headline: null,
+      collapsed_summary: null,
+      context_details: null,
       source_support: "none",
       source_timing_alignment: "none",
     };
@@ -675,12 +654,24 @@ function signalBriefWithoutAcceptedSources(
     };
   }
 
+  if (brief.classification === "No Clear Cause") {
+    return {
+      ...brief,
+      headline: null,
+      collapsed_summary: null,
+      context_details: null,
+      source_support: "none",
+      source_timing_alignment: "none",
+    };
+  }
+
   return {
     ...brief,
-    public_label: "No Clear Cause",
-    classification: "No Clear Cause",
-    headline: "No clear public catalyst",
-    collapsed_summary: signalEvidenceOnlyNoClearCauseSummary(row),
+    status: "queued_for_analysis",
+    public_label: null,
+    classification: null,
+    headline: null,
+    collapsed_summary: null,
     context_details: null,
     source_support: "none",
     source_timing_alignment: "none",
@@ -1012,7 +1003,9 @@ async function getDailyItems(
       market_range_pct: row.market_range_pct,
       notable_symbols: notableSymbols,
       top_symbol_moves: topSymbolMoves,
-      public_context_status: brief?.status ?? row.claude_status,
+      public_context_status: publicClaudeStatus(
+        brief?.status ?? row.claude_status,
+      ),
       sources: publicSources(
         dailyPublicSourceRows(sourceRows, row.day_start, row.day_end),
       ),
@@ -1231,7 +1224,7 @@ async function getSignalEventItems(
       momentum_context: row.momentum_context,
       volatility_context: row.volatility_context,
       event_range_context: row.event_range_context,
-      public_context_status: brief?.status ?? "queued_for_analysis",
+      public_context_status: publicClaudeStatus(brief?.status),
       sources: signalSources,
       evidence_window: {
         start: row.event_start,
@@ -1285,10 +1278,12 @@ async function getSignalEventItems(
     };
 
     if (brief) {
-      item.brief =
+      const finalBrief =
         signalSources.length === 0
-          ? signalBriefWithoutAcceptedSources(publicBrief(brief), row)
+          ? signalBriefWithoutAcceptedSources(publicBrief(brief))
           : publicBrief(brief);
+      item.brief = finalBrief;
+      item.public_context_status = finalBrief.status;
     }
 
     items.push(item);

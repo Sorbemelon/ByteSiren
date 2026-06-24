@@ -649,6 +649,74 @@ test("Signal Event feed item preserves source-free No Clear Cause analysis", asy
   assert.equal(signal.brief?.source_timing_alignment, "none");
 });
 
+test("Daily Overview public brief strips citation markup", async () => {
+  const { db } = createMemoryD1({
+    daily_overviews_v02: [dailyOverview()],
+    claude_briefs_v02: [
+      claudeBrief("brief_daily", "daily_overview_v02", "daily_2026-06-19", {
+        collapsed_summary:
+          'Crypto sold off <cite index="0-3">as risk assets weakened.</cite> ETF flows were mixed.',
+        context_details: '<cite index="1-1">Context stays readable.</cite>',
+      }),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const daily = feed.day_groups[0].items[0];
+
+  assert.equal(daily.item_type, "daily_overview");
+  if (daily.item_type !== "daily_overview") {
+    throw new Error("expected daily item");
+  }
+
+  assert.equal(
+    daily.brief?.collapsed_summary,
+    "Crypto sold off as risk assets weakened. ETF flows were mixed.",
+  );
+  assert.equal(daily.brief?.context_details, "Context stays readable.");
+  assert.equal(
+    `${daily.brief?.collapsed_summary ?? ""} ${daily.brief?.context_details ?? ""}`.includes(
+      "<cite",
+    ),
+    false,
+  );
+});
+
+test("Signal Event failed retryable brief stays unresolved instead of No Clear Cause", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [
+      signalEvent("sig_retrying", "2026-06-19T14:00:00.000Z"),
+    ],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_retrying", {
+        status: "failed_retryable",
+        public_label: null,
+        classification: null,
+        headline: null,
+        collapsed_summary: null,
+        context_details: null,
+        source_support: null,
+        source_timing_alignment: null,
+        error_code: "unavailable",
+        error_message: "Claude request failed before a response.",
+      }),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  assert.equal(signal.public_context_status, "queued_for_analysis");
+  assert.equal(signal.brief?.status, "queued_for_analysis");
+  assert.equal(signal.brief?.public_label, null);
+  assert.equal(signal.brief?.classification, null);
+  assert.equal(signal.brief?.headline, null);
+  assert.equal(signal.brief?.collapsed_summary, null);
+});
+
 test("Signal Event feed item replaces source-referencing No Clear Cause copy when no sources survive", async () => {
   const { db } = createMemoryD1({
     signal_events_v02: [
@@ -692,11 +760,10 @@ test("Signal Event feed item replaces source-referencing No Clear Cause copy whe
   }
 
   assert.equal(signal.sources.length, 0);
-  assert.equal(signal.brief?.headline, "No clear public catalyst");
-  assert.match(
-    signal.brief?.collapsed_summary ?? "",
-    /range break upside pressure across 4\/5 tracked symbols/,
-  );
+  assert.equal(signal.brief?.public_label, "No Clear Cause");
+  assert.equal(signal.brief?.classification, "No Clear Cause");
+  assert.equal(signal.brief?.headline, null);
+  assert.equal(signal.brief?.collapsed_summary, null);
   assert.equal(signal.brief?.context_details, null);
   assert.equal(
     /source|article|publisher|Reuters|Fed/i.test(
@@ -752,17 +819,15 @@ test("Signal Event with high source_support but zero in-window rows drops to No 
   }
 
   // The feed window filter drops the only (stale) row, so the stored
-  // high-support news brief must NOT survive — it is rewritten to No Clear Cause
-  // even though source_support/source_timing_alignment were not "none".
+  // high-support news brief must NOT survive. It stays unresolved instead of
+  // being replaced with deterministic No Clear Cause copy.
   assert.equal(signal.sources.length, 0);
-  assert.equal(signal.brief?.public_label, "No Clear Cause");
-  assert.equal(signal.brief?.classification, "No Clear Cause");
-  assert.equal(signal.brief?.headline, "No clear public catalyst");
-  assert.match(
-    signal.brief?.collapsed_summary ?? "",
-    /range break upside pressure across 4\/5 tracked symbols/,
-  );
-  assert.match(signal.brief?.collapsed_summary ?? "", /Avg Change \+2\.10%/);
+  assert.equal(signal.public_context_status, "queued_for_analysis");
+  assert.equal(signal.brief?.status, "queued_for_analysis");
+  assert.equal(signal.brief?.public_label, null);
+  assert.equal(signal.brief?.classification, null);
+  assert.equal(signal.brief?.headline, null);
+  assert.equal(signal.brief?.collapsed_summary, null);
   assert.equal(
     (signal.brief?.collapsed_summary ?? "").includes("Fed decision"),
     false,
