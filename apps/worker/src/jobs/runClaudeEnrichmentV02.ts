@@ -279,10 +279,6 @@ function signalStatusFor(
     return "no_clear_cause";
   }
 
-  if (classification === "Claude Limited") {
-    return "claude_limited";
-  }
-
   return "brief_ready";
 }
 
@@ -482,14 +478,6 @@ function normalizeSignalResultAfterSourcePolicy(input: {
   payload: SignalEventClaudePayloadV02;
 }): SignalEventClaudeResultV02 {
   if (acceptedSources(input.sourceInputs).length === 0) {
-    if (input.result.classification === "Claude Limited") {
-      return {
-        ...input.result,
-        source_support: "none",
-        source_timing_alignment: "none",
-      };
-    }
-
     if (
       input.result.classification === "No Clear Cause" &&
       !noSourceSignalCopyNeedsReplacement(input)

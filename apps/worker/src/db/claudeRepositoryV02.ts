@@ -77,12 +77,12 @@ export const TERMINAL_CLAUDE_BRIEF_STATUSES_V02 = new Set([
   "context_only",
   "no_clear_cause",
   "no_major_driver",
-  "claude_limited",
   "failed_terminal",
 ]);
 
 export const RETRYABLE_CLAUDE_BRIEF_STATUSES_V02 = new Set([
   "queued_for_analysis",
+  "claude_limited",
   "failed_retryable",
 ]);
 

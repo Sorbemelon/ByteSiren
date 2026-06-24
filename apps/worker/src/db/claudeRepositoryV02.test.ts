@@ -213,6 +213,30 @@ test("claude_briefs_v02 retryable statuses can update", async () => {
   assert.equal(updated.error_code, "validation_error");
 });
 
+test("claude_briefs_v02 claude_limited remains retryable after quota clears", async () => {
+  const { db } = createMemoryD1();
+  await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_limited_retry",
+    prompt_mode: "signal_event",
+    status: "claude_limited",
+    public_label: "Claude Limited",
+    updated_at: "2026-06-19T15:00:00.000Z",
+  });
+
+  const updated = await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_limited_retry",
+    prompt_mode: "signal_event",
+    status: "brief_ready",
+    public_label: "Market Backdrop",
+    updated_at: "2026-06-19T15:10:00.000Z",
+  });
+
+  assert.equal(updated.status, "brief_ready");
+  assert.equal(updated.public_label, "Market Backdrop");
+});
+
 test("claude_briefs_v02 force can explicitly overwrite terminal rows", async () => {
   const { db } = createMemoryD1();
   await upsertClaudeBriefV02(db, {

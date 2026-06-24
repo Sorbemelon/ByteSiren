@@ -619,11 +619,16 @@ function signalBriefWithoutAcceptedSources(
 ): ClaudeBriefPublicV02 {
   // This is only reached when zero public source rows survive the window filter,
   // so any source-backed copy in the stored brief is now unsupported and must be
-  // replaced. A genuine "Claude Limited" error state keeps its own label/copy
-  // (it is not source-backed news), but it still drops to no source support.
-  if (brief.classification === "Claude Limited") {
+  // replaced. "Claude Limited" is a deferred/quota state, not completed public
+  // analysis, so keep the status but do not expose stale generated copy.
+  if (brief.status === "claude_limited") {
     return {
       ...brief,
+      public_label: "Claude Limited",
+      classification: "Claude Limited",
+      headline: null,
+      collapsed_summary: null,
+      context_details: null,
       source_support: "none",
       source_timing_alignment: "none",
     };

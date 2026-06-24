@@ -6,8 +6,7 @@ export type SignalEventClassificationV02 =
   | "Focused Cause"
   | "Likely Cause"
   | "Market Backdrop"
-  | "No Clear Cause"
-  | "Claude Limited";
+  | "No Clear Cause";
 
 export type ClaudeConfidenceV02 = "high" | "medium" | "low";
 
@@ -184,7 +183,6 @@ export const SIGNAL_EVENT_CLASSIFICATIONS_V02 = [
   "Likely Cause",
   "Market Backdrop",
   "No Clear Cause",
-  "Claude Limited",
 ] as const;
 
 export const SIGNAL_EVENT_SOURCE_TAGS_V02 = [

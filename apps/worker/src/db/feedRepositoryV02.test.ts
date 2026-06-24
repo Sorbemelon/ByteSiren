@@ -717,6 +717,41 @@ test("Signal Event failed retryable brief stays unresolved instead of No Clear C
   assert.equal(signal.brief?.collapsed_summary, null);
 });
 
+test("Signal Event Claude Limited brief keeps deferred status without generated copy", async () => {
+  const { db } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_limited", "2026-06-19T14:00:00.000Z")],
+    claude_briefs_v02: [
+      claudeBrief("brief_signal", "signal_event_v02", "sig_limited", {
+        status: "claude_limited",
+        public_label: "Claude Limited",
+        classification: "Claude Limited",
+        headline: "Source search unavailable",
+        collapsed_summary:
+          "Claude generated a limited analysis but no public source rows were accepted.",
+        context_details: "This text should not be public without sources.",
+        source_support: "none",
+        source_timing_alignment: "none",
+      }),
+    ],
+  });
+  const feed = await getIntelligenceFeedV02(db, { now });
+  const signal = feed.day_groups[0].items[0];
+
+  assert.equal(signal.item_type, "signal_event");
+  if (signal.item_type !== "signal_event") {
+    throw new Error("expected signal item");
+  }
+
+  assert.equal(signal.public_context_status, "claude_limited");
+  assert.equal(signal.brief?.status, "claude_limited");
+  assert.equal(signal.brief?.public_label, "Claude Limited");
+  assert.equal(signal.brief?.classification, "Claude Limited");
+  assert.equal(signal.brief?.headline, null);
+  assert.equal(signal.brief?.collapsed_summary, null);
+  assert.equal(signal.brief?.context_details, null);
+  assert.equal(signal.sources.length, 0);
+});
+
 test("Signal Event feed item replaces source-referencing No Clear Cause copy when no sources survive", async () => {
   const { db } = createMemoryD1({
     signal_events_v02: [

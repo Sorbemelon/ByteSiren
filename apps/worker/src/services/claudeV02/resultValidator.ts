@@ -54,6 +54,8 @@ const PUBLIC_OPERATIONAL_LIMIT_PATTERNS = [
   /\btool limit error\b/i,
   /\bmax[_\s-]?uses\b/i,
   /\bsearches?\s+(?:were\s+)?exhausted\b/i,
+  /\b(?:web|source)\s+search\s+(?:was\s+)?unavailable\b/i,
+  /\bsearch\s+was\s+unavailable\b/i,
   /\bcould not be completed\b.*\b(?:web\s+)?search\b/i,
 ] as const;
 

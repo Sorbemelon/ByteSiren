@@ -36,6 +36,7 @@ const SIGNAL_EVENT_SYSTEM_PROMPT = [
   "- Do not infer a news cause from chart pattern alone.",
   "- Attempt event-specific source matching first.",
   "- If no time-aligned source supports a cause, return Market Backdrop or No Clear Cause, but do not attach stale Signal Event sources.",
+  "- Do not return Claude Limited. Claude Limited is a scheduler/quota state used before analysis runs, not a completed Signal Event classification.",
   "- Do not force a cause.",
   "- Do not provide trading advice, price targets, or buy/sell/long/short/hold guidance.",
   "- Do not include citation markup, XML tags, HTML tags, or <cite> tags in any public text field. Put source metadata only in the sources array.",
@@ -46,7 +47,6 @@ const SIGNAL_EVENT_SYSTEM_PROMPT = [
   "- Likely Cause",
   "- Market Backdrop",
   "- No Clear Cause",
-  "- Claude Limited",
   "",
   "Source tags:",
   "- Focused catalyst source",
@@ -79,7 +79,7 @@ const SIGNAL_EVENT_SYSTEM_PROMPT = [
     mode: "signal_event",
     item_id: "echo the item_id from the payload",
     classification:
-      "Focused Cause | Likely Cause | Market Backdrop | No Clear Cause | Claude Limited",
+      "Focused Cause | Likely Cause | Market Backdrop | No Clear Cause",
     confidence: "high | medium | low",
     headline: "short public headline",
     collapsed_summary:

@@ -18,7 +18,6 @@ const TERMINAL_DAILY_CLAUDE_STATUSES = new Set([
   "brief_ready",
   "context_only",
   "no_major_driver",
-  "claude_limited",
   "failed_terminal",
 ]);
 

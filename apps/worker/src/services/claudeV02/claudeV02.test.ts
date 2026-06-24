@@ -261,7 +261,7 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
   assert.match(signalPrompt, /Likely Cause/);
   assert.match(signalPrompt, /Market Backdrop/);
   assert.match(signalPrompt, /No Clear Cause/);
-  assert.match(signalPrompt, /Claude Limited/);
+  assert.doesNotMatch(signalPrompt, /- Claude Limited/);
   assert.match(signalPrompt, /6 hours before the evidence window start/);
   assert.match(signalPrompt, /published after the Signal Event/i);
   assert.match(
@@ -297,6 +297,7 @@ test("prompt builders include v0.2 label rules and JSON-only safety", async () =
     signalPrompt,
     /collapsed_summary may only mention source-backed news or article facts that are supported by one of those returned sources/,
   );
+  assert.match(signalPrompt, /Claude Limited is a scheduler\/quota state/);
   assert.match(
     signalPrompt,
     /do not mention sources, articles, or publishers in public fields/,
@@ -367,6 +368,12 @@ test("v0.2 validators accept Signal and Daily results but reject crossed labels 
     validateSignalEventClaudeResultV02({
       ...validSignalResult(),
       classification: "Quiet Day",
+    }),
+  );
+  assert.throws(() =>
+    validateSignalEventClaudeResultV02({
+      ...validSignalResult(),
+      classification: "Claude Limited",
     }),
   );
   assert.throws(() =>
@@ -475,6 +482,22 @@ test("v0.2 Daily validator rejects public web-search-limit wording", () => {
         ...validDailyResult(),
         collapsed_summary:
           "External source validation could not be completed this session due to a web search tool limit error.",
+      }),
+    /public tool-limit wording/,
+  );
+});
+
+test("v0.2 Signal Event validator rejects public web-search-limit wording", () => {
+  assert.throws(
+    () =>
+      validateSignalEventClaudeResultV02({
+        ...validSignalResult(),
+        classification: "No Clear Cause",
+        sources: [],
+        source_support: "none",
+        source_timing_alignment: "none",
+        collapsed_summary:
+          "No source-backed context is available because web search was unavailable during validation.",
       }),
     /public tool-limit wording/,
   );
