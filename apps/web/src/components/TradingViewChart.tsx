@@ -64,6 +64,13 @@ interface ChartPlotArea {
   height: number;
 }
 
+const V02_SOURCE_MARKER_OVERLAY_HEIGHT = 156;
+const V02_SOURCE_MARKER_STACK_TOP = 6;
+const V02_SOURCE_MARKER_STACK_STEP = 13;
+const V02_SOURCE_MARKER_SIZE = 8;
+const V02_SOURCE_MARKER_MUTED_SIZE = 5;
+const V02_SOURCE_MARKER_SELECTED_SIZE = 12;
+
 function cssVar(name: string, fallback: string): string {
   if (typeof document === "undefined") return fallback;
   const v = getComputedStyle(document.documentElement)
@@ -511,7 +518,8 @@ function buildV02SourceOverlays(
 
   return groups.flatMap((group) => {
     return group.map((overlay, index) => {
-      const top = 6 + index * 16;
+      const top =
+        V02_SOURCE_MARKER_STACK_TOP + index * V02_SOURCE_MARKER_STACK_STEP;
 
       return {
         ...overlay,
@@ -883,25 +891,29 @@ export default function TradingViewChart({
         className="pointer-events-none absolute left-0 top-0 z-[4] overflow-hidden"
         style={{
           width: plotArea.width,
-          height: Math.min(108, plotArea.height),
+          height: Math.min(V02_SOURCE_MARKER_OVERLAY_HEIGHT, plotArea.height),
         }}
       >
         {v02SourceOverlays.map((overlay) => {
           const muted =
             (hasSelectedSourceMarker || hasSelectedV02Item) &&
             !overlay.marker.selected;
-          const markerSize = overlay.marker.selected ? 15 : muted ? 6 : 10;
+          const markerSize = overlay.marker.selected
+            ? V02_SOURCE_MARKER_SELECTED_SIZE
+            : muted
+              ? V02_SOURCE_MARKER_MUTED_SIZE
+              : V02_SOURCE_MARKER_SIZE;
           const markerBorderWidth = overlay.marker.filled
             ? overlay.marker.selected
-              ? 2
+              ? 1.8
               : muted
                 ? 0
-                : 1.4
+                : 1.1
             : overlay.marker.selected
-              ? 3
+              ? 2.4
               : muted
-                ? 2
-                : 2.4;
+                ? 1.6
+                : 2;
 
           return (
             <button
@@ -924,7 +936,7 @@ export default function TradingViewChart({
               }}
               aria-label={`${overlay.marker.label} source marker for ${overlay.marker.publisher ?? overlay.marker.itemType}`}
               title={`${overlay.marker.label}: ${overlay.marker.publisher ?? overlay.marker.url}`}
-              className="pointer-events-auto absolute inline-flex h-6 w-6 -translate-x-1/2 items-center justify-center bg-transparent p-0 transition-opacity"
+              className="pointer-events-auto absolute inline-flex h-5 w-5 -translate-x-1/2 items-center justify-center bg-transparent p-0 transition-opacity"
               style={{
                 left: overlay.left,
                 top: overlay.top,
