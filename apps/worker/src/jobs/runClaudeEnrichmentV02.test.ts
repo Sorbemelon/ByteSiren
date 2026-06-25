@@ -1169,3 +1169,44 @@ test("repeated v0.2 enrichment is idempotent for brief and source rows", async (
   assert.equal(tables.source_references_v02.length, 1);
   assert.equal(second.requests.length, 0);
 });
+
+test("forced v0.2 enrichment replaces stale source rows for the target", async () => {
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
+    signal_event_symbols_v02: [signalSymbol("sig_public")],
+  });
+  const first = new MockClaudeClient([
+    okResult(
+      signalResult(
+        "Focused Cause",
+        "https://www.reuters.com/markets/2026/06/19/focused-context/",
+      ),
+    ),
+  ]);
+  const second = new MockClaudeClient([
+    okResult(
+      signalResult(
+        "Market Backdrop",
+        "https://www.reuters.com/markets/2026/06/19/backdrop-context/",
+      ),
+    ),
+  ]);
+  const testEnv = env({
+    DB: db,
+    ENABLE_SIGNAL_CLAUDE_V02: "true",
+  });
+
+  await runClaudeEnrichmentV02(db, testEnv, { now, client: first });
+  await runClaudeEnrichmentV02(db, testEnv, {
+    now,
+    client: second,
+    limit: 5,
+    force: true,
+  });
+
+  assert.equal(tables.claude_briefs_v02.length, 1);
+  assert.equal(tables.claude_briefs_v02[0].classification, "Market Backdrop");
+  assert.equal(tables.source_references_v02.length, 1);
+  assert.equal(tables.source_references_v02[0].source_role, "Backdrop source");
+  assert.equal(tables.source_references_v02[0].used_for, "backdrop");
+});

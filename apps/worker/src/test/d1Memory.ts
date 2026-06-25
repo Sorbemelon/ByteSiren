@@ -2205,6 +2205,15 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         return result(before - tables.market_features.length);
       }
 
+      if (this.sql.includes("DELETE FROM source_references_v02")) {
+        const [targetType, targetId] = this.params as [string, string];
+        const before = tables.source_references_v02.length;
+        tables.source_references_v02 = tables.source_references_v02.filter(
+          (row) => row.target_type !== targetType || row.target_id !== targetId,
+        );
+        return result(before - tables.source_references_v02.length);
+      }
+
       if (this.sql.includes("DELETE FROM raw_signal_events")) {
         const [cutoff] = this.params as [string];
         const before = tables.raw_signal_events.length;

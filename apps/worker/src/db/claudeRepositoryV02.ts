@@ -558,6 +558,46 @@ export async function upsertSourceReferencesV02(
   );
 }
 
+export async function deleteSourceReferencesV02ForTarget(
+  db: D1Database,
+  targetType: ClaudeTargetTypeV02,
+  targetId: string,
+): Promise<number> {
+  assertClaudeTarget(targetType);
+
+  const result = await db
+    .prepare(
+      `DELETE FROM source_references_v02
+       WHERE target_type = ?
+         AND target_id = ?`,
+    )
+    .bind(targetType, targetId)
+    .run();
+
+  return result.meta?.changes ?? 0;
+}
+
+export async function replaceSourceReferencesV02ForTarget(
+  db: D1Database,
+  targetType: ClaudeTargetTypeV02,
+  targetId: string,
+  sources: SourceReferenceInputV02[],
+): Promise<number> {
+  assertClaudeTarget(targetType);
+
+  if (
+    sources.some(
+      (source) =>
+        source.target_type !== targetType || source.target_id !== targetId,
+    )
+  ) {
+    throw new Error("source references must match replacement target.");
+  }
+
+  await deleteSourceReferencesV02ForTarget(db, targetType, targetId);
+  return upsertSourceReferencesV02(db, sources);
+}
+
 export async function listAcceptedSourceReferencesV02ByTarget(
   db: D1Database,
   targetType: ClaudeTargetTypeV02,

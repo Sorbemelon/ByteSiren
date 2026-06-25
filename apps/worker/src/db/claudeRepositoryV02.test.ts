@@ -8,6 +8,7 @@ import {
   isSelectableClaudeBriefV02,
   listAcceptedSourceReferencesV02ByTarget,
   listClaudeBriefsV02ByStatus,
+  replaceSourceReferencesV02ForTarget,
   updateClaudeBriefV02Status,
   upsertClaudeBriefV02,
   upsertSourceReferencesV02,
@@ -366,6 +367,57 @@ test("source_references_v02 repository writes accepted and rejected v0.2 sources
   assert.equal(accepted[0].url, articleUrl);
   assert.equal(accepted[0].brief_id, null);
   assert.equal(accepted[0].brief_v02_id, brief.id);
+});
+
+test("source_references_v02 replacement removes stale source roles for target", async () => {
+  const { db, tables } = createMemoryD1();
+  const brief = await upsertClaudeBriefV02(db, {
+    target_type: "signal_event_v02",
+    target_id: "sig_replace",
+    prompt_mode: "signal_event",
+    status: "brief_ready",
+  });
+
+  const focusedSource = {
+    target_type: "signal_event_v02" as const,
+    target_id: "sig_replace",
+    brief_id: brief.id,
+    source_role: "Focused catalyst source" as const,
+    source_strength: "acceptable",
+    publisher: "Reuters",
+    title: "Focused catalyst",
+    url: articleUrl,
+    published_at: "2026-06-19T14:20:00.000Z",
+    used_for: "focused_catalyst",
+    accepted: true as const,
+    rejection_reason: null,
+    metadata: { why_relevant: "First run." },
+  };
+  const backdropSource = {
+    ...focusedSource,
+    source_role: "Backdrop source" as const,
+    url: "https://www.reuters.com/markets/2026/06/19/crypto-backdrop/",
+    title: "Market backdrop",
+    used_for: "backdrop",
+    metadata: { why_relevant: "Replacement run." },
+  };
+
+  await replaceSourceReferencesV02ForTarget(
+    db,
+    "signal_event_v02",
+    "sig_replace",
+    [focusedSource],
+  );
+  await replaceSourceReferencesV02ForTarget(
+    db,
+    "signal_event_v02",
+    "sig_replace",
+    [backdropSource],
+  );
+
+  assert.equal(tables.source_references_v02.length, 1);
+  assert.equal(tables.source_references_v02[0].source_role, "Backdrop source");
+  assert.equal(tables.source_references_v02[0].used_for, "backdrop");
 });
 
 test("source_references_v02 rejects Market Story target", async () => {

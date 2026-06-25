@@ -10,8 +10,9 @@ import {
   getClaudeBriefV02ByTarget,
   isSelectableClaudeBriefV02,
   isTerminalClaudeBriefStatusV02,
+  deleteSourceReferencesV02ForTarget,
+  replaceSourceReferencesV02ForTarget,
   upsertClaudeBriefV02,
-  upsertSourceReferencesV02,
   type ClaudeBriefV02Row,
 } from "../db/claudeRepositoryV02.ts";
 import { recordJobRun } from "../db/marketRepository.ts";
@@ -645,6 +646,11 @@ async function persistClientFailure(input: {
       "Claude v0.2 enrichment failed.",
     updated_at: input.now.toISOString(),
   });
+  await deleteSourceReferencesV02ForTarget(
+    input.db,
+    input.target.target_type,
+    input.target.target_id,
+  );
 
   return status;
 }
@@ -681,6 +687,11 @@ async function persistValidationFailure(input: {
     error_message: safeErrorMessage(input.error),
     updated_at: input.now.toISOString(),
   });
+  await deleteSourceReferencesV02ForTarget(
+    input.db,
+    input.target.target_type,
+    input.target.target_id,
+  );
 
   return "failed_retryable";
 }
@@ -761,7 +772,12 @@ async function persistValidatedResult(input: {
 
     return {
       status,
-      sourcesWritten: await upsertSourceReferencesV02(input.db, sources),
+      sourcesWritten: await replaceSourceReferencesV02ForTarget(
+        input.db,
+        "signal_event_v02",
+        input.target.target_id,
+        sources,
+      ),
       rejectedSources: rejectedSources(sources).length,
     };
   }
@@ -799,7 +815,12 @@ async function persistValidatedResult(input: {
 
   return {
     status,
-    sourcesWritten: await upsertSourceReferencesV02(input.db, sources),
+    sourcesWritten: await replaceSourceReferencesV02ForTarget(
+      input.db,
+      "daily_overview_v02",
+      input.target.target_id,
+      sources,
+    ),
     rejectedSources: rejectedSources(sources).length,
   };
 }
