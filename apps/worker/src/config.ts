@@ -29,7 +29,7 @@ export type FeedVersion = "v01" | "v02";
 export const DEFAULT_CLAUDE_CATCHUP_LIMIT = 5;
 export const MAX_CLAUDE_CATCHUP_LIMIT = 10;
 export const DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS = 120_000;
-export const MAX_CLAUDE_REQUEST_TIMEOUT_MS = 600_000;
+export const MAX_CLAUDE_REQUEST_TIMEOUT_MS = 1_200_000;
 
 const allowedSymbolSet = new Set<string>(ALLOWED_SYMBOLS);
 

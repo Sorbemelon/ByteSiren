@@ -11,6 +11,9 @@ const WORKER_DIR = path.resolve("apps/worker");
 const WRANGLER_TOML = path.join(WORKER_DIR, "wrangler.toml");
 const DEFAULT_API_BASE = "https://bytesiren-api.nephilim.workers.dev";
 const DEFAULT_REPORT_PREFIX = "v02-phase-g-claude-enrichment-run";
+const DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS = 120_000;
+const MAX_CLAUDE_REQUEST_TIMEOUT_MS = 1_200_000;
+const NODE_FETCH_TIMEOUT_PADDING_MS = 30_000;
 const MAX_BATCH_SIZE = 10;
 const MAX_TARGETS = 100;
 const SAFE_COUNT_TABLES = [
@@ -395,6 +398,49 @@ async function importClaudeRunner() {
   );
 }
 
+export function readClaudeRequestTimeoutMs(value) {
+  const parsed = Number.parseInt(value ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS;
+  }
+
+  return Math.min(parsed, MAX_CLAUDE_REQUEST_TIMEOUT_MS);
+}
+
+export async function configureNodeFetchTimeout(timeoutMs) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return {
+      configured: false,
+      reason: "invalid_timeout",
+    };
+  }
+
+  const transportTimeoutMs = timeoutMs + NODE_FETCH_TIMEOUT_PADDING_MS;
+
+  try {
+    const { Agent, setGlobalDispatcher } = await import("undici");
+    setGlobalDispatcher(
+      new Agent({
+        headersTimeout: transportTimeoutMs,
+        bodyTimeout: transportTimeoutMs,
+      }),
+    );
+
+    return {
+      configured: true,
+      headers_timeout_ms: transportTimeoutMs,
+      body_timeout_ms: transportTimeoutMs,
+    };
+  } catch (error) {
+    return {
+      configured: false,
+      reason: "undici_unavailable",
+      error: redact(error instanceof Error ? error.message : String(error)),
+    };
+  }
+}
+
 async function makeRemoteDb(options) {
   const runId = `${Date.now()}-${process.pid}-${Math.random()
     .toString(36)
@@ -721,9 +767,12 @@ export async function runClaudeEnrichmentCli(options) {
   }
 
   const db = await makeRemoteDb(options);
-  const runner = await importClaudeRunner();
   const wranglerVars = await readWranglerVars();
   const env = safeEnvForRunner(db, wranglerVars);
+  const nodeFetchTimeout = await configureNodeFetchTimeout(
+    readClaudeRequestTimeoutMs(env.CLAUDE_REQUEST_TIMEOUT_MS),
+  );
+  const runner = await importClaudeRunner();
   const countsBefore = await readCounts(db);
   const selectedTargets = await selectTargets({ db, env, options, runner });
   const selectedSummary = summarizeTargets(selectedTargets);
@@ -762,6 +811,7 @@ export async function runClaudeEnrichmentCli(options) {
       selects_market_story: false,
       selects_audit_event: false,
       record_job_runs: false,
+      node_fetch_timeout: nodeFetchTimeout,
     },
     selected_targets: selectedSummary,
     selected_target_count: selectedSummary.length,

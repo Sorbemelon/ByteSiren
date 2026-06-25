@@ -5,6 +5,7 @@ import {
   applyBindings,
   claudeEnrichmentReportResult,
   parseClaudeEnrichmentArgs,
+  readClaudeRequestTimeoutMs,
   redact,
   runClaudeEnrichmentCli,
   safeEnvForRunner,
@@ -146,6 +147,15 @@ test("v0.2 Claude enrichment CLI honors explicit Claude search-budget env overri
   } else {
     process.env.CLAUDE_SECOND_SEARCH_MAX_USES = previousSecond;
   }
+});
+
+test("v0.2 Claude enrichment CLI caps explicit request timeout at twenty minutes", () => {
+  assert.equal(readClaudeRequestTimeoutMs(), 120_000);
+  assert.equal(readClaudeRequestTimeoutMs(""), 120_000);
+  assert.equal(readClaudeRequestTimeoutMs("abc"), 120_000);
+  assert.equal(readClaudeRequestTimeoutMs("600000"), 600_000);
+  assert.equal(readClaudeRequestTimeoutMs("1200000"), 1_200_000);
+  assert.equal(readClaudeRequestTimeoutMs("9999999"), 1_200_000);
 });
 
 test("v0.2 Claude enrichment report marks failed live target as needs fix", () => {

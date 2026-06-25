@@ -94,11 +94,11 @@ jobs:
   enrich:
     name: GitHub-executed v0.2 Claude enrichment
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 240
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      CLAUDE_REQUEST_TIMEOUT_MS: "600000"
+      CLAUDE_REQUEST_TIMEOUT_MS: "1200000"
       CLAUDE_DEFAULT_MAX_USES: "6"
     steps:
       - name: Checkout
@@ -187,8 +187,8 @@ jobs:
           fi
 
           base_minutes=12
-          per_target_minutes=11
-          max_minutes=110
+          per_target_minutes=22
+          max_minutes=230
           timeout_minutes=$((base_minutes + (target_count * per_target_minutes)))
 
           if [ "$timeout_minutes" -gt "$max_minutes" ]; then

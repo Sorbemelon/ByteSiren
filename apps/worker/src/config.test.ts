@@ -105,7 +105,7 @@ test("CLAUDE_CATCHUP_LIMIT uses a bounded safe default", () => {
   assert.equal(parseClaudeCatchupLimit("99"), MAX_CLAUDE_CATCHUP_LIMIT);
 });
 
-test("CLAUDE_REQUEST_TIMEOUT_MS defaults safely and caps at ten minutes", () => {
+test("CLAUDE_REQUEST_TIMEOUT_MS defaults safely and caps at twenty minutes", () => {
   assert.equal(
     parseClaudeRequestTimeoutMs(),
     DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS,
@@ -123,8 +123,9 @@ test("CLAUDE_REQUEST_TIMEOUT_MS defaults safely and caps at ten minutes", () => 
     DEFAULT_CLAUDE_REQUEST_TIMEOUT_MS,
   );
   assert.equal(parseClaudeRequestTimeoutMs("600000"), 600_000);
+  assert.equal(parseClaudeRequestTimeoutMs("1200000"), 1_200_000);
   assert.equal(
-    parseClaudeRequestTimeoutMs("999999"),
+    parseClaudeRequestTimeoutMs("9999999"),
     MAX_CLAUDE_REQUEST_TIMEOUT_MS,
   );
 });
