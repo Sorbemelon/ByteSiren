@@ -94,11 +94,12 @@ jobs:
   enrich:
     name: GitHub-executed v0.2 Claude enrichment
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 120
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       CLAUDE_REQUEST_TIMEOUT_MS: "600000"
+      CLAUDE_DEFAULT_MAX_USES: "6"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -135,6 +136,71 @@ jobs:
         run: |
           corepack pnpm --filter @bytesiren/worker exec node --test ../../scripts/v02-claude-enrichment.test.mjs
           corepack pnpm --filter @bytesiren/worker exec node --test src/db/claudeRepositoryV02.test.ts src/jobs/runClaudeEnrichmentV02.test.ts src/services/claudeV02/claudeV02.test.ts src/services/githubDispatch.test.ts src/deploymentBoundary.test.ts
+
+      - name: Compute v0.2 Claude timeout budget
+        id: timeout_budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          ids="${{ inputs.ids }}"
+          signal_ids="${{ inputs.signal_event_ids }}"
+          limit="${{ inputs.limit }}"
+          max_targets="${{ inputs.max_targets }}"
+
+          if [ -z "$ids" ] && [ -n "$signal_ids" ]; then
+            ids="$signal_ids"
+          fi
+
+          count_csv_items() {
+            local value="$1"
+            awk -v s="$value" 'BEGIN {
+              count = 0
+              n = split(s, parts, ",")
+              for (i = 1; i <= n; i++) {
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", parts[i])
+                if (parts[i] != "") count++
+              }
+              print count
+            }'
+          }
+
+          positive_int_or_default() {
+            local value="$1"
+            local fallback="$2"
+            if [[ "$value" =~ ^[0-9]+$ ]] && [ "$value" -gt 0 ]; then
+              echo "$value"
+            else
+              echo "$fallback"
+            fi
+          }
+
+          if [ -n "$ids" ]; then
+            target_count="$(count_csv_items "$ids")"
+          elif [ -n "$max_targets" ]; then
+            target_count="$(positive_int_or_default "$max_targets" 5)"
+          else
+            target_count="$(positive_int_or_default "$limit" 5)"
+          fi
+
+          if [ "$target_count" -lt 1 ]; then
+            target_count=1
+          fi
+
+          base_minutes=12
+          per_target_minutes=11
+          max_minutes=110
+          timeout_minutes=$((base_minutes + (target_count * per_target_minutes)))
+
+          if [ "$timeout_minutes" -gt "$max_minutes" ]; then
+            timeout_minutes="$max_minutes"
+          fi
+
+          timeout_seconds=$((timeout_minutes * 60))
+
+          echo "target_count=$target_count" >> "$GITHUB_OUTPUT"
+          echo "timeout_minutes=$timeout_minutes" >> "$GITHUB_OUTPUT"
+          echo "timeout_seconds=$timeout_seconds" >> "$GITHUB_OUTPUT"
+          echo "Claude enrichment timeout budget: ${timeout_minutes} minute(s) for ${target_count} requested target(s)."
 
       - name: Run v0.2 Claude enrichment
         shell: bash
@@ -178,7 +244,8 @@ jobs:
             args+=("--max-targets" "${{ inputs.max_targets }}")
           fi
 
-          node "${args[@]}"
+          echo "Running Claude enrichment with timeout budget ${{ steps.timeout_budget.outputs.timeout_minutes }} minute(s)."
+          timeout --foreground --kill-after=60s "${{ steps.timeout_budget.outputs.timeout_seconds }}s" node "${args[@]}"
 
       - name: Upload Phase G reports
         if: always()

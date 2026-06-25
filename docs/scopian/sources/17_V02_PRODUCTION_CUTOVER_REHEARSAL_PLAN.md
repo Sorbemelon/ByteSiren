@@ -352,7 +352,7 @@ V02_MARKET_STORY_OPEN_TTL_HOURS=72
 
 The 72-hour Market Story open TTL remains bounded and is used only for current/open story formation and refresh, so multi-day Signal clusters do not age out before a story can be published. This incremental path must not run the historical detector rebuild, reset v0.2 tables, import snapshot SQL, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or mutate old v0.1 Claude/source tables. Market Story stays deterministic-only and source-free.
 
-Phase G moves v0.2 Claude enrichment to GitHub Actions. The workflow `.github/workflows/v02-claude-enrichment.yml` remains manual `workflow_dispatch` until owner proof/backfill succeeds. It runs `scripts/v02-claude-enrichment.mjs`, selects only missing `signal_event_v02` and `daily_overview_v02` targets, calls Claude from GitHub Actions, and writes only `claude_briefs_v02` and `source_references_v02`. Market Story and Audit Event remain excluded from Claude/source targets.
+Phase G moves v0.2 Claude enrichment to GitHub Actions. The workflow `.github/workflows/v02-claude-enrichment.yml` remains manual `workflow_dispatch` until owner proof/backfill succeeds. It runs `scripts/v02-claude-enrichment.mjs`, selects only missing `signal_event_v02` and `daily_overview_v02` targets, calls Claude from GitHub Actions, and writes only `claude_briefs_v02` and `source_references_v02`. Market Story and Audit Event remain excluded from Claude/source targets. Bounded backfill waves should use the workflow's target-count-derived timeout budget rather than a fixed total timeout; individual Claude HTTP requests remain capped at 10 minutes.
 
 The D5/Phase G Signal dispatch scaffold is disabled by default:
 
