@@ -446,7 +446,7 @@ test("Signal Event feed item exposes evidence labels, highlights, brief, and acc
   );
 });
 
-test("Signal Event feed item keeps in-window and nearby Backdrop sources but hides stale sources", async () => {
+test("Signal Event feed item keeps accepted Signal sources without a second timestamp filter", async () => {
   const { db } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_late", "2026-06-19T14:00:00.000Z")],
     claude_briefs_v02: [
@@ -517,6 +517,7 @@ test("Signal Event feed item keeps in-window and nearby Backdrop sources but hid
           published_at: "2026-06-17T02:00:00.000Z",
           source_role: "Backdrop source",
           used_for: "backdrop",
+          created_at: "2026-06-19T14:00:00.000Z",
           metadata_json: JSON.stringify({
             catalyst_time_utc: "2026-06-17T02:00:00.000Z",
           }),
@@ -535,7 +536,7 @@ test("Signal Event feed item keeps in-window and nearby Backdrop sources but hid
   assert.deepEqual(
     signal.sources.map((source) => source.url).sort(),
     [
-      "https://blockchainreporter.net/markets/2026/06/19/roundup/",
+      "https://www.reuters.com/markets/2026/06/17/prior-day-context/",
       "https://finance.yahoo.com/markets/crypto/articles/next-day-market-recap.html",
       "https://www.reuters.com/markets/2026/06/19/in-window-context/",
     ].sort(),
@@ -623,7 +624,8 @@ test("Signal Event feed item preserves source-free No Clear Cause analysis", asy
           published_at: "2026-06-17T02:00:00.000Z",
           source_role: "Backdrop source",
           used_for: "backdrop",
-          accepted: 1,
+          accepted: 0,
+          rejection_reason: "not_used_for_no_clear_cause",
           metadata_json: JSON.stringify({
             catalyst_time_utc: "2026-06-17T02:00:00.000Z",
           }),
@@ -808,7 +810,7 @@ test("Signal Event feed item replaces source-referencing No Clear Cause copy whe
   );
 });
 
-test("Signal Event with high source_support but zero in-window rows drops to No Clear Cause", async () => {
+test("Signal Event keeps accepted source-backed brief even outside the former feed window", async () => {
   const { db } = createMemoryD1({
     signal_events_v02: [
       signalEvent("sig_drift", "2026-06-19T14:00:00.000Z", {
@@ -853,33 +855,27 @@ test("Signal Event with high source_support but zero in-window rows drops to No 
     throw new Error("expected signal item");
   }
 
-  // The feed window filter drops the only (stale) row, so the stored
-  // high-support news brief must NOT survive. It stays unresolved instead of
-  // being replaced with deterministic No Clear Cause copy.
-  assert.equal(signal.sources.length, 0);
-  assert.equal(signal.public_context_status, "queued_for_analysis");
-  assert.equal(signal.brief?.status, "queued_for_analysis");
-  assert.equal(signal.brief?.public_label, null);
-  assert.equal(signal.brief?.classification, null);
-  assert.equal(signal.brief?.headline, null);
-  assert.equal(signal.brief?.collapsed_summary, null);
+  assert.equal(signal.sources.length, 1);
+  assert.equal(signal.sources[0].tag, "Likely cause source");
+  assert.equal(
+    signal.sources[0].url,
+    "https://www.reuters.com/markets/2026/06/19/old-context/",
+  );
+  assert.equal(signal.public_context_status, "brief_ready");
+  assert.equal(signal.brief?.status, "brief_ready");
+  assert.equal(signal.brief?.public_label, "Likely Cause");
+  assert.equal(signal.brief?.classification, "Likely Cause");
   assert.equal(
     (signal.brief?.collapsed_summary ?? "").includes("Fed decision"),
-    false,
-  );
-  assert.equal(
-    (signal.brief?.collapsed_summary ?? "").includes("Reuters"),
-    false,
-  );
-  assert.equal(
-    /source|article|publisher/i.test(signal.brief?.collapsed_summary ?? ""),
-    false,
+    true,
   );
 });
 
-test("Signal Event source window uses 6h-before-event-start bounds", async () => {
+test("Signal Event source display trusts accepted rows instead of 6h-before-event-start bounds", async () => {
   const { db } = createMemoryD1({
-    // Event 14:00–14:45 UTC → allowed source window starts at 08:00 UTC.
+    // Event 14:00-14:45 UTC used to imply a feed source window starting at
+    // 08:00 UTC. Accepted Signal source rows now display without that second
+    // feed-side time filter.
     signal_events_v02: [signalEvent("sig_bounds", "2026-06-19T14:00:00.000Z")],
     claude_briefs_v02: [
       claudeBrief("brief_signal", "signal_event_v02", "sig_bounds"),
@@ -919,10 +915,12 @@ test("Signal Event source window uses 6h-before-event-start bounds", async () =>
     throw new Error("expected signal item");
   }
 
-  // Only the row at/after eventStart-6h survives; the one 30m earlier is dropped.
   assert.deepEqual(
     signal.sources.map((source) => source.url),
-    ["https://www.reuters.com/markets/2026/06/19/inside/"],
+    [
+      "https://www.reuters.com/markets/2026/06/19/inside/",
+      "https://www.reuters.com/markets/2026/06/19/just-before/",
+    ],
   );
 });
 

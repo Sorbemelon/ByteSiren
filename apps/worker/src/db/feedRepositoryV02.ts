@@ -617,10 +617,10 @@ function noSourceSignalCopyNeedsReplacement(
 function signalBriefWithoutAcceptedSources(
   brief: ClaudeBriefPublicV02,
 ): ClaudeBriefPublicV02 {
-  // This is only reached when zero public source rows survive the window filter,
-  // so any source-backed copy in the stored brief is now unsupported and must be
-  // replaced. "Claude Limited" is a deferred/quota state, not completed public
-  // analysis, so keep the status but do not expose stale generated copy.
+  // This is only reached when no accepted public Signal sources exist, so any
+  // source-backed copy in the stored brief is unsupported and must be replaced.
+  // "Claude Limited" is a deferred/quota state, not completed public analysis,
+  // so keep the status but do not expose stale generated copy.
   if (brief.status === "claude_limited") {
     return {
       ...brief,
@@ -683,9 +683,6 @@ function signalBriefWithoutAcceptedSources(
   };
 }
 
-const SIGNAL_PUBLIC_SOURCE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
-const SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS = 30 * 60 * 60 * 1000;
-
 function parsedTime(value: string | null | undefined): number | null {
   if (!value) {
     return null;
@@ -697,98 +694,6 @@ function parsedTime(value: string | null | undefined): number | null {
 
 function isWithinWindow(value: number, start: number, end: number): boolean {
   return value >= Math.min(start, end) && value <= Math.max(start, end);
-}
-
-function utcDay(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
-}
-
-function isNearbySignalBackdropRecap(input: {
-  publishedAt: number | null;
-  catalystTime: number | null;
-  eventStart: number;
-  eventEnd: number;
-}): boolean {
-  if (input.publishedAt === null) {
-    return false;
-  }
-
-  const eventDay = utcDay(input.eventStart);
-  const catalystIsSameEventDay =
-    input.catalystTime !== null && utcDay(input.catalystTime) === eventDay;
-
-  return (
-    input.publishedAt >= input.eventStart &&
-    input.publishedAt <= input.eventEnd + SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS &&
-    (input.catalystTime === null || catalystIsSameEventDay)
-  );
-}
-
-function signalPublicSourceRows(
-  rows: SourceReferenceV02FeedRow[],
-  eventStartIso: string,
-  eventEndIso: string,
-): SourceReferenceV02FeedRow[] {
-  const eventStart = parsedTime(eventStartIso);
-  const eventEnd = parsedTime(eventEndIso);
-
-  if (eventStart === null || eventEnd === null) {
-    return rows;
-  }
-
-  const sourceStart = eventStart - SIGNAL_PUBLIC_SOURCE_LOOKBACK_MS;
-  const sourceEnd = eventEnd;
-  const eventDay = utcDay(eventStart);
-
-  return rows.filter((row) => {
-    const metadata = parseJsonObject(row.metadata_json);
-    const catalystTime = parsedTime(
-      typeof metadata.catalyst_time_utc === "string"
-        ? metadata.catalyst_time_utc
-        : null,
-    );
-
-    if (
-      catalystTime !== null &&
-      isWithinWindow(catalystTime, sourceStart, sourceEnd)
-    ) {
-      return true;
-    }
-
-    const publishedAt = parsedTime(row.published_at);
-
-    if (
-      publishedAt !== null &&
-      isWithinWindow(publishedAt, sourceStart, sourceEnd)
-    ) {
-      return true;
-    }
-
-    // Mirror of sourcePolicy: a same-UTC-day Backdrop source is valid context
-    // even outside the strict 6h window (keeps Market Backdrop classifications).
-    const sameDayTime = catalystTime ?? publishedAt;
-    if (
-      row.source_role === "Backdrop source" &&
-      sameDayTime !== null &&
-      utcDay(sameDayTime) === eventDay
-    ) {
-      return true;
-    }
-
-    if (
-      row.source_role === "Backdrop source" &&
-      isNearbySignalBackdropRecap({
-        publishedAt,
-        catalystTime,
-        eventStart,
-        eventEnd,
-      })
-    ) {
-      return true;
-    }
-
-    return row.source_role === "Price check source" && publishedAt === null;
-  });
 }
 
 const DAILY_PUBLIC_SOURCE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
@@ -1202,9 +1107,7 @@ async function getSignalEventItems(
         reason: "strongest_peak_15m",
       });
     }
-    const signalSources = publicSources(
-      signalPublicSourceRows(sourceRows, row.event_start, row.event_end),
-    );
+    const signalSources = publicSources(sourceRows);
 
     const item: SignalEventFeedItemV02 = {
       item_type: "signal_event",
