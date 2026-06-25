@@ -86,7 +86,9 @@ ByteSiren is a public portfolio project for market monitoring and engineering de
 
 ## Screenshots
 
-Screenshots will be added after final public capture.
+| Desktop | Mobile |
+| --- | --- |
+| ![ByteSiren v0.2 desktop dashboard with chart and intelligence feed](docs/public/assets/bytesiren-v02-live-desktop.png) | ![ByteSiren v0.2 mobile intelligence feed](docs/public/assets/bytesiren-v02-live-mobile.png) |
 
 ## Architecture
 
@@ -267,10 +269,12 @@ Use `apps/worker/.dev.vars.example` and `apps/web/.env.local.example` as templat
 - Tracked Worker config defaults to `FEED_VERSION=v02`.
 - Deterministic incremental v0.2 refresh is enabled.
 - Manual/backstop v0.2 snapshot refresh is available through GitHub workflow dispatch.
-- Claude enrichment is optional, bounded, and separate from the deterministic public feed.
-- Source context depends on the current Claude enrichment/backfill state.
+- Claude enrichment is optional, bounded, and separate from the deterministic public feed; the visible Signal/Daily queue is currently backfilled.
+- Source context appears only on accepted Signal/Daily sources; Market Story remains source-free and Claude-free.
 - Status: live public beta.
 - This is a portfolio-grade public app, not a production trading tool.
+
+See [v0.2 Public Release Notes](docs/public/V02_PUBLIC_RELEASE_NOTES.md) for the current live-status checklist and known limits.
 
 ## License
 
