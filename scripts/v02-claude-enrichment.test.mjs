@@ -7,6 +7,7 @@ import {
   parseClaudeEnrichmentArgs,
   redact,
   runClaudeEnrichmentCli,
+  safeEnvForRunner,
   sqlLiteral,
 } from "./v02-claude-enrichment.mjs";
 
@@ -115,6 +116,36 @@ test("v0.2 Claude enrichment redacts Claude and GitHub secrets", () => {
   assert.equal(value.includes("ghp_abcdef"), false);
   assert.equal(value.includes("github_pat_secret"), false);
   assert.match(value, /x-api-key \[redacted\]/);
+});
+
+test("v0.2 Claude enrichment CLI honors explicit Claude search-budget env overrides", () => {
+  const previousDefault = process.env.CLAUDE_DEFAULT_MAX_USES;
+  const previousSecond = process.env.CLAUDE_SECOND_SEARCH_MAX_USES;
+
+  process.env.CLAUDE_DEFAULT_MAX_USES = "6";
+  process.env.CLAUDE_SECOND_SEARCH_MAX_USES = "8";
+
+  const env = safeEnvForRunner("db", {
+    CLAUDE_DEFAULT_MAX_USES: "2",
+    CLAUDE_SECOND_SEARCH_MAX_USES: "3",
+  });
+
+  assert.equal(env.CLAUDE_DEFAULT_MAX_USES, "6");
+  assert.equal(env.CLAUDE_SECOND_SEARCH_MAX_USES, "8");
+  assert.equal(env.ENABLE_SIGNAL_CLAUDE_V02, "false");
+  assert.equal(env.ENABLE_DAILY_CLAUDE, "false");
+
+  if (previousDefault === undefined) {
+    delete process.env.CLAUDE_DEFAULT_MAX_USES;
+  } else {
+    process.env.CLAUDE_DEFAULT_MAX_USES = previousDefault;
+  }
+
+  if (previousSecond === undefined) {
+    delete process.env.CLAUDE_SECOND_SEARCH_MAX_USES;
+  } else {
+    process.env.CLAUDE_SECOND_SEARCH_MAX_USES = previousSecond;
+  }
 });
 
 test("v0.2 Claude enrichment report marks failed live target as needs fix", () => {

@@ -405,7 +405,7 @@ async function makeRemoteDb(options) {
   });
 }
 
-function safeEnvForRunner(db, wranglerVars) {
+export function safeEnvForRunner(db, wranglerVars) {
   return {
     ...wranglerVars,
     DB: db,
@@ -413,6 +413,14 @@ function safeEnvForRunner(db, wranglerVars) {
     CLAUDE_REQUEST_TIMEOUT_MS:
       process.env.CLAUDE_REQUEST_TIMEOUT_MS ??
       wranglerVars.CLAUDE_REQUEST_TIMEOUT_MS ??
+      "",
+    CLAUDE_DEFAULT_MAX_USES:
+      process.env.CLAUDE_DEFAULT_MAX_USES ??
+      wranglerVars.CLAUDE_DEFAULT_MAX_USES ??
+      "",
+    CLAUDE_SECOND_SEARCH_MAX_USES:
+      process.env.CLAUDE_SECOND_SEARCH_MAX_USES ??
+      wranglerVars.CLAUDE_SECOND_SEARCH_MAX_USES ??
       "",
     ENABLE_SIGNAL_CLAUDE_V02: "false",
     ENABLE_DAILY_CLAUDE: "false",
