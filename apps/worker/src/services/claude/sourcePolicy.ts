@@ -6,7 +6,7 @@ import type {
   SourceStrength,
 } from "./types.ts";
 
-const DEFAULT_REJECT_PATTERNS = [
+export const DEFAULT_REJECT_PATTERNS = [
   "price prediction",
   "forecast",
   "price target",
@@ -20,8 +20,6 @@ const DEFAULT_REJECT_PATTERNS = [
   "stealthex",
   "-price-prediction-",
 ] as const;
-
-const DATE_WINDOW_DAYS = 3;
 
 export interface RawClaudeSource {
   publisher?: unknown;
@@ -137,22 +135,6 @@ function matchesRejectPattern(sourceText: string, blockedDomains: string[]) {
   );
 }
 
-function dateOutsideWindow(publishedAt: string | null, eventDate?: string) {
-  if (!publishedAt || !eventDate) {
-    return false;
-  }
-
-  const published = Date.parse(publishedAt);
-  const event = Date.parse(eventDate);
-
-  if (!Number.isFinite(published) || !Number.isFinite(event)) {
-    return false;
-  }
-
-  const days = Math.abs(published - event) / (24 * 60 * 60 * 1000);
-  return days > DATE_WINDOW_DAYS;
-}
-
 function sourceRole(value: unknown): SourceRole {
   return isSourceRole(value) ? value : "backdrop";
 }
@@ -214,11 +196,6 @@ export function filterSourceLinks(
 
     if (matchesRejectPattern(sourceText, options.blockedDomains ?? [])) {
       rejected.push(reject(source, "blocked_or_low_quality_source"));
-      continue;
-    }
-
-    if (dateOutsideWindow(publishedAt, options.eventDate)) {
-      rejected.push(reject(source, "outside_event_date_window"));
       continue;
     }
 

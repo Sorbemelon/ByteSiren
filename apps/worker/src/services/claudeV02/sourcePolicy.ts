@@ -61,12 +61,6 @@ const DAILY_SOURCE_TAGS = new Set<DailyOverviewSourceTagV02>([
   "Price check source",
 ]);
 
-const SIGNAL_CAUSE_TAGS = new Set<SignalEventSourceTagV02>([
-  "Focused catalyst source",
-  "Likely cause source",
-]);
-const SIGNAL_CAUSE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
-const SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS = 30 * 60 * 60 * 1000;
 export const MAX_PUBLIC_SOURCES_PER_BRIEF_V02 = 3;
 
 function assertClaudeBackedTarget(
@@ -107,149 +101,16 @@ function usedForFromTag(tag: SourceTagV02): RawClaudeSource["used_for"] {
   return "backdrop";
 }
 
-function timeValue(value: string | null | undefined): number | null {
-  if (!value) {
-    return null;
+function signalSourceTimingNote(source: ClaudeOutputSourceV02): string | null {
+  if (source.catalyst_time_utc) {
+    return "claude_provided_catalyst_time";
   }
 
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function inWindow(value: number, start: number, end: number): boolean {
-  return value >= Math.min(start, end) && value <= Math.max(start, end);
-}
-
-function utcDay(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
-}
-
-function isNearbySignalBackdropRecap(input: {
-  publishedAt: number | null;
-  catalystTime: number | null;
-  eventStart: number;
-  eventEnd: number;
-}): boolean {
-  if (input.publishedAt === null) {
-    return false;
+  if (source.published_at) {
+    return "claude_provided_publication_time";
   }
 
-  const eventDay = utcDay(input.eventStart);
-  const nextDayEnd = input.eventEnd + SIGNAL_BACKDROP_RECAP_LOOKAHEAD_MS;
-  const catalystIsSameEventDay =
-    input.catalystTime !== null && utcDay(input.catalystTime) === eventDay;
-
-  return (
-    input.publishedAt >= input.eventStart &&
-    input.publishedAt <= nextDayEnd &&
-    (input.catalystTime === null || catalystIsSameEventDay)
-  );
-}
-
-function signalSourceRoleAfterTiming(input: {
-  tag: SourceTagV02;
-  published_at: string | null;
-  catalyst_time_utc?: string | null;
-  signalEventWindow?: { start: string; end: string } | null;
-}): {
-  tag: SourceTagV02;
-  timingPolicyNote: string | null;
-  rejectionReason: string | null;
-} {
-  if (!input.signalEventWindow) {
-    return { tag: input.tag, timingPolicyNote: null, rejectionReason: null };
-  }
-
-  const eventStart = timeValue(input.signalEventWindow.start);
-  const eventEnd = timeValue(input.signalEventWindow.end);
-
-  if (eventStart === null || eventEnd === null) {
-    return { tag: input.tag, timingPolicyNote: null, rejectionReason: null };
-  }
-
-  const catalystStart = eventStart - SIGNAL_CAUSE_LOOKBACK_MS;
-  const catalystEnd = eventEnd;
-  const catalystTime = timeValue(input.catalyst_time_utc);
-  const publishedAt = timeValue(input.published_at);
-  const catalystInWindow =
-    catalystTime !== null && inWindow(catalystTime, catalystStart, catalystEnd);
-  const publishedInWindow =
-    publishedAt !== null && inWindow(publishedAt, catalystStart, catalystEnd);
-
-  if (catalystInWindow) {
-    return {
-      tag: input.tag,
-      timingPolicyNote: "catalyst_time_in_window",
-      rejectionReason: null,
-    };
-  }
-
-  if (publishedInWindow) {
-    return {
-      tag: input.tag,
-      timingPolicyNote: "published_time_in_window",
-      rejectionReason: null,
-    };
-  }
-
-  if (input.tag === "Price check source" && publishedAt === null) {
-    return {
-      tag: input.tag,
-      timingPolicyNote: "price_source_without_publication_time",
-      rejectionReason: null,
-    };
-  }
-
-  // Cause tags that failed the in-window test are downgraded to Backdrop.
-  const downgradedTag: SourceTagV02 = SIGNAL_CAUSE_TAGS.has(
-    input.tag as SignalEventSourceTagV02,
-  )
-    ? "Backdrop source"
-    : input.tag;
-
-  // Same-UTC-day coverage of the move is valid Backdrop context even when it
-  // falls outside the strict 6h catalyst window. Accept it as Backdrop so the
-  // Signal Event can classify Market Backdrop instead of No Clear Cause. Cause
-  // tags are never kept here — they already failed the in-window test above.
-  const eventDay = utcDay(eventStart);
-  const sameDayTime = catalystTime ?? publishedAt;
-  if (
-    downgradedTag === "Backdrop source" &&
-    sameDayTime !== null &&
-    utcDay(sameDayTime) === eventDay
-  ) {
-    return {
-      tag: "Backdrop source",
-      timingPolicyNote: "signal_source_same_utc_day_backdrop",
-      rejectionReason: null,
-    };
-  }
-
-  // A near next-day article can still be useful public context for the same
-  // Signal Event, especially for late-UTC moves that only receive recap
-  // coverage after midnight. Keep it as Backdrop so the UI can show a source
-  // chip for Market Backdrop, but never promote it into Focused/Likely cause.
-  if (
-    downgradedTag === "Backdrop source" &&
-    isNearbySignalBackdropRecap({
-      publishedAt,
-      catalystTime,
-      eventStart,
-      eventEnd,
-    })
-  ) {
-    return {
-      tag: "Backdrop source",
-      timingPolicyNote: "signal_source_nearby_backdrop_recap",
-      rejectionReason: null,
-    };
-  }
-
-  return {
-    tag: downgradedTag,
-    timingPolicyNote: "signal_source_outside_6h_event_window",
-    rejectionReason: "signal_source_outside_6h_event_window",
-  };
+  return null;
 }
 
 function sourceRolePriority(source: AcceptedSourceReferenceV02): number {
@@ -294,34 +155,25 @@ export function toSourceReferenceInputsV02(input: {
       throw new Error(`Unsupported source tag ${source.tag} for ${targetType}`);
     }
 
-    const timing =
-      targetType === "signal_event_v02"
-        ? signalSourceRoleAfterTiming({
-            tag: source.tag,
-            published_at: source.published_at,
-            catalyst_time_utc: source.catalyst_time_utc,
-            signalEventWindow: input.signalEventWindow,
-          })
-        : { tag: source.tag, timingPolicyNote: null, rejectionReason: null };
-
     return {
       publisher: source.publisher,
       title: source.title,
       url: source.url,
       published_at: source.published_at,
-      used_for: usedForFromTag(timing.tag),
+      used_for: usedForFromTag(source.tag),
       source_strength: "acceptable",
-      _source_role: timing.tag,
+      _source_role: source.tag,
       _why_relevant: source.why_relevant,
       _catalyst_time_utc: source.catalyst_time_utc ?? null,
-      _timing_policy_note: timing.timingPolicyNote,
-      _signal_rejection_reason: timing.rejectionReason,
+      _timing_policy_note:
+        targetType === "signal_event_v02"
+          ? signalSourceTimingNote(source)
+          : null,
     } as RawClaudeSource & {
       _source_role: SourceTagV02;
       _why_relevant: string;
       _catalyst_time_utc: string | null;
       _timing_policy_note: string | null;
-      _signal_rejection_reason: string | null;
     };
   });
   const filtered = filterSourceLinks(rawSources, {
@@ -344,9 +196,6 @@ export function toSourceReferenceInputsV02(input: {
 
   const accepted = filtered.accepted.flatMap((source) => {
     const raw = rawSourceForUrl(source.url);
-    if (raw?._signal_rejection_reason) {
-      return [];
-    }
 
     const sourceReference = {
       target_type: targetType,
@@ -374,37 +223,8 @@ export function toSourceReferenceInputsV02(input: {
     return limitAcceptedSources(accepted);
   }
 
-  const timingRejected = filtered.accepted.flatMap((source) => {
-    const raw = rawSourceForUrl(source.url);
-    if (!raw?._signal_rejection_reason) {
-      return [];
-    }
-
-    const sourceReference: RejectedSourceReferenceV02 = {
-      target_type: targetType,
-      target_id: input.target_id,
-      brief_id: input.brief_id ?? null,
-      source_role: raw._source_role,
-      source_strength: source.source_strength ?? null,
-      publisher: source.publisher ?? null,
-      title: source.title ?? null,
-      url: source.url ?? "about:blank",
-      published_at: source.published_at ?? null,
-      used_for: source.used_for ?? null,
-      accepted: false,
-      rejection_reason: raw._signal_rejection_reason,
-      metadata: {
-        why_relevant: raw._why_relevant ?? "",
-        catalyst_time_utc: raw._catalyst_time_utc ?? null,
-        timing_policy_note: raw._timing_policy_note ?? null,
-      },
-    };
-    return [sourceReference];
-  });
-
   return [
     ...limitAcceptedSources(accepted),
-    ...timingRejected,
     ...filtered.rejected.map(
       (source): RejectedSourceReferenceV02 => ({
         target_type: targetType,

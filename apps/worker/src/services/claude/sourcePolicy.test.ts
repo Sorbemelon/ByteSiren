@@ -24,6 +24,26 @@ test("source policy accepts reputable source with usable URL", () => {
   assert.equal(result.accepted[0].url, articleUrl);
 });
 
+test("source policy does not reject usable article solely by event date", () => {
+  const result = filterSourceLinks(
+    [
+      {
+        publisher: "Crypto.com",
+        title: "XRP latest news item",
+        url: "https://crypto.com/en/coins-ai/xrp/latest-news",
+        published_at: "2026-06-01",
+        used_for: "backdrop",
+        source_strength: "acceptable",
+      },
+    ],
+    { eventDate: "2026-06-12" },
+  );
+
+  assert.equal(result.accepted.length, 1);
+  assert.equal(result.rejected.length, 0);
+  assert.equal(result.accepted[0].publisher, "Crypto.com");
+});
+
 test("source policy derives publisher label from accepted source URL", () => {
   const result = filterSourceLinks([
     {

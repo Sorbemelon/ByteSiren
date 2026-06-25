@@ -544,6 +544,7 @@ test("v0.2 enrichment writes Signal Event brief and sources only to v0.2 tables"
   assert.equal(tables.claude_briefs_v02.length, 1);
   assert.equal(tables.claude_briefs_v02[0].target_type, "signal_event_v02");
   assert.equal(tables.claude_briefs_v02[0].status, "brief_ready");
+  assert.equal(tables.claude_briefs_v02[0].context_details, null);
   assert.equal(tables.source_references_v02.length, 1);
   assert.equal(tables.source_references_v02[0].brief_id, null);
   assert.equal(
@@ -560,10 +561,10 @@ test("v0.2 enrichment writes Signal Event brief and sources only to v0.2 tables"
 
   // Rules + output schema live in the system prompt; the user prompt is the payload only.
   const request = mock.requests[0];
-  assert.match(request.system_prompt, /Allowed classifications/);
+  assert.match(request.system_prompt, /Signal Event classifications/);
   assert.match(request.system_prompt, /Required output shape/);
   assert.match(request.user_prompt, /Signal Event payload:/);
-  assert.doesNotMatch(request.user_prompt, /Allowed classifications/);
+  assert.doesNotMatch(request.user_prompt, /Signal Event classifications/);
 });
 
 test("v0.2 admin sample run works with scheduled flags disabled", async () => {
@@ -718,7 +719,7 @@ test("v0.2 enrichment sample filters prevent accidental other-mode processing", 
   );
 });
 
-test("v0.2 enrichment replaces Signal news copy when no accepted source survives policy", async () => {
+test("v0.2 enrichment replaces Signal news copy when no accepted source survives URL policy", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
     signal_event_symbols_v02: [signalSymbol("sig_public")],
@@ -731,13 +732,13 @@ test("v0.2 enrichment replaces Signal news copy when no accepted source survives
     "Reuters and other sources did not line up with this Signal Event.";
   staleNewsResult.sources = [
     {
-      title: "Old catalyst recap",
+      title: "Reuters homepage",
       publisher: "Reuters",
-      url: "https://www.reuters.com/markets/2026/06/17/old-catalyst-recap/",
-      published_at: "2026-06-17T02:00:00.000Z",
-      catalyst_time_utc: "2026-06-17T02:00:00.000Z",
+      url: "https://www.reuters.com/",
+      published_at: "",
+      catalyst_time_utc: "",
       tag: "Likely cause source",
-      why_relevant: "Older macro context from a prior UTC day.",
+      why_relevant: "Generic publisher homepage should not back a cause.",
     },
   ];
   const mock = new MockClaudeClient([okResult(staleNewsResult)]);
@@ -774,7 +775,7 @@ test("v0.2 enrichment replaces Signal news copy when no accepted source survives
   assert.equal(tables.source_references_v02[0].accepted, 0);
   assert.equal(
     tables.source_references_v02[0].rejection_reason,
-    "signal_source_outside_6h_event_window",
+    "generic_homepage_url",
   );
 });
 
@@ -827,13 +828,13 @@ test("v0.2 enrichment uses Claude source-free Signal insight after source policy
     "The move reads as downside pressure with SOLUSDT setting the pace while breadth across the basket confirms the detector signal; the external driver remains unconfirmed.";
   noClearCause.sources = [
     {
-      title: "Old catalyst recap",
+      title: "Reuters homepage",
       publisher: "Reuters",
-      url: "https://www.reuters.com/markets/2026/06/17/old-catalyst-recap/",
-      published_at: "2026-06-17T02:00:00.000Z",
-      catalyst_time_utc: "2026-06-17T02:00:00.000Z",
+      url: "https://www.reuters.com/",
+      published_at: "",
+      catalyst_time_utc: "",
       tag: "Backdrop source",
-      why_relevant: "Older macro context from a prior UTC day.",
+      why_relevant: "Generic publisher homepage should be rejected.",
     },
   ];
   const mock = new MockClaudeClient([okResult(noClearCause)]);
@@ -872,6 +873,10 @@ test("v0.2 enrichment uses Claude source-free Signal insight after source policy
   );
   assert.equal(tables.source_references_v02.length, 1);
   assert.equal(tables.source_references_v02[0].accepted, 0);
+  assert.equal(
+    tables.source_references_v02[0].rejection_reason,
+    "generic_homepage_url",
+  );
 });
 
 test("v0.2 enrichment keeps Market Backdrop with a nearby Backdrop source", async () => {
@@ -918,7 +923,7 @@ test("v0.2 enrichment keeps Market Backdrop with a nearby Backdrop source", asyn
   assert.equal(tables.source_references_v02[0].source_role, "Backdrop source");
   assert.match(
     tables.source_references_v02[0].metadata_json,
-    /signal_source_nearby_backdrop_recap/,
+    /claude_provided_publication_time/,
   );
 });
 
@@ -944,6 +949,7 @@ test("v0.2 enrichment writes Daily Overview brief and sources only when daily fl
   assert.equal(tables.claude_briefs_v02[0].target_type, "daily_overview_v02");
   assert.equal(tables.claude_briefs_v02[0].public_label, null);
   assert.equal(tables.claude_briefs_v02[0].classification, null);
+  assert.equal(tables.claude_briefs_v02[0].context_details, null);
   assert.equal(
     tables.source_references_v02[0].target_type,
     "daily_overview_v02",
@@ -1080,7 +1086,7 @@ test("source policy downgrades Signal cause labels when accepted cause sources d
   assert.equal(tables.source_references_v02[0].accepted, 0);
 });
 
-test("source policy rejects stale Signal cause sources outside the 6-hour event window", async () => {
+test("source policy preserves stale-looking Signal cause sources when Claude uses them", async () => {
   const { db, tables } = createMemoryD1({
     signal_events_v02: [signalEvent("sig_public", "2026-06-19T14:00:00.000Z")],
     signal_event_symbols_v02: [signalSymbol("sig_public")],
@@ -1100,14 +1106,17 @@ test("source policy rejects stale Signal cause sources outside the 6-hour event 
     { now, client: mock },
   );
 
-  assert.equal(result.no_clear_cause_count, 1);
-  assert.equal(tables.claude_briefs_v02[0].status, "no_clear_cause");
-  assert.equal(tables.claude_briefs_v02[0].public_label, "No Clear Cause");
-  assert.equal(tables.source_references_v02[0].accepted, 0);
-  assert.equal(tables.source_references_v02[0].source_role, "Backdrop source");
+  assert.equal(result.brief_ready_count, 1);
+  assert.equal(tables.claude_briefs_v02[0].status, "brief_ready");
+  assert.equal(tables.claude_briefs_v02[0].public_label, "Focused Cause");
+  assert.equal(tables.source_references_v02[0].accepted, 1);
+  assert.equal(
+    tables.source_references_v02[0].source_role,
+    "Focused catalyst source",
+  );
   assert.match(
     tables.source_references_v02[0].metadata_json,
-    /signal_source_outside_6h_event_window/,
+    /claude_provided_catalyst_time/,
   );
 });
 

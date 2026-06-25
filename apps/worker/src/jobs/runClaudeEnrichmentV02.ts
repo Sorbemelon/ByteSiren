@@ -504,8 +504,8 @@ function noAcceptedSignalSourceResult(input: {
     detector_feedback: {
       ...input.result.detector_feedback,
       source_policy_note: sourceFreeInsight
-        ? "Signal Event public brief used Claude's source-free chart/evidence insight because no accepted time-aligned source remained after source policy."
-        : "Signal Event brief text was replaced because no accepted time-aligned source remained after source policy.",
+        ? "Signal Event public brief used Claude's source-free chart/evidence insight because no accepted source remained after source policy."
+        : "Signal Event brief text was replaced because no accepted source remained after source policy.",
     },
   };
 }
@@ -739,7 +739,7 @@ async function persistValidatedResult(input: {
       confidence: normalizedResult.confidence,
       headline: normalizedResult.headline,
       collapsed_summary: normalizedResult.collapsed_summary,
-      context_details: normalizedResult.context_details,
+      context_details: null,
       source_support: normalizedResult.source_support,
       source_timing_alignment: normalizedResult.source_timing_alignment,
       validation_flags: normalizedResult.validation_flags,
@@ -778,7 +778,7 @@ async function persistValidatedResult(input: {
     confidence: result.confidence,
     headline: result.headline,
     collapsed_summary: result.collapsed_summary,
-    context_details: result.context_details,
+    context_details: null,
     source_support: result.notable_drivers[0]?.source_support ?? null,
     source_timing_alignment: null,
     validation_flags: result.validation_flags,
