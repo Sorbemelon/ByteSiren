@@ -16,6 +16,8 @@ import {
 } from "./jobs/runClaudeEnrichmentV02.ts";
 import {
   isDailyOverviewGenerationEnabled,
+  isIncrementalDailyOverviewGenerationEnabled,
+  runIncrementalDailyOverviewsV02,
   runDailyOverviewsV02,
 } from "./jobs/runDailyOverviewsV02.ts";
 import {
@@ -161,8 +163,6 @@ export default {
     }
 
     if (controller.cron === DETECTOR_CRON) {
-      await runDetector(env.DB, { env });
-
       if (isV02IncrementalRefreshEnabled(env)) {
         await runIncrementalRefreshV02(env.DB, env, {
           triggerSource: "cloudflare_cron",
@@ -171,6 +171,8 @@ export default {
           ),
         });
       }
+
+      await runDetector(env.DB, { env });
 
       return;
     }
@@ -187,7 +189,11 @@ export default {
     if (controller.cron === CLEANUP_CRON) {
       await cleanupOldData(env.DB);
 
-      if (isDailyOverviewGenerationEnabled(env)) {
+      if (isIncrementalDailyOverviewGenerationEnabled(env)) {
+        await runIncrementalDailyOverviewsV02(env.DB, env, {
+          requestId: crypto.randomUUID(),
+        });
+      } else if (isDailyOverviewGenerationEnabled(env)) {
         await runDailyOverviewsV02(env.DB, env);
       }
 

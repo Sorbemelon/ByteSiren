@@ -660,6 +660,12 @@ test("scheduled detector cron runs incremental v0.2 refresh only when enabled", 
 
   await worker.scheduled(scheduledController(DETECTOR_CRON), env);
 
+  const jobNames = tables.job_runs.map((row) => row.job_name);
+  assert.equal(
+    jobNames.indexOf("run_incremental_signals_v02") <
+      jobNames.indexOf("run_detector"),
+    true,
+  );
   assert.equal(
     tables.job_runs.some((row) => row.job_name === "run_detector"),
     true,
@@ -979,6 +985,39 @@ test("scheduled cleanup cron can generate v0.2 Daily Overviews behind flag", asy
   const env: Env = {
     DB: db,
     ENABLE_DAILY_OVERVIEWS: "true",
+  };
+
+  await worker.scheduled(scheduledController(CLEANUP_CRON), env);
+
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "cleanup_old_data"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "run_daily_overviews_v02"),
+    true,
+  );
+  assert.equal(tables.daily_overviews_v02.length, 1);
+  assert.equal(
+    tables.daily_overviews_v02[0].claude_status,
+    "queued_for_analysis",
+  );
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+});
+
+test("scheduled cleanup cron can generate bounded v0.2 Daily Overviews behind incremental flag", async () => {
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const { db, tables } = createMemoryD1({
+    market_candles: seededCompleteDayRows(yesterday),
+  });
+  const env: Env = {
+    DB: db,
+    ENABLE_DAILY_OVERVIEWS: "false",
+    ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS: "true",
+    V02_DAILY_OVERVIEW_LOOKBACK_DAYS: "5",
   };
 
   await worker.scheduled(scheduledController(CLEANUP_CRON), env);

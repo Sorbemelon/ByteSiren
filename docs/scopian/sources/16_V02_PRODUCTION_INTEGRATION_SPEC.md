@@ -302,10 +302,11 @@ ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=false
 Normal production refresh is incremental and Worker-bounded:
 
 1. Cloudflare Cron dispatches the existing market ingest workflow every 15 minutes.
-2. The existing Worker detector cron runs v0.1 detector behavior while `DETECTOR_VERSION=v01` remains unchanged.
-3. When `ENABLE_V02_INCREMENTAL_REFRESH=true`, the same detector cron also runs a bounded v0.2 incremental refresh.
+2. The existing Worker detector cron runs the bounded v0.2 incremental refresh before any legacy v0.1 detector work when `ENABLE_V02_INCREMENTAL_REFRESH=true`, so a slow legacy detector cannot block public v0.2 freshness.
+3. The legacy v0.1 detector may still run afterward while `DETECTOR_VERSION=v01` remains unchanged.
 4. Incremental Signal/Audit detection calls `runDetectorV02` only with explicit recent `timeFrom/timeTo` bounds.
 5. Incremental Market Story refresh reads recent/open Signal/Audit rows and upserts only the rolling story window.
+6. The daily cleanup cron can run bounded v0.2 Daily Overview refresh for recent completed UTC days when `ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS=true`, without enabling the older broad `ENABLE_DAILY_OVERVIEWS` path.
 
 Incremental flags:
 
@@ -313,8 +314,10 @@ Incremental flags:
 ENABLE_V02_INCREMENTAL_REFRESH=true after D5 canary
 ENABLE_V02_INCREMENTAL_SIGNALS=true
 ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
+ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS=true
 V02_INCREMENTAL_TARGET_WINDOW_HOURS=6
 V02_INCREMENTAL_LOOKBACK_HOURS=24
+V02_DAILY_OVERVIEW_LOOKBACK_DAYS=5
 V02_MARKET_STORY_OPEN_TTL_HOURS=72
 V02_INCREMENTAL_MAX_SIGNALS_PER_RUN=25
 ```

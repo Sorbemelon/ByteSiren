@@ -339,18 +339,20 @@ Tracked production keeps:
 ENABLE_V02_REFRESH_WORKFLOW_DISPATCH=false
 ```
 
-Normal v0.2 refresh is incremental. The existing market ingest workflow continues on the 15-minute cadence. The existing Worker detector cron may run bounded v0.2 incremental Signal/Audit detection and current/open Market Story refresh only when `ENABLE_V02_INCREMENTAL_REFRESH=true`:
+Normal v0.2 refresh is incremental. The existing market ingest workflow continues on the 15-minute cadence. The existing Worker detector cron runs bounded v0.2 incremental Signal/Audit detection and current/open Market Story refresh before legacy v0.1 detector work when `ENABLE_V02_INCREMENTAL_REFRESH=true`, so slow legacy detector work cannot block public v0.2 freshness:
 
 ```text
 ENABLE_V02_INCREMENTAL_REFRESH=true after D5 canary
 ENABLE_V02_INCREMENTAL_SIGNALS=true
 ENABLE_V02_INCREMENTAL_MARKET_STORIES=true
+ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS=true
 V02_INCREMENTAL_TARGET_WINDOW_HOURS=6
 V02_INCREMENTAL_LOOKBACK_HOURS=24
+V02_DAILY_OVERVIEW_LOOKBACK_DAYS=5
 V02_MARKET_STORY_OPEN_TTL_HOURS=72
 ```
 
-The 72-hour Market Story open TTL remains bounded and is used only for current/open story formation and refresh, so multi-day Signal clusters do not age out before a story can be published. This incremental path must not run the historical detector rebuild, reset v0.2 tables, import snapshot SQL, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or mutate old v0.1 Claude/source tables. Market Story stays deterministic-only and source-free.
+The 72-hour Market Story open TTL remains bounded and is used only for current/open story formation and refresh, so multi-day Signal clusters do not age out before a story can be published. The daily cleanup cron may also refresh recent completed UTC Daily Overview rows through `ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS=true` while keeping the older broad `ENABLE_DAILY_OVERVIEWS=false` default. This incremental path must not run the historical detector rebuild, reset v0.2 tables, import snapshot SQL, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or mutate old v0.1 Claude/source tables. Market Story stays deterministic-only and source-free.
 
 Phase G moves v0.2 Claude enrichment to GitHub Actions. The workflow `.github/workflows/v02-claude-enrichment.yml` remains manual `workflow_dispatch` until owner proof/backfill succeeds. It runs `scripts/v02-claude-enrichment.mjs`, selects only missing `signal_event_v02` and `daily_overview_v02` targets, calls Claude from GitHub Actions, and writes only `claude_briefs_v02` and `source_references_v02`. Market Story and Audit Event remain excluded from Claude/source targets. Bounded backfill waves should use the workflow's target-count-derived timeout budget rather than a fixed total timeout; the GitHub Claude workflow caps individual Claude HTTP requests at 20 minutes and sets Node fetch transport timeouts slightly higher.
 

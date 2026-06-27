@@ -25,6 +25,9 @@ import type { Env } from "../types/env.ts";
 import type { MarketCandle } from "../types/market.ts";
 import { safeErrorMessage } from "../utils/http.ts";
 
+const DEFAULT_INCREMENTAL_DAILY_LOOKBACK_DAYS = 5;
+const MAX_INCREMENTAL_DAILY_LOOKBACK_DAYS = 14;
+
 export interface RunDailyOverviewsV02Result {
   status: "success" | "skipped" | "failed";
   message: string;
@@ -49,6 +52,46 @@ export function isDailyOverviewGenerationEnabled(
   env: Pick<Env, "ENABLE_DAILY_OVERVIEWS">,
 ): boolean {
   return parseBooleanFlag(env.ENABLE_DAILY_OVERVIEWS);
+}
+
+export function isIncrementalDailyOverviewGenerationEnabled(
+  env: Pick<Env, "ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS">,
+): boolean {
+  return parseBooleanFlag(env.ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS);
+}
+
+function parsePositiveInt(
+  value: string | undefined,
+  fallback: number,
+  max: number,
+): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.min(max, Math.trunc(parsed)));
+}
+
+function incrementalDailyLookbackDays(
+  env: Pick<Env, "V02_DAILY_OVERVIEW_LOOKBACK_DAYS">,
+  override?: number,
+): number {
+  return Math.max(
+    1,
+    Math.min(
+      MAX_INCREMENTAL_DAILY_LOOKBACK_DAYS,
+      Math.trunc(
+        override ??
+          parsePositiveInt(
+            env.V02_DAILY_OVERVIEW_LOOKBACK_DAYS,
+            DEFAULT_INCREMENTAL_DAILY_LOOKBACK_DAYS,
+            MAX_INCREMENTAL_DAILY_LOOKBACK_DAYS,
+          ),
+      ),
+    ),
+  );
 }
 
 async function loadCandles(
@@ -292,4 +335,30 @@ export async function runDailyOverviewsV02(
       dates_skipped: [],
     };
   }
+}
+
+export async function runIncrementalDailyOverviewsV02(
+  db: D1Database,
+  env: Pick<
+    Env,
+    | "ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS"
+    | "V02_DAILY_OVERVIEW_LOOKBACK_DAYS"
+  >,
+  options: RunDailyOverviewsV02Options = {},
+): Promise<RunDailyOverviewsV02Result> {
+  const days = options.days ?? incrementalDailyLookbackDays(env);
+
+  return runDailyOverviewsV02(
+    db,
+    {
+      ENABLE_DAILY_OVERVIEWS: isIncrementalDailyOverviewGenerationEnabled(env)
+        ? "true"
+        : "false",
+    },
+    {
+      ...options,
+      days,
+      includeIncompleteDays: false,
+    },
+  );
 }
