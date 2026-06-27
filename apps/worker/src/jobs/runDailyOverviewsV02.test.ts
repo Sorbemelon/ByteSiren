@@ -266,6 +266,81 @@ test("runDailyOverviewsV02 dispatches bounded Daily Claude workflow for queued r
   }
 });
 
+test("runDailyOverviewsV02 skips Daily Claude dispatch for existing terminal briefs", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: dayCandles("2026-06-19"),
+    claude_briefs_v02: [
+      {
+        id: "brief_daily_2026-06-19",
+        target_type: "daily_overview_v02",
+        target_id: "daily_2026-06-19",
+        prompt_mode: "daily_overview",
+        status: "brief_ready",
+        public_label: "Daily context",
+        classification: "market_day",
+        confidence: "medium",
+        headline: "Daily market context",
+        collapsed_summary: "Existing daily context.",
+        context_details: "Existing daily context.",
+        source_support: "source_backed",
+        source_timing_alignment: "aligned",
+        validation_flags_json: "[]",
+        detector_feedback_json: "{}",
+        prompt_version: "v02-daily-overview-v1",
+        model: "claude-sonnet-4-6",
+        error_code: null,
+        error_message: null,
+        created_at: "2026-06-20T00:10:00.000Z",
+        updated_at: "2026-06-20T00:10:00.000Z",
+      },
+    ],
+  });
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async () => {
+      throw new Error("GitHub dispatch should not be called");
+    };
+
+    const result = await runDailyOverviewsV02(
+      db,
+      {
+        ENABLE_DAILY_OVERVIEWS: "true",
+        ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH: "true",
+        GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
+        GITHUB_INGEST_REPO: "ByteSiren",
+        GITHUB_INGEST_OWNER: "Sorbemelon",
+        V02_DAILY_CLAUDE_WORKFLOW_FILE: "v02-claude-enrichment.yml",
+        V02_DAILY_CLAUDE_WORKFLOW_REF: "main",
+        V02_DAILY_CLAUDE_DISPATCH_LIMIT: "3",
+      },
+      {
+        now: new Date("2026-06-21T12:00:00.000Z"),
+        requestId: "daily-dispatch-existing-brief",
+        triggerSource: "cloudflare_cron_daily",
+        dispatchClaude: true,
+      },
+    );
+    const dispatchJob = tables.job_runs.find(
+      (row) => row.job_name === "dispatch_v02_daily_claude_workflow",
+    );
+    const dispatchMeta = JSON.parse(dispatchJob?.metadata_json ?? "{}") as {
+      daily_overview_ids?: string[];
+      dispatch_status?: string;
+    };
+
+    assert.equal(result.status, "success");
+    assert.equal(result.claude_dispatch?.dispatch_status, "skipped_no_targets");
+    assert.equal(dispatchJob?.status, "skipped");
+    assert.equal(dispatchMeta.dispatch_status, "skipped_no_targets");
+    assert.deepEqual(dispatchMeta.daily_overview_ids, []);
+    assert.equal(tables.claude_briefs_v02.length, 1);
+    assert.equal(tables.source_references_v02.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("runDailyOverviewsV02 is idempotent and preserves terminal Claude status", async () => {
   const { db, tables } = createMemoryD1({
     market_candles: dayCandles("2026-06-19"),

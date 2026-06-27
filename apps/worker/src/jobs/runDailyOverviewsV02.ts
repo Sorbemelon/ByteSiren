@@ -13,6 +13,10 @@ import {
   upsertDailyOverviewsV02,
 } from "../db/dailyOverviewRepositoryV02.ts";
 import {
+  getClaudeBriefV02ByTarget,
+  isSelectableClaudeBriefV02,
+} from "../db/claudeRepositoryV02.ts";
+import {
   getCandlesForSymbolRange,
   getCandlesForSymbolSince,
   recordJobRun,
@@ -128,6 +132,28 @@ function dispatchJobStatus(result: V02DailyClaudeDispatchResult): JobRunStatus {
   }
 
   return "failed";
+}
+
+async function selectDailyClaudeDispatchTargetIds(
+  db: D1Database,
+  rows: { id: string }[],
+): Promise<string[]> {
+  const targetIds: string[] = [];
+
+  for (const row of rows) {
+    const existing = await getClaudeBriefV02ByTarget(
+      db,
+      "daily_overview_v02",
+      row.id,
+      "daily_overview",
+    );
+
+    if (isSelectableClaudeBriefV02(existing)) {
+      targetIds.push(row.id);
+    }
+  }
+
+  return targetIds;
 }
 
 async function loadCandles(
@@ -303,9 +329,10 @@ export async function runDailyOverviewsV02(
       ? 0
       : await upsertDailyOverviewsV02(db, generated.rows);
     let claudeDispatch: V02DailyClaudeDispatchResult | null = null;
-    const claudeDispatchTargetIds = generated.rows
-      .filter((row) => row.claude_status === "queued_for_analysis")
-      .map((row) => row.id);
+    const claudeDispatchTargetIds =
+      !options.dryRun && options.dispatchClaude === true
+        ? await selectDailyClaudeDispatchTargetIds(db, generated.rows)
+        : [];
     const message = options.dryRun
       ? `v0.2 Daily Overview generation dry-run completed: ${generated.rows.length} rows estimated, ${generated.skipped.length} days skipped.`
       : `v0.2 Daily Overview generation completed: ${generated.rows.length} rows generated, ${generated.skipped.length} days skipped.`;
