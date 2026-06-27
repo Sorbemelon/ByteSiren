@@ -21,8 +21,12 @@ import {
   candidateDailyOverviewDatesV02,
   generateDailyOverviewsV02,
 } from "../services/dailyOverviewsV02/index.ts";
+import {
+  dispatchV02DailyClaudeWorkflow,
+  type V02DailyClaudeDispatchResult,
+} from "../services/githubDispatch.ts";
 import type { Env } from "../types/env.ts";
-import type { MarketCandle } from "../types/market.ts";
+import type { JobRunStatus, MarketCandle } from "../types/market.ts";
 import { safeErrorMessage } from "../utils/http.ts";
 
 const DEFAULT_INCREMENTAL_DAILY_LOOKBACK_DAYS = 5;
@@ -36,6 +40,7 @@ export interface RunDailyOverviewsV02Result {
   daily_overviews_written: number;
   dates_generated: string[];
   dates_skipped: string[];
+  claude_dispatch: V02DailyClaudeDispatchResult | null;
 }
 
 export interface RunDailyOverviewsV02Options {
@@ -46,7 +51,11 @@ export interface RunDailyOverviewsV02Options {
   dateTo?: string;
   dryRun?: boolean;
   requestId?: string;
+  triggerSource?: string;
+  dispatchClaude?: boolean;
 }
+
+type DailyOverviewEnv = Pick<Env, "ENABLE_DAILY_OVERVIEWS"> & Partial<Env>;
 
 export function isDailyOverviewGenerationEnabled(
   env: Pick<Env, "ENABLE_DAILY_OVERVIEWS">,
@@ -92,6 +101,33 @@ function incrementalDailyLookbackDays(
       ),
     ),
   );
+}
+
+function dailyClaudeDispatchLimit(
+  env: Partial<
+    Pick<
+      Env,
+      "V02_CLAUDE_DAILY_DISPATCH_LIMIT" | "V02_DAILY_CLAUDE_DISPATCH_LIMIT"
+    >
+  >,
+): number {
+  return parsePositiveInt(
+    env.V02_CLAUDE_DAILY_DISPATCH_LIMIT ?? env.V02_DAILY_CLAUDE_DISPATCH_LIMIT,
+    3,
+    10,
+  );
+}
+
+function dispatchJobStatus(result: V02DailyClaudeDispatchResult): JobRunStatus {
+  if (result.dispatch_status === "dispatched" || result.ok) {
+    return "success";
+  }
+
+  if (result.outcome === "skipped") {
+    return "skipped";
+  }
+
+  return "failed";
 }
 
 async function loadCandles(
@@ -165,7 +201,7 @@ function filterDates(
 
 export async function runDailyOverviewsV02(
   db: D1Database,
-  env: Pick<Env, "ENABLE_DAILY_OVERVIEWS">,
+  env: DailyOverviewEnv,
   options: RunDailyOverviewsV02Options = {},
 ): Promise<RunDailyOverviewsV02Result> {
   const now = options.now ?? new Date();
@@ -202,6 +238,7 @@ export async function runDailyOverviewsV02(
       daily_overviews_written: 0,
       dates_generated: [],
       dates_skipped: [],
+      claude_dispatch: null,
     };
   }
 
@@ -265,6 +302,10 @@ export async function runDailyOverviewsV02(
     const written = options.dryRun
       ? 0
       : await upsertDailyOverviewsV02(db, generated.rows);
+    let claudeDispatch: V02DailyClaudeDispatchResult | null = null;
+    const claudeDispatchTargetIds = generated.rows
+      .filter((row) => row.claude_status === "queued_for_analysis")
+      .map((row) => row.id);
     const message = options.dryRun
       ? `v0.2 Daily Overview generation dry-run completed: ${generated.rows.length} rows estimated, ${generated.skipped.length} days skipped.`
       : `v0.2 Daily Overview generation completed: ${generated.rows.length} rows generated, ${generated.skipped.length} days skipped.`;
@@ -289,10 +330,50 @@ export async function runDailyOverviewsV02(
           date_to: options.dateTo ?? null,
           dry_run: false,
           request_id: options.requestId ?? null,
+          dispatch_claude_requested: options.dispatchClaude === true,
+          claude_dispatch_target_ids: claudeDispatchTargetIds,
         },
         startedAt,
         new Date(),
       );
+
+      if (options.dispatchClaude === true) {
+        const dispatchStartedAt = new Date();
+        claudeDispatch = await dispatchV02DailyClaudeWorkflow(
+          env as Env,
+          claudeDispatchTargetIds,
+          {
+            dryRun: false,
+            triggerSource: options.triggerSource ?? "incremental_daily",
+            now,
+            limit: dailyClaudeDispatchLimit(env),
+          },
+        );
+
+        await recordJobRun(
+          db,
+          "dispatch_v02_daily_claude_workflow",
+          dispatchJobStatus(claudeDispatch),
+          claudeDispatch.message,
+          {
+            request_id: options.requestId ?? null,
+            trigger_source: options.triggerSource ?? "incremental_daily",
+            daily_overview_ids: claudeDispatchTargetIds,
+            generated_dates: generated.summary.dates_generated,
+            dispatch_status: claudeDispatch.dispatch_status,
+            dispatch_attempted: claudeDispatch.dispatch_attempted,
+            workflow: claudeDispatch.workflow,
+            repo: claudeDispatch.repo,
+            ref: claudeDispatch.ref,
+            github_status: claudeDispatch.status,
+            inputs_summary: claudeDispatch.inputs_summary,
+            token_present: claudeDispatch.token_present,
+            error_summary: claudeDispatch.error_summary ?? null,
+          },
+          dispatchStartedAt,
+          new Date(),
+        );
+      }
     }
 
     return {
@@ -303,6 +384,7 @@ export async function runDailyOverviewsV02(
       daily_overviews_written: written,
       dates_generated: generated.summary.dates_generated,
       dates_skipped: generated.summary.dates_skipped,
+      claude_dispatch: claudeDispatch,
     };
   } catch (error) {
     const message = `v0.2 Daily Overview generation failed: ${safeErrorMessage(error)}`;
@@ -333,6 +415,7 @@ export async function runDailyOverviewsV02(
       daily_overviews_written: 0,
       dates_generated: [],
       dates_skipped: [],
+      claude_dispatch: null,
     };
   }
 }
@@ -343,7 +426,8 @@ export async function runIncrementalDailyOverviewsV02(
     Env,
     | "ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS"
     | "V02_DAILY_OVERVIEW_LOOKBACK_DAYS"
-  >,
+  > &
+    Partial<Env>,
   options: RunDailyOverviewsV02Options = {},
 ): Promise<RunDailyOverviewsV02Result> {
   const days = options.days ?? incrementalDailyLookbackDays(env);
@@ -351,6 +435,7 @@ export async function runIncrementalDailyOverviewsV02(
   return runDailyOverviewsV02(
     db,
     {
+      ...env,
       ENABLE_DAILY_OVERVIEWS: isIncrementalDailyOverviewGenerationEnabled(env)
         ? "true"
         : "false",

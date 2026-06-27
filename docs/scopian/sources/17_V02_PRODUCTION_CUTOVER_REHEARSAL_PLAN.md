@@ -125,6 +125,10 @@ ENABLE_MARKET_STORIES=false
 ENABLE_DAILY_OVERVIEWS=false
 ENABLE_SIGNAL_CLAUDE_V02=false
 ENABLE_DAILY_CLAUDE=false
+ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=true after GitHub Claude workflow proof
+ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH=true after GitHub Claude workflow proof
+V02_CLAUDE_SIGNAL_DISPATCH_LIMIT=3
+V02_CLAUDE_DAILY_DISPATCH_LIMIT=3
 ENABLE_V02_CLAUDE_SAMPLE_TOOLS=false
 ENABLE_V02_ADMIN_TOOLS=false
 ENABLE_ADMIN_MAINTENANCE=false
@@ -133,12 +137,12 @@ ENABLE_ADMIN_MAINTENANCE=false
 Worker vars for temporary cutover rehearsal:
 
 ```text
-DETECTOR_VERSION=v02
-ENABLE_MARKET_STORIES=true
-ENABLE_DAILY_OVERVIEWS=true
+DETECTOR_VERSION=v02 only during explicitly approved admin/rehearsal detector work
+ENABLE_MARKET_STORIES=true only during explicitly approved admin/rehearsal Market Story generation
+ENABLE_DAILY_OVERVIEWS=true only during explicitly approved admin/rehearsal broad Daily generation
 FEED_VERSION=v02 remains the normal public feed after Phase C; use FEED_VERSION=v01 only for rollback
-ENABLE_SIGNAL_CLAUDE_V02=true only during scheduled Signal Claude enrichment or bounded catch-up
-ENABLE_DAILY_CLAUDE=true only during scheduled Daily Claude enrichment or bounded catch-up
+ENABLE_SIGNAL_CLAUDE_V02=false for normal production; GitHub workflow dispatch is the approved Signal Claude path
+ENABLE_DAILY_CLAUDE=false for normal production; GitHub workflow dispatch is the approved Daily Claude path
 ENABLE_V02_CLAUDE_SAMPLE_TOOLS=true only during protected one-shot admin Claude samples
 ENABLE_V02_ADMIN_TOOLS=true only during protected rehearsal
 ENABLE_ADMIN_MAINTENANCE=true only during protected admin actions

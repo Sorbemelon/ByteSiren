@@ -184,11 +184,14 @@ interface StoryClusterV02 {
 interface StoryEligibilityV02 {
   eligible: boolean;
   reason: string;
+  rangeEvidenceReason: string;
   publicCount: number;
   auditCount: number;
   averageChartContextScore: number;
   durationMin: number;
   eventSwingPct: number;
+  storyMovePct: number | null;
+  storyVolatilityScore: number | null;
 }
 
 interface StoryBarStatsV02 {
@@ -779,24 +782,39 @@ function storyRange(
 function storyEligibility(
   events: MarketStorySourceEventV02[],
   options: MarketStoryOptionsV02,
+  candles: MarketStoryCandleV02[] = [],
 ): StoryEligibilityV02 {
   const publicCount = events.filter((event) => event.publish_candidate).length;
   const auditCount = events.length - publicCount;
-  const range = storyRange(events);
+  const range = storyRange(events, candles);
   const averageScore = averageChartScore(events);
+  const storyMovePct = Math.abs(Number(range.barStats.avgChangePct ?? 0));
+  const storyVolatilityScore = Number(range.barStats.swingScore ?? 0);
+  const rangeEvidenceReason =
+    range.eventSwingPct >= options.minStorySwingChangePct
+      ? "event_story_range_confirmed"
+      : storyMovePct >= options.minStorySwingChangePct
+        ? "candle_story_move_confirmed"
+        : storyVolatilityScore >= 50 &&
+            averageScore >= options.strongAuditSequenceAverageScore
+          ? "candle_story_volatility_confirmed"
+          : "below_minimum_story_range";
 
   if (
     range.durationMin < options.minStoryDurationMinutes ||
-    range.eventSwingPct < options.minStorySwingChangePct
+    rangeEvidenceReason === "below_minimum_story_range"
   ) {
     return {
       eligible: false,
       reason: "below_minimum_story_range",
+      rangeEvidenceReason,
       publicCount,
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
       eventSwingPct: range.eventSwingPct,
+      storyMovePct: range.barStats.avgChangePct,
+      storyVolatilityScore: range.barStats.swingScore,
     };
   }
 
@@ -804,11 +822,14 @@ function storyEligibility(
     return {
       eligible: true,
       reason: "min_public_signals",
+      rangeEvidenceReason,
       publicCount,
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
       eventSwingPct: range.eventSwingPct,
+      storyMovePct: range.barStats.avgChangePct,
+      storyVolatilityScore: range.barStats.swingScore,
     };
   }
 
@@ -820,11 +841,14 @@ function storyEligibility(
     return {
       eligible: true,
       reason: "strong_audit_context_sequence",
+      rangeEvidenceReason,
       publicCount,
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
       eventSwingPct: range.eventSwingPct,
+      storyMovePct: range.barStats.avgChangePct,
+      storyVolatilityScore: range.barStats.swingScore,
     };
   }
 
@@ -832,22 +856,28 @@ function storyEligibility(
     return {
       eligible: true,
       reason: "mixed_public_audit_strong_chart_context",
+      rangeEvidenceReason,
       publicCount,
       auditCount,
       averageChartContextScore: averageScore,
       durationMin: range.durationMin,
       eventSwingPct: range.eventSwingPct,
+      storyMovePct: range.barStats.avgChangePct,
+      storyVolatilityScore: range.barStats.swingScore,
     };
   }
 
   return {
     eligible: false,
     reason: "below_story_threshold",
+    rangeEvidenceReason,
     publicCount,
     auditCount,
     averageChartContextScore: averageScore,
     durationMin: range.durationMin,
     eventSwingPct: range.eventSwingPct,
+    storyMovePct: range.barStats.avgChangePct,
+    storyVolatilityScore: range.barStats.swingScore,
   };
 }
 
@@ -1140,7 +1170,7 @@ function storyFromCluster(
 
   const events = cluster.events;
   const range = storyRange(events, candles);
-  const eligibility = storyEligibility(events, options);
+  const eligibility = storyEligibility(events, options, candles);
   const label = normalizedStoryLabel(events);
   const sourceType = storySourceType(events);
   const signalIds = events
@@ -1158,6 +1188,7 @@ function storyFromCluster(
   const decisionReasons = [
     MARKET_STORY_V02_MODEL_VERSION,
     eligibility.reason,
+    eligibility.rangeEvidenceReason,
     sourceType,
     ...label.reasons,
     ...cluster.gapReasons,

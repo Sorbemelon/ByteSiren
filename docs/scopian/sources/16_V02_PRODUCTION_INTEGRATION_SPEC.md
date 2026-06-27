@@ -57,9 +57,13 @@ Daily Overview uses Claude and represents full UTC-day context. It may include d
 
 Daily Overview rows are created deterministically before Claude enrichment. Row generation computes `24h Change`, market range, market tone, notable symbols, top symbol moves, same-day publishable Signal Event IDs, same-day publishable Market Story IDs, and same-day Audit Event counts from existing spot 15m candles and v0.2 records. It must not fake Claude summaries or sources.
 
+When bounded Daily Overview generation creates or refreshes rows with `claude_status=queued_for_analysis`, the Worker may dispatch `.github/workflows/v02-claude-enrichment.yml` through GitHub `workflow_dispatch` if `ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH=true`. The dispatch input must be explicit `target_types=daily`, `mode=ids`, and a capped comma-separated `ids` list. The Worker records safe evidence in `job_runs` as `dispatch_v02_daily_claude_workflow` and does not call Claude inline.
+
 ### Market Story
 
 Market Story is deterministic only. It represents broader chart-pattern context such as range, trend, momentum, volatility expansion, reversal, or mixed movement structure. It is descriptive market intelligence, not a cause claim and not trading advice.
+
+Market Story public eligibility must stay bounded to the story window. The minimum story range gate may use source-event swing, candle move, or candle volatility inside the story window. This prevents a current/open story from being suppressed as `below_minimum_story_range` solely because the component event average changes are small while the combined story-window candle move is material.
 
 Market Story rows must not include:
 
@@ -82,6 +86,8 @@ Market Story must not have a `source_references_v02` target.
 Signal Event uses Claude for event-specific public context after deterministic detection passes the public gate. Signal Event display uses `Avg Change` for the collapsed metric and per-symbol `Window Change` and `Range Position` in the evidence table.
 
 Only the first public Signal Event in a canonical merge sequence should queue Claude. Later merged detections update deterministic evidence and display range but must not trigger Claude again.
+
+When a new public Signal Event is detected and `ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=true`, the Worker may dispatch the GitHub-executed Claude workflow with explicit `target_types=signal`, `mode=ids`, `ids`, and `signal_event_ids` inputs. The Worker records safe evidence in `job_runs` as `dispatch_v02_signal_claude_workflow`, including dispatch status and target IDs but never token values.
 
 ### Audit Event
 

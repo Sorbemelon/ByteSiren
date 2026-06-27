@@ -610,18 +610,22 @@ V02_DAILY_OVERVIEW_LOOKBACK_DAYS=5
 V02_MARKET_STORY_OPEN_TTL_HOURS=72
 ```
 
-The 72-hour Market Story open TTL is still a bounded incremental window. It exists so multi-day Signal clusters can form or refresh after their last Signal without falling back to a full historical rebuild. The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds before legacy v0.1 detector work, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. Recent completed Daily Overview rows refresh through the bounded `ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS=true` path while the older broad `ENABLE_DAILY_OVERVIEWS=false` default stays off. The incremental path must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, call Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
+The 72-hour Market Story open TTL is still a bounded incremental window. It exists so multi-day Signal clusters can form or refresh after their last Signal without falling back to a full historical rebuild. The incremental path calls `runDetectorV02` only with explicit `timeFrom/timeTo` bounds before legacy v0.1 detector work, preserves `DETECTOR_VERSION=v01`, updates/upserts `signal_events_v02`, `signal_event_symbols_v02`, and `audit_events_v02`, then refreshes only the recent/open Market Story window. Recent completed Daily Overview rows refresh through the bounded `ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS=true` path while the older broad `ENABLE_DAILY_OVERVIEWS=false` default stays off. The Market Story public gate can satisfy the minimum story range from either event swing or bounded candle movement/volatility inside the story window; this avoids suppressing a current story as `below_minimum_story_range` when source events are individually small but the chart move across the story is material. The incremental deterministic path must not clear all v0.2 tables, run the historical detector rebuild, write old v0.1 tables, run Worker-side Claude, write `claude_briefs_v02`, write `source_references_v02`, or add Claude/source fields to Market Story.
 
 Phase G adds the GitHub-executed v0.2 Claude enrichment path for missing Signal/Daily context. GitHub Actions runs `.github/workflows/v02-claude-enrichment.yml` by `workflow_dispatch`; the Node executor is `scripts/v02-claude-enrichment.mjs`. The workflow reads remote D1, calls Claude only from GitHub Actions, and writes only `claude_briefs_v02` and `source_references_v02` through the existing v0.2 prompt, validator, terminal-status, and source-policy code. It must never call Worker-side long-running Claude, write old `claude_briefs` or `source_references`, or select Market Story/Audit targets. The GitHub Claude workflow caps each Claude HTTP request at 20 minutes and sets Node's fetch transport timeout slightly higher, while the workflow command timeout scales with the requested Signal/Daily target count so multi-target backfills are not killed by a fixed job cap.
 
-Worker triggering for newly detected Signal Events remains bounded and disabled unless the owner enables it after workflow proof:
+Worker triggering for newly detected Signal Events and newly generated Daily Overview rows is bounded and uses only GitHub `workflow_dispatch`. The Worker records safe dispatch evidence in `job_runs` as `dispatch_v02_signal_claude_workflow` and `dispatch_v02_daily_claude_workflow`; it must not run Claude inline or print token values.
 
 ```text
-ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=false
+ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH=true
+ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH=true
 V02_CLAUDE_WORKFLOW_FILE=v02-claude-enrichment.yml
 V02_CLAUDE_WORKFLOW_REF=main
 V02_CLAUDE_SIGNAL_DISPATCH_LIMIT=3
+V02_CLAUDE_DAILY_DISPATCH_LIMIT=3
 V02_CLAUDE_DISPATCH_COOLDOWN_MIN=15
+ENABLE_SIGNAL_CLAUDE_V02=false
+ENABLE_DAILY_CLAUDE=false
 ```
 
 Required GitHub secret names for live workflow runs are `ANTHROPIC_API_KEY` and `CLOUDFLARE_API_TOKEN` (plus `CLOUDFLARE_ACCOUNT_ID` only if the runner environment requires it). Do not print secret values. Manual backfill must be bounded with `dry_run=true` first, then `dry_run=false` only with `confirm_live_claude=true`. The legacy Worker flags `ENABLE_SIGNAL_CLAUDE_V02` and `ENABLE_DAILY_CLAUDE` stay `false`.

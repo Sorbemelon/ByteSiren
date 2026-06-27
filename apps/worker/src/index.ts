@@ -192,9 +192,18 @@ export default {
       if (isIncrementalDailyOverviewGenerationEnabled(env)) {
         await runIncrementalDailyOverviewsV02(env.DB, env, {
           requestId: crypto.randomUUID(),
+          triggerSource: "cloudflare_cron_daily",
+          dispatchClaude: parseBooleanFlag(
+            env.ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH,
+          ),
         });
       } else if (isDailyOverviewGenerationEnabled(env)) {
-        await runDailyOverviewsV02(env.DB, env);
+        await runDailyOverviewsV02(env.DB, env, {
+          triggerSource: "cloudflare_cron_daily",
+          dispatchClaude: parseBooleanFlag(
+            env.ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH,
+          ),
+        });
       }
 
       return;

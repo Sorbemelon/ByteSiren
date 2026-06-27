@@ -221,12 +221,37 @@ test("runIncrementalRefreshV02 dispatches bounded Signal Claude workflow when en
     assert.match(capturedUrl, /v02-claude-enrichment\.yml\/dispatches$/);
     assert.equal(capturedBody?.ref, "main");
     assert.equal(inputs.trigger_source, "cloudflare_cron");
+    assert.equal(inputs.target_types, "signal");
+    assert.equal(inputs.mode, "ids");
     assert.equal(inputs.dry_run, "false");
     assert.equal(inputs.confirm_live, "true");
+    assert.equal(typeof inputs.ids, "string");
+    assert.match(String(inputs.ids), /^signal_v02_/);
     assert.equal(typeof inputs.signal_event_ids, "string");
     assert.match(String(inputs.signal_event_ids), /^signal_v02_/);
+    assert.equal(inputs.batch_size, "3");
     assert.equal(tables.claude_briefs_v02.length, 0);
     assert.equal(tables.source_references_v02.length, 0);
+    assert.equal(
+      tables.job_runs.some(
+        (row) => row.job_name === "dispatch_v02_signal_claude_workflow",
+      ),
+      true,
+    );
+    const dispatchJob = tables.job_runs.find(
+      (row) => row.job_name === "dispatch_v02_signal_claude_workflow",
+    );
+    const dispatchMeta = JSON.parse(dispatchJob?.metadata_json ?? "{}") as {
+      dispatch_status?: string;
+      dispatch_attempted?: boolean;
+      inputs_summary?: { target_types?: string; mode?: string };
+      new_public_signal_detected?: boolean;
+    };
+    assert.equal(dispatchMeta.dispatch_status, "dispatched");
+    assert.equal(dispatchMeta.dispatch_attempted, true);
+    assert.equal(dispatchMeta.inputs_summary?.target_types, "signal");
+    assert.equal(dispatchMeta.inputs_summary?.mode, "ids");
+    assert.equal(dispatchMeta.new_public_signal_detected, true);
     assert.equal(
       JSON.stringify(capturedBody).includes("secret-github-token"),
       false,

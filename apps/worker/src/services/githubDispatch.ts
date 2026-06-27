@@ -12,6 +12,7 @@ const DEFAULT_HOURS = "6";
 const DEFAULT_DRY_RUN = "false";
 const DEFAULT_REFRESH_REPO = "Sorbemelon/ByteSiren";
 const DEFAULT_SIGNAL_CLAUDE_DISPATCH_LIMIT = 3;
+const DEFAULT_DAILY_CLAUDE_DISPATCH_LIMIT = 3;
 const ACTIVE_WORKFLOW_RUN_STATUSES = new Set([
   "queued",
   "in_progress",
@@ -93,8 +94,31 @@ export type V02SignalClaudeDispatchStatus =
 export interface V02SignalClaudeInputsSummary {
   trigger_source: string;
   requested_at: string;
+  target_types: "signal";
+  mode: "ids";
+  ids: string;
   signal_event_ids: string;
   limit: string;
+  batch_size: string;
+  dry_run: "false";
+  confirm_live: "true";
+}
+
+export type V02DailyClaudeDispatchStatus =
+  | "dry_run"
+  | "dispatched"
+  | "skipped_disabled"
+  | "skipped_no_targets"
+  | "failed_dispatch";
+
+export interface V02DailyClaudeInputsSummary {
+  trigger_source: string;
+  requested_at: string;
+  target_types: "daily";
+  mode: "ids";
+  ids: string;
+  limit: string;
+  batch_size: string;
   dry_run: "false";
   confirm_live: "true";
 }
@@ -114,6 +138,21 @@ export interface V02SignalClaudeDispatchResult {
   error_summary?: string;
 }
 
+export interface V02DailyClaudeDispatchResult {
+  ok: boolean;
+  outcome: GitHubDispatchOutcome;
+  status: number | null;
+  message: string;
+  dispatch_status: V02DailyClaudeDispatchStatus;
+  workflow: string;
+  repo: string;
+  ref: string;
+  inputs_summary: V02DailyClaudeInputsSummary;
+  dispatch_attempted: boolean;
+  token_present: boolean;
+  error_summary?: string;
+}
+
 export interface V02RefreshDispatchOptions extends GitHubDispatchOptions {
   dryRun?: boolean;
   force?: boolean;
@@ -123,6 +162,13 @@ export interface V02RefreshDispatchOptions extends GitHubDispatchOptions {
 }
 
 export interface V02SignalClaudeDispatchOptions extends GitHubDispatchOptions {
+  dryRun?: boolean;
+  triggerSource?: string;
+  now?: Date;
+  limit?: number;
+}
+
+export interface V02DailyClaudeDispatchOptions extends GitHubDispatchOptions {
   dryRun?: boolean;
   triggerSource?: string;
   now?: Date;
@@ -150,6 +196,15 @@ interface V02RefreshDispatchConfig {
 }
 
 interface V02SignalClaudeDispatchConfig {
+  owner: string;
+  repoName: string;
+  repoSlug: string;
+  workflow: string;
+  ref: string;
+  token: string;
+}
+
+interface V02DailyClaudeDispatchConfig {
   owner: string;
   repoName: string;
   repoSlug: string;
@@ -230,6 +285,10 @@ function v02SignalClaudeWorkflowDispatchEnabled(env: Env): boolean {
   return isEnabled(env.ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH);
 }
 
+function v02DailyClaudeWorkflowDispatchEnabled(env: Env): boolean {
+  return isEnabled(env.ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH);
+}
+
 function normalizeRepoSlug(value: string | undefined): {
   owner: string;
   repoName: string;
@@ -299,6 +358,32 @@ function v02SignalClaudeDispatchConfig(
   };
 }
 
+function v02DailyClaudeDispatchConfig(
+  env: Env,
+  { requireToken }: { requireToken: boolean },
+): V02DailyClaudeDispatchConfig {
+  const repo = normalizeRepoSlug(env.GITHUB_REFRESH_WORKFLOW_REPO);
+  const token = requireToken
+    ? readRequired(
+        env.GITHUB_INGEST_DISPATCH_TOKEN,
+        "GITHUB_INGEST_DISPATCH_TOKEN",
+      )
+    : (env.GITHUB_INGEST_DISPATCH_TOKEN?.trim() ?? "");
+
+  return {
+    ...repo,
+    workflow:
+      env.V02_CLAUDE_WORKFLOW_FILE?.trim() ||
+      env.V02_DAILY_CLAUDE_WORKFLOW_FILE?.trim() ||
+      DEFAULT_V02_SIGNAL_CLAUDE_WORKFLOW,
+    ref:
+      env.V02_CLAUDE_WORKFLOW_REF?.trim() ||
+      env.V02_DAILY_CLAUDE_WORKFLOW_REF?.trim() ||
+      DEFAULT_REF,
+    token,
+  };
+}
+
 function safeSummary(value: string, token?: string): string {
   let sanitized = value.replace(/\s+/g, " ").trim();
 
@@ -343,6 +428,17 @@ function signalClaudeLimit(value: number | undefined): number {
   );
 }
 
+function dailyClaudeLimit(value: number | undefined): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_DAILY_CLAUDE_DISPATCH_LIMIT;
+  }
+
+  return Math.max(
+    1,
+    Math.min(DEFAULT_DAILY_CLAUDE_DISPATCH_LIMIT, Math.trunc(value ?? 0)),
+  );
+}
+
 function v02SignalClaudeInputsSummary(
   signalEventIds: string[],
   now: Date,
@@ -353,8 +449,32 @@ function v02SignalClaudeInputsSummary(
   return {
     trigger_source: safeInputSlug(options.triggerSource, "incremental_signal"),
     requested_at: now.toISOString(),
+    target_types: "signal",
+    mode: "ids",
+    ids: signalEventIds.slice(0, limit).join(","),
     signal_event_ids: signalEventIds.slice(0, limit).join(","),
     limit: String(limit),
+    batch_size: String(limit),
+    dry_run: "false",
+    confirm_live: "true",
+  };
+}
+
+function v02DailyClaudeInputsSummary(
+  dailyOverviewIds: string[],
+  now: Date,
+  options: Pick<V02DailyClaudeDispatchOptions, "triggerSource" | "limit">,
+): V02DailyClaudeInputsSummary {
+  const limit = dailyClaudeLimit(options.limit);
+
+  return {
+    trigger_source: safeInputSlug(options.triggerSource, "incremental_daily"),
+    requested_at: now.toISOString(),
+    target_types: "daily",
+    mode: "ids",
+    ids: dailyOverviewIds.slice(0, limit).join(","),
+    limit: String(limit),
+    batch_size: String(limit),
     dry_run: "false",
     confirm_live: "true",
   };
@@ -560,6 +680,45 @@ function v02SignalClaudeFailureResult({
   outcome?: "failed" | "skipped";
   tokenPresent?: boolean;
 }): V02SignalClaudeDispatchResult {
+  return {
+    ok: false,
+    outcome,
+    status,
+    message,
+    dispatch_status: dispatchStatus,
+    workflow,
+    repo,
+    ref,
+    inputs_summary: inputsSummary,
+    dispatch_attempted: false,
+    token_present: tokenPresent,
+    ...(errorSummary ? { error_summary: errorSummary } : {}),
+  };
+}
+
+function v02DailyClaudeFailureResult({
+  status,
+  message,
+  dispatchStatus,
+  workflow = DEFAULT_V02_SIGNAL_CLAUDE_WORKFLOW,
+  repo = DEFAULT_REFRESH_REPO,
+  ref = DEFAULT_REF,
+  inputsSummary = v02DailyClaudeInputsSummary([], new Date(0), {}),
+  errorSummary,
+  outcome = "failed",
+  tokenPresent = false,
+}: {
+  status: number | null;
+  message: string;
+  dispatchStatus: V02DailyClaudeDispatchStatus;
+  workflow?: string;
+  repo?: string;
+  ref?: string;
+  inputsSummary?: V02DailyClaudeInputsSummary;
+  errorSummary?: string;
+  outcome?: "failed" | "skipped";
+  tokenPresent?: boolean;
+}): V02DailyClaudeDispatchResult {
   return {
     ok: false,
     outcome,
@@ -944,6 +1103,147 @@ export async function dispatchV02SignalClaudeWorkflow(
     return v02SignalClaudeFailureResult({
       status: null,
       message: "v0.2 Signal Claude workflow dispatch failed: network_error.",
+      dispatchStatus: "failed_dispatch",
+      workflow,
+      repo,
+      ref,
+      inputsSummary,
+      errorSummary:
+        error instanceof Error
+          ? safeSummary(error.message, config.token)
+          : "Unexpected dispatch error.",
+      tokenPresent,
+    });
+  }
+}
+
+export async function dispatchV02DailyClaudeWorkflow(
+  env: Env,
+  dailyOverviewIds: string[],
+  options: V02DailyClaudeDispatchOptions = {},
+): Promise<V02DailyClaudeDispatchResult> {
+  const dryRun = options.dryRun === true;
+  const now = options.now ?? new Date();
+  const ids = [
+    ...new Set(dailyOverviewIds.map((id) => id.trim()).filter(Boolean)),
+  ];
+  const inputsSummary = v02DailyClaudeInputsSummary(ids, now, options);
+  const tokenPresent = Boolean(env.GITHUB_INGEST_DISPATCH_TOKEN?.trim());
+
+  if (!v02DailyClaudeWorkflowDispatchEnabled(env)) {
+    return v02DailyClaudeFailureResult({
+      status: null,
+      message:
+        "v0.2 Daily Claude workflow dispatch skipped: ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH is not true.",
+      dispatchStatus: "skipped_disabled",
+      inputsSummary,
+      outcome: "skipped",
+      tokenPresent,
+    });
+  }
+
+  if (ids.length === 0) {
+    return v02DailyClaudeFailureResult({
+      status: null,
+      message:
+        "v0.2 Daily Claude workflow dispatch skipped: no Daily Overview targets.",
+      dispatchStatus: "skipped_no_targets",
+      inputsSummary,
+      outcome: "skipped",
+      tokenPresent,
+    });
+  }
+
+  let config: V02DailyClaudeDispatchConfig;
+
+  try {
+    config = v02DailyClaudeDispatchConfig(env, { requireToken: !dryRun });
+  } catch (error) {
+    return v02DailyClaudeFailureResult({
+      status: null,
+      message: `v0.2 Daily Claude workflow dispatch failed: ${
+        error instanceof Error ? safeSummary(error.message) : "invalid config"
+      }.`,
+      dispatchStatus: "failed_dispatch",
+      inputsSummary,
+      tokenPresent,
+    });
+  }
+
+  const workflow = config.workflow;
+  const repo = config.repoSlug;
+  const ref = config.ref;
+
+  if (dryRun) {
+    return {
+      ok: true,
+      outcome: "success",
+      status: null,
+      message: `v0.2 Daily Claude workflow dispatch dry-run: ${workflow} on ${ref}.`,
+      dispatch_status: "dry_run",
+      workflow,
+      repo,
+      ref,
+      inputs_summary: inputsSummary,
+      dispatch_attempted: false,
+      token_present: tokenPresent,
+    };
+  }
+
+  const url = `${GITHUB_DISPATCH_URL_PREFIX}/${encodeURIComponent(
+    config.owner,
+  )}/${encodeURIComponent(config.repoName)}/actions/workflows/${encodeURIComponent(
+    workflow,
+  )}/dispatches`;
+
+  try {
+    const response = await (options.fetcher ?? fetch)(url, {
+      method: "POST",
+      headers: {
+        accept: "application/vnd.github+json",
+        authorization: `Bearer ${config.token}`,
+        "content-type": "application/json",
+        "user-agent": "ByteSiren-Worker",
+        "x-github-api-version": GITHUB_API_VERSION,
+      },
+      body: JSON.stringify({
+        ref,
+        inputs: inputsSummary,
+      }),
+    });
+    const text = await response.text();
+
+    if (!SUCCESS_STATUSES.has(response.status)) {
+      return v02DailyClaudeFailureResult({
+        status: response.status,
+        message: `v0.2 Daily Claude workflow dispatch failed: HTTP ${response.status}.`,
+        dispatchStatus: "failed_dispatch",
+        workflow,
+        repo,
+        ref,
+        inputsSummary,
+        errorSummary: safeSummary(text, config.token),
+        tokenPresent,
+      });
+    }
+
+    return {
+      ok: true,
+      outcome: "success",
+      status: response.status,
+      message: `v0.2 Daily Claude workflow dispatched: ${workflow} on ${ref}.`,
+      dispatch_status: "dispatched",
+      workflow,
+      repo,
+      ref,
+      inputs_summary: inputsSummary,
+      dispatch_attempted: true,
+      token_present: tokenPresent,
+    };
+  } catch (error) {
+    return v02DailyClaudeFailureResult({
+      status: null,
+      message: "v0.2 Daily Claude workflow dispatch failed: network_error.",
       dispatchStatus: "failed_dispatch",
       workflow,
       repo,

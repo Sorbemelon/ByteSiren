@@ -192,6 +192,80 @@ test("runDailyOverviewsV02 writes deterministic Daily Overview rows only", async
   assert.equal(metadata.skipped_count, 0);
 });
 
+test("runDailyOverviewsV02 dispatches bounded Daily Claude workflow for queued rows", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: dayCandles("2026-06-19"),
+  });
+  const originalFetch = globalThis.fetch;
+  let capturedUrl = "";
+  let capturedBody: {
+    ref?: unknown;
+    inputs?: Record<string, unknown>;
+  } = {};
+  globalThis.fetch = async (input, init) => {
+    capturedUrl = String(input);
+    capturedBody = JSON.parse(String(init?.body ?? "{}"));
+    return new Response(null, { status: 204 });
+  };
+
+  try {
+    const result = await runDailyOverviewsV02(
+      db,
+      {
+        DB: db,
+        ENABLE_DAILY_OVERVIEWS: "true",
+        ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH: "true",
+        GITHUB_REFRESH_WORKFLOW_REPO: "Sorbemelon/ByteSiren",
+        GITHUB_INGEST_DISPATCH_TOKEN: "secret-github-token",
+        V02_DAILY_CLAUDE_WORKFLOW_FILE: "v02-claude-enrichment.yml",
+        V02_DAILY_CLAUDE_WORKFLOW_REF: "main",
+        V02_DAILY_CLAUDE_DISPATCH_LIMIT: "3",
+      },
+      {
+        now: new Date("2026-06-21T12:00:00.000Z"),
+        requestId: "daily-dispatch-test",
+        triggerSource: "cloudflare_cron_daily",
+        dispatchClaude: true,
+      },
+    );
+    const inputs = capturedBody.inputs ?? {};
+    const dispatchJob = tables.job_runs.find(
+      (row) => row.job_name === "dispatch_v02_daily_claude_workflow",
+    );
+    const dispatchMeta = JSON.parse(dispatchJob?.metadata_json ?? "{}") as {
+      daily_overview_ids?: string[];
+      dispatch_status?: string;
+      inputs_summary?: { target_types?: string; mode?: string; ids?: string };
+    };
+
+    assert.equal(result.status, "success");
+    assert.equal(result.claude_dispatch?.dispatch_status, "dispatched");
+    assert.match(capturedUrl, /v02-claude-enrichment\.yml\/dispatches$/);
+    assert.equal(capturedBody.ref, "main");
+    assert.equal(inputs.trigger_source, "cloudflare_cron_daily");
+    assert.equal(inputs.target_types, "daily");
+    assert.equal(inputs.mode, "ids");
+    assert.equal(inputs.ids, "daily_2026-06-19");
+    assert.equal(inputs.limit, "3");
+    assert.equal(inputs.batch_size, "3");
+    assert.equal(inputs.dry_run, "false");
+    assert.equal(inputs.confirm_live, "true");
+    assert.equal(dispatchJob?.status, "success");
+    assert.equal(dispatchMeta.dispatch_status, "dispatched");
+    assert.deepEqual(dispatchMeta.daily_overview_ids, ["daily_2026-06-19"]);
+    assert.equal(dispatchMeta.inputs_summary?.target_types, "daily");
+    assert.equal(dispatchMeta.inputs_summary?.mode, "ids");
+    assert.equal(tables.claude_briefs_v02.length, 0);
+    assert.equal(tables.source_references_v02.length, 0);
+    assert.equal(
+      JSON.stringify(capturedBody).includes("secret-github-token"),
+      false,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("runDailyOverviewsV02 is idempotent and preserves terminal Claude status", async () => {
   const { db, tables } = createMemoryD1({
     market_candles: dayCandles("2026-06-19"),

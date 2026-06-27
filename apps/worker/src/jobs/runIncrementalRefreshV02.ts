@@ -5,7 +5,10 @@ import {
   type DetectorV02TableCounts,
 } from "../db/v02DetectorRepository.ts";
 import { recordJobRun } from "../db/marketRepository.ts";
-import { dispatchV02SignalClaudeWorkflow } from "../services/githubDispatch.ts";
+import {
+  dispatchV02SignalClaudeWorkflow,
+  type V02SignalClaudeDispatchResult,
+} from "../services/githubDispatch.ts";
 import type { Env } from "../types/env.ts";
 import type { JobRunStatus } from "../types/market.ts";
 import { safeErrorMessage } from "../utils/http.ts";
@@ -206,6 +209,20 @@ function claudeDispatchLimit(env: Env): number {
     3,
     10,
   );
+}
+
+function dispatchJobStatus(
+  result: V02SignalClaudeDispatchResult,
+): JobRunStatus {
+  if (result.dispatch_status === "dispatched" || result.ok) {
+    return "success";
+  }
+
+  if (result.outcome === "skipped") {
+    return "skipped";
+  }
+
+  return "failed";
 }
 
 async function recordIncrementalJob(
@@ -453,9 +470,11 @@ export async function runIncrementalRefreshV02(
     }
 
     if (options.dispatchClaude === true) {
+      const dispatchStartedAt = new Date();
+      const signalClaudeTargets = signals?.new_signal_ids ?? [];
       claudeDispatch = await dispatchV02SignalClaudeWorkflow(
         env,
-        signals?.new_signal_ids ?? [],
+        signalClaudeTargets,
         {
           dryRun,
           triggerSource,
@@ -463,6 +482,32 @@ export async function runIncrementalRefreshV02(
           limit: claudeDispatchLimit(env),
         },
       );
+
+      if (!dryRun && signalClaudeTargets.length > 0) {
+        await recordIncrementalJob(
+          db,
+          "dispatch_v02_signal_claude_workflow",
+          dispatchJobStatus(claudeDispatch),
+          claudeDispatch.message,
+          {
+            request_id: requestId,
+            trigger_source: triggerSource,
+            signal_event_ids: signalClaudeTargets,
+            changed_signal_ids: signals?.changed_signal_ids ?? [],
+            new_public_signal_detected: true,
+            dispatch_status: claudeDispatch.dispatch_status,
+            dispatch_attempted: claudeDispatch.dispatch_attempted,
+            workflow: claudeDispatch.workflow,
+            repo: claudeDispatch.repo,
+            ref: claudeDispatch.ref,
+            github_status: claudeDispatch.status,
+            inputs_summary: claudeDispatch.inputs_summary,
+            token_present: claudeDispatch.token_present,
+            error_summary: claudeDispatch.error_summary ?? null,
+          },
+          dispatchStartedAt,
+        );
+      }
     }
 
     const failed = marketStories?.status === "failed";

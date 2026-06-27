@@ -355,6 +355,34 @@ test("story duration and swing thresholds are respected", () => {
   );
 });
 
+test("strong candle move can satisfy minimum story range when event swing is small", () => {
+  const output = generateMarketStoriesV02(
+    [
+      event("signal_a", { startHour: 0, endHour: 1, avg_change_pct: 0.4 }),
+      event("signal_b", { startHour: 4, endHour: 5, avg_change_pct: 0.4 }),
+    ],
+    {},
+    [
+      candle("BTCUSDT", iso(0), 100, 101),
+      candle("BTCUSDT", iso(4, 45), 101, 103.2),
+      candle("ETHUSDT", iso(0), 100, 101),
+      candle("ETHUSDT", iso(4, 45), 101, 103.4),
+    ],
+  );
+  const story = output.market_stories[0];
+  const reasons = JSON.parse(story.decision_reasons_json) as string[];
+  const rangeContext = JSON.parse(story.range_context_json) as {
+    avg_change_pct?: number;
+  };
+
+  assert.equal(output.summary.story_count, 1);
+  assert.equal(story.publish_candidate, true);
+  assert.equal(story.suppress_reason, null);
+  assert.equal(story.publish_reason, "min_public_signals");
+  assert.equal(reasons.includes("candle_story_move_confirmed"), true);
+  assert.equal(rangeContext.avg_change_pct, 3.3);
+});
+
 test("Volatility Score uses RMS of all 15m bar changes inside the story window", () => {
   const output = generateMarketStoriesV02(
     [
