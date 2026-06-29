@@ -645,47 +645,110 @@ function countKeys(value, pattern) {
   return count;
 }
 
+function publicFeedItemType(item) {
+  return item?.item_type ?? item?.type ?? null;
+}
+
+export function summarizePublicFeedSmokeJson(
+  json,
+  responseOk = true,
+  status = 200,
+) {
+  const groups = Array.isArray(json.day_groups) ? json.day_groups : [];
+  const items = groups.flatMap((group) => group.items ?? []);
+  const sources = items.flatMap((item) =>
+    Array.isArray(item.sources) ? item.sources : [],
+  );
+
+  return {
+    ok: responseOk && json.ok === true,
+    http_status: status,
+    version: json.version ?? null,
+    grouping: json.grouping ?? null,
+    day_groups: groups.length,
+    public_items: items.length,
+    daily_overviews: items.filter(
+      (item) => publicFeedItemType(item) === "daily_overview",
+    ).length,
+    market_stories: items.filter(
+      (item) => publicFeedItemType(item) === "market_story",
+    ).length,
+    signal_events: items.filter(
+      (item) => publicFeedItemType(item) === "signal_event",
+    ).length,
+    public_audit_events: items.filter(
+      (item) => publicFeedItemType(item) === "audit_event",
+    ).length,
+    source_count: sources.length,
+    market_story_forbidden_field_count: items
+      .filter((item) => publicFeedItemType(item) === "market_story")
+      .filter(
+        (item) =>
+          item.claude_status ||
+          item.public_label ||
+          item.classification ||
+          (Array.isArray(item.sources) && item.sources.length > 0),
+      ).length,
+    raw_trace_or_token_key_count: countKeys(
+      json,
+      /raw|trace|tool|token|budget|search/i,
+    ),
+  };
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchPublicFeedSmokeWithRetry(apiBase, attempts = 3) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(
+        `${apiBase.replace(/\/$/, "")}/api/intelligence/feed`,
+      );
+      const json = await response.json();
+      const summary = summarizePublicFeedSmokeJson(
+        json,
+        response.ok,
+        response.status,
+      );
+
+      if (summary.ok || attempt === attempts) {
+        return {
+          ...summary,
+          attempts: attempt,
+        };
+      }
+
+      lastError = `feed smoke returned HTTP ${response.status}`;
+    } catch (error) {
+      lastError =
+        error instanceof Error ? redact(error.message) : "fetch_failed";
+
+      if (attempt === attempts) {
+        return {
+          ok: false,
+          attempts: attempt,
+          error: lastError,
+        };
+      }
+    }
+
+    await wait(1_000 * attempt);
+  }
+
+  return {
+    ok: false,
+    attempts,
+    error: lastError ?? "fetch_failed",
+  };
+}
+
 async function fetchPublicFeedSmoke(apiBase) {
   try {
-    const response = await fetch(
-      `${apiBase.replace(/\/$/, "")}/api/intelligence/feed`,
-    );
-    const json = await response.json();
-    const groups = Array.isArray(json.day_groups) ? json.day_groups : [];
-    const items = groups.flatMap((group) => group.items ?? []);
-    const sources = items.flatMap((item) =>
-      Array.isArray(item.sources) ? item.sources : [],
-    );
-    return {
-      ok: response.ok && json.ok === true,
-      http_status: response.status,
-      version: json.version ?? null,
-      grouping: json.grouping ?? null,
-      day_groups: groups.length,
-      public_items: items.length,
-      daily_overviews: items.filter((item) => item.type === "daily_overview")
-        .length,
-      market_stories: items.filter((item) => item.type === "market_story")
-        .length,
-      signal_events: items.filter((item) => item.type === "signal_event")
-        .length,
-      public_audit_events: items.filter((item) => item.type === "audit_event")
-        .length,
-      source_count: sources.length,
-      market_story_forbidden_field_count: items
-        .filter((item) => item.type === "market_story")
-        .filter(
-          (item) =>
-            item.claude_status ||
-            item.public_label ||
-            item.classification ||
-            (Array.isArray(item.sources) && item.sources.length > 0),
-        ).length,
-      raw_trace_or_token_key_count: countKeys(
-        json,
-        /raw|trace|tool|token|budget|search/i,
-      ),
-    };
+    return await fetchPublicFeedSmokeWithRetry(apiBase);
   } catch (error) {
     return {
       ok: false,

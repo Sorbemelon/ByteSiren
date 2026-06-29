@@ -9,6 +9,7 @@ import {
   redact,
   runClaudeEnrichmentCli,
   safeEnvForRunner,
+  summarizePublicFeedSmokeJson,
   sqlLiteral,
 } from "./v02-claude-enrichment.mjs";
 
@@ -185,4 +186,33 @@ test("v0.2 Claude enrichment report marks failed live target as needs fix", () =
     }),
     "PASS",
   );
+});
+
+test("v0.2 Claude enrichment public feed smoke understands v02 item_type", () => {
+  const summary = summarizePublicFeedSmokeJson({
+    ok: true,
+    version: "v02",
+    grouping: "utc_day",
+    day_groups: [
+      {
+        items: [
+          {
+            item_type: "daily_overview",
+            sources: [{ url: "https://example.test" }],
+          },
+          { item_type: "signal_event" },
+          { item_type: "market_story" },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(summary.ok, true);
+  assert.equal(summary.version, "v02");
+  assert.equal(summary.daily_overviews, 1);
+  assert.equal(summary.signal_events, 1);
+  assert.equal(summary.market_stories, 1);
+  assert.equal(summary.public_audit_events, 0);
+  assert.equal(summary.source_count, 1);
+  assert.equal(summary.market_story_forbidden_field_count, 0);
 });
