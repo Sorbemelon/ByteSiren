@@ -319,13 +319,13 @@ export async function cleanupOldData(
   db: D1Database,
   cutoffIso = retentionCutoffIso(),
 ): Promise<{ market_candles: number; market_features: number }> {
-  const candleResult = await db
-    .prepare("DELETE FROM market_candles WHERE open_time < ?")
+  const featureResult = await db
+    .prepare("DELETE FROM market_features WHERE open_time < ?")
     .bind(cutoffIso)
     .run();
 
-  const featureResult = await db
-    .prepare("DELETE FROM market_features WHERE open_time < ?")
+  const candleResult = await db
+    .prepare("DELETE FROM market_candles WHERE open_time < ?")
     .bind(cutoffIso)
     .run();
 

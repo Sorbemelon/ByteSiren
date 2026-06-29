@@ -71,6 +71,51 @@ function areScheduledJobsEnabled(env: Env): boolean {
   return env.ENABLE_SCHEDULED_JOBS?.trim().toLowerCase() !== "false";
 }
 
+const INCREMENTAL_REFRESH_FALLBACK_MINUTES = 10;
+
+function minutesAgoIso(now: Date, minutes: number): string {
+  return new Date(now.getTime() - minutes * 60 * 1000).toISOString();
+}
+
+async function hasRecentSuccessfulIncrementalSignalRun(
+  db: D1Database,
+  now = new Date(),
+): Promise<boolean> {
+  const cutoffIso = minutesAgoIso(now, INCREMENTAL_REFRESH_FALLBACK_MINUTES);
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM job_runs
+       WHERE job_name = 'run_incremental_signals_v02'
+         AND status = 'success'
+         AND started_at >= ?`,
+    )
+    .bind(cutoffIso)
+    .first<{ count: number }>();
+
+  return Number(row?.count ?? 0) > 0;
+}
+
+async function runIncrementalRefreshFallbackIfStale(
+  db: D1Database,
+  env: Env,
+): Promise<void> {
+  if (!isV02IncrementalRefreshEnabled(env)) {
+    return;
+  }
+
+  if (await hasRecentSuccessfulIncrementalSignalRun(db)) {
+    return;
+  }
+
+  await runIncrementalRefreshV02(db, env, {
+    triggerSource: "cloudflare_cron_fallback",
+    dispatchClaude: parseBooleanFlag(
+      env.ENABLE_V02_SIGNAL_CLAUDE_WORKFLOW_DISPATCH,
+    ),
+  });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -187,8 +232,6 @@ export default {
     }
 
     if (controller.cron === CLEANUP_CRON) {
-      await cleanupOldData(env.DB);
-
       if (isIncrementalDailyOverviewGenerationEnabled(env)) {
         await runIncrementalDailyOverviewsV02(env.DB, env, {
           requestId: crypto.randomUUID(),
@@ -206,10 +249,14 @@ export default {
         });
       }
 
+      await cleanupOldData(env.DB);
+
       return;
     }
 
     if (controller.cron === CLAUDE_ENRICHMENT_CRON) {
+      await runIncrementalRefreshFallbackIfStale(env.DB, env);
+
       if (isClaudeEnrichmentV02Enabled(env)) {
         await runClaudeEnrichmentV02(env.DB, env);
       } else {

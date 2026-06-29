@@ -733,6 +733,89 @@ test("scheduled Claude cron runs enrichment only", async () => {
   );
 });
 
+test("scheduled Claude cron runs incremental v0.2 fallback when detector refresh is stale", async () => {
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [seededIncident()],
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+    ENABLE_V02_INCREMENTAL_REFRESH: "true",
+    ENABLE_V02_INCREMENTAL_SIGNALS: "true",
+    ENABLE_V02_INCREMENTAL_MARKET_STORIES: "false",
+  };
+
+  await worker.scheduled(scheduledController(CLAUDE_ENRICHMENT_CRON), env);
+
+  const incrementalJob = tables.job_runs.find(
+    (row) => row.job_name === "run_incremental_signals_v02",
+  );
+  const metadata = JSON.parse(incrementalJob?.metadata_json ?? "{}") as {
+    trigger_source?: string;
+  };
+
+  assert.ok(["success", "skipped"].includes(incrementalJob?.status ?? ""));
+  assert.equal(metadata.trigger_source, "cloudflare_cron_fallback");
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "claude_enrichment"),
+    true,
+  );
+  assert.equal(
+    tables.job_runs.some(
+      (row) => row.job_name === "run_incremental_market_stories_v02",
+    ),
+    false,
+  );
+  assert.equal(tables.claude_briefs_v02.length, 0);
+  assert.equal(tables.source_references_v02.length, 0);
+});
+
+test("scheduled Claude cron skips incremental v0.2 fallback after recent successful refresh", async () => {
+  const recentStartedAt = new Date().toISOString();
+  const { db, tables } = createMemoryD1({
+    market_candles: seededRows(),
+    incidents: [seededIncident()],
+    job_runs: [
+      {
+        id: "recent_incremental_refresh",
+        job_name: "run_incremental_signals_v02",
+        status: "success",
+        started_at: recentStartedAt,
+        finished_at: recentStartedAt,
+        message: "Recent incremental refresh.",
+        metadata_json: "{}",
+      },
+    ],
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+    ENABLE_V02_INCREMENTAL_REFRESH: "true",
+    ENABLE_V02_INCREMENTAL_SIGNALS: "true",
+    ENABLE_V02_INCREMENTAL_MARKET_STORIES: "true",
+  };
+
+  await worker.scheduled(scheduledController(CLAUDE_ENRICHMENT_CRON), env);
+
+  assert.equal(
+    tables.job_runs.filter(
+      (row) => row.job_name === "run_incremental_signals_v02",
+    ).length,
+    1,
+  );
+  assert.equal(
+    tables.job_runs.some(
+      (row) => row.job_name === "run_incremental_market_stories_v02",
+    ),
+    false,
+  );
+  assert.equal(
+    tables.job_runs.some((row) => row.job_name === "claude_enrichment"),
+    true,
+  );
+});
+
 test("scheduled Claude cron uses v0.2 enrichment only when v0.2 Claude flags are enabled", async () => {
   const incident = seededIncident();
   const { db, tables } = createMemoryD1({

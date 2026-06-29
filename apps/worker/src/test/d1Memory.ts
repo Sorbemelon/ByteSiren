@@ -841,6 +841,22 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
 
       if (
         this.sql.includes("COUNT(*) AS count") &&
+        this.sql.includes("FROM job_runs")
+      ) {
+        const [cutoff] = this.params as [string];
+
+        return {
+          count: tables.job_runs.filter(
+            (row) =>
+              row.job_name === "run_incremental_signals_v02" &&
+              row.status === "success" &&
+              row.started_at >= cutoff,
+          ).length,
+        } as T;
+      }
+
+      if (
+        this.sql.includes("COUNT(*) AS count") &&
         this.sql.includes("FROM daily_overviews_v02")
       ) {
         return {
