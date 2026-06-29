@@ -576,6 +576,55 @@ async function deleteRowsByIds(
   }
 }
 
+async function listProtectedSignalEventIds(
+  db: D1Database,
+  ids: string[],
+): Promise<Set<string>> {
+  const protectedIds = new Set<string>();
+
+  for (let index = 0; index < ids.length; index += SQLITE_BIND_CHUNK_SIZE) {
+    const chunk = ids.slice(index, index + SQLITE_BIND_CHUNK_SIZE);
+
+    if (chunk.length === 0) {
+      continue;
+    }
+
+    const placeholders = chunk.map(() => "?").join(", ");
+    const result = await db
+      .prepare(
+        `SELECT DISTINCT id
+         FROM (
+           SELECT id
+           FROM signal_events_v02
+           WHERE id IN (${placeholders})
+             AND publish_candidate = 1
+
+           UNION
+
+           SELECT target_id AS id
+           FROM claude_briefs_v02
+           WHERE target_type = 'signal_event_v02'
+             AND target_id IN (${placeholders})
+
+           UNION
+
+           SELECT target_id AS id
+           FROM source_references_v02
+           WHERE target_type = 'signal_event_v02'
+             AND target_id IN (${placeholders})
+         )`,
+      )
+      .bind(...chunk, ...chunk, ...chunk)
+      .all<{ id: string }>();
+
+    for (const row of result.results ?? []) {
+      protectedIds.add(row.id);
+    }
+  }
+
+  return protectedIds;
+}
+
 async function pruneDetectorV02OutputForRange(
   db: D1Database,
   output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
@@ -595,8 +644,15 @@ async function pruneDetectorV02OutputForRange(
   );
   const staleSignalIds = existingSignalIds.filter((id) => !signalIds.has(id));
   const staleAuditIds = existingAuditIds.filter((id) => !auditIds.has(id));
+  const protectedSignalIds = await listProtectedSignalEventIds(
+    db,
+    staleSignalIds,
+  );
+  const deletableStaleSignalIds = staleSignalIds.filter(
+    (id) => !protectedSignalIds.has(id),
+  );
 
-  await deleteSignalSymbolsForEvents(db, staleSignalIds);
-  await deleteRowsByIds(db, "signal_events_v02", "id", staleSignalIds);
+  await deleteSignalSymbolsForEvents(db, deletableStaleSignalIds);
+  await deleteRowsByIds(db, "signal_events_v02", "id", deletableStaleSignalIds);
   await deleteRowsByIds(db, "audit_events_v02", "id", staleAuditIds);
 }

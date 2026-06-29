@@ -392,6 +392,45 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
         };
       }
 
+      if (
+        this.sql.includes("SELECT DISTINCT id") &&
+        this.sql.includes("FROM signal_events_v02") &&
+        this.sql.includes("FROM claude_briefs_v02") &&
+        this.sql.includes("FROM source_references_v02") &&
+        this.sql.includes("target_type = 'signal_event_v02'")
+      ) {
+        const candidateIds = new Set(this.params.map(String));
+        const protectedIds = new Set<string>();
+
+        for (const row of tables.signal_events_v02) {
+          if (candidateIds.has(row.id) && row.publish_candidate === 1) {
+            protectedIds.add(row.id);
+          }
+        }
+
+        for (const row of tables.claude_briefs_v02) {
+          if (
+            row.target_type === "signal_event_v02" &&
+            candidateIds.has(row.target_id)
+          ) {
+            protectedIds.add(row.target_id);
+          }
+        }
+
+        for (const row of tables.source_references_v02) {
+          if (
+            row.target_type === "signal_event_v02" &&
+            candidateIds.has(row.target_id)
+          ) {
+            protectedIds.add(row.target_id);
+          }
+        }
+
+        return {
+          results: [...protectedIds].map((id) => ({ id })) as T[],
+        };
+      }
+
       if (this.sql.includes("SELECT id AS id FROM market_stories_v02")) {
         return {
           results: tables.market_stories_v02.map((row) => ({

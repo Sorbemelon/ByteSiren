@@ -13,6 +13,7 @@ import { createMemoryD1 } from "../test/d1Memory.ts";
 import {
   signalEventStorageIdV02,
   upsertDetectorV02Output,
+  upsertDetectorV02OutputForRange,
 } from "../db/v02DetectorRepository.ts";
 import type { SignalEventV02 } from "../services/detectorV02/index.ts";
 
@@ -564,6 +565,73 @@ test("v0.2 Signal Event storage identity survives a later window extension", asy
   assert.equal(
     tables.signal_event_symbols_v02.every(
       (symbol) => symbol.signal_event_id === stableId,
+    ),
+    true,
+  );
+});
+
+test("v0.2 bounded detector pruning keeps public enriched Signals", async () => {
+  const staleId = "signal_v02_20260629113000_up";
+  const staleStart = "2026-06-29T11:30:00.000Z";
+  const staleEnd = "2026-06-29T12:14:59.998Z";
+  const nextSignal = detectorSignalEvent(116);
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [storySignalRow(staleId, staleStart, staleEnd)],
+    signal_event_symbols_v02: ALLOWED_SYMBOLS.map((symbol) =>
+      staleSignalSymbolRow(staleId, symbol),
+    ),
+    claude_briefs_v02: [
+      {
+        id: `claude_v02_signal_event_${staleId}`,
+        target_type: "signal_event_v02",
+        target_id: staleId,
+        prompt_mode: "signal_event",
+        status: "no_clear_cause",
+        public_label: "No Clear Cause",
+        classification: "No Clear Cause",
+        confidence: "low",
+        headline: "No clear public catalyst",
+        collapsed_summary: "Fresh Claude context.",
+        context_details: null,
+        source_support: "none",
+        source_timing_alignment: "none",
+        validation_flags_json: "{}",
+        detector_feedback_json: "{}",
+        prompt_version: "v02-signal-event-v1",
+        model: "claude-sonnet-4-6",
+        error_code: null,
+        error_message: null,
+        created_at: staleStart,
+        updated_at: staleStart,
+      },
+    ],
+  });
+
+  await upsertDetectorV02OutputForRange(
+    db,
+    {
+      signal_events: [nextSignal],
+      audit_events: [],
+    },
+    {
+      startIso: "2026-06-29T10:00:00.000Z",
+      endIso: "2026-06-29T18:00:00.000Z",
+    },
+  );
+
+  assert.equal(
+    tables.signal_events_v02.some((row) => row.id === staleId),
+    true,
+  );
+  assert.equal(
+    tables.signal_event_symbols_v02.some(
+      (row) => row.signal_event_id === staleId,
+    ),
+    true,
+  );
+  assert.equal(
+    tables.signal_events_v02.some(
+      (row) => row.id === signalEventStorageIdV02(nextSignal),
     ),
     true,
   );
