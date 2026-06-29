@@ -53,9 +53,26 @@ export function signalEventStorageIdV02(
 function signalEventForStorage(event: SignalEventV02): SignalEventV02 {
   const id = signalEventStorageIdV02(event);
 
+  return signalEventWithStorageId(event, id);
+}
+
+function signalEventWithStorageId(
+  event: SignalEventV02,
+  id: string,
+): SignalEventV02 {
+  const durationMin = Math.max(
+    0,
+    Math.round(
+      (Date.parse(event.event_end) - Date.parse(event.event_start)) / 60000,
+    ),
+  );
+
   return {
     ...event,
     id,
+    duration_min: Number.isFinite(durationMin)
+      ? durationMin
+      : event.duration_min,
     symbols: event.symbols.map((symbol) => ({
       ...symbol,
       id: `${id}_${symbol.symbol}`,
@@ -393,8 +410,9 @@ export async function upsertDetectorV02OutputForRange(
   output: { signal_events: SignalEventV02[]; audit_events: AuditEventV02[] },
   range: { startIso: string; endIso: string },
 ): Promise<DetectorV02WriteCounts> {
-  const signalEventsForStorage = output.signal_events.map(
-    signalEventForStorage,
+  const signalEventsForStorage = await canonicalizeOverlappingSignalEvents(
+    db,
+    output.signal_events.map(signalEventForStorage),
   );
   const storageOutput = {
     signal_events: signalEventsForStorage,
@@ -574,6 +592,83 @@ async function deleteRowsByIds(
       .bind(...chunk)
       .run();
   }
+}
+
+async function canonicalizeOverlappingSignalEvents(
+  db: D1Database,
+  events: SignalEventV02[],
+): Promise<SignalEventV02[]> {
+  const canonicalEvents: SignalEventV02[] = [];
+  const byId = new Map<string, SignalEventV02>();
+
+  for (const event of events) {
+    const overlap = await findExistingPublicSignalOverlap(db, event);
+    const canonical =
+      overlap && overlap.event_start <= event.event_start
+        ? signalEventWithStorageId(
+            {
+              ...event,
+              id: overlap.id,
+              date_utc: overlap.date_utc,
+              event_start: overlap.event_start,
+              event_end:
+                overlap.event_end > event.event_end
+                  ? overlap.event_end
+                  : event.event_end,
+            },
+            overlap.id,
+          )
+        : event;
+    const existing = byId.get(canonical.id);
+
+    if (!existing || existing.event_end < canonical.event_end) {
+      byId.set(canonical.id, canonical);
+    }
+  }
+
+  for (const event of byId.values()) {
+    canonicalEvents.push(event);
+  }
+
+  return canonicalEvents.sort((a, b) =>
+    a.event_start.localeCompare(b.event_start),
+  );
+}
+
+async function findExistingPublicSignalOverlap(
+  db: D1Database,
+  event: SignalEventV02,
+): Promise<{
+  id: string;
+  date_utc: string;
+  event_start: string;
+  event_end: string;
+} | null> {
+  if (!event.publish_candidate) {
+    return null;
+  }
+
+  const row = await db
+    .prepare(
+      `SELECT id, date_utc, event_start, event_end
+       FROM signal_events_v02
+       WHERE publish_candidate = 1
+         AND direction = ?
+         AND id <> ?
+         AND event_start <= ?
+         AND event_end >= ?
+       ORDER BY event_start ASC, event_end DESC, id ASC
+       LIMIT 1`,
+    )
+    .bind(event.direction, event.id, event.event_end, event.event_start)
+    .first<{
+      id: string;
+      date_utc: string;
+      event_start: string;
+      event_end: string;
+    }>();
+
+  return row ?? null;
 }
 
 async function listProtectedSignalEventIds(

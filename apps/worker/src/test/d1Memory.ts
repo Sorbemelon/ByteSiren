@@ -951,6 +951,40 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       }
 
       if (
+        this.sql.includes("FROM signal_events_v02") &&
+        this.sql.includes("publish_candidate = 1") &&
+        this.sql.includes("direction = ?") &&
+        this.sql.includes("id <> ?") &&
+        this.sql.includes("event_start <= ?") &&
+        this.sql.includes("event_end >= ?") &&
+        this.sql.includes("LIMIT 1")
+      ) {
+        const [direction, id, eventEnd, eventStart] = this.params as [
+          string,
+          string,
+          string,
+          string,
+        ];
+        const row = tables.signal_events_v02
+          .filter(
+            (signal) =>
+              signal.publish_candidate === 1 &&
+              signal.direction === direction &&
+              signal.id !== id &&
+              signal.event_start <= eventEnd &&
+              signal.event_end >= eventStart,
+          )
+          .sort(
+            (a, b) =>
+              a.event_start.localeCompare(b.event_start) ||
+              b.event_end.localeCompare(a.event_end) ||
+              a.id.localeCompare(b.id),
+          )[0];
+
+        return (row ?? null) as T;
+      }
+
+      if (
         this.sql.includes("COUNT(*) AS count") &&
         this.sql.includes("FROM market_candles")
       ) {

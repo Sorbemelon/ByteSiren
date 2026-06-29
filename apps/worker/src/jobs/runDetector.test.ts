@@ -637,6 +637,55 @@ test("v0.2 bounded detector pruning keeps public enriched Signals", async () => 
   );
 });
 
+test("v0.2 bounded detector canonicalizes overlapping public Signals to the existing row", async () => {
+  const existingStart = isoAt(100);
+  const existingEnd = closeIsoAt(124);
+  const incoming = {
+    ...detectorSignalEvent(24),
+    event_end: closeIsoAt(132),
+    duration_min: 195,
+  };
+  const existingId = signalEventStorageIdV02({
+    event_start: existingStart,
+    direction: "observed_up",
+  });
+  const incomingStorageId = signalEventStorageIdV02(incoming);
+  const { db, tables } = createMemoryD1({
+    signal_events_v02: [storySignalRow(existingId, existingStart, existingEnd)],
+    signal_event_symbols_v02: ALLOWED_SYMBOLS.map((symbol) =>
+      staleSignalSymbolRow(existingId, symbol),
+    ),
+  });
+
+  await upsertDetectorV02OutputForRange(
+    db,
+    {
+      signal_events: [incoming],
+      audit_events: [],
+    },
+    {
+      startIso: existingStart,
+      endIso: incoming.event_end,
+    },
+  );
+
+  assert.equal(tables.signal_events_v02.length, 1);
+  assert.equal(tables.signal_events_v02[0].id, existingId);
+  assert.equal(tables.signal_events_v02[0].event_start, existingStart);
+  assert.equal(tables.signal_events_v02[0].event_end, incoming.event_end);
+  assert.equal(
+    tables.signal_events_v02.some((row) => row.id === incomingStorageId),
+    false,
+  );
+  assert.equal(tables.signal_event_symbols_v02.length, ALLOWED_SYMBOLS.length);
+  assert.equal(
+    tables.signal_event_symbols_v02.every(
+      (symbol) => symbol.signal_event_id === existingId,
+    ),
+    true,
+  );
+});
+
 test("v0.2 detector output pruning handles more than SQLite bind limit", async () => {
   const staleIds = Array.from({ length: 1100 }, (_, index) => `stale_${index}`);
   const { db, tables } = createMemoryD1({
