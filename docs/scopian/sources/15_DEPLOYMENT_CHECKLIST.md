@@ -172,7 +172,7 @@ The dispatch uses a rolling lookback window, defaulting to 6 hours, so delayed o
 2,17,32,47 * * * *    GitHub workflow dispatch
 5,20,35,50 * * * *    detector
 10,25,40,55 * * * *   Claude enrichment
-17 0 * * *            cleanup
+18 0 * * *            cleanup and recent v0.2 Daily Overview refresh
 ```
 
 7. The GitHub Actions importer calls:

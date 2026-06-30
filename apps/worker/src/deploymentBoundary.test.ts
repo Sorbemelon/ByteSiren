@@ -25,6 +25,8 @@ test("deployment boundary keeps active Wrangler configs app-local", () => {
   assert.match(workerWrangler, /"2,17,32,47 \* \* \* \*"/);
   assert.match(workerWrangler, /"5,20,35,50 \* \* \* \*"/);
   assert.match(workerWrangler, /"10,25,40,55 \* \* \* \*"/);
+  assert.match(workerWrangler, /"18 0 \* \* \*"/);
+  assert.equal(workerWrangler.includes('"17 0 * * *"'), false);
   assert.equal(workerWrangler.includes('"30 1 * * *"'), false);
   assert.match(
     workerWrangler,

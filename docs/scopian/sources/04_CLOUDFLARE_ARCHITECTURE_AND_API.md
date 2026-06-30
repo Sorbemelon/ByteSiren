@@ -335,7 +335,7 @@ Recommended:
 ```text
 */5 * * * *      poll Binance and detect
 */15 * * * *     enrich queued incidents with Claude
-17 0 * * *       cleanup records older than 31 days
+18 0 * * *       cleanup records older than 31 days
 ```
 
 Worker `scheduled()` handler must route based on cron expression.
