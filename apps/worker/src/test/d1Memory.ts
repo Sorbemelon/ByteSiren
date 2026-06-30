@@ -2333,9 +2333,18 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       if (this.sql.includes("DELETE FROM source_references")) {
         const [cutoff] = this.params as [string];
         const before = tables.source_references.length;
+        const oldIncidentIds = new Set(
+          tables.incidents
+            .filter((row) => row.started_at < cutoff)
+            .map((row) => row.id),
+        );
         const oldBriefIds = new Set(
           tables.claude_briefs
-            .filter((row) => (row.generated_at ?? row.created_at) < cutoff)
+            .filter(
+              (row) =>
+                (row.generated_at ?? row.created_at) < cutoff ||
+                oldIncidentIds.has(row.incident_id),
+            )
             .map((row) => row.id),
         );
         tables.source_references = tables.source_references.filter(
@@ -2347,8 +2356,15 @@ export function createMemoryD1(initial: Partial<MemoryD1Tables> = {}): {
       if (this.sql.includes("DELETE FROM claude_briefs")) {
         const [cutoff] = this.params as [string];
         const before = tables.claude_briefs.length;
+        const oldIncidentIds = new Set(
+          tables.incidents
+            .filter((row) => row.started_at < cutoff)
+            .map((row) => row.id),
+        );
         tables.claude_briefs = tables.claude_briefs.filter(
-          (row) => (row.generated_at ?? row.created_at) >= cutoff,
+          (row) =>
+            (row.generated_at ?? row.created_at) >= cutoff &&
+            !oldIncidentIds.has(row.incident_id),
         );
         return result(before - tables.claude_briefs.length);
       }

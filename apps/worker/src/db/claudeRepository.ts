@@ -451,18 +451,25 @@ export async function cleanupClaudeDataOlderThan31Days(
       `DELETE FROM source_references
        WHERE created_at < ?
           OR brief_id IN (
-            SELECT id FROM claude_briefs
-            WHERE COALESCE(generated_at, created_at) < ?
+            SELECT cb.id
+            FROM claude_briefs cb
+            LEFT JOIN incidents i ON i.id = cb.incident_id
+            WHERE COALESCE(cb.generated_at, cb.created_at) < ?
+               OR i.started_at < ?
           )`,
     )
-    .bind(cutoffIso, cutoffIso)
+    .bind(cutoffIso, cutoffIso, cutoffIso)
     .run();
   const briefResult = await db
     .prepare(
       `DELETE FROM claude_briefs
-       WHERE COALESCE(generated_at, created_at) < ?`,
+       WHERE COALESCE(generated_at, created_at) < ?
+          OR incident_id IN (
+            SELECT id FROM incidents
+            WHERE started_at < ?
+          )`,
     )
-    .bind(cutoffIso)
+    .bind(cutoffIso, cutoffIso)
     .run();
 
   return {
