@@ -29,12 +29,12 @@ export async function cleanupOldData(
   const cutoffIso = retentionCutoffIso(now);
 
   try {
+    const claudeDeleted = await cleanupClaudeDataOlderThan31Days(db, cutoffIso);
     const marketDeleted = await cleanupOldMarketData(db, cutoffIso);
     const detectorDeleted = await cleanupDetectorDataOlderThan31Days(
       db,
       cutoffIso,
     );
-    const claudeDeleted = await cleanupClaudeDataOlderThan31Days(db, cutoffIso);
     const deleted = {
       market_candles: marketDeleted.market_candles,
       market_features:

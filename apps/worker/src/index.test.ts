@@ -1061,6 +1061,70 @@ test("scheduled cleanup cron runs cleanup only", async () => {
   assert.equal(tables.daily_overviews_v02.length, 0);
 });
 
+test("scheduled cleanup cron removes legacy Claude children before old incidents", async () => {
+  const oldIncident: IncidentRow = {
+    ...seededIncident(),
+    id: "bs_20000101_market_wide_up_0900",
+    incident_key: "bs_20000101_market_wide_up_0900",
+    macro_day_cache_key: "2000-01-01_market_wide_observed_up_all",
+    started_at: "2000-01-01T09:00:00.000Z",
+    ended_at: "2000-01-01T09:14:59.999Z",
+    created_at: "2000-01-01T09:00:00.000Z",
+    updated_at: "2000-01-01T09:00:00.000Z",
+  };
+  const { db, tables } = createMemoryD1({
+    incidents: [oldIncident],
+    claude_briefs: [
+      {
+        id: "legacy_brief_old_incident",
+        incident_id: oldIncident.id,
+        analysis_mode: "market_day",
+        catalyst_status: "cause_supported",
+        ui_label: "Focused Cause",
+        confidence: "medium",
+        price_context_check: "matches_binance",
+        headline: "Old brief",
+        summary: "Old summary",
+        focused_catalyst_json: "{}",
+        main_catalyst_json: "{}",
+        broader_context_json: "[]",
+        caveats_json: "[]",
+        tags_json: "[]",
+        source_quality_meta_json: "{}",
+        generated_at: "2000-01-01T10:00:00.000Z",
+        created_at: "2000-01-01T10:00:00.000Z",
+        updated_at: "2000-01-01T10:00:00.000Z",
+      },
+    ],
+    source_references: [
+      {
+        id: 1,
+        brief_id: "legacy_brief_old_incident",
+        publisher: "CoinDesk",
+        title: "Old source",
+        url: "https://www.coindesk.com/markets/2000/01/01/old",
+        normalized_url: "www.coindesk.com/markets/2000/01/01/old",
+        published_at: "2000-01-01",
+        accessed_at: "2000-01-01T10:01:00.000Z",
+        used_for: "backdrop",
+        source_strength: "acceptable",
+        created_at: "2000-01-01T10:01:00.000Z",
+      },
+    ],
+  });
+  const env: Env = {
+    DB: db,
+  };
+
+  await worker.scheduled(scheduledController(CLEANUP_CRON), env);
+
+  assert.equal(tables.source_references.length, 0);
+  assert.equal(tables.claude_briefs.length, 0);
+  assert.equal(tables.incidents.length, 0);
+  assert.equal(tables.job_runs.at(-1)?.job_name, "cleanup_old_data");
+  assert.equal(tables.job_runs.at(-1)?.status, "success");
+});
+
 test("scheduled cleanup cron can generate v0.2 Daily Overviews behind flag", async () => {
   const { db, tables } = createMemoryD1({
     market_candles: seededCompleteDayRows(),
