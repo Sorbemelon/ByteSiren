@@ -6,6 +6,7 @@ import {
   LEGACY_POLL_MARKET_CRON,
   parseBooleanFlag,
 } from "./config.ts";
+import { getDailyOverviewV02ByDate } from "./db/dailyOverviewRepositoryV02.ts";
 import { cleanupOldData } from "./jobs/cleanupOldData.ts";
 import { dispatchGitHubIngest } from "./jobs/dispatchGitHubIngest.ts";
 import { enrichQueuedIncidents } from "./jobs/enrichQueuedIncidents.ts";
@@ -69,6 +70,47 @@ function isWorkerMarketFetchEnabled(env: Env): boolean {
 
 function areScheduledJobsEnabled(env: Env): boolean {
   return env.ENABLE_SCHEDULED_JOBS?.trim().toLowerCase() !== "false";
+}
+
+function latestCompleteUtcDate(now = new Date()): string {
+  const date = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1),
+  );
+
+  return date.toISOString().slice(0, 10);
+}
+
+async function runMissingLatestDailyOverviewV02(
+  db: D1Database,
+  env: Env,
+): Promise<void> {
+  if (!isIncrementalDailyOverviewGenerationEnabled(env)) {
+    return;
+  }
+
+  const dateUtc = latestCompleteUtcDate();
+  const existing = await getDailyOverviewV02ByDate(db, dateUtc);
+
+  if (existing) {
+    return;
+  }
+
+  await runDailyOverviewsV02(
+    db,
+    {
+      ...env,
+      ENABLE_DAILY_OVERVIEWS: "true",
+    },
+    {
+      dateFrom: dateUtc,
+      dateTo: dateUtc,
+      requestId: crypto.randomUUID(),
+      triggerSource: "cloudflare_cron_daily_fallback",
+      dispatchClaude: parseBooleanFlag(
+        env.ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH,
+      ),
+    },
+  );
 }
 
 const INCREMENTAL_REFRESH_FALLBACK_MINUTES = 10;
@@ -255,6 +297,7 @@ export default {
     }
 
     if (controller.cron === CLAUDE_ENRICHMENT_CRON) {
+      await runMissingLatestDailyOverviewV02(env.DB, env);
       await runIncrementalRefreshFallbackIfStale(env.DB, env);
 
       if (isClaudeEnrichmentV02Enabled(env)) {

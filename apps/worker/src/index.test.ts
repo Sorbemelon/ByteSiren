@@ -733,6 +733,44 @@ test("scheduled Claude cron runs enrichment only", async () => {
   );
 });
 
+test("scheduled Claude cron repairs missing latest v0.2 Daily Overview", async () => {
+  const previousUtcDay = new Date();
+  previousUtcDay.setUTCDate(previousUtcDay.getUTCDate() - 1);
+  const dateUtc = previousUtcDay.toISOString().slice(0, 10);
+  const { db, tables } = createMemoryD1({
+    market_candles: seededCompleteDayRows(dateUtc),
+  });
+  const env: Env = {
+    DB: db,
+    MARKET_FETCH_MODE: "external_import",
+    ENABLE_V02_INCREMENTAL_DAILY_OVERVIEWS: "true",
+    ENABLE_V02_DAILY_CLAUDE_WORKFLOW_DISPATCH: "false",
+  };
+
+  await worker.scheduled(scheduledController(CLAUDE_ENRICHMENT_CRON), env);
+
+  const daily = tables.daily_overviews_v02.find(
+    (row) => row.date_utc === dateUtc,
+  );
+  const dailyJob = tables.job_runs.find(
+    (row) => row.job_name === "run_daily_overviews_v02",
+  );
+  const metadata = JSON.parse(dailyJob?.metadata_json ?? "{}") as {
+    date_from?: string;
+    date_to?: string;
+    generated_count?: number;
+    dispatch_claude_requested?: boolean;
+  };
+
+  assert.equal(daily?.id, `daily_${dateUtc}`);
+  assert.equal(daily?.claude_status, "queued_for_analysis");
+  assert.equal(dailyJob?.status, "success");
+  assert.equal(metadata.date_from, dateUtc);
+  assert.equal(metadata.date_to, dateUtc);
+  assert.equal(metadata.generated_count, 1);
+  assert.equal(metadata.dispatch_claude_requested, false);
+});
+
 test("scheduled Claude cron runs incremental v0.2 fallback when detector refresh is stale", async () => {
   const { db, tables } = createMemoryD1({
     market_candles: seededRows(),
